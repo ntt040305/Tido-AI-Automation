@@ -33,6 +33,20 @@
       "gender": "male",
       "audio_file": "d:/Tido/Assets/Voices/Phuctido1.mp3",
       "ref_text": "Không chỉ là thiết bị vệ sinh, đây là trải nghiệm nâng tầm cuộc sống mỗi ngày cho tổ ấm của bạn. Chào đón một biểu tượng tiện nghi mới chính thức ra mắt tại quận Long Biên, Hà Nội.",
+      "references": {
+        "intro": {
+          "audio_file": "d:/Tido/Assets/Voices/Phuctido1.mp3",
+          "ref_text": "Không chỉ là thiết bị vệ sinh, đây là trải nghiệm nâng tầm cuộc sống mỗi ngày cho tổ ấm của bạn. Chào đón một biểu tượng tiện nghi mới chính thức ra mắt tại quận Long Biên, Hà Nội."
+        },
+        "body": {
+          "audio_file": "d:/Tido/Assets/Voices/Phuctido1.mp3",
+          "ref_text": "Không chỉ là thiết bị vệ sinh, đây là trải nghiệm nâng tầm cuộc sống mỗi ngày cho tổ ấm của bạn. Chào đón một biểu tượng tiện nghi mới chính thức ra mắt tại quận Long Biên, Hà Nội."
+        },
+        "outro": {
+          "audio_file": "d:/Tido/Assets/Voices/Phuctido1.mp3",
+          "ref_text": "Không chỉ là thiết bị vệ sinh, đây là trải nghiệm nâng tầm cuộc sống mỗi ngày cho tổ ấm của bạn. Chào đón một biểu tượng tiện nghi mới chính thức ra mắt tại quận Long Biên, Hà Nội."
+        }
+      },
       "duration_s": 10.03,
       "trim_to_s": null,
       "profile": {
