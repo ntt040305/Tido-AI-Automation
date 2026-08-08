@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TIDO — AI Video Factory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B0B0C; --surface:#151517; --surface-2:#1C1C1F; --surface-3:#232326;
+    --border:#28282C; --border-strong:#38383D;
+    --text:#F2F1ED; --text-2:#9C9B96; --text-3:#65645F;
+    --accent:#E6402F; --accent-dim:#5A2019;
+    --ok:#5FBF77; --ok-dim:#1E3323;
+    --warn:#E8A33D; --warn-dim:#3A2C10;
+    --radius:14px; --radius-lg:20px; --radius-pill:999px;
+    --shadow-card: 0 1px 2px rgba(0,0,0,.35), 0 10px 28px rgba(0,0,0,.28);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg); color:var(--text); font-family:'Be Vietnam Pro',sans-serif; -webkit-font-smoothing:antialiased; display:flex; min-height:100vh;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  ::selection{background:var(--accent-dim); color:#fff;}
+
+  .rail{width:64px; flex-shrink:0; background:var(--bg); border-right:1px solid var(--border); display:flex; flex-direction:column; align-items:center; padding:20px 0; position:sticky; top:0; height:100vh;}
+  .logo{display:flex; flex-direction:column; align-items:center; gap:4px; margin-bottom:28px;}
+  .logo .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent);}
+  .logo .mark{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;color:var(--text-2);}
+  .nav{display:flex; flex-direction:column; gap:6px; flex:1;}
+  .navbtn{width:40px;height:40px;border-radius:var(--radius-pill);display:flex;align-items:center;justify-content:center; color:var(--text-3); cursor:pointer; border:1px solid transparent; position:relative; background:none;}
+  .navbtn:hover{color:var(--text-2); background:var(--surface);}
+  .navbtn.active{color:var(--text); background:var(--surface-2); border-color:var(--border);}
+  .navbtn.active::after{content:'';position:absolute;left:-9px;width:3px;height:14px;background:var(--accent);border-radius:2px;}
+  .navbtn svg{width:19px;height:19px;}
+
+  .profile-wrap{position:relative;}
+  .avatar{width:34px;height:34px;border-radius:50%;background:var(--surface-2); border:1px solid var(--border-strong); display:flex; align-items:center; justify-content:center; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--text-2); cursor:pointer;}
+  .avatar:hover{border-color:var(--text-2);}
+  .profile-menu{position:absolute; bottom:0; left:52px; background:var(--surface-2); border:1px solid var(--border-strong); border-radius:var(--radius); padding:6px; width:170px; display:none; box-shadow:var(--shadow-card);}
+  .profile-menu.open{display:block;}
+  .profile-menu .who{padding:9px 10px; font-size:12.5px; color:var(--text-2); border-bottom:1px solid var(--border); margin-bottom:6px;}
+  .profile-menu .who b{color:var(--text); display:block; font-weight:500; font-size:13.5px; margin-bottom:1px;}
+  .pm-item{padding:9px 10px; font-size:13.5px; color:var(--text-2); border-radius:5px; cursor:pointer; display:flex; align-items:center; gap:9px;}
+  .pm-item:hover{background:var(--surface-3); color:var(--text);}
+  .pm-item svg{width:15px;height:15px;flex-shrink:0;}
+
+  .main{flex:1; min-width:0;}
+  .view{display:none; padding:48px 56px; max-width:1180px;}
+  .view.active{display:block;}
+  .eyebrow{font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-3); margin-bottom:10px;}
+  h1{font-size:26px; font-weight:600; letter-spacing:-.01em;}
+  h2{font-size:15px; font-weight:600; margin-bottom:16px;}
+  .sub{color:var(--text-2); font-size:14px; margin-top:6px;}
+  .back-link{display:inline-flex; align-items:center; gap:6px; color:var(--text-3); font-size:13px; cursor:pointer; margin-bottom:18px;}
+  .back-link:hover{color:var(--text-2);}
+  .back-link svg{width:13px;height:13px;}
+
+  .btn{font-family:inherit; font-size:14px; font-weight:600; border-radius:var(--radius-pill); padding:11px 22px; cursor:pointer; border:1px solid transparent; display:inline-flex; align-items:center; gap:8px; transition:transform .12s, opacity .12s;}
+  .btn:hover{opacity:.88;}
+  .btn:active{transform:scale(.97);}
+  .btn-primary{background:var(--text); color:var(--bg);}
+  .btn-ghost{background:var(--surface); color:var(--text-2); border-color:var(--border-strong);}
+  .btn-ghost:hover{color:var(--text); border-color:var(--text-2); opacity:1;}
+  .btn-sm{padding:8px 16px; font-size:13px;}
+
+  .head-row{display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:24px;}
+  .filter-row{display:flex; gap:8px; margin-bottom:28px;}
+  .filter-chip{font-size:12.5px; padding:7px 15px; border-radius:var(--radius-pill); border:1px solid var(--border-strong); color:var(--text-2); cursor:pointer;}
+  .filter-chip.sel{background:var(--text); color:var(--bg); border-color:var(--text);}
+  .grid-cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:20px;}
+  .card{cursor:pointer;}
+  .frame{position:relative; border-radius:var(--radius-lg); background:var(--surface); border:1px solid var(--border); overflow:hidden; display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow-card); transition:transform .18s;}
+  .card:hover .frame{transform:translateY(-3px);}
+  .frame.v916{aspect-ratio:9/16;} .frame.v169{aspect-ratio:16/9;}
+  .frame svg{width:24px;height:24px;color:var(--text-3);}
+  .frame .tc{position:absolute; top:12px; left:12px; font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--text-2); background:rgba(0,0,0,.55); padding:4px 9px; border-radius:var(--radius-pill); backdrop-filter:blur(4px);}
+  .card-title{font-size:14px; font-weight:500; margin-top:12px; line-height:1.4;}
+  .status-row{display:flex; align-items:center; gap:7px; margin-top:5px;}
+  .tally{width:6px;height:6px;border-radius:50%; flex-shrink:0;}
+  .tally.live{background:var(--accent); box-shadow:0 0 6px var(--accent); animation:pulse 1.6s infinite;}
+  .tally.ok{background:var(--ok);}
+  .tally.idle{background:var(--text-3);}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+  .status-text{font-size:12.5px; color:var(--text-2);}
+
+  .demo-switch{display:flex; gap:4px; margin-bottom:34px; padding:5px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-pill); width:fit-content;}
+  .demo-switch button{font-family:'IBM Plex Mono',monospace; font-size:11.5px; padding:8px 14px; border-radius:var(--radius-pill); border:none; background:none; color:var(--text-3); cursor:pointer;}
+  .demo-switch button.active{background:var(--surface-3); color:var(--text);}
+
+  .proj-header{display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;}
+  .stage-mini{display:flex; align-items:center; gap:5px; margin-top:8px;}
+  .stage-mini .sp{width:5px;height:5px;border-radius:50%;background:var(--surface-3);border:1px solid var(--border-strong);}
+  .stage-mini .sp.done{background:var(--ok); border-color:var(--ok);}
+  .stage-mini .sp.now{background:var(--accent); border-color:var(--accent);}
+  .stage-mini .ln{width:16px;height:1px;background:var(--border);}
+  .stage-mini .stxt{font-size:11px; color:var(--text-3); margin-left:6px; font-family:'IBM Plex Mono',monospace;}
+
+  .proj-layout{display:grid; grid-template-columns:1fr 300px; gap:44px; margin-top:32px;}
+
+  .field{margin-bottom:20px;}
+  .field label{display:block; font-size:13px; color:var(--text-2); margin-bottom:8px;}
+  .field input, .field textarea{width:100%; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:11px 13px; color:var(--text); font-family:inherit; font-size:14px;}
+  .field input:focus, .field textarea:focus{outline:none; border-color:var(--text-2);}
+  .field textarea{resize:vertical; min-height:80px;}
+
+  .brief-summary{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:18px 20px; margin-bottom:24px; display:flex; justify-content:space-between; align-items:flex-start; gap:16px;}
+  .brief-summary .txt{font-size:13.5px; color:var(--text-2); line-height:1.75;}
+  .brief-summary .txt b{color:var(--text); font-weight:500;}
+  .brief-summary svg{width:14px;height:14px; color:var(--text-3); flex-shrink:0; margin-top:2px;}
+
+  .approve-bar{display:flex; align-items:center; justify-content:space-between; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px 20px; margin-bottom:26px; flex-wrap:wrap; gap:12px;}
+  .approve-bar .cost{font-family:'IBM Plex Mono',monospace; font-size:12.5px; color:var(--text-2);}
+  .approve-bar .cost b{color:var(--text); margin-left:4px;}
+  .approve-bar .actions{display:flex; gap:9px;}
+
+  .prog-line{display:flex; align-items:center; gap:14px; margin-bottom:26px;}
+  .prog-track{flex:1; height:2px; background:var(--border); position:relative;}
+  .prog-fill{position:absolute; left:0; top:0; height:100%; background:var(--accent); width:62%;}
+  .prog-text{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--text-2); white-space:nowrap;}
+
+  .scene-block{display:flex; justify-content:space-between; gap:16px; margin-bottom:22px; padding-bottom:22px; border-bottom:1px solid var(--border);}
+  .scene-block:last-child{border-bottom:none;}
+  .scene-tag{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--accent); letter-spacing:.08em; margin-bottom:8px;}
+  .scene-line{font-size:13.5px; color:var(--text-2); line-height:1.7;}
+  .scene-line b{color:var(--text); font-weight:500;}
+  .scene-qc{display:flex; align-items:center; gap:6px; margin-top:8px; font-size:12px; color:var(--text-2);}
+  .scene-thumb-mini{width:54px; aspect-ratio:9/16; background:var(--surface); border:1px solid var(--border); border-radius:10px; flex-shrink:0; display:flex; align-items:center; justify-content:center; position:relative;}
+  .scene-thumb-mini svg{width:14px;height:14px; color:var(--text-3);}
+  .scene-thumb-mini .tally{position:absolute; top:5px; left:5px;}
+
+  .asset-section{margin-bottom:26px;}
+  .asset-label{font-size:12.5px; color:var(--text-2); margin-bottom:10px; font-weight:500;}
+  .dropzone{border:1px dashed var(--border-strong); border-radius:var(--radius); padding:20px; display:flex; flex-direction:column; align-items:center; gap:7px; color:var(--text-3); font-size:12px; cursor:pointer; text-align:center;}
+  .dropzone svg{width:17px;height:17px;}
+  .dropzone:hover{border-color:var(--text-3); color:var(--text-2);}
+  .color-row{display:flex; gap:8px;}
+  .swatch{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);}
+  .thumb-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:8px;}
+  .thumb-grid .t{aspect-ratio:1; background:var(--surface); border:1px solid var(--border); border-radius:12px; display:flex; align-items:center; justify-content:center; color:var(--text-3);}
+  .thumb-grid .t.add{border-style:dashed; cursor:pointer;}
+  .thumb-grid .t svg{width:16px;height:16px;}
+
+  .output-hero{display:grid; grid-template-columns:300px 1fr; gap:40px; margin-bottom:8px;}
+  .player{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); aspect-ratio:9/16; display:flex; align-items:center; justify-content:center; position:relative; box-shadow:var(--shadow-card);}
+  .player svg{width:30px;height:30px; color:var(--text-3);}
+  .scrubber{margin-top:12px; height:3px; background:var(--surface-2); border-radius:2px; position:relative;}
+  .scrubber .fill{position:absolute; left:0; top:0; height:100%; width:100%; background:var(--text-2); border-radius:2px;}
+  .qc-item{display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--border); font-size:13px; color:var(--text-2);}
+  .qc-item svg{width:14px;height:14px; color:var(--ok); flex-shrink:0;}
+  .variant-row{display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border); font-size:13px;}
+  .variant-row .vname{font-weight:500;}
+  .variant-row .vmeta{color:var(--text-3); font-size:11.5px; font-family:'IBM Plex Mono',monospace;}
+
+  details.collapse{margin-top:32px; border-top:1px solid var(--border); padding-top:18px;}
+  details.collapse summary{cursor:pointer; font-size:13px; color:var(--text-3); list-style:none; display:flex; align-items:center; gap:6px;}
+  details.collapse summary::-webkit-details-marker{display:none;}
+  details.collapse summary svg{width:12px;height:12px; transition:transform .15s;}
+  details.collapse[open] summary svg{transform:rotate(90deg);}
+  details.collapse .inner{margin-top:20px; opacity:.75;}
+
+  .kpi-row{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:36px;}
+  .kpi{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:18px 20px;}
+  .kpi .k-label{font-size:11.5px; color:var(--text-3); margin-bottom:8px;}
+  .kpi .k-val{font-family:'IBM Plex Mono',monospace; font-size:20px; font-weight:500;}
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  th{text-align:left; font-weight:500; color:var(--text-3); font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; padding:0 0 10px; border-bottom:1px solid var(--border-strong);}
+  td{padding:11px 0; border-bottom:1px solid var(--border); color:var(--text-2);}
+  td.mono, th.mono{font-family:'IBM Plex Mono',monospace;}
+  td.main{color:var(--text); font-weight:500;}
+  .badge{font-size:11px; padding:3px 9px; border-radius:20px; font-family:'IBM Plex Mono',monospace;}
+  .badge.ok{background:var(--ok-dim); color:var(--ok);}
+  .badge.warn{background:var(--warn-dim); color:var(--warn);}
+</style>
+</head>
+<body>
+
+<div class="rail">
+  <div class="logo"><span class="dot"></span><span class="mark">TIDO</span></div>
+  <div class="nav">
+    <button class="navbtn active" data-view="collection" title="Bộ sưu tập">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    </button>
+  </div>
+  <div class="profile-wrap">
+    <div class="avatar" id="avatarBtn">MH</div>
+    <div class="profile-menu" id="profileMenu">
+      <div class="who"><b>Minh Hoàng</b>TIDO Studio</div>
+      <div class="pm-item" onclick="go('cost')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 19V9M11 19V5M18 19v-7"/></svg>Chi phí</div>
+      <div class="pm-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/></svg>Cài đặt</div>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+
+  <section class="view active" id="collection">
+    <div class="head-row">
+      <div><div class="eyebrow">Bộ sưu tập</div><h1>Toàn bộ dự án</h1></div>
+      <button class="btn btn-primary" onclick="go('project')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Tạo dự án mới</button>
+    </div>
+    <div class="filter-row">
+      <div class="filter-chip sel">Tất cả</div><div class="filter-chip">Đang sản xuất</div><div class="filter-chip">Hoàn thành</div><div class="filter-chip">Nháp</div>
+    </div>
+    <div class="grid-cards">
+      <div class="card" onclick="go('project')">
+        <div class="frame v916"><span class="tc">00:00:15</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></div>
+        <div class="card-title">Summer Sale — Cà phê Trung Nguyên</div>
+        <div class="status-row"><span class="tally ok"></span><span class="status-text">Hoàn thành · TikTok</span></div>
+      </div>
+      <div class="card" onclick="go('project')">
+        <div class="frame v916"><span class="tc">00:00:30</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></div>
+        <div class="card-title">Ra mắt bộ sưu tập mới</div>
+        <div class="status-row"><span class="tally live"></span><span class="status-text">Đang sản xuất · Reels</span></div>
+      </div>
+      <div class="card" onclick="go('project')">
+        <div class="frame v169"><span class="tc">00:00:30</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></div>
+        <div class="card-title">TVC thương hiệu quý 3</div>
+        <div class="status-row"><span class="tally idle"></span><span class="status-text">Chờ duyệt kịch bản</span></div>
+      </div>
+      <div class="card" onclick="go('project')">
+        <div class="frame v916"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></div>
+        <div class="card-title">Combo khai trương chi nhánh</div>
+        <div class="status-row"><span class="tally idle"></span><span class="status-text">Nháp · Shorts</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="project">
+    <div class="back-link" onclick="go('collection')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>Bộ sưu tập</div>
+    <div class="proj-header"><div><h1>Ra mắt bộ sưu tập mới</h1><div class="sub">Instagram Reels · 30s</div></div></div>
+    <div class="stage-mini">
+      <span class="sp done"></span><span class="ln"></span><span class="sp done"></span><span class="ln"></span>
+      <span class="sp now"></span><span class="ln"></span><span class="sp"></span><span class="ln"></span><span class="sp"></span>
+      <span class="stxt" id="stageLabel">Đang sản xuất</span>
+    </div>
+
+    <div class="demo-switch">
+      <button data-s="draft" onclick="setState('draft')">Nháp</button>
+      <button data-s="review" onclick="setState('review')">Chờ duyệt</button>
+      <button data-s="producing" class="active" onclick="setState('producing')">Đang sản xuất</button>
+      <button data-s="done" onclick="setState('done')">Hoàn thành</button>
+    </div>
+
+    <div class="proj-layout">
+      <div>
+        <div class="state-block" id="st-draft" style="display:none;">
+          <h2>Thông tin dự án</h2>
+          <div class="field"><label>Tên sản phẩm</label><input type="text" placeholder="Cà phê sữa đá hộp 330ml"></div>
+          <div class="field"><label>Mô tả ngắn</label><textarea placeholder="Đặc điểm, lợi ích nổi bật của sản phẩm..."></textarea></div>
+          <div class="field"><label>Ưu đãi / CTA</label><input type="text" placeholder="Giảm 20% — mua ngay hôm nay"></div>
+          <div class="field"><label>Brief chi tiết</label><textarea placeholder="Mô tả chi tiết mong muốn cho video..."></textarea></div>
+          <button class="btn btn-primary">Khoá brief &amp; tạo kịch bản</button>
+        </div>
+
+        <div class="state-block" id="st-review" style="display:none;">
+          <div class="brief-summary">
+            <div class="txt"><b>Cà phê sữa đá hộp 330ml</b> · Giảm 20% mua ngay · Budget $15.00</div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 118 0v4"/></svg>
+          </div>
+          <div class="approve-bar">
+            <span class="cost">Ước tính sản xuất<b>$12.64</b></span>
+            <div class="actions"><button class="btn btn-ghost btn-sm">Yêu cầu viết lại</button><button class="btn btn-primary btn-sm" onclick="setState('producing')">Duyệt kịch bản</button></div>
+          </div>
+          <h2>Kịch bản</h2>
+          <div class="scene-block"><div><div class="scene-tag">CẢNH 01 — HOOK</div><div class="scene-line"><b>[HÌNH ẢNH]</b> Cận cảnh sản phẩm xoay chậm dưới ánh sáng studio.</div></div></div>
+          <div class="scene-block"><div><div class="scene-tag">CẢNH 02 — RETENTION</div><div class="scene-line"><b>[HÌNH ẢNH]</b> Người mẫu tương tác tự nhiên với sản phẩm.</div></div></div>
+          <div class="scene-block"><div><div class="scene-tag">CẢNH 03 — CTA</div><div class="scene-line"><b>[HÌNH ẢNH]</b> Logo và mã giảm giá xuất hiện rõ ràng.</div></div></div>
+        </div>
+
+        <div class="state-block" id="st-producing">
+          <div class="brief-summary">
+            <div class="txt"><b>Cà phê sữa đá hộp 330ml</b> · Giảm 20% mua ngay · Kịch bản v2 đã duyệt</div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 118 0v4"/></svg>
+          </div>
+          <div class="prog-line"><span class="prog-text">3/5 scenes</span><div class="prog-track"><div class="prog-fill"></div></div><span class="prog-text">$7.80 / $15.00</span></div>
+          <h2>Kịch bản &amp; tiến độ</h2>
+          <div class="scene-block">
+            <div><div class="scene-tag">CẢNH 01 — HOOK</div><div class="scene-line"><b>[HÌNH ẢNH]</b> Cận cảnh sản phẩm xoay chậm.</div><div class="scene-qc"><span class="tally ok"></span>QC 94</div></div>
+            <div class="scene-thumb-mini"><span class="tally ok"></span></div>
+          </div>
+          <div class="scene-block">
+            <div><div class="scene-tag">CẢNH 02 — RETENTION</div><div class="scene-line"><b>[HÌNH ẢNH]</b> Tương tác sản phẩm tự nhiên.</div><div class="scene-qc"><span class="tally ok"></span>QC 88</div></div>
+            <div class="scene-thumb-mini"><span class="tally ok"></span></div>
+          </div>
+          <div class="scene-block">
+            <div><div class="scene-tag">CẢNH 03 — CHI TIẾT</div><div class="scene-line"><b>[HÌNH ẢNH]</b> Chất liệu, cận cảnh bề mặt sản phẩm.</div><div class="scene-qc mono">00:00:12 — đang render</div></div>
+            <div class="scene-thumb-mini"><span class="tally live"></span></div>
+          </div>
+          <div class="scene-block">
+            <div><div class="scene-tag">CẢNH 04 — GÓC RỘNG</div><div class="scene-line"><b>[HÌNH ẢNH]</b> Toàn cảnh bộ sưu tập.</div><div class="scene-qc"><span class="tally idle"></span>Đang chờ</div></div>
+            <div class="scene-thumb-mini"></div>
+          </div>
+          <div class="scene-block">
+            <div><div class="scene-tag">CẢNH 05 — CTA</div><div class="scene-line"><b>[HÌNH ẢNH]</b> Logo và mã giảm giá.</div><div class="scene-qc"><span class="tally idle"></span>Đang chờ</div></div>
+            <div class="scene-thumb-mini"></div>
+          </div>
+        </div>
+
+        <div class="state-block" id="st-done" style="display:none;">
+          <div class="output-hero">
+            <div>
+              <div class="player"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="12" cy="12" r="9"/><path d="M10 8l6 4-6 4z" fill="currentColor" stroke="none"/></svg></div>
+              <div class="scrubber"><div class="fill"></div></div>
+            </div>
+            <div>
+              <h2>Kết quả</h2>
+              <div class="qc-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg>Hook rõ ràng trong 3 giây đầu</div>
+              <div class="qc-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg>Chữ đọc được trên di động</div>
+              <div class="qc-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg>Âm thanh đạt chuẩn -14 LUFS</div>
+              <div style="margin-top:16px;">
+                <div class="variant-row"><span class="vname">Vertical Master</span><span class="vmeta">1080×1920</span></div>
+                <div class="variant-row"><span class="vname">Reels variant</span><span class="vmeta">Safe zone</span></div>
+                <div class="variant-row" style="border-bottom:none;"><span class="vname">Clean version</span><span class="vmeta">Không logo</span></div>
+              </div>
+              <div style="margin-top:20px; display:flex; gap:10px;">
+                <button class="btn btn-primary btn-sm">Duyệt &amp; hoàn thành</button>
+                <button class="btn btn-ghost btn-sm">Tải tất cả (ZIP)</button>
+              </div>
+            </div>
+          </div>
+          <details class="collapse">
+            <summary><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>Xem lại brief &amp; kịch bản</summary>
+            <div class="inner">
+              <div class="scene-block"><div><div class="scene-tag">CẢNH 01 — HOOK</div><div class="scene-line">Cận cảnh sản phẩm xoay chậm dưới ánh sáng studio.</div></div></div>
+              <div class="scene-block"><div><div class="scene-tag">CẢNH 02 — RETENTION</div><div class="scene-line">Tương tác sản phẩm tự nhiên.</div></div></div>
+            </div>
+          </details>
+        </div>
+      </div>
+
+      <div>
+        <div class="asset-section"><div class="asset-label">Logo</div><div class="dropzone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 4v11"/><path d="M7 11l5 5 5-5"/><path d="M5 19h14"/></svg>Tải logo lên (PNG/SVG)</div></div>
+        <div class="asset-section"><div class="asset-label">Màu thương hiệu</div><div class="color-row"><div class="swatch" style="background:#E6402F;"></div><div class="swatch" style="background:#F2F1ED;"></div><div class="swatch" style="background:#151517;"></div></div></div>
+        <div class="asset-section">
+          <div class="asset-label">Hình ảnh sản phẩm</div>
+          <div class="thumb-grid">
+            <div class="t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></div>
+            <div class="t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></div>
+            <div class="t add"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 5v14M5 12h14"/></svg></div>
+          </div>
+        </div>
+        <div class="asset-section"><div class="asset-label">Video tham khảo</div><div class="field" style="margin-bottom:0;"><input type="text" placeholder="Dán link TikTok / YouTube..."></div></div>
+        <div class="asset-section"><div class="asset-label">Ghi chú phong cách</div><div class="field" style="margin-bottom:0;"><textarea placeholder="Mood, tone mong muốn..." style="min-height:60px;"></textarea></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="cost">
+    <div class="back-link" onclick="go('collection')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>Bộ sưu tập</div>
+    <div class="eyebrow">Profile</div>
+    <h1 style="margin-bottom:30px;">Chi phí</h1>
+    <div class="kpi-row">
+      <div class="kpi"><div class="k-label">Hôm nay</div><div class="k-val">$46.20</div></div>
+      <div class="kpi"><div class="k-label">Tuần này</div><div class="k-val">$318.90</div></div>
+      <div class="kpi"><div class="k-label">Cost / giây dùng được</div><div class="k-val">$0.41</div></div>
+      <div class="kpi"><div class="k-label">Chênh lệch ước tính</div><div class="k-val">+6.2%</div></div>
+    </div>
+    <table>
+      <thead><tr><th>Job</th><th>Dự án</th><th>Provider</th><th class="mono">Ước tính</th><th class="mono">Thực tế</th><th>Trạng thái</th></tr></thead>
+      <tbody>
+        <tr><td class="main mono">JB-0231</td><td>Ra mắt bộ sưu tập</td><td>Seedance 2.0</td><td class="mono">$2.10</td><td class="mono">$2.34</td><td><span class="badge ok">Thành công</span></td></tr>
+        <tr><td class="main mono">JB-0230</td><td>Ra mắt bộ sưu tập</td><td>Veo3 Flow</td><td class="mono">$1.80</td><td class="mono">$1.80</td><td><span class="badge ok">Thành công</span></td></tr>
+        <tr><td class="main mono">JB-0229</td><td>Summer Sale</td><td>ElevenLabs</td><td class="mono">$0.90</td><td class="mono">$1.05</td><td><span class="badge warn">Retry 1×</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+</div>
+
+<script>
+  document.querySelectorAll('.navbtn').forEach(b=> b.addEventListener('click', ()=> go(b.dataset.view)));
+  function go(id){
+    document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active', b.dataset.view===id));
+    document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active', v.id===id));
+    document.getElementById('profileMenu').classList.remove('open');
+    window.scrollTo(0,0);
+  }
+  document.getElementById('avatarBtn').addEventListener('click', (e)=>{
+    e.stopPropagation();
+    document.getElementById('profileMenu').classList.toggle('open');
+  });
+  document.addEventListener('click', ()=> document.getElementById('profileMenu').classList.remove('open'));
+
+  const stageLabels = {draft:'Nháp', review:'Chờ duyệt kịch bản', producing:'Đang sản xuất', done:'Hoàn thành'};
+  function setState(s){
+    document.querySelectorAll('.state-block').forEach(el=> el.style.display='none');
+    document.getElementById('st-'+s).style.display='block';
+    document.querySelectorAll('.demo-switch button').forEach(b=> b.classList.toggle('active', b.dataset.s===s));
+    document.getElementById('stageLabel').textContent = stageLabels[s];
+  }
+</script>
+
+</body>
+</html>

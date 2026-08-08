@@ -1,0 +1,245 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SceneSpecification",
+  "type": "object",
+  "required": [
+    "sceneId",
+    "version",
+    "profileId",
+    "order",
+    "durationSeconds",
+    "narrativePurpose",
+    "creativeIntent",
+    "subject",
+    "environment",
+    "camera",
+    "lighting",
+    "action",
+    "audio",
+    "editing",
+    "generationStrategy",
+    "negativeConstraints",
+    "qcCriteria"
+  ],
+  "properties": {
+    "sceneId": {
+      "type": "string"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "profileId": {
+      "type": "string"
+    },
+    "order": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "durationSeconds": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "importance": {
+      "enum": [
+        "standard",
+        "important",
+        "hero",
+        "hook"
+      ]
+    },
+    "narrativePurpose": {
+      "type": "string"
+    },
+    "creativeIntent": {
+      "type": "object",
+      "required": [
+        "message",
+        "emotion",
+        "viewerResponse",
+        "productRole"
+      ],
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "emotion": {
+          "type": "string"
+        },
+        "viewerResponse": {
+          "type": "string"
+        },
+        "productRole": {
+          "type": "string"
+        },
+        "storyBeat": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "techniqueCardRefs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "subject": {
+      "type": "object"
+    },
+    "environment": {
+      "type": "object"
+    },
+    "camera": {
+      "type": "object",
+      "required": [
+        "shotSize",
+        "angle",
+        "movement",
+        "composition"
+      ],
+      "properties": {
+        "shotSize": {
+          "type": "string"
+        },
+        "angle": {
+          "type": "string"
+        },
+        "height": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "distance": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "lensEquivalentMm": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "depthOfField": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "focusTarget": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "movement": {
+          "type": "object"
+        },
+        "composition": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": true
+    },
+    "lighting": {
+      "type": "object"
+    },
+    "action": {
+      "type": "object"
+    },
+    "colorTexture": {
+      "type": "object"
+    },
+    "audio": {
+      "type": "object"
+    },
+    "editing": {
+      "type": "object"
+    },
+    "profileExtension": {
+      "type": "object"
+    },
+    "generationStrategy": {
+      "type": "object",
+      "required": [
+        "method",
+        "candidateCount",
+        "retryCap",
+        "costCap"
+      ],
+      "properties": {
+        "method": {
+          "enum": [
+            "customer_asset",
+            "stock",
+            "nano_banana_image",
+            "text_to_video",
+            "image_to_video",
+            "static_animation",
+            "product_compositing",
+            "motion_graphic",
+            "template"
+          ]
+        },
+        "requiresNanoBanana2": {
+          "type": "boolean"
+        },
+        "referenceAssetIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "primaryVideoModelRequirement": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "fallbackVideoModelRequirement": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "candidateCount": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        },
+        "retryCap": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        },
+        "costCap": {
+          "type": "number",
+          "minimum": 0
+        },
+        "fallbackMethod": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "negativeConstraints": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "qcCriteria": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MusicTrack",
+  "type": "object",
+  "required": [
+    "trackId",
+    "title",
+    "source",
+    "genres",
+    "moods",
+    "durationSeconds",
+    "licenseStatus"
+  ],
+  "properties": {
+    "trackId": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "source": {
+      "type": "string"
+    },
+    "genres": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "moods": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "bpm": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "key": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "durationSeconds": {
+      "type": "number"
+    },
+    "energy": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 1
+    },
+    "instrumentation": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "hasVocals": {
+      "type": "boolean"
+    },
+    "introStrength": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 1
+    },
+    "dropTimes": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "loopPoints": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "industryTags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "profileTags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "licenseStatus": {
+      "enum": [
+        "approved",
+        "restricted",
+        "expired",
+        "unknown"
+      ]
+    },
+    "licenseExpiresAt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "restrictions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}

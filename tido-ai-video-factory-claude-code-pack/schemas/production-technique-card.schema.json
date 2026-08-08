@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ProductionTechniqueCard",
+  "type": "object",
+  "required": [
+    "techniqueId",
+    "version",
+    "name",
+    "category",
+    "purpose",
+    "profileTags",
+    "setup",
+    "expectedResult",
+    "commonFailures",
+    "qcRequirements",
+    "status"
+  ],
+  "properties": {
+    "techniqueId": {
+      "type": "string"
+    },
+    "version": {
+      "type": "integer"
+    },
+    "name": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string"
+    },
+    "purpose": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "suitableFor": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "notSuitableFor": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "profileTags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "setup": {
+      "type": "object"
+    },
+    "expectedResult": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "commonFailures": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "qcRequirements": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "providerHints": {
+      "type": "object"
+    },
+    "fallback": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "status": {
+      "enum": [
+        "draft",
+        "approved",
+        "archived"
+      ]
+    },
+    "owner": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "additionalProperties": false
+}

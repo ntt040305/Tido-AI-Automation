@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "VoiceProfile",
+  "type": "object",
+  "required": [
+    "voiceId",
+    "displayName",
+    "provider",
+    "language",
+    "styleTags",
+    "industryTags",
+    "licenseStatus",
+    "qualityScore"
+  ],
+  "properties": {
+    "voiceId": {
+      "type": "string"
+    },
+    "displayName": {
+      "type": "string"
+    },
+    "provider": {
+      "type": "string"
+    },
+    "providerVoiceId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "language": {
+      "type": "string"
+    },
+    "accent": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "perceivedGender": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "perceivedAge": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "styleTags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "industryTags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "profileTags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "energy": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "warmth": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "authority": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "emotionalRange": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "paceWpm": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "licenseStatus": {
+      "enum": [
+        "approved",
+        "restricted",
+        "expired",
+        "unknown"
+      ]
+    },
+    "licenseExpiresAt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "qualityScore": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    }
+  },
+  "additionalProperties": false
+}

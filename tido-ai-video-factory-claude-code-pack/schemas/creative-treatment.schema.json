@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CreativeTreatment",
+  "type": "object",
+  "required": [
+    "briefVersion",
+    "profileId",
+    "consumerInsight",
+    "bigIdea",
+    "openingStrategy",
+    "emotionalJourney",
+    "visualDirection",
+    "productRole",
+    "editingDirection",
+    "voiceRequirements",
+    "musicBrief"
+  ],
+  "properties": {
+    "briefVersion": {
+      "type": "integer"
+    },
+    "profileId": {
+      "type": "string"
+    },
+    "consumerInsight": {
+      "type": "string"
+    },
+    "bigIdea": {
+      "type": "string"
+    },
+    "openingStrategy": {
+      "type": "object"
+    },
+    "retentionFlow": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "object"
+      }
+    },
+    "emotionalJourney": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "visualDirection": {
+      "type": "object"
+    },
+    "productRole": {
+      "type": "string"
+    },
+    "editingDirection": {
+      "type": "object"
+    },
+    "voiceRequirements": {
+      "type": "object"
+    },
+    "musicBrief": {
+      "type": "object"
+    },
+    "riskNotes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}

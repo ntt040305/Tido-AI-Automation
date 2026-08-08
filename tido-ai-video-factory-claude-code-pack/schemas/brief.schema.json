@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BriefVersion",
+  "type": "object",
+  "required": [
+    "projectId",
+    "version",
+    "profileId",
+    "objective",
+    "product",
+    "audience",
+    "message",
+    "cta",
+    "durationSeconds",
+    "assets",
+    "confirmedBy"
+  ],
+  "properties": {
+    "projectId": {
+      "type": "string"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "profileId": {
+      "type": "string"
+    },
+    "objective": {
+      "type": "string"
+    },
+    "contentType": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "distributionChannels": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "product": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "brandId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "productId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "price": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "offer": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "claims": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "audience": {
+      "type": "object"
+    },
+    "message": {
+      "type": "string"
+    },
+    "benefit": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "cta": {
+      "type": "string"
+    },
+    "visualDirection": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "hookRequirement": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "subtitleRequired": {
+      "type": "boolean"
+    },
+    "voiceRequired": {
+      "type": "boolean"
+    },
+    "durationSeconds": {
+      "enum": [
+        15,
+        30
+      ]
+    },
+    "assets": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "confirmedBy": {
+      "type": "string"
+    },
+    "confirmedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}

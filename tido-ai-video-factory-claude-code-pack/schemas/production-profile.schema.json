@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ProductionProfile",
+  "type": "object",
+  "required": [
+    "profileId",
+    "aspectRatio",
+    "resolution",
+    "durations",
+    "creativeProfile",
+    "qcProfile"
+  ],
+  "properties": {
+    "profileId": {
+      "enum": [
+        "SHORT_VERTICAL_9_16_V1",
+        "TVC_HORIZONTAL_16_9_V1"
+      ]
+    },
+    "aspectRatio": {
+      "enum": [
+        "9:16",
+        "16:9"
+      ]
+    },
+    "resolution": {
+      "type": "object",
+      "required": [
+        "width",
+        "height"
+      ],
+      "properties": {
+        "width": {
+          "type": "integer"
+        },
+        "height": {
+          "type": "integer"
+        }
+      },
+      "additionalProperties": false
+    },
+    "durations": {
+      "type": "array",
+      "items": {
+        "enum": [
+          15,
+          30
+        ]
+      }
+    },
+    "platforms": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "creativeProfile": {
+      "type": "string"
+    },
+    "sceneExtension": {
+      "type": "string"
+    },
+    "qcProfile": {
+      "type": "string"
+    },
+    "safeZoneProfile": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "outputVariants": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}
