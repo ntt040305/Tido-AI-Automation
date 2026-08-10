@@ -1,144 +1,28 @@
 {
   "voices": [
     {
-      "id": "haianh",
-      "name": "Hải Anh",
-      "gender": "female",
-      "audio_file": "d:/Tido/Assets/Voices/HaiAnh.mp3",
-      "ref_text": "Chào mừng ba đến với buổi trải nghiệm lớp học online vui học!",
-      "duration_s": 3.63,
-      "trim_to_s": null,
-      "profile": {
-        "style": [
-          "trẻ trung",
-          "tươi vui",
-          "năng động",
-          "khuyến khích"
-        ],
-        "tone": "bright",
-        "best_for": [
-          "giáo dục",
-          "trẻ em",
-          "lifestyle",
-          "quảng cáo nhẹ nhàng",
-          "hướng dẫn"
-        ],
-        "speed_default": 1.0,
-        "cfg_strength_default": 2.0
-      }
-    },
-    {
-      "id": "phuctido",
-      "name": "Phúc TIDO",
+      "id": "vo_motaro_kb19",
+      "name": "VO Motaro (Nam MC - Khuyến mãi / TVC / Sôi nổi)",
       "gender": "male",
-      "audio_file": "d:/Tido/Assets/Voices/Phuctido1.mp3",
-      "ref_text": "Không chỉ là thiết bị vệ sinh, đây là trải nghiệm nâng tầm cuộc sống mỗi ngày cho tổ ấm của bạn. Chào đón một biểu tượng tiện nghi mới chính thức ra mắt tại quận Long Biên, Hà Nội.",
-      "references": {
-        "intro": {
-          "audio_file": "d:/Tido/Assets/Voices/Phuctido1.mp3",
-          "ref_text": "Không chỉ là thiết bị vệ sinh, đây là trải nghiệm nâng tầm cuộc sống mỗi ngày cho tổ ấm của bạn. Chào đón một biểu tượng tiện nghi mới chính thức ra mắt tại quận Long Biên, Hà Nội."
-        },
-        "body": {
-          "audio_file": "d:/Tido/Assets/Voices/Phuctido1.mp3",
-          "ref_text": "Không chỉ là thiết bị vệ sinh, đây là trải nghiệm nâng tầm cuộc sống mỗi ngày cho tổ ấm của bạn. Chào đón một biểu tượng tiện nghi mới chính thức ra mắt tại quận Long Biên, Hà Nội."
-        },
-        "outro": {
-          "audio_file": "d:/Tido/Assets/Voices/Phuctido1.mp3",
-          "ref_text": "Không chỉ là thiết bị vệ sinh, đây là trải nghiệm nâng tầm cuộc sống mỗi ngày cho tổ ấm của bạn. Chào đón một biểu tượng tiện nghi mới chính thức ra mắt tại quận Long Biên, Hà Nội."
-        }
-      },
-      "duration_s": 10.03,
+      "audio_file": "d:/Tido/Assets/Voices/VO_Motaro_kb19_8s.wav",
+      "ref_text": "Dừng lại ngay, nóng nhất tháng bảy không phải thời tiết, mà là bão sale Royal Short. Duy nhất ba ngày từ ngày mồng năm đến ngày mồng bảy tháng bảy.",
+      "duration_s": 8.0,
       "trim_to_s": null,
       "profile": {
         "style": [
-          "chuyên nghiệp",
-          "thuyết phục",
-          "uy tín",
-          "tự tin"
+          "cấp bách",
+          "khuyến mãi",
+          "gây chú ý",
+          "sôi nổi",
+          "dứt khoát"
         ],
-        "tone": "deep_authoritative",
+        "tone": "urgent",
         "best_for": [
-          "sản phẩm cao cấp",
-          "bất động sản",
-          "công nghệ",
-          "tài chính",
-          "thương hiệu"
-        ],
-        "speed_default": 1.0,
-        "cfg_strength_default": 2.0
-      }
-    },
-    {
-      "id": "vuhuyen",
-      "name": "Vũ Huyền",
-      "gender": "female",
-      "audio_file": "d:/Tido/Assets/Voices/VuHuyen.mp3",
-      "ref_text": "Với NBO, lựa chọn thực phẩm sạch, an toàn và minh bạch không chỉ là nhu cầu mà là quyền lợi chính đáng của mỗi gia đình trên hành trình chăm sóc sức khỏe. Từ niềm tin đó, NBO chọn con đường chủ động xây dựng vùng nguyên liệu hữu cơ ngay tại Việt Nam.",
-      "duration_s": 14.0,
-      "trim_to_s": null,
-      "profile": {
-        "style": [
-          "ấm áp",
-          "chân thành",
-          "tin tưởng",
-          "gần gũi",
-          "truyền cảm"
-        ],
-        "tone": "warm_sincere",
-        "best_for": [
-          "thực phẩm",
-          "sức khỏe",
-          "gia đình",
-          "làm đẹp",
-          "câu chuyện cảm xúc"
-        ],
-        "speed_default": 0.9,
-        "cfg_strength_default": 2.0
-      }
-    },
-    {
-      "id": "vo_1_lp_bank",
-      "name": "VO 1 LP Bank",
-      "gender": "male",
-      "audio_file": "d:/Tido/Assets/Voices/VO_1_LP_Bank_12s.wav",
-      "ref_text": "Phí quản lý tài khoản, phí duy trì dịch vụ, phí chuyển tiền, phí tin nhắn... Ôi đau đầu quá! Sao phải đóng nhiều loại phí thế nhỉ? Có cách nào miễn phí tất cả không?",
-      "duration_s": 12.0,
-      "trim_to_s": null,
-      "profile": {
-        "style": [
-          "hoạt náo",
-          "đời thường",
-          "tự nhiên"
-        ],
-        "tone": "energetic",
-        "best_for": [
-          "ngân hàng",
-          "tài chính cá nhân",
-          "quảng cáo hài hước"
-        ],
-        "speed_default": 1.0,
-        "cfg_strength_default": 2.0
-      }
-    },
-    {
-      "id": "vo_lion_fitness",
-      "name": "VO Lion Fitness",
-      "gender": "male",
-      "audio_file": "d:/Tido/Assets/Voices/VO_Lion_Fitness_12s.wav",
-      "ref_text": "Mùa hè là lúc khoe thân hình bốc lửa. Không chỉ giúp bạn có thân hình chuẩn, Lion Fitness còn mang đến môi trường tập luyện chuyên nghiệp, hiện đại hàng đầu.",
-      "duration_s": 12.0,
-      "trim_to_s": null,
-      "profile": {
-        "style": [
-          "mạnh mẽ",
-          "động lực",
-          "thể thao"
-        ],
-        "tone": "strong",
-        "best_for": [
-          "phòng gym",
-          "thể thao",
-          "năng lượng cao"
+          "sale",
+          "flash sale",
+          "sự kiện",
+          "livestream",
+          "tvc game"
         ],
         "speed_default": 1.0,
         "cfg_strength_default": 2.0
@@ -146,50 +30,28 @@
     },
     {
       "id": "vo_mizaki_3",
-      "name": "VO Mizaki 3",
+      "name": "VO Mizaki 3 (Nữ MC - Thanh lịch / Sang trọng / Bất động sản)",
       "gender": "female",
       "audio_file": "d:/Tido/Assets/Voices/VO_Mizaki_3_12s.wav",
-      "ref_text": "Nghi khi bước vào căn hộ, cảm nhận rõ nít nhất là công gian mở, hoán đảnh với bốt cụp liền mặt và lối huyết kế phóng khoái. Với diễn tích khoảng 65 m, căn hộ 2 phòng ngũ được thiết kế tối.",
+      "ref_text": "Ngay khi bước vào căn hộ, cảm nhận rõ nét nhất là không gian mở, khoáng đạt với bố cục liền mạch và lối thiết kế phóng khoáng. Với diện tích khoảng 65 mét vuông, căn hộ hai phòng ngủ được thiết kế tối.",
       "duration_s": 12.0,
       "trim_to_s": null,
       "profile": {
         "style": [
           "thanh lịch",
           "cao cấp",
-          "bất động sản"
+          "bất động sản",
+          "truyền cảm"
         ],
         "tone": "elegant",
         "best_for": [
           "bất động sản",
           "nội thất",
-          "phong cách sống"
+          "phong cách sống",
+          "spa",
+          "mỹ phẩm"
         ],
         "speed_default": 0.95,
-        "cfg_strength_default": 2.0
-      }
-    },
-    {
-      "id": "vo_motaro_kb19",
-      "name": "VO Motaro kb19",
-      "gender": "male",
-      "audio_file": "d:/Tido/Assets/Voices/VO_Motaro_kb19_12s.wav",
-      "ref_text": "Dừng lại ngay, nóng nhất tháng 7 không phải thời tiết mà là bão seo royal shot. Duy nhất 3 ngày từ ngày mùm năm từ ngày mùm 7 tháng 7 lai xuyên suốt 7 giờ sáng tới 20h.",
-      "duration_s": 12.0,
-      "trim_to_s": null,
-      "profile": {
-        "style": [
-          "cấp bách",
-          "khuyến mãi",
-          "gây chú ý"
-        ],
-        "tone": "urgent",
-        "best_for": [
-          "sale",
-          "flash sale",
-          "sự kiện",
-          "livestream"
-        ],
-        "speed_default": 1.1,
         "cfg_strength_default": 2.0
       }
     }
