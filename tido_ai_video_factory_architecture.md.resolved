@@ -1,0 +1,106 @@
+# 🎬 TIDO AI VIDEO FACTORY - COMPLETE API ORCHESTRATION PIPELINE
+
+Bản quy trình tổng thể miêu tả chi tiết từng bước hoạt động của hệ thống khi **kéo và điều phối các API** (Claude, ElevenLabs, Nano Banana 2, Veo3/Grok) kết hợp với **Engine Dựng Phim Tự Động FFmpeg**.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as Client Website (UI)
+    participant Server as Next.js API Gateway
+    participant Claude as Claude Sonnet API
+    participant Eleven as ElevenLabs API
+    participant Banana as Nano Banana 2 API
+    participant Veo as Veo3 / Grok Video API
+    participant Core as FFmpeg Pro-Editor Engine
+
+    User->>Server: 1. Gửi Yêu Cầu (Chủ đề, Vibe, Voice Sample)
+    Server->>Claude: 2. Gọi API Claude (Master Hollywood Prompt)
+    Claude-->>Server: 3. Trả về JSON 23 Thông Số Điện Ảnh (Kịch bản, Prompts, Prosody)
+    
+    par Async Step 2 & 3
+        Server->>Eleven: 4. Gọi API Voice TTS (+Timestamps)
+        Eleven-->>Server: 5. Trả về Audio .WAV + Timestamps từng từ
+    and
+        Server->>Banana: 6. Gọi API Image Keyframe (+Character Seed)
+        Banana-->>Server: 7. Trả về URL Ảnh Keyframe 8K
+    end
+
+    Server->>Veo: 8. Gọi API Video B-Roll (Ảnh Keyframe + Motion Prompt)
+    Veo-->>Server: 9. Trả về Clip Video AI 10 giây (Task Webhook)
+
+    Server->>Core: 10. Truyền Video Clips + Audio + Timestamps
+    Note over Core: 11. Dựng phim tự động (Subdivision, Speed Ramp, LUT Color, SFX, Subtitle)
+    Core-->>Server: 12. Trả về File Master Video MP4 4K
+
+    Server-->>User: 13. Hiển thị Video trên Studio Preview Console
+```
+
+---
+
+## 🌐 CHI TIẾT 6 GIAI ĐOẠN ĐIỀU PHỐI API (API WORKFLOW STEPS)
+
+### 📍 GIAI ĐOẠN 1: GỌI API CLAUDE SONNET 3.5/3.7 (KỊCH BẢN & STORYBOARD)
+* **API Endpoint:** `POST https://api.anthropic.com/v1/messages`
+* **Nhiệm vụ:** Tạo kịch bản phân cảnh chi tiết theo **Cấu trúc 23 Thông số Điện ảnh (Master Director Schema)**.
+* **Dữ liệu gửi đi (Request Payload):**
+  - Prompt chủ đề người dùng nhập.
+  - System Prompt ép chuẩn output 100% dạng JSON (định dạng sẵn camera, lighting, prosody, prompt tiếng Anh).
+* **Dữ liệu nhận về (Response Data):**
+  - Mảng `scenes[]` chứa lời thoại tiếng Việt + Prompts tiếng Anh cho Nano Banana 2 & Veo3.
+
+---
+
+### 📍 GIAI ĐOẠN 2: GỌI API ELEVENLABS (VOICE CLONING & ALIGNMENT TIMESTAMPS)
+* **API Endpoint:** `POST https://api.elevenlabs.io/v1/text-to-speech/{voice_id}/with-timestamps`
+* **Nhiệm vụ:** Sinh âm thanh lồng tiếng chuẩn cảm xúc và lấy bảng mốc thời gian chính xác từng từ.
+* **Dữ liệu gửi đi (Request Payload):**
+  - `text`: Lời thoại phân cảnh.
+  - `voice_settings`: `stability`, `similarity_boost`, `style`, `speed`.
+* **Dữ liệu nhận về (Response Data):**
+  - File âm thanh `.wav` từng cảnh.
+  - Mảng Timestamp từng chữ (Word-level timestamps) để phục vụ làm phụ đề nảy chữ và cắt hình ảnh ở Bước 5.
+* **Xử lý nội bộ:** Đo thời lượng thực tế của file âm thanh (Ví dụ: Scene 1 = `3.42s`).
+
+---
+
+### 📍 GIAI ĐOẠN 3: GỌI API NANO BANANA 2 (SINH ẢNH KEYFRAME GỐC 8K)
+* **API Endpoint:** `POST https://api.nanobanana.com/v2/generate-image`
+* **Nhiệm vụ:** Sinh các bức ảnh minh họa Keyframe đầu tiên cho phân cảnh với nhân vật đồng bộ.
+* **Dữ liệu gửi đi (Request Payload):**
+  - `nano_banana_2_prompt` từ Claude.
+  - `character_seed`: Mã giữ nguyên gương mặt nhân vật qua các cảnh.
+  - `--ar 9:16` (cho TikTok/Reels) hoặc `--ar 16:9` (cho TVC).
+* **Dữ liệu nhận về (Response Data):**
+  - URL ảnh Keyframe chất lượng cao 8K.
+
+---
+
+### 📍 GIAI ĐOẠN 4: GỌI API VEO 3.1 LITE / GROK VIDEO (SINH CLIP VIDEO AI 10 GIÂY)
+* **API Endpoint:** `POST https://api.veo.ai/v3.1/image-to-video` (hoặc Grok Video API)
+* **Nhiệm vụ:** Biến bức ảnh tĩnh từ Nano Banana 2 thành clip video chuyển động 10 giây.
+* **Dữ liệu gửi đi (Request Payload):**
+  - `image_url`: URL ảnh vừa tạo từ Nano Banana 2 làm Image Reference.
+  - `motion_prompt`: `veo3_grok_motion_prompt` từ Claude.
+  - `duration`: `10s`.
+* **Dữ liệu nhận về (Response Data):**
+  - Webhook Callback URL / Task ID ➔ Trả về file video `.mp4` 10 giây.
+
+---
+
+### 📍 GIAI ĐOẠN 5: ENGINE DỰNG PHIM TỰ ĐỘNG (FFMPEG & PRO-EDITOR CORE)
+* **Nhiệm vụ:** Nhận tất cả các tài nguyên thu thập từ API và thực hiện quy trình dựng phim chuyên nghiệp.
+* **Chuỗi thao tác tự động:**
+  1. **Cắt nhỏ clip 10s (Micro-Shot Subdivision):** Cắt clip 10s thành 2-3 cú shot nhỏ (Toàn cảnh ➔ Cận cảnh ➔ Biểu cảm) và khớp với thời lượng âm thanh từ ElevenLabs.
+  2. **Biến thiên tốc độ (Speed Ramping):** Áp dụng tốc độ nẩy `1.3x ➔ 0.75x`.
+  3. **Chuyển cảnh điện ảnh (Match Cut & Whip Pan):** Nối cảnh mượt mà tại các từ mang hành động mạnh.
+  4. **Đồng bộ màu sắc (3D LUT Lock):** Áp mã màu điện ảnh (Warm Gold / Teal & Amber) lên toàn bộ clip.
+  5. **Chèn hiệu ứng âm thanh (SFX Triggering):** Khớp tiếng Whoosh, Bass Drop và Foley vào đúng vị trí.
+  6. **Tự động né giọng (BGM Ducking):** Giảm volume nhạc nền khi lời thoại vang lên.
+  7. **Render phụ đề nảy chữ (Kinetic Captions):** Dựa vào dữ liệu Timestamp của ElevenLabs để nảy chữ từng từ.
+
+---
+
+### 📍 GIAI ĐOẠN 6: TRẢ KẾT QUẢ VỀ PREVIEW CONSOLE NGUYÊN BẢN (WEBSITE UI)
+* Trình duyệt Web của người dùng nhận tín hiệu thông qua WebSocket/Polling.
+* Hiển thị Video Master hoàn chỉnh 4K trên trình nghe nhìn của Website.
+* **Cơ chế Re-render Cục Bộ (Smart Delta Re-rendering):** Nếu người dùng chỉnh sửa lời thoại ở Cảnh 3, hệ thống **CHỈ gọi lại API ElevenLabs và Veo3 của Cảnh 3**, sau đó ghép lại vào Master Timeline mà **KHÔNG cần phải tốn tiền gọi API re-render lại Phân cảnh 1, 2, 4, 5!**

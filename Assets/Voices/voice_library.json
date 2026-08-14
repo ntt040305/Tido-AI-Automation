@@ -4,9 +4,9 @@
       "id": "vo_motaro_kb19",
       "name": "VO Motaro (Nam MC - Khuyến mãi / TVC / Sôi nổi)",
       "gender": "male",
-      "audio_file": "d:/Tido/Assets/Voices/VO_Motaro_kb19_8s.wav",
+      "audio_file": "d:/Tido/Assets/Voices/VO_Motaro_kb19_12s.wav",
       "ref_text": "Dừng lại ngay, nóng nhất tháng bảy không phải thời tiết, mà là bão sale Royal Short. Duy nhất ba ngày từ ngày mồng năm đến ngày mồng bảy tháng bảy.",
-      "duration_s": 8.0,
+      "duration_s": 12.0,
       "trim_to_s": null,
       "profile": {
         "style": [
@@ -25,7 +25,7 @@
           "tvc game"
         ],
         "speed_default": 1.0,
-        "cfg_strength_default": 2.0
+        "cfg_strength_default": 1.6
       }
     },
     {
@@ -51,8 +51,8 @@
           "spa",
           "mỹ phẩm"
         ],
-        "speed_default": 0.95,
-        "cfg_strength_default": 2.0
+        "speed_default": 1.0,
+        "cfg_strength_default": 1.5
       }
     }
   ]
