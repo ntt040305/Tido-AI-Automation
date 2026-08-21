@@ -35,7 +35,10 @@ Thumbs.db
 .env.test.local
 .env.production.local
 
-# Temp media & cache storage
+# Temp media, cache & generated storage
 .tempmediaStorage/
+temp/
 cache/
 logs/
+results/
+data/generated/
