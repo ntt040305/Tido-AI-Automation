@@ -1,0 +1,16 @@
+/data/your_dataset/
+/data/your_training_dataset/
+/data/your_training_dataset_non_preprocessed/
+/ckpts/your_training_dataset/
+/preprocess
+
+# Ngăn chặn push các file môi trường & bảo mật
+.env
+.env.*
+!.env.example
+
+# Ngăn chặn push thư mục ảo của Python (.venv) và cache
+.venv/
+__pycache__/
+*.pyc
+.DS_Store

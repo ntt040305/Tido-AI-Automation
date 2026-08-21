@@ -1,0 +1,41 @@
+# Dependencies & Environments
+node_modules/
+.next/
+out/
+build/
+dist/
+.venv/
+venv/
+env/
+ENV/
+*.egg-info/
+__pycache__/
+*.py[cod]
+
+# Large Model Checkpoints
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.bin
+*.onnx
+
+# System & IDE Files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.tmp
+
+# Environment Variables & Secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Temp media & cache storage
+.tempmediaStorage/
+cache/
+logs/

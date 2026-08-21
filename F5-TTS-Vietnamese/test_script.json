@@ -1,0 +1,90 @@
+{
+  "metadata": {
+    "title": "Tai Nghe Dây Da - Âm Thanh Hay, Giá Rẻ",
+    "voice_id": "vo_mizaki_3",
+    "genre_vibe": "Sang Trọng Tinh Tế",
+    "tags": [
+      "Tai Nghe",
+      "Dây Da",
+      "Âm Thanh Hay",
+      "Sang Trọng"
+    ]
+  },
+  "segments": [
+    {
+      "text": "Bạn đang tìm kiếm một chiếc tai nghe với âm thanh hay, trong và thiết kế sang trọng?",
+      "emotion": "hào hứng, vui vẻ",
+      "pacing": "nhanh",
+      "intensity": 0.55,
+      "prosody": {
+        "pace_delta": "-",
+        "pause_delta": "-",
+        "energy_target": "-",
+        "pitch_variation_target": "-",
+        "phrase_length": "medium",
+        "emphasis_density": "medium",
+        "vocal_tail": "soft"
+      }
+    },
+    {
+      "text": "Hôm nay, chúng tôi mang đến cho bạn chiếc tai nghe dây da, với âm thanh tuyệt hảo và thiết kế tinh tế.",
+      "emotion": "hào hứng, vui vẻ",
+      "pacing": "nhanh",
+      "intensity": 0.6,
+      "prosody": {
+        "pace_delta": "=",
+        "pause_delta": "=",
+        "energy_target": "=",
+        "pitch_variation_target": "=",
+        "phrase_length": "medium",
+        "emphasis_density": "medium",
+        "vocal_tail": "long"
+      }
+    },
+    {
+      "text": "Và điều đặc biệt, khi mua một chiếc, bạn sẽ được tặng ngay một chiếc tai nghe thứ hai, hoàn toàn miễn phí.",
+      "emotion": "hào hứng, hấp dẫn",
+      "pacing": "nhanh",
+      "intensity": 0.75,
+      "prosody": {
+        "pace_delta": "+",
+        "pause_delta": "-",
+        "energy_target": "+",
+        "pitch_variation_target": "+",
+        "phrase_length": "short",
+        "emphasis_density": "high",
+        "vocal_tail": "soft"
+      }
+    },
+    {
+      "text": "Đừng bỏ lỡ cơ hội này, hãy mua ngay và tận hưởng âm thanh tuyệt vời với giá cực kỳ phải chăng.",
+      "emotion": "khuyến khích, hấp dẫn",
+      "pacing": "nhanh",
+      "intensity": 0.8,
+      "prosody": {
+        "pace_delta": "+",
+        "pause_delta": "-",
+        "energy_target": "+",
+        "pitch_variation_target": "+",
+        "phrase_length": "short",
+        "emphasis_density": "high",
+        "vocal_tail": "soft"
+      }
+    },
+    {
+      "text": "Tai nghe dây da, âm thanh hay, giá rẻ. Mua ngay và cảm nhận sự khác biệt.",
+      "emotion": "thanh lịch",
+      "pacing": "nhanh",
+      "intensity": 0.55,
+      "prosody": {
+        "pace_delta": "-",
+        "pause_delta": "-",
+        "energy_target": "-",
+        "pitch_variation_target": "-",
+        "phrase_length": "medium",
+        "emphasis_density": "medium",
+        "vocal_tail": "soft"
+      }
+    }
+  ]
+}

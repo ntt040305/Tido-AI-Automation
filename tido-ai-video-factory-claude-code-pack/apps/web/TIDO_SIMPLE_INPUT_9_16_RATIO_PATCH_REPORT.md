@@ -1,0 +1,41 @@
+# TIDO SIMPLE INPUT — ADD 9:16 ASPECT RATIO PATCH REPORT
+
+```
+DEFAULT SIMPLE RATIO:
+1:1
+
+FINAL SIMPLE UI RATIOS:
+1:1, 3:4, 9:16
+
+IMGSTUDIO SIMPLE ALLOWED RATIOS:
+["1:1", "3:4", "9:16"]
+
+9:16 ADDED TO UI:
+YES
+
+9:16 ADDED TO IMGSTUDIO PREVALIDATION:
+YES
+
+USER SELECTED 9:16 PRESERVED EXACTLY:
+YES
+
+SILENT FALLBACK:
+NO
+
+OTHER PROVIDER RATIO SUPPORT CHANGED:
+NO
+
+OTHER GENERATION LOGIC CHANGED:
+NO
+
+FILES MODIFIED:
+- apps/web/lib/image-engine/config.ts
+- apps/web/components/SimpleRenderImageComponents.tsx
+- apps/web/lib/image-engine/run-simple-input-v6-tests.ts
+
+OFFLINE TESTS:
+PASS (98/98 test cases passed)
+
+PAID CALLS:
+0
+```

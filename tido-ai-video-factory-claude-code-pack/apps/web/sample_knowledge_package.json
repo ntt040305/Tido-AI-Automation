@@ -1,0 +1,61 @@
+{
+  "package_version": "1.0",
+  "routing_version": "1.0",
+  "retrieval_mode": "METADATA_ONLY",
+  "requires_universal_core": true,
+  "universal_blocks": [],
+  "selected_blocks": [
+    {
+      "id": "material.glass",
+      "version": "1.0.0",
+      "title": "Glass Material Visual & Optical Behavior",
+      "knowledge_type": "MATERIAL",
+      "selection_tier": "PRIMARY",
+      "final_score": 0.643,
+      "scores": {
+        "metadata": 1,
+        "semantic": 0,
+        "signal_confidence": 0.976,
+        "information_value": 0.95,
+        "priority": 0.9,
+        "query_importance": 0,
+        "redundancy_penalty": 0
+      },
+      "matched_signals": [
+        "material: glass",
+        "content: liquid",
+        "property: transparent",
+        "geometry: cylindrical",
+        "packaging: bottle"
+      ],
+      "selection_reasons": [
+        "Matched observed material 'glass' via match_rules (97% confidence)",
+        "Matched observed content 'liquid' via routing_dimensions (99% confidence)",
+        "Matched observed property 'transparent' via match_rules (98% confidence)",
+        "Matched observed geometry 'cylindrical' via routing_dimensions (95% confidence)",
+        "Matched observed packaging 'bottle' via match_rules (99% confidence)"
+      ],
+      "estimated_tokens": 462
+    }
+  ],
+  "rejected_candidates": [
+    {
+      "id": "property.transparent",
+      "final_score": 0.635,
+      "reason_code": "COVERED_BY_SELECTED_BLOCK",
+      "reason": "Content covered by higher-scoring selected block 'material.glass'."
+    }
+  ],
+  "warnings": [
+    "UNIVERSAL_CORE_NOT_POPULATED: Universal commercial knowledge blocks pending Stage 4."
+  ],
+  "stats": {
+    "repository_blocks": 2,
+    "metadata_candidates": 2,
+    "semantic_candidates": 0,
+    "fused_candidates": 2,
+    "selected_blocks": 1,
+    "estimated_tokens": 462,
+    "duration_ms": 5
+  }
+}

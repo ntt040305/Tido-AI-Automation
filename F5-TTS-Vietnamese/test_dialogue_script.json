@@ -1,0 +1,27 @@
+{
+  "metadata": {
+    "title": "Đối Thoại Mua Bán Căn Hộ Cao Cấp",
+    "voice_id": "vo_motaro_kb19",
+    "genre_vibe": "Kịch bản đối thoại 2 nhân vật"
+  },
+  "segments": [
+    {
+      "voice_id": "vo_motaro_kb19",
+      "text": "Chào em, căn hộ hai phòng ngủ ở Sài Gòn này giá bao nhiêu vậy em?",
+      "emotion": "hào hứng",
+      "pacing": "bình thường"
+    },
+    {
+      "voice_id": "vo_mizaki_3",
+      "text": "Dạ chào anh, căn hộ này diện tích 65 mét vuông, nội thất sang trọng, giá hôm nay chỉ một tỷ 500 nghìn đồng anh nhé.",
+      "emotion": "thanh lịch",
+      "pacing": "chậm"
+    },
+    {
+      "voice_id": "vo_motaro_kb19",
+      "text": "Giá tốt quá em ơi! Đặt cọc cho anh căn này ngay nhé!",
+      "emotion": "vui vẻ",
+      "pacing": "nhanh"
+    }
+  ]
+}
