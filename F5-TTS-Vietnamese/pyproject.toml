@@ -40,6 +40,9 @@ dependencies = [
     "vocos",
     "wandb",
     "x_transformers>=1.31.14",
+    # [FIX 2] Auto-QC (Whisper ASR) — bắt buộc khi QUALITY_MODE != FAST
+    # Không có package này sẽ crash ngay ModuleNotFoundError khi khởi tạo AutomaticSpeechQC
+    "openai-whisper",
 ]
 
 [project.optional-dependencies]

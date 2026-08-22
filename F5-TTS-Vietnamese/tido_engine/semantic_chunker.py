@@ -100,13 +100,24 @@ class BreathAwareChunker:
             pause_ms = 350
         elif bound in ['?', '!']:
             pause_ms = 400
-            
+
+        # [FIX 1] Gắn lại dấu câu vào cuối text để F5-TTS nhận tín hiệu kết thúc câu tự nhiên.
+        # Trước đây boundary_after bị tách riêng và không bao giờ được ghép lại,
+        # khiến model không biết đâu là cuối câu → không hạ giọng, không ngắt hơi.
+        final_text = text.rstrip()
+        if bound and not final_text.endswith(bound):
+            final_text = final_text + bound
+        elif not bound and final_text and final_text[-1] not in ',.;?!':
+            # Nếu không có dấu câu nào, mặc định thêm '.' để model vẫn có tín hiệu kết thúc
+            final_text = final_text + '.'
+
         return InferenceChunk(
             chunk_index=idx,
-            text=text,
+            text=final_text,
             word_count=word_cnt,
             boundary_after=bound,
             pause_after_ms=pause_ms,
             is_question=is_q,
             is_exclamation=is_ex
         )
+

@@ -41,7 +41,10 @@ class ProsodyDirector:
         state: ProsodyState,
         pause_after_user: Optional[float] = None,
         intensity: Optional[float] = None,
-        prosody_config: Optional[dict] = None
+        prosody_config: Optional[dict] = None,
+        # [FIX 4] Thêm 2 tham số mới để đưa pause từ boundary dấu câu vào tính toán
+        boundary_pause_ms: Optional[int] = None,
+        vocal_tail: Optional[str] = None,
     ) -> DeliveryPlan:
         el = (requested_emotion or "neutral").lower()
         pl = (requested_pacing or "bình thường").lower()
@@ -81,8 +84,22 @@ class ProsodyDirector:
         if intensity is not None:
             cfg = cfg * (0.85 + 0.3 * final_intensity)
 
+        # [FIX 5] Đọc emphasis_density từ JSON kịch bản và điều chỉnh CFG.
+        # Trước đây field này được khai báo nhưng không bao giờ được đọc → vô tác dụng.
+        emphasis_density = str(prosody.get("emphasis_density", "medium")).lower()
+        if emphasis_density == "high":
+            cfg += 0.08
+        elif emphasis_density == "low":
+            cfg -= 0.08
+
         # Soft intimate CFG clamp range: 1.35 - 1.85
         cfg = max(1.35, min(1.85, cfg))
+
+        # [FIX 6 - part of prosody_director] Blend với cfg_strength_default của từng giọng nếu có.
+        # Đảm bảo mỗi giọng giữ được "chất riêng" thay vì dùng chung 1 công thức.
+        if getattr(voice_profile, 'cfg_strength_default', None) is not None:
+            cfg = (cfg + voice_profile.cfg_strength_default) / 2.0
+            cfg = max(1.35, min(1.85, cfg))
 
         # 2. Dynamic Pacing & Speed Ratio Calculation
         base_rate = voice_profile.baseline_speaking_rate
@@ -118,22 +135,38 @@ class ProsodyDirector:
             elif pitch_variation == "-" or emotion == "warm":
                 pitch_shift = -0.6 * final_intensity
 
-        # 4. Pause planning with pause_delta
+        # 4. Pause planning — [FIX 4] Dùng boundary_pause_ms làm baseline thay vì
+        # chỉ tính theo pacing. Câu hỏi/cảm thán giờ có pause khác câu thường.
         pause_delta = prosody.get("pause_delta", "=")
         if pause_after_user is not None:
             pause_after_ms = int(float(pause_after_user) * 1000)
         else:
+            # [FIX 4] Lấy boundary_pause_ms (đã được tính đúng theo loại dấu câu trong _build_chunk)
+            # làm baseline, mặc định 260 nếu không có.
+            base_pause = boundary_pause_ms if boundary_pause_ms is not None else 260
+
+            # Nhân hệ số pacing vào baseline
             if "chậm" in pl:
-                pause_after_ms = 350
+                pace_factor = 1.25
             elif "nhanh" in pl:
-                pause_after_ms = 180
+                pace_factor = 0.75
             else:
-                pause_after_ms = 260
+                pace_factor = 1.0
+            pause_after_ms = int(base_pause * pace_factor)
 
         if pause_delta == "+":
             pause_after_ms = int(pause_after_ms * 1.3)
         elif pause_delta == "-":
             pause_after_ms = int(pause_after_ms * 0.65)
+
+        # [FIX 4] vocal_tail từ JSON kịch bản: "long" cho câu CTA/outro, "soft" cho câu nhẹ
+        if vocal_tail == "long":
+            pause_after_ms = int(pause_after_ms * 1.35)
+        elif vocal_tail == "soft":
+            pause_after_ms = int(pause_after_ms * 0.85)
+
+        # [FIX 4] Clamp pause cuối trong khoảng [60, 900] ms
+        pause_after_ms = max(60, min(900, pause_after_ms))
 
         # Target NFE Steps: 52 for high energy TVC, 48 default
         nfe_step = 52 if emotion == "energetic" or "nhanh" in pl else 48
@@ -158,3 +191,4 @@ class ProsodyDirector:
             speed_effective=speed_effective,
             pitch_shift=pitch_shift
         )
+

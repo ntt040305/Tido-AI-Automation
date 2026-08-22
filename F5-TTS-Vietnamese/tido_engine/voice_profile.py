@@ -32,3 +32,7 @@ class VoiceProfile:
     # Reference dictionary overrides
     speed_default: float = 1.0
     pronunciation_map: Dict[str, str] = field(default_factory=dict)
+    # [FIX 6] CFG riêng từng giọng từ voice_library.json (ví dụ: 1.6 cho Motaro, 1.5 cho Mizaki).
+    # Trước đây field này trong JSON không được đọc → mọi giọng dùng chung 1 công thức CFG.
+    cfg_strength_default: Optional[float] = None
+

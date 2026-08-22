@@ -33,6 +33,8 @@ from tido_engine.continuity_engine import GlobalContinuityEngine
 from tido_engine.audio_mastering import AudioMastering
 from tido_engine.observability import ObservabilityLogger
 from tido_engine.emotion_modulator import EmotionModulator
+# [FIX 7] Dùng paths.py thay vì hardcode checkpoint path Windows
+from tido_engine.paths import CKPT_MODEL_FILE, CKPT_VOCAB_FILE, HF_CACHE_DIR, TEMP_DIR
 
 class TidoVoicePerformanceEngine:
     def __init__(self, voice_lib_path: str, quality_mode: str = "STUDIO"):
@@ -66,10 +68,11 @@ class TidoVoicePerformanceEngine:
             from f5_tts.api import F5TTS
             self.f5tts = F5TTS(
                 model="F5TTS_Base",
-                ckpt_file=r"d:\Tido\F5-TTS-Vietnamese\ckpt_vivoice\model_last.pt",
-                vocab_file=r"d:\Tido\F5-TTS-Vietnamese\ckpt_vivoice\config.json",
+                # [FIX 7] Dùng paths.py thay vì hardcode path Windows
+                ckpt_file=CKPT_MODEL_FILE,
+                vocab_file=CKPT_VOCAB_FILE,
                 device=self.device,
-                hf_cache_dir=r"D:\hf_cache"
+                hf_cache_dir=HF_CACHE_DIR
             )
             print("      ✅ F5-TTS Model initialized!")
 
@@ -83,6 +86,113 @@ class TidoVoicePerformanceEngine:
                 print("      ✅ DeepFilterNet initialized!")
             except Exception as e:
                 print(f"⚠️ DeepFilterNet init skipped: {e}")
+
+    # [FIX 2] Method mới: vòng lặp render + Auto-QC + Adaptive Repair cho từng chunk.
+    # Trước đây f5tts.infer() được gọi 1 lần thẳng ra file, không có bước kiểm tra ASR hay retry.
+    def _render_chunk_with_qc(
+        self,
+        seg_profile: VoiceProfile,
+        plan: DeliveryPlan,
+        gen_text: str,
+        prev_text: str,
+        temp_wave: str,
+    ) -> AudioSegment:
+        """
+        [FIX 2] Render 1 InferenceChunk với vòng lặp Auto-QC (Whisper) + Adaptive Repair.
+        Trả về AudioSegment có text_accuracy cao nhất trong số các lần retry.
+        Nếu không có qc_engine (FAST mode), render 1 lần và trả về ngay.
+        """
+        best_seg: Optional[AudioSegment] = None
+        best_accuracy: float = -1.0
+        current_gen_text = gen_text
+        speed = plan.speed_effective
+        remove_silence = True
+        nfe_step = plan.target_nfe_step
+        cfg_strength = plan.target_cfg
+
+        max_attempts = 1 if self.qc_engine is None else (self.repair_manager.max_retries + 1)
+
+        for attempt in range(max_attempts):
+            try:
+                self.f5tts.infer(
+                    ref_file=seg_profile.reference_path,
+                    ref_text=seg_profile.reference_transcript,
+                    gen_text=current_gen_text,
+                    file_wave=temp_wave,
+                    speed=speed,
+                    remove_silence=remove_silence,
+                    nfe_step=nfe_step,
+                    cfg_strength=cfg_strength
+                )
+            except Exception as e:
+                print(f"    ❌ Inference error (attempt {attempt+1}): {e}")
+                break
+
+            if not os.path.exists(temp_wave):
+                print(f"    ❌ Output file not created (attempt {attempt+1})")
+                break
+
+            chunk_seg = AudioSegment.from_file(temp_wave)
+
+            # Nếu không có QC engine (FAST mode), trả về ngay
+            if self.qc_engine is None:
+                if os.path.exists(temp_wave):
+                    try: os.remove(temp_wave)
+                    except: pass
+                return chunk_seg
+
+            # [FIX 2] Gọi Whisper QC để kiểm tra chất lượng audio
+            qc_result: QCResult = self.qc_engine.audit_audio(temp_wave, gen_text)
+            print(f"     🔍 [QC: attempt {attempt+1}] accuracy={qc_result.text_accuracy:.2f} passed={qc_result.passed}")
+            if qc_result.errors:
+                for err in qc_result.errors:
+                    print(f"         ⚠️ {err.get('type')} — expected: {err.get('expected','')} | detected: {err.get('detected','')}")
+
+            # Giữ candidate có accuracy cao nhất làm best-effort fallback
+            if qc_result.text_accuracy > best_accuracy:
+                best_accuracy = qc_result.text_accuracy
+                best_seg = chunk_seg
+
+            if qc_result.passed:
+                # QC passed — dừng lại, không cần retry
+                if os.path.exists(temp_wave):
+                    try: os.remove(temp_wave)
+                    except: pass
+                return chunk_seg
+
+            # [FIX 2] Xác định chiến lược repair cho lần retry tiếp theo
+            strategy = self.repair_manager.get_repair_strategy(attempt, qc_result)
+            if not strategy.get("should_retry", False):
+                break
+
+            print(f"     🔧 [REPAIR] action={strategy['action']} — {strategy.get('reason','')}")
+            action = strategy["action"]
+
+            if action == "CONTEXT_OVERLAP":
+                # Thêm context prefix từ câu trước để F5-TTS không nuốt chữ đầu
+                current_gen_text = self.context_fallback.prepare_context_text(gen_text, prev_text)
+            elif action == "INCREASE_TAIL_PAD":
+                # Giảm speed nhẹ, tắt silence removal để giữ đuôi âm
+                remove_silence = False
+                speed = max(0.75, speed * 0.95)
+            elif action == "ADJUST_CFG_SEED":
+                # Điều chỉnh CFG ±0.1 để thay đổi mode sinh âm
+                cfg_strength = max(1.0, min(2.5, cfg_strength + (0.1 if attempt % 2 == 0 else -0.1)))
+
+            if os.path.exists(temp_wave):
+                try: os.remove(temp_wave)
+                except: pass
+
+        # Hết lượt retry — trả về candidate có accuracy cao nhất (best-effort)
+        if os.path.exists(temp_wave):
+            try: os.remove(temp_wave)
+            except: pass
+        if best_seg is not None:
+            print(f"     ⚠️ [QC] Best-effort result used (accuracy={best_accuracy:.2f})")
+            return best_seg
+        # Nếu không có candidate nào hợp lệ, báo lỗi và trả về silent segment
+        print("     ❌ [QC] All attempts failed. Returning empty segment.")
+        return AudioSegment.silent(duration=200)
 
     def process_script(self, script_path: str, output_path: str) -> str:
         """Processes a full script JSON through the complete 20-subsystem pipeline."""
@@ -144,6 +254,7 @@ class TidoVoicePerformanceEngine:
 
             for chunk in chunks:
                 # 6. PROSODY DIRECTOR & DELIVERY PLAN
+                # [FIX 4] Truyền boundary_pause_ms và vocal_tail vào create_delivery_plan
                 plan: DeliveryPlan = self.prosody_director.create_delivery_plan(
                     chunk_index=chunk.chunk_index,
                     text=chunk.text,
@@ -153,38 +264,34 @@ class TidoVoicePerformanceEngine:
                     state=state,
                     pause_after_user=user_pause_after,
                     intensity=seg.get('intensity'),
-                    prosody_config=seg.get('prosody')
+                    prosody_config=seg.get('prosody'),
+                    # [FIX 4] Truyền pause từ loại dấu câu vào prosody director
+                    boundary_pause_ms=chunk.pause_after_ms,
+                    vocal_tail=(seg.get('prosody') or {}).get('vocal_tail'),
                 )
 
-                # 7. F5 INFERENCE + STABILITY RENDER
-                # Strip bracketed tags (e.g. [hào hứng], [tự tin]) so F5-TTS does not pronounce them or hallucinate end-words like 'ớt'
+                # 7. F5 INFERENCE + AUTO-QC + ADAPTIVE REPAIR
+                # Strip bracketed tags (e.g. [hào hứng], [tự tin]) so F5-TTS does not pronounce them
                 clean_gen_text = re.sub(r'\[.*?\]', '', plan.text).strip()
                 clean_gen_text = re.sub(r'\s+', ' ', clean_gen_text)
-                
-                temp_wave = os.path.join(os.path.dirname(output_path), f"_tmp_{seg_idx}_{chunk.chunk_index}.wav")
+
+                # [FIX 7] Dùng TEMP_DIR thay vì dùng đường dẫn theo output_path cứng
+                temp_wave = os.path.join(TEMP_DIR, f"_tmp_{seg_idx}_{chunk.chunk_index}.wav")
                 t0 = time.time()
-                
-                try:
-                    self.f5tts.infer(
-                        ref_file=seg_profile.reference_path,
-                        ref_text=seg_profile.reference_transcript,
-                        gen_text=clean_gen_text,
-                        file_wave=temp_wave,
-                        speed=plan.speed_effective,
-                        remove_silence=True,
-                        nfe_step=plan.target_nfe_step,
-                        cfg_strength=plan.target_cfg
-                    )
-                except Exception as e:
-                    print(f"    ❌ Inference error: {e}")
+
+                # [FIX 2] Thay gọi trực tiếp f5tts.infer() bằng _render_chunk_with_qc()
+                chunk_seg = self._render_chunk_with_qc(
+                    seg_profile=seg_profile,
+                    plan=plan,
+                    gen_text=clean_gen_text,
+                    prev_text=prev_segment_text,
+                    temp_wave=temp_wave,
+                )
+
+                if len(chunk_seg) == 0:
                     continue
 
-                chunk_seg = AudioSegment.from_file(temp_wave)
                 print(f"     ✅ Rendered chunk in {time.time()-t0:.1f}s")
-
-                if os.path.exists(temp_wave):
-                    try: os.remove(temp_wave)
-                    except: pass
 
                 # Apply Continuity Gain Adjustment & Layer 2 Expressive Modulation
                 chunk_seg = self.continuity_engine.process_continuity(chunk_seg)

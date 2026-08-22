@@ -11,7 +11,10 @@ import re
 import json
 from typing import Dict, Optional
 
-GLOBAL_DICT_PATH = r"d:\Tido\Assets\Voices\user_dictionary.json"
+# [FIX 7] Dùng paths.py thay vì hardcode path Windows
+from tido_engine.paths import USER_DICTIONARY_PATH
+
+GLOBAL_DICT_PATH = USER_DICTIONARY_PATH
 
 class PronunciationEngine:
     def __init__(self, global_dict_path: str = GLOBAL_DICT_PATH):

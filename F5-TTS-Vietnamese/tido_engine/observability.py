@@ -9,8 +9,9 @@ import json
 import time
 from typing import Dict, Any
 
-LOG_DIR = r"d:\Tido\F5-TTS-Vietnamese\logs"
-os.makedirs(LOG_DIR, exist_ok=True)
+# [FIX 7] Dùng paths.py thay vì hardcode path Windows
+from tido_engine.paths import LOG_DIR
+
 
 class ObservabilityLogger:
     def __init__(self, log_dir: str = LOG_DIR):
