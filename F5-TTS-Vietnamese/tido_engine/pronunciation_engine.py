@@ -11,13 +11,13 @@ import re
 import json
 from typing import Dict, Optional
 
-# [FIX 7] Dùng paths.py thay vì hardcode path Windows
+# [FIX 7] Dùng USER_DICTIONARY_PATH động từ tido_engine/paths.py
 from tido_engine.paths import USER_DICTIONARY_PATH
 
-GLOBAL_DICT_PATH = USER_DICTIONARY_PATH
+GLOBAL_DICTIONARY_PATH = USER_DICTIONARY_PATH
 
 class PronunciationEngine:
-    def __init__(self, global_dict_path: str = GLOBAL_DICT_PATH):
+    def __init__(self, global_dict_path: str = GLOBAL_DICTIONARY_PATH):
         self.global_dict_path = global_dict_path
         self.global_map: Dict[str, str] = {
             "jomoo": "jo mo",

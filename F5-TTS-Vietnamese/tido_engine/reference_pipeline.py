@@ -13,10 +13,8 @@ from pydub import AudioSegment
 from pydub.silence import detect_leading_silence
 
 from tido_engine.voice_profile import VoiceProfile
-# [FIX 7] Dùng paths.py thay vì hardcode path Windows
-from tido_engine.paths import REF_CACHE_DIR, resolve_audio_path
-
-CACHE_DIR = REF_CACHE_DIR
+# [FIX 7] Import CACHE_DIR và resolve_audio_path từ paths.py
+from tido_engine.paths import CACHE_DIR, resolve_audio_path
 
 class ReferencePipeline:
     def __init__(self, voice_library_path: str):
@@ -59,9 +57,10 @@ class ReferencePipeline:
                 voice_id = list(self.raw_voices.keys())[0]
 
         vdata = self.raw_voices[voice_id]
-        # [FIX 7] resolve_audio_path fallback tìm theo tên file nếu path tuyệt đối không tồn tại
+        # [FIX 7] Resolve audio path cross-platform (nếu path tuyệt đối r"d:\Tido\..." không tồn tại trên Linux/Docker)
         audio_file = resolve_audio_path(vdata['audio_file'])
 
+        
         ref_transcript = vdata.get('ref_text', '')
 
         file_hash = self.compute_file_hash(audio_file)
@@ -82,11 +81,11 @@ class ReferencePipeline:
             baseline_loudness_dbfs=-18.0,
             baseline_speaking_rate=3.5,
             speed_default=vdata.get('profile', {}).get('speed_default', 1.0),
-            pronunciation_map=vdata.get('pronunciation_map', {}),
-            # [FIX 6] Đọc cfg_strength_default riêng từng giọng từ voice_library.json.
-            # Trước đây field này trong JSON hoàn toàn bị bỏ qua khi tạo VoiceProfile.
+            # [FIX 6] Lấy cfg_strength_default riêng của giọng từ JSON (VD 1.6 cho Motaro)
             cfg_strength_default=vdata.get('profile', {}).get('cfg_strength_default'),
+            pronunciation_map=vdata.get('pronunciation_map', {})
         )
+
         
         self.profiles_cache[voice_id] = profile
         self.processed_ref_paths[voice_id] = audio_file

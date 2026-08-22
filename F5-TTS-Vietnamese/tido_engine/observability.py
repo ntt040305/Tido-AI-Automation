@@ -9,9 +9,8 @@ import json
 import time
 from typing import Dict, Any
 
-# [FIX 7] Dùng paths.py thay vì hardcode path Windows
+# [FIX 7] Dùng LOG_DIR động từ tido_engine/paths.py
 from tido_engine.paths import LOG_DIR
-
 
 class ObservabilityLogger:
     def __init__(self, log_dir: str = LOG_DIR):
@@ -26,3 +25,4 @@ class ObservabilityLogger:
             print(f"📊 [OBSERVABILITY] Execution log saved: {file_path}")
         except Exception as e:
             print(f"⚠️ Warning saving observability log: {e}")
+

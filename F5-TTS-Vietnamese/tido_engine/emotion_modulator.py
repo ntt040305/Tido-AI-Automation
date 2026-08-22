@@ -6,13 +6,10 @@ Provides clean, un-distorted audio post-processing:
 2. Smooth Butterworth Air Presence Boost (>7000Hz).
 3. Soft-Knee Peak Normalization to -1.5 dBFS.
 4. Natural Exponential Micro-Fading (Smooth Head & Tail).
-5. [FIX 3] Pitch shift thật (librosa) để thay đổi cao độ theo cảm xúc.
 """
 
 import re
 import numpy as np
-# [FIX 3] Import librosa để thực hiện pitch shifting thật theo plan.pitch_shift
-import librosa
 from scipy import signal
 from pydub import AudioSegment
 
@@ -53,7 +50,6 @@ class EmotionModulator:
     def modulate_emotion(self, base_audio: AudioSegment, plan) -> AudioSegment:
         """
         Layer 2: Applies clean, smooth audio post-processing to F5-TTS audio.
-        [FIX 3] Thêm bước áp dụng pitch shift thật theo plan.pitch_shift trước mastering.
         """
         if len(base_audio) == 0:
             return base_audio
@@ -62,24 +58,6 @@ class EmotionModulator:
 
         # Clean audio array
         samples = self._audio_to_float_array(audio)
-
-        # [FIX 3] Áp dụng pitch shift thật bằng librosa nếu plan.pitch_shift != 0.
-        # Clamp trong [-2.5, 2.5] bán cung để tránh giọng bị méo/chipmunk.
-        # Wrap trong try/except để không crash toàn bộ pipeline nếu librosa gặp lỗi.
-        pitch_shift = getattr(plan, 'pitch_shift', 0.0) or 0.0
-        if pitch_shift != 0.0:
-            try:
-                n_steps = float(max(-2.5, min(2.5, pitch_shift)))
-                samples = librosa.effects.pitch_shift(
-                    y=samples,
-                    sr=self.sample_rate,
-                    n_steps=n_steps,
-                    bins_per_octave=12
-                )
-            except Exception as pitch_err:
-                # [FIX 3] Nếu pitch shift thất bại, bỏ qua bước này, không crash pipeline
-                print(f"⚠️ [PITCH SHIFT] Bỏ qua pitch shift (n_steps={pitch_shift:.2f}): {pitch_err}")
-
         samples_clean = self._apply_clean_mastering(samples)
         audio = self._float_array_to_audio(samples_clean, audio)
 
