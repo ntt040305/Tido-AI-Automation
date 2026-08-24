@@ -31,7 +31,4 @@ class VoiceProfile:
     
     # Reference dictionary overrides
     speed_default: float = 1.0
-    # [FIX 6] Cho phép từng voice định nghĩa CFG baseline riêng trong voice_library.json
-    cfg_strength_default: Optional[float] = None
     pronunciation_map: Dict[str, str] = field(default_factory=dict)
-

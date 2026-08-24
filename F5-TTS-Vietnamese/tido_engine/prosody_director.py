@@ -41,10 +41,7 @@ class ProsodyDirector:
         state: ProsodyState,
         pause_after_user: Optional[float] = None,
         intensity: Optional[float] = None,
-        prosody_config: Optional[dict] = None,
-        # [FIX 4] Thêm 2 tham số mới: boundary_pause_ms và vocal_tail
-        boundary_pause_ms: Optional[int] = None,
-        vocal_tail: Optional[str] = None
+        prosody_config: Optional[dict] = None
     ) -> DeliveryPlan:
         el = (requested_emotion or "neutral").lower()
         pl = (requested_pacing or "bình thường").lower()
@@ -70,17 +67,6 @@ class ProsodyDirector:
             emotion = "neutral"
             base_intensity = 0.5
             cfg = 1.45
-
-        # [FIX 6] Blend với cfg_strength_default riêng của voice profile nếu có trong voice_library.json
-        if getattr(voice_profile, "cfg_strength_default", None) is not None:
-            cfg = (cfg + voice_profile.cfg_strength_default) / 2.0
-
-        # [FIX 5] Đọc field emphasis_density từ JSON prosody_config ("high"/"medium"/"low")
-        emphasis_density = str(prosody.get("emphasis_density", "medium")).lower()
-        if emphasis_density == "high":
-            cfg += 0.08
-        elif emphasis_density == "low":
-            cfg -= 0.08
 
         # Override intensity if user provided explicit intensity float (e.g. 0.65)
         final_intensity = float(intensity) if intensity is not None else base_intensity
@@ -132,34 +118,22 @@ class ProsodyDirector:
             elif pitch_variation == "-" or emotion == "warm":
                 pitch_shift = -0.6 * final_intensity
 
-        # 4. Pause planning với [FIX 4] boundary_pause_ms, vocal_tail và pause_delta
+        # 4. Pause planning with pause_delta
         pause_delta = prosody.get("pause_delta", "=")
         if pause_after_user is not None:
             pause_after_ms = int(float(pause_after_user) * 1000)
         else:
-            # Lấy boundary_pause_ms từ BreathAwareChunker (hoặc default 260) làm baseline
-            base_pause = boundary_pause_ms if boundary_pause_ms is not None else 260
             if "chậm" in pl:
-                pause_after_ms = int(base_pause * 1.25)
+                pause_after_ms = 350
             elif "nhanh" in pl:
-                pause_after_ms = int(base_pause * 0.75)
+                pause_after_ms = 180
             else:
-                pause_after_ms = base_pause
+                pause_after_ms = 260
 
         if pause_delta == "+":
             pause_after_ms = int(pause_after_ms * 1.3)
         elif pause_delta == "-":
             pause_after_ms = int(pause_after_ms * 0.65)
-
-        # [FIX 4] Áp dụng vocal_tail multiplier ("long" -> 1.35, "soft" -> 0.85)
-        vt = (vocal_tail or "").lower()
-        if vt == "long":
-            pause_after_ms = int(pause_after_ms * 1.35)
-        elif vt == "soft":
-            pause_after_ms = int(pause_after_ms * 0.85)
-
-        # Clamp pause_after_ms vào khoảng an toàn [60, 900] ms
-        pause_after_ms = max(60, min(900, pause_after_ms))
 
         # Target NFE Steps: 52 for high energy TVC, 48 default
         nfe_step = 52 if emotion == "energetic" or "nhanh" in pl else 48
@@ -184,4 +158,3 @@ class ProsodyDirector:
             speed_effective=speed_effective,
             pitch_shift=pitch_shift
         )
-

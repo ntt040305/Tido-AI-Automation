@@ -13,8 +13,9 @@ from pydub import AudioSegment
 from pydub.silence import detect_leading_silence
 
 from tido_engine.voice_profile import VoiceProfile
-# [FIX 7] Import CACHE_DIR và resolve_audio_path từ paths.py
-from tido_engine.paths import CACHE_DIR, resolve_audio_path
+
+CACHE_DIR = r"d:\Tido\F5-TTS-Vietnamese\cache\ref_cache"
+os.makedirs(CACHE_DIR, exist_ok=True)
 
 class ReferencePipeline:
     def __init__(self, voice_library_path: str):
@@ -57,9 +58,7 @@ class ReferencePipeline:
                 voice_id = list(self.raw_voices.keys())[0]
 
         vdata = self.raw_voices[voice_id]
-        # [FIX 7] Resolve audio path cross-platform (nếu path tuyệt đối r"d:\Tido\..." không tồn tại trên Linux/Docker)
-        audio_file = resolve_audio_path(vdata['audio_file'])
-
+        audio_file = vdata['audio_file']
         
         ref_transcript = vdata.get('ref_text', '')
 
@@ -81,11 +80,8 @@ class ReferencePipeline:
             baseline_loudness_dbfs=-18.0,
             baseline_speaking_rate=3.5,
             speed_default=vdata.get('profile', {}).get('speed_default', 1.0),
-            # [FIX 6] Lấy cfg_strength_default riêng của giọng từ JSON (VD 1.6 cho Motaro)
-            cfg_strength_default=vdata.get('profile', {}).get('cfg_strength_default'),
             pronunciation_map=vdata.get('pronunciation_map', {})
         )
-
         
         self.profiles_cache[voice_id] = profile
         self.processed_ref_paths[voice_id] = audio_file
