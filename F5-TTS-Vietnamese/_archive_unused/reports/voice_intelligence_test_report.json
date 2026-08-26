@@ -1,0 +1,23 @@
+{
+  "voice_recommendation": {
+    "voice_id": "voice_mizaki_fem_01",
+    "recommended_persona": "warm_expert",
+    "recommended_style": "commercial_seller",
+    "confidence_score": 0.8,
+    "reasoning": "Matches female audience target."
+  },
+  "style_recommendation": {
+    "persona": "commercial_seller",
+    "style": "commercial_seller",
+    "confidence_score": 0.95,
+    "reasoning": "High energy sales persona ideal for short-form video conversion."
+  },
+  "analytics_report": {
+    "voice_id": "voice_mizaki_fem_01",
+    "total_usage": 1,
+    "average_quality_score": 96.5,
+    "best_performing_style": "warm_expert",
+    "best_performing_genre": "commercial_ad",
+    "user_satisfaction_rate": 100.0
+  }
+}

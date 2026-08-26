@@ -1,0 +1,54 @@
+{
+  "task_id": "syn_1787681491665",
+  "pipeline_mode": "v2_safe",
+  "reference_validation": {
+    "reference_audio": "d:/Tido/Assets/Voices/VO_Mizaki_3_12s.wav",
+    "reference_duration": 12.0,
+    "reference_sample_rate": 44100,
+    "reference_text": "Ngay khi bước vào căn hộ, cảm nhận rõ nét nhất là không gian mở, khoáng đạt với bố cục liền mạch và lối thiết kế phóng khoáng. Với diện tích khoảng 65 mét vuông, căn hộ hai phòng ngủ được thiết kế tối.",
+    "reference_text_source": "verified_human_script",
+    "reference_validation_status": "PASSED"
+  },
+  "text_trace_logs": [
+    {
+      "segment_id": "seg_clean",
+      "original_text": "Hãy bắt đầu hành trình ngay hôm nay tại Gym Toàn Thắng.",
+      "migrated_text": "Hãy bắt đầu hành trình ngay hôm nay tại Gym Toàn Thắng.",
+      "normalized_text": "hãy bắt đầu hành trình ngay hôm nay tại gym toàn thắng.",
+      "pronunciation_processed_text": "hãy bắt đầu hành trình ngay hôm nay tại Gim Toàn Thắng.",
+      "emphasis_processed_text": "hãy bắt đầu hành trình ngay hôm nay tại Gim Toàn Thắng.",
+      "final_text_sent_to_f5": "hãy bắt đầu hành trình ngay hôm nay tại Gim Toàn Thắng.",
+      "dictionary_matches": [
+        {
+          "original_phrase": "toàn thắng",
+          "matched_dictionary_key": "Toàn Thắng",
+          "replacement": "Toàn Thắng"
+        },
+        {
+          "original_phrase": "gym",
+          "matched_dictionary_key": "Gym",
+          "replacement": "Gim"
+        }
+      ],
+      "status": "PASSED"
+    }
+  ],
+  "chunk_trace_logs": [
+    {
+      "chunk_id": "chunk_1",
+      "source_text": "Hãy bắt đầu hành trình ngay hôm nay tại Gym Toàn Thắng.",
+      "final_text_sent_to_f5": "hãy bắt đầu hành trình ngay hôm nay tại Gim Toàn Thắng.",
+      "start_padding": 80,
+      "end_padding": 180,
+      "pause_after": 280,
+      "peak_dbfs": -2.42,
+      "clipped_samples": 0,
+      "output_duration": 3.21
+    }
+  ],
+  "mastering": {
+    "final_peak_dbfs": -2.42,
+    "final_clipped_samples": 0,
+    "total_duration_s": 3.21
+  }
+}

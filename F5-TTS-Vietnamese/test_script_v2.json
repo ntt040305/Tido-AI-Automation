@@ -1,0 +1,340 @@
+{
+  "version": "2.0",
+  "metadata": {
+    "title": "Quảng cáo Phòng Gym Toàn Thắng (Fix Hallucinations & Tone)",
+    "voice_id": "vo_mizaki_3",
+    "global_genre": "tiktok_ads",
+    "target_audience": "general"
+  },
+  "segments": [
+    {
+      "segment_id": "seg_001",
+      "text": "Bạn muốn thay đổi vóc dáng, [nhấn mạnh] khỏe hơn và tự tin hơn mỗi ngày?",
+      "performance": {
+        "segment_role": "hook",
+        "speaking_intent": "persuade",
+        "emotion_state": {
+          "primary_emotion": "excited",
+          "valence": 0.7,
+          "arousal": 0.8
+        },
+        "speaker_attitude": "confident",
+        "energy_level": "high",
+        "emphasis_words": [
+          {
+            "word": "khỏe hơn",
+            "type": "pitch_boost"
+          }
+        ],
+        "pause_instruction": {
+          "pause_before_ms": 0,
+          "pause_after_ms": 220,
+          "breath_inset": false
+        },
+        "pitch_behavior": {
+          "contour": "dynamic_range",
+          "pitch_shift_semitones": 0.0
+        },
+        "speed_ratio": 1.0
+      },
+      "pronunciation_overrides": []
+    },
+    {
+      "segment_id": "seg_002",
+      "text": "Đừng chỉ nghĩ về nó! Hãy bắt đầu hành trình ngay tại Gym Toàn Thắng!",
+      "performance": {
+        "segment_role": "call_to_action",
+        "speaking_intent": "hype",
+        "emotion_state": {
+          "primary_emotion": "excited",
+          "valence": 0.8,
+          "arousal": 0.9
+        },
+        "speaker_attitude": "urgent",
+        "energy_level": "explosive",
+        "emphasis_words": [],
+        "pause_instruction": {
+          "pause_before_ms": 0,
+          "pause_after_ms": 220,
+          "breath_inset": false
+        },
+        "pitch_behavior": {
+          "contour": "dynamic_range",
+          "pitch_shift_semitones": 0.0
+        },
+        "speed_ratio": 1.0
+      },
+      "pronunciation_overrides": []
+    },
+    {
+      "segment_id": "seg_003",
+      "text": "Một không gian tập luyện hiện đại, năng động và sẵn sàng tiếp thêm năng lượng cho bạn!",
+      "performance": {
+        "segment_role": "call_to_action",
+        "speaking_intent": "hype",
+        "emotion_state": {
+          "primary_emotion": "excited",
+          "valence": 0.8,
+          "arousal": 0.9
+        },
+        "speaker_attitude": "urgent",
+        "energy_level": "explosive",
+        "emphasis_words": [],
+        "pause_instruction": {
+          "pause_before_ms": 0,
+          "pause_after_ms": 220,
+          "breath_inset": false
+        },
+        "pitch_behavior": {
+          "contour": "dynamic_range",
+          "pitch_shift_semitones": 0.0
+        },
+        "speed_ratio": 1.0
+      },
+      "pronunciation_overrides": []
+    },
+    {
+      "segment_id": "seg_004",
+      "text": "Tại Toàn Thắng, hệ thống máy tập được bố trí khoa học cho nhiều mục tiêu khác nhau.",
+      "performance": {
+        "segment_role": "explanation",
+        "speaking_intent": "inform",
+        "emotion_state": {
+          "primary_emotion": "neutral",
+          "valence": 0.2,
+          "arousal": 0.5
+        },
+        "speaker_attitude": "authoritative",
+        "energy_level": "medium",
+        "emphasis_words": [],
+        "pause_instruction": {
+          "pause_before_ms": 0,
+          "pause_after_ms": 220,
+          "breath_inset": false
+        },
+        "pitch_behavior": {
+          "contour": "dynamic_range",
+          "pitch_shift_semitones": 0.0
+        },
+        "speed_ratio": 1.0
+      },
+      "pronunciation_overrides": []
+    },
+    {
+      "segment_id": "seg_005",
+      "text": "Từ tăng cơ, giảm mỡ, cải thiện sức bền đến duy trì một cơ thể khỏe mạnh!",
+      "performance": {
+        "segment_role": "explanation",
+        "speaking_intent": "inform",
+        "emotion_state": {
+          "primary_emotion": "neutral",
+          "valence": 0.0,
+          "arousal": 0.5
+        },
+        "speaker_attitude": "friendly",
+        "energy_level": "medium",
+        "emphasis_words": [],
+        "pause_instruction": {
+          "pause_before_ms": 0,
+          "pause_after_ms": 220,
+          "breath_inset": false
+        },
+        "pitch_behavior": {
+          "contour": "dynamic_range",
+          "pitch_shift_semitones": 0.0
+        },
+        "speed_ratio": 1.0
+      },
+      "pronunciation_overrides": []
+    },
+    {
+      "segment_id": "seg_006",
+      "text": "Khu vực tập tạ được trang bị đa dạng, giúp bạn dễ dàng xây dựng từng nhóm cơ.",
+      "performance": {
+        "segment_role": "call_to_action",
+        "speaking_intent": "hype",
+        "emotion_state": {
+          "primary_emotion": "excited",
+          "valence": 0.8,
+          "arousal": 0.9
+        },
+        "speaker_attitude": "urgent",
+        "energy_level": "explosive",
+        "emphasis_words": [],
+        "pause_instruction": {
+          "pause_before_ms": 0,
+          "pause_after_ms": 220,
+          "breath_inset": false
+        },
+        "pitch_behavior": {
+          "contour": "dynamic_range",
+          "pitch_shift_semitones": 0.0
+        },
+        "speed_ratio": 1.0
+      },
+      "pronunciation_overrides": []
+    },
+    {
+      "segment_id": "seg_007",
+      "text": "Từ ngực, vai, lưng, đến chân và tay đều có thiết bị hỗ trợ phù hợp.",
+      "performance": {
+        "segment_role": "explanation",
+        "speaking_intent": "inform",
+        "emotion_state": {
+          "primary_emotion": "neutral",
+          "valence": 0.2,
+          "arousal": 0.5
+        },
+        "speaker_attitude": "authoritative",
+        "energy_level": "medium",
+        "emphasis_words": [],
+        "pause_instruction": {
+          "pause_before_ms": 0,
+          "pause_after_ms": 220,
+          "breath_inset": false
+        },
+        "pitch_behavior": {
+          "contour": "dynamic_range",
+          "pitch_shift_semitones": 0.0
+        },
+        "speed_ratio": 1.0
+      },
+      "pronunciation_overrides": []
+    },
+    {
+      "segment_id": "seg_008",
+      "text": "Muốn đốt cháy năng lượng? Khu các đi ô luôn sẵn sàng cho những buổi tập đầy hứng khởi!",
+      "performance": {
+        "segment_role": "call_to_action",
+        "speaking_intent": "hype",
+        "emotion_state": {
+          "primary_emotion": "excited",
+          "valence": 0.8,
+          "arousal": 0.9
+        },
+        "speaker_attitude": "urgent",
+        "energy_level": "explosive",
+        "emphasis_words": [],
+        "pause_instruction": {
+          "pause_before_ms": 0,
+          "pause_after_ms": 220,
+          "breath_inset": false
+        },
+        "pitch_behavior": {
+          "contour": "dynamic_range",
+          "pitch_shift_semitones": 0.0
+        },
+        "speed_ratio": 1.0
+      },
+      "pronunciation_overrides": []
+    },
+    {
+      "segment_id": "seg_009",
+      "text": "Máy chạy bộ, xe đạp và nhiều thiết bị khác, giúp buổi tập thêm đa dạng.",
+      "performance": {
+        "segment_role": "explanation",
+        "speaking_intent": "inform",
+        "emotion_state": {
+          "primary_emotion": "neutral",
+          "valence": 0.2,
+          "arousal": 0.5
+        },
+        "speaker_attitude": "authoritative",
+        "energy_level": "medium",
+        "emphasis_words": [],
+        "pause_instruction": {
+          "pause_before_ms": 0,
+          "pause_after_ms": 220,
+          "breath_inset": false
+        },
+        "pitch_behavior": {
+          "contour": "dynamic_range",
+          "pitch_shift_semitones": 0.0
+        },
+        "speed_ratio": 1.0
+      },
+      "pronunciation_overrides": []
+    },
+    {
+      "segment_id": "seg_010",
+      "text": "Bạn mới bắt đầu tập luyện? [thì thầm] Đừng lo, Toàn Thắng luôn có đội ngũ hỗ trợ đồng hành.",
+      "performance": {
+        "segment_role": "testimonial",
+        "speaking_intent": "reassure",
+        "emotion_state": {
+          "primary_emotion": "warm",
+          "valence": 0.6,
+          "arousal": 0.3
+        },
+        "speaker_attitude": "intimate",
+        "energy_level": "whisper",
+        "emphasis_words": [],
+        "pause_instruction": {
+          "pause_before_ms": 0,
+          "pause_after_ms": 220,
+          "breath_inset": false
+        },
+        "pitch_behavior": {
+          "contour": "dynamic_range",
+          "pitch_shift_semitones": 0.0
+        },
+        "speed_ratio": 1.0
+      },
+      "pronunciation_overrides": []
+    },
+    {
+      "segment_id": "seg_011",
+      "text": "Các pi ti sẽ hướng dẫn kỹ thuật, giúp bạn tập đúng và hạn chế tối đa chấn thương!",
+      "performance": {
+        "segment_role": "testimonial",
+        "speaking_intent": "reassure",
+        "emotion_state": {
+          "primary_emotion": "warm",
+          "valence": 0.6,
+          "arousal": 0.3
+        },
+        "speaker_attitude": "intimate",
+        "energy_level": "whisper",
+        "emphasis_words": [],
+        "pause_instruction": {
+          "pause_before_ms": 0,
+          "pause_after_ms": 220,
+          "breath_inset": false
+        },
+        "pitch_behavior": {
+          "contour": "dynamic_range",
+          "pitch_shift_semitones": 0.0
+        },
+        "speed_ratio": 1.0
+      },
+      "pronunciation_overrides": []
+    },
+    {
+      "segment_id": "seg_012",
+      "text": "Hãy đến ngay Gym Toàn Thắng hôm nay để bứt phá giới hạn bản thân!",
+      "performance": {
+        "segment_role": "call_to_action",
+        "speaking_intent": "hype",
+        "emotion_state": {
+          "primary_emotion": "excited",
+          "valence": 0.8,
+          "arousal": 0.9
+        },
+        "speaker_attitude": "urgent",
+        "energy_level": "explosive",
+        "emphasis_words": [],
+        "pause_instruction": {
+          "pause_before_ms": 0,
+          "pause_after_ms": 220,
+          "breath_inset": false
+        },
+        "pitch_behavior": {
+          "contour": "dynamic_range",
+          "pitch_shift_semitones": 0.0
+        },
+        "speed_ratio": 1.0
+      },
+      "pronunciation_overrides": []
+    }
+  ]
+}

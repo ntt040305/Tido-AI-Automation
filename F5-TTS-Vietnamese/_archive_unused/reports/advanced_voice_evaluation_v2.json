@@ -1,0 +1,61 @@
+{
+  "selected_winner_id": "cand_seed_42",
+  "winner_final_score": 96.3,
+  "evaluator": "AI Voice Critic V2",
+  "candidates_evaluated": [
+    {
+      "candidate_id": "cand_seed_42",
+      "wave_path": "d:\\Tido\\F5-TTS-Vietnamese\\test_output_phase4\\cand_seed_42.wav",
+      "naturalness_score": 97.0,
+      "speaker_similarity_score": 97.8,
+      "pronunciation_accuracy_score": 96.0,
+      "prosody_alignment_score": 94.0,
+      "emotion_delivery_score": 100.0,
+      "speech_clarity_score": 92.0,
+      "final_composite_score": 96.3,
+      "prosody_details": {
+        "speed_match_score": 95.0,
+        "pause_match_score": 97.0,
+        "energy_curve_match_score": 93.8,
+        "emphasis_execution_score": 90.0,
+        "overall_prosody_alignment_score": 94.0
+      }
+    },
+    {
+      "candidate_id": "cand_seed_101",
+      "wave_path": "d:\\Tido\\F5-TTS-Vietnamese\\test_output_phase4\\cand_seed_101.wav",
+      "naturalness_score": 97.0,
+      "speaker_similarity_score": 97.9,
+      "pronunciation_accuracy_score": 96.0,
+      "prosody_alignment_score": 94.0,
+      "emotion_delivery_score": 100.0,
+      "speech_clarity_score": 92.0,
+      "final_composite_score": 96.3,
+      "prosody_details": {
+        "speed_match_score": 95.0,
+        "pause_match_score": 97.0,
+        "energy_curve_match_score": 93.8,
+        "emphasis_execution_score": 90.0,
+        "overall_prosody_alignment_score": 94.0
+      }
+    },
+    {
+      "candidate_id": "cand_seed_999",
+      "wave_path": "d:\\Tido\\F5-TTS-Vietnamese\\test_output_phase4\\cand_seed_999.wav",
+      "naturalness_score": 97.0,
+      "speaker_similarity_score": 97.4,
+      "pronunciation_accuracy_score": 86.0,
+      "prosody_alignment_score": 94.0,
+      "emotion_delivery_score": 100.0,
+      "speech_clarity_score": 92.0,
+      "final_composite_score": 94.2,
+      "prosody_details": {
+        "speed_match_score": 95.0,
+        "pause_match_score": 97.0,
+        "energy_curve_match_score": 93.8,
+        "emphasis_execution_score": 90.0,
+        "overall_prosody_alignment_score": 94.0
+      }
+    }
+  ]
+}

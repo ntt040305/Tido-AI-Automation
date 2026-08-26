@@ -1,0 +1,32 @@
+{
+  "version": "3.0",
+  "total_voices": 1,
+  "voices": [
+    {
+      "voice_id": "user_enrolled_mizaki_v3",
+      "name": "Custom User Enrolled Voice Mizaki",
+      "gender": "female",
+      "reference_audio": "d:\\Tido\\F5-TTS-Vietnamese\\test_output_phase5\\user_enrolled_mizaki_v3_24k_norm.wav",
+      "reference_text": "Ngay khi bước vào căn hộ, cảm nhận rõ nét nhất là không gian mở, khoáng đạt với bố cục liền mạch và lối thiết kế phóng khoáng.",
+      "duration_s": 12.0,
+      "speaker_embedding": [
+        3.672775,
+        2.7173289304097255,
+        0.17112575538080257,
+        0.8912353515625,
+        0.5,
+        2.0,
+        0.7398571735022498,
+        1.2
+      ],
+      "metadata": {
+        "original_input_file": "d:\\Tido\\Assets\\Voices\\VO_Mizaki_3_12s.wav",
+        "sample_rate": 24000,
+        "channels": 1,
+        "enrolled_at": "2026-08-25"
+      },
+      "default_persona": "warm_expert",
+      "default_style": "warm_expert"
+    }
+  ]
+}

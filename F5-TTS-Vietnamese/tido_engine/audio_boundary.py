@@ -56,7 +56,7 @@ class AudioStitcher:
 
     def stitch_chunks(self, rendered_chunks: list) -> AudioSegment:
         """
-        Stitches rendered chunks into a seamless continuous audio timeline.
+        Stitches rendered chunks into a seamless continuous audio timeline with VoiceStudio-style crossfade overlap.
         rendered_chunks: list of (AudioSegment, DeliveryPlan)
         """
         if not rendered_chunks:
@@ -67,11 +67,15 @@ class AudioStitcher:
         for j, (chunk_audio, delivery_plan) in enumerate(rendered_chunks):
             # Process boundary safety
             safe_audio = self.process_segment_boundary(chunk_audio)
-            final += safe_audio
-
-            # Add timeline room-tone pause between chunks
-            if j < len(rendered_chunks) - 1:
+            
+            if len(final) == 0:
+                final = safe_audio
+            else:
+                # If pause between chunks is small (e.g. <= 120ms), crossfade overlap 15ms for continuous breath flow
                 pause_ms = delivery_plan.pause_after_ms
-                final += make_room_tone(pause_ms, self.target_sr)
+                if pause_ms <= 120 and len(safe_audio) > 50 and len(final) > 50:
+                    final = final.append(safe_audio, crossfade=15)
+                else:
+                    final += make_room_tone(pause_ms, self.target_sr) + safe_audio
 
         return final

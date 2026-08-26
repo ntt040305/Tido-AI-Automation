@@ -1,0 +1,37 @@
+{
+  "total_logs": 4,
+  "usage_logs": [
+    {
+      "log_id": "log_1787638216106",
+      "voice_id": "voice_vn_female_north_01",
+      "script_id": "scr_gym_60s",
+      "style_used": "warm_expert",
+      "quality_score": 96.5,
+      "timestamp": 1787638216.1064746
+    },
+    {
+      "log_id": "log_1787638216106",
+      "voice_id": "voice_vn_female_north_01",
+      "script_id": "scr_promo_30s",
+      "style_used": "warm_expert",
+      "quality_score": 97.0,
+      "timestamp": 1787638216.1064746
+    },
+    {
+      "log_id": "log_1787643745877",
+      "voice_id": "voice_vn_female_north_01",
+      "script_id": "scr_gym_60s",
+      "style_used": "warm_expert",
+      "quality_score": 96.5,
+      "timestamp": 1787643745.8771172
+    },
+    {
+      "log_id": "log_1787643745877",
+      "voice_id": "voice_vn_female_north_01",
+      "script_id": "scr_promo_30s",
+      "style_used": "warm_expert",
+      "quality_score": 97.0,
+      "timestamp": 1787643745.8776746
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "script_title": "Phase 7 Micro Dynamics Test Script",
+  "voice_id": "vo_mizaki_3",
+  "context_description": "quảng cáo gym micro",
+  "timestamp": "2026-08-26 01:40:09",
+  "variant_a_v2_semantic_acting": {
+    "pipeline_mode": "v2_semantic_acting",
+    "metrics": {
+      "speaker_similarity": 98.0,
+      "naturalness": 98.9,
+      "pronunciation_accuracy": 96.0,
+      "pause_quality": 98.5,
+      "energy_variation": 22.4,
+      "ending_quality": 92.0,
+      "micro_dynamics_score": 90.5
+    }
+  },
+  "variant_b_v2_micro_dynamics": {
+    "pipeline_mode": "v2_micro_dynamics",
+    "metrics": {
+      "speaker_similarity": 98.0,
+      "naturalness": 99.4,
+      "pronunciation_accuracy": 96.0,
+      "pause_quality": 99.1,
+      "energy_variation": 24.8,
+      "ending_quality": 98.6,
+      "micro_dynamics_score": 99.2
+    }
+  },
+  "deltas": {
+    "naturalness_improvement": "+0.5 pts",
+    "pause_realism_gain": "+0.6 pts",
+    "energy_variation_gain": "+2.4 dB",
+    "ending_quality_gain": "+6.6 pts",
+    "micro_dynamics_score_gain": "+8.7 pts",
+    "speaker_similarity_retained": "98.0% (Identical Identity)"
+  }
+}

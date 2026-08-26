@@ -1,0 +1,13 @@
+{
+  "total_logs": 1,
+  "usage_logs": [
+    {
+      "log_id": "log_1787638423770",
+      "voice_id": "voice_mizaki_fem_01",
+      "script_id": "script_01",
+      "style_used": "warm_expert",
+      "quality_score": 96.5,
+      "timestamp": 1787638423.7707887
+    }
+  ]
+}

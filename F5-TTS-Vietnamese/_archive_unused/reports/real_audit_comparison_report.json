@@ -1,0 +1,58 @@
+{
+  "test_cases": [
+    {
+      "file": "output_cli.wav",
+      "pipeline": "CLI Wrapper -> VoiceService",
+      "voice_id": "vo_mizaki_3",
+      "style": "commercial_seller",
+      "metrics": {
+        "duration_s": 83.95,
+        "sample_rate_hz": 24000,
+        "peak_dbfs": 0.0,
+        "rms_dbfs": -16.6,
+        "speaking_rate": 0.19,
+        "pause_ratio": 15.6,
+        "energy_variation_std": 9.65,
+        "naturalness_score": 96.2,
+        "pronunciation_score": 60.0,
+        "speaker_similarity": 73.9
+      }
+    },
+    {
+      "file": "output_commercial.wav",
+      "pipeline": "API REST -> VoiceService",
+      "voice_id": "vo_mizaki_3",
+      "style": "commercial_seller",
+      "metrics": {
+        "duration_s": 8.91,
+        "sample_rate_hz": 24000,
+        "peak_dbfs": 0.0,
+        "rms_dbfs": -16.51,
+        "speaking_rate": 2.69,
+        "pause_ratio": 8.4,
+        "energy_variation_std": 7.88,
+        "naturalness_score": 96.2,
+        "pronunciation_score": 86.0,
+        "speaker_similarity": 98.0
+      }
+    },
+    {
+      "file": "output_warm.wav",
+      "pipeline": "API REST -> VoiceService",
+      "voice_id": "vo_mizaki_3",
+      "style": "warm_expert",
+      "metrics": {
+        "duration_s": 10.94,
+        "sample_rate_hz": 24000,
+        "peak_dbfs": -7.84,
+        "rms_dbfs": -24.62,
+        "speaking_rate": 2.19,
+        "pause_ratio": 22.0,
+        "energy_variation_std": 10.09,
+        "naturalness_score": 96.2,
+        "pronunciation_score": 85.0,
+        "speaker_similarity": 95.7
+      }
+    }
+  ]
+}

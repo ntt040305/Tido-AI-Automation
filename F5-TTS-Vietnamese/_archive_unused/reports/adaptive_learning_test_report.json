@@ -1,0 +1,22 @@
+{
+  "learning_comparison": {
+    "target_voice_id": "voice_mizaki_fem_01",
+    "category": "cosmetics",
+    "score_before": 85.0,
+    "score_after": 99.0,
+    "delta_improvement": 14.0
+  },
+  "user_preference_profile": {
+    "user_id": "usr_skincare_brand_01",
+    "preferred_voices": {
+      "voice_mizaki_fem_01": 8.0,
+      "voice_motaro_male_02": 1.75
+    },
+    "preferred_styles": {
+      "warm_expert": 8.75
+    },
+    "preferred_energy": "medium",
+    "preferred_pacing": "normal"
+  },
+  "ab_test_win_rate": 90.0
+}

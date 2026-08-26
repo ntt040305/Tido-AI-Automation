@@ -29,6 +29,7 @@ dependencies = [
     "pydub",
     "pypinyin",
     "safetensors",
+    "sherpa-onnx",
     "soundfile",
     "tomli",
     "torch>=2.0.0",

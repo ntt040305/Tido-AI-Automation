@@ -1,0 +1,47 @@
+{
+  "selected_candidate_id": "cand_seed_42",
+  "best_wave_path": "d:\\Tido\\F5-TTS-Vietnamese\\test_output_phase4\\cand_seed_42.wav",
+  "best_composite_score": 94.7,
+  "total_candidates_evaluated": 3,
+  "reports": [
+    {
+      "candidate_id": "cand_seed_42",
+      "wave_path": "d:\\Tido\\F5-TTS-Vietnamese\\test_output_phase4\\cand_seed_42.wav",
+      "duration_s": 4.08,
+      "speaker_similarity_score": 94.6,
+      "naturalness_score": 96.0,
+      "speech_clarity_score": 92.0,
+      "speaking_rate_wpm": 220.8,
+      "pause_quality_score": 95.0,
+      "energy_variation_score": 100.0,
+      "robotic_penalty": 10.0,
+      "composite_quality_score": 94.7
+    },
+    {
+      "candidate_id": "cand_seed_101",
+      "wave_path": "d:\\Tido\\F5-TTS-Vietnamese\\test_output_phase4\\cand_seed_101.wav",
+      "duration_s": 4.22,
+      "speaker_similarity_score": 93.5,
+      "naturalness_score": 96.0,
+      "speech_clarity_score": 92.0,
+      "speaking_rate_wpm": 213.0,
+      "pause_quality_score": 95.0,
+      "energy_variation_score": 100.0,
+      "robotic_penalty": 10.0,
+      "composite_quality_score": 94.5
+    },
+    {
+      "candidate_id": "cand_seed_999",
+      "wave_path": "d:\\Tido\\F5-TTS-Vietnamese\\test_output_phase4\\cand_seed_999.wav",
+      "duration_s": 4.48,
+      "speaker_similarity_score": 91.0,
+      "naturalness_score": 91.0,
+      "speech_clarity_score": 70.0,
+      "speaking_rate_wpm": 200.8,
+      "pause_quality_score": 95.0,
+      "energy_variation_score": 100.0,
+      "robotic_penalty": 35.0,
+      "composite_quality_score": 86.5
+    }
+  ]
+}

@@ -1,0 +1,85 @@
+{
+  "search_query": "giọng nữ miền Bắc ấm áp chuyên gia",
+  "parsed_intent": {
+    "gender": "female",
+    "accent": "Northern",
+    "style": "warm_expert"
+  },
+  "ranked_leaderboard": [
+    {
+      "rank": 1,
+      "voice_id": "voice_vn_female_north_01",
+      "name": "Mizaki - Giọng Nữ Miền Bắc Ấm Áp",
+      "rank_score": 98.0,
+      "profile_v4": {
+        "voice_id": "voice_vn_female_north_01",
+        "name": "Mizaki - Giọng Nữ Miền Bắc Ấm Áp",
+        "owner_id": "usr_admin_101",
+        "permission": "public",
+        "version": "4.0",
+        "quality_score": 96.5,
+        "reference_audio": "d:\\Tido\\Assets\\Voices\\VO_Mizaki_3_12s.wav",
+        "reference_text": "Ngay khi bước vào căn hộ, cảm nhận rõ nét nhất là không gian mở.",
+        "duration_s": 12.0,
+        "speaker_embedding": [
+          0.1,
+          0.2,
+          0.3
+        ],
+        "metadata_v2": {
+          "gender": "female",
+          "language": "vi-VN",
+          "accent": "Northern",
+          "estimated_age_range": "young_adult",
+          "speaking_style": "warm_expert",
+          "energy_level": "medium",
+          "voice_quality_score": 96.5
+        },
+        "metadata_embedding": [],
+        "usage_count": 15,
+        "default_persona": "warm_expert",
+        "default_style": "warm_expert"
+      }
+    },
+    {
+      "rank": 2,
+      "voice_id": "voice_vn_female_central_03",
+      "name": "Thu Hà - Giọng Nữ Miền Trung Thuyết Minh",
+      "rank_score": 66.1,
+      "profile_v4": {
+        "voice_id": "voice_vn_female_central_03",
+        "name": "Thu Hà - Giọng Nữ Miền Trung Thuyết Minh",
+        "owner_id": "usr_admin_102",
+        "permission": "shared",
+        "version": "4.0",
+        "quality_score": 88.5,
+        "reference_audio": "d:\\Tido\\Assets\\Voices\\VO_Mizaki_3_12s.wav",
+        "reference_text": "Vùng đất cố đô với ngàn năm văn hóa truyền thống.",
+        "duration_s": 15.0,
+        "speaker_embedding": [
+          0.7,
+          0.8,
+          0.9
+        ],
+        "metadata_v2": {
+          "gender": "female",
+          "language": "vi-VN",
+          "accent": "Central",
+          "estimated_age_range": "middle_aged",
+          "speaking_style": "documentary_narrator",
+          "energy_level": "calm",
+          "voice_quality_score": 88.5
+        },
+        "metadata_embedding": [],
+        "usage_count": 3,
+        "default_persona": "documentary_narrator",
+        "default_style": "documentary_narrator"
+      }
+    }
+  ],
+  "telemetry_stats": {
+    "usage_count": 4,
+    "average_quality_score": 96.8,
+    "last_used_timestamp": 1787643745.8776746
+  }
+}

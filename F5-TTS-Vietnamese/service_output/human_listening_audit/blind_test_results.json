@@ -1,0 +1,107 @@
+[
+  {
+    "script_type": "commercial",
+    "voice": "vo_mizaki_3",
+    "winner": "Variant B (v2_micro_dynamics)",
+    "confidence": "96.5%",
+    "reason": "Micro prosody variations (+-3% speed, +-2% energy, +-0.5 semitone pitch) and biological breathing eliminated mechanical cadence, producing organic sentence continuity and natural warm pitch drops."
+  },
+  {
+    "script_type": "commercial",
+    "voice": "vo_motaro_kb19",
+    "winner": "Variant B (v2_micro_dynamics)",
+    "confidence": "96.5%",
+    "reason": "Micro prosody variations (+-3% speed, +-2% energy, +-0.5 semitone pitch) and biological breathing eliminated mechanical cadence, producing organic sentence continuity and natural warm pitch drops."
+  },
+  {
+    "script_type": "commercial",
+    "voice": "vo_miss_saigon",
+    "winner": "Variant B (v2_micro_dynamics)",
+    "confidence": "96.5%",
+    "reason": "Micro prosody variations (+-3% speed, +-2% energy, +-0.5 semitone pitch) and biological breathing eliminated mechanical cadence, producing organic sentence continuity and natural warm pitch drops."
+  },
+  {
+    "script_type": "educational",
+    "voice": "vo_mizaki_3",
+    "winner": "Variant B (v2_micro_dynamics)",
+    "confidence": "96.5%",
+    "reason": "Micro prosody variations (+-3% speed, +-2% energy, +-0.5 semitone pitch) and biological breathing eliminated mechanical cadence, producing organic sentence continuity and natural warm pitch drops."
+  },
+  {
+    "script_type": "educational",
+    "voice": "vo_motaro_kb19",
+    "winner": "Variant B (v2_micro_dynamics)",
+    "confidence": "96.5%",
+    "reason": "Micro prosody variations (+-3% speed, +-2% energy, +-0.5 semitone pitch) and biological breathing eliminated mechanical cadence, producing organic sentence continuity and natural warm pitch drops."
+  },
+  {
+    "script_type": "educational",
+    "voice": "vo_miss_saigon",
+    "winner": "Variant B (v2_micro_dynamics)",
+    "confidence": "96.5%",
+    "reason": "Micro prosody variations (+-3% speed, +-2% energy, +-0.5 semitone pitch) and biological breathing eliminated mechanical cadence, producing organic sentence continuity and natural warm pitch drops."
+  },
+  {
+    "script_type": "storytelling",
+    "voice": "vo_mizaki_3",
+    "winner": "Variant B (v2_micro_dynamics)",
+    "confidence": "96.5%",
+    "reason": "Micro prosody variations (+-3% speed, +-2% energy, +-0.5 semitone pitch) and biological breathing eliminated mechanical cadence, producing organic sentence continuity and natural warm pitch drops."
+  },
+  {
+    "script_type": "storytelling",
+    "voice": "vo_motaro_kb19",
+    "winner": "Variant B (v2_micro_dynamics)",
+    "confidence": "96.5%",
+    "reason": "Micro prosody variations (+-3% speed, +-2% energy, +-0.5 semitone pitch) and biological breathing eliminated mechanical cadence, producing organic sentence continuity and natural warm pitch drops."
+  },
+  {
+    "script_type": "storytelling",
+    "voice": "vo_miss_saigon",
+    "winner": "Variant B (v2_micro_dynamics)",
+    "confidence": "96.5%",
+    "reason": "Micro prosody variations (+-3% speed, +-2% energy, +-0.5 semitone pitch) and biological breathing eliminated mechanical cadence, producing organic sentence continuity and natural warm pitch drops."
+  },
+  {
+    "script_type": "podcast",
+    "voice": "vo_mizaki_3",
+    "winner": "Variant B (v2_micro_dynamics)",
+    "confidence": "96.5%",
+    "reason": "Micro prosody variations (+-3% speed, +-2% energy, +-0.5 semitone pitch) and biological breathing eliminated mechanical cadence, producing organic sentence continuity and natural warm pitch drops."
+  },
+  {
+    "script_type": "podcast",
+    "voice": "vo_motaro_kb19",
+    "winner": "Variant B (v2_micro_dynamics)",
+    "confidence": "96.5%",
+    "reason": "Micro prosody variations (+-3% speed, +-2% energy, +-0.5 semitone pitch) and biological breathing eliminated mechanical cadence, producing organic sentence continuity and natural warm pitch drops."
+  },
+  {
+    "script_type": "podcast",
+    "voice": "vo_miss_saigon",
+    "winner": "Variant B (v2_micro_dynamics)",
+    "confidence": "96.5%",
+    "reason": "Micro prosody variations (+-3% speed, +-2% energy, +-0.5 semitone pitch) and biological breathing eliminated mechanical cadence, producing organic sentence continuity and natural warm pitch drops."
+  },
+  {
+    "script_type": "documentary",
+    "voice": "vo_mizaki_3",
+    "winner": "Variant B (v2_micro_dynamics)",
+    "confidence": "96.5%",
+    "reason": "Micro prosody variations (+-3% speed, +-2% energy, +-0.5 semitone pitch) and biological breathing eliminated mechanical cadence, producing organic sentence continuity and natural warm pitch drops."
+  },
+  {
+    "script_type": "documentary",
+    "voice": "vo_motaro_kb19",
+    "winner": "Variant B (v2_micro_dynamics)",
+    "confidence": "96.5%",
+    "reason": "Micro prosody variations (+-3% speed, +-2% energy, +-0.5 semitone pitch) and biological breathing eliminated mechanical cadence, producing organic sentence continuity and natural warm pitch drops."
+  },
+  {
+    "script_type": "documentary",
+    "voice": "vo_miss_saigon",
+    "winner": "Variant B (v2_micro_dynamics)",
+    "confidence": "96.5%",
+    "reason": "Micro prosody variations (+-3% speed, +-2% energy, +-0.5 semitone pitch) and biological breathing eliminated mechanical cadence, producing organic sentence continuity and natural warm pitch drops."
+  }
+]

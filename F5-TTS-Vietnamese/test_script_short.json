@@ -1,0 +1,30 @@
+{
+  "title": "Gym Commercial Test",
+  "voice_id": "vo_mizaki_3",
+  "global_genre": "commercial_seller",
+  "speaker_intent": "friendly_gym_consultant",
+  "audience": "people_wanting_body_transformation",
+  "segments": [
+    {
+      "segment_id": "seg_001",
+      "role": "hook",
+      "intent": "empathy_question",
+      "emotion": "curious_warm",
+      "text": "Bạn có đang gặp khó khăn trong việc thay đổi vóc dáng và cải thiện sức khỏe mỗi ngày không?"
+    },
+    {
+      "segment_id": "seg_002",
+      "role": "solution",
+      "intent": "trust_building",
+      "emotion": "confident_warm",
+      "text": "Tại Gym Toàn Thắng, bạn sẽ được tập luyện trong không gian hiện đại, với hệ thống máy tập khoa học và đội ngũ huấn luyện viên luôn đồng hành."
+    },
+    {
+      "segment_id": "seg_003",
+      "role": "cta",
+      "intent": "encourage_action",
+      "emotion": "positive_energy",
+      "text": "Hãy bắt đầu hành trình thay đổi bản thân ngay hôm nay."
+    }
+  ]
+}

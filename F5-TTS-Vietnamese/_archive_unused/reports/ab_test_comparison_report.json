@@ -1,0 +1,49 @@
+{
+  "ab_test_results": [
+    {
+      "mode": "v1",
+      "filename": "output_v1_baseline.wav",
+      "render_time_s": 71.81,
+      "metrics": {
+        "duration_s": 20.75,
+        "sample_rate_hz": 24000,
+        "channels": 1,
+        "peak_dbfs": -1.0,
+        "rms_dbfs": -19.07,
+        "clipped_samples": 0,
+        "is_clipping_free": true
+      },
+      "text_trace_file": "d:\\Tido\\F5-TTS-Vietnamese\\ab_test_outputs\\debug_text_trace.json"
+    },
+    {
+      "mode": "v2_safe",
+      "filename": "output_v2_safe.wav",
+      "render_time_s": 50.21,
+      "metrics": {
+        "duration_s": 20.75,
+        "sample_rate_hz": 24000,
+        "channels": 1,
+        "peak_dbfs": -1.0,
+        "rms_dbfs": -19.08,
+        "clipped_samples": 0,
+        "is_clipping_free": true
+      },
+      "text_trace_file": "d:\\Tido\\F5-TTS-Vietnamese\\ab_test_outputs\\debug_text_trace.json"
+    },
+    {
+      "mode": "v2_full",
+      "filename": "output_v2_full.wav",
+      "render_time_s": 50.31,
+      "metrics": {
+        "duration_s": 20.75,
+        "sample_rate_hz": 24000,
+        "channels": 1,
+        "peak_dbfs": -1.0,
+        "rms_dbfs": -19.77,
+        "clipped_samples": 0,
+        "is_clipping_free": true
+      },
+      "text_trace_file": "d:\\Tido\\F5-TTS-Vietnamese\\ab_test_outputs\\debug_text_trace.json"
+    }
+  ]
+}

@@ -25,7 +25,17 @@
           "tvc game"
         ],
         "speed_default": 1.0,
-        "cfg_strength_default": 1.6
+        "cfg_strength_default": 1.55
+      },
+      "pronunciation_map": {
+        "Toàn Thắng": "Toàn Thắng",
+        "Gym": "Gim"
+      },
+      "references": {
+        "default": {
+          "audio_file": "d:/Tido/Assets/Voices/VO_Motaro_kb19_12s.wav",
+          "ref_text": "Dừng lại ngay, nóng nhất tháng bảy không phải thời tiết, mà là bão sale Royal Short. Duy nhất ba ngày từ ngày mồng năm đến ngày mồng bảy tháng bảy."
+        }
       }
     },
     {
@@ -52,7 +62,53 @@
           "mỹ phẩm"
         ],
         "speed_default": 1.0,
-        "cfg_strength_default": 1.5
+        "cfg_strength_default": 1.50
+      },
+      "pronunciation_map": {
+        "Toàn Thắng": "Toàn Thắng",
+        "Gym": "Gim"
+      },
+      "references": {
+        "default": {
+          "audio_file": "d:/Tido/Assets/Voices/VO_Mizaki_3_12s.wav",
+          "ref_text": "Ngay khi bước vào căn hộ, cảm nhận rõ nét nhất là không gian mở, khoáng đạt với bố cục liền mạch và lối thiết kế phóng khoáng. Với diện tích khoảng 65 mét vuông, căn hộ hai phòng ngủ được thiết kế tối."
+        }
+      }
+    },
+    {
+      "id": "vo_miss_saigon",
+      "name": "VO Miss Saigon (Nữ miền Nam - Ấm áp / Nhẹ nhàng / Phóng khoáng)",
+      "gender": "female",
+      "audio_file": "d:/Tido/Assets/Voices/VO_MissSaigon_12s.wav",
+      "ref_text": "Chào mừng bạn đến với kênh lắng nghe chia sẻ cuộc sống nhẹ nhàng mỗi ngày cùng chúng mình.",
+      "duration_s": 12.0,
+      "trim_to_s": null,
+      "profile": {
+        "style": [
+          "miền nam",
+          "ấm áp",
+          "podcast",
+          "nhẹ nhàng"
+        ],
+        "tone": "warm",
+        "best_for": [
+          "podcast",
+          "storytelling",
+          "mỹ phẩm",
+          "chia sẻ"
+        ],
+        "speed_default": 1.0,
+        "cfg_strength_default": 1.50
+      },
+      "pronunciation_map": {
+        "Toàn Thắng": "Toàn Thắng",
+        "Gym": "Gim"
+      },
+      "references": {
+        "default": {
+          "audio_file": "d:/Tido/Assets/Voices/VO_MissSaigon_12s.wav",
+          "ref_text": "Chào mừng bạn đến với kênh lắng nghe chia sẻ cuộc sống nhẹ nhàng mỗi ngày cùng chúng mình."
+        }
       }
     }
   ]

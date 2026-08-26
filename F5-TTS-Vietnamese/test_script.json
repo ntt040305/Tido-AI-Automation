@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "title": "Quảng cáo Phòng Gym Toàn Thắng",
+    "title": "Quảng cáo Phòng Gym Toàn Thắng (Fix Hallucinations & Tone)",
     "voice_id": "vo_mizaki_3",
     "genre_vibe": "Khỏe Khoắn Hào Hứng",
     "tags": [
@@ -14,63 +14,63 @@
   },
   "segments": [
     {
-      "text": "Bạn muốn thay đổi vóc dáng,khỏe hơn và tự tin hơn mỗi ngày?",
+      "text": "Bạn muốn thay đổi vóc dáng, [nhấn mạnh] khỏe hơn và tự tin hơn mỗi ngày?",
       "emotion": "gợi mở, truyền động lực",
       "pacing": "bình thường"
     },
     {
-      "text": "Đừng chỉ nghĩ về nó,hãy bắt đầu hành trình của bạn tại gim Toàn Thắng!",
-      "emotion": "thôi thúc, mạnh mẽ",
-      "pacing": "nhanh"
+      "text": "Đừng chỉ nghĩ về nó! Hãy bắt đầu hành trình ngay tại Gym Toàn Thắng!",
+      "emotion": "hào hứng, mạnh mẽ",
+      "pacing": "bình thường"
     },
     {
-      "text": "Một không gian tập luyện hiện đại,năng động và sẵn sàng tiếp thêm năng lượng cho bạn.",
+      "text": "Một không gian tập luyện hiện đại, năng động và sẵn sàng tiếp thêm năng lượng cho bạn!",
       "emotion": "hào hứng, tích cực",
       "pacing": "bình thường"
     },
     {
-      "text": "Tại Toàn Thắng,hệ thống máy tập được bố trí khoa học cho nhiều mục tiêu khác nhau.",
+      "text": "Tại Toàn Thắng, hệ thống máy tập được bố trí khoa học cho nhiều mục tiêu khác nhau.",
       "emotion": "chuyên nghiệp, giới thiệu",
       "pacing": "bình thường"
     },
     {
-      "text": "Từ tăng cơ, giảm mỡ,cải thiện sức bền đến duy trì một cơ thể khỏe mạnh.",
+      "text": "Từ tăng cơ, giảm mỡ, cải thiện sức bền đến duy trì một cơ thể khỏe mạnh!",
       "emotion": "tự tin, thuyết phục",
       "pacing": "bình thường"
     },
     {
-      "text": "Khu vực tập tạ được trang bị đa dạng,giúp bạn dễ dàng xây dựng từng nhóm cơ.",
+      "text": "Khu vực tập tạ được trang bị đa dạng, giúp bạn dễ dàng xây dựng từng nhóm cơ.",
       "emotion": "mạnh mẽ, chuyên nghiệp",
       "pacing": "bình thường"
     },
     {
-      "text": "Từ ngực, vai, lưng,đến chân và tay đều có thiết bị hỗ trợ phù hợp.",
+      "text": "Từ ngực, vai, lưng, đến chân và tay đều có thiết bị hỗ trợ phù hợp.",
       "emotion": "giới thiệu, chắc chắn",
       "pacing": "bình thường"
     },
     {
-      "text": "Muốn đốt cháy năng lượng? Khu các-đi-ô luôn sẵn sàng cho những buổi tập đầy hứng khởi!",
-      "emotion": "năng lượng, hào hứng",
-      "pacing": "nhanh"
+      "text": "Muốn đốt cháy năng lượng? Khu các đi ô luôn sẵn sàng cho những buổi tập đầy hứng khởi!",
+      "emotion": "energetic",
+      "pacing": "bình thường"
     },
     {
-      "text": "Máy chạy bộ, xe đạp và nhiều thiết bị khác,giúp buổi tập thêm đa dạng.",
+      "text": "Máy chạy bộ, xe đạp và nhiều thiết bị khác, giúp buổi tập thêm đa dạng.",
       "emotion": "tươi sáng, giới thiệu",
       "pacing": "bình thường"
     },
     {
-      "text": "Bạn mới bắt đầu tập luyện?Đừng lo, Toàn Thắng luôn có đội ngũ hỗ trợ đồng hành.",
-      "emotion": "gần gũi, trấn an",
+      "text": "Bạn mới bắt đầu tập luyện? [thì thầm] Đừng lo, Toàn Thắng luôn có đội ngũ hỗ trợ đồng hành.",
+      "emotion": "warm",
       "pacing": "bình thường"
     },
     {
-      "text": "Các pi-ti sẽ hướng dẫn kỹ thuật,giúp bạn tập đúng và hạn chế những chấn thương không đáng có.",
+      "text": "Các pi ti sẽ hướng dẫn kỹ thuật, giúp bạn tập đúng và hạn chế tối đa chấn thương!",
       "emotion": "tận tâm, đáng tin cậy",
       "pacing": "bình thường"
     },
     {
-      "text": "Mỗi người có một mục tiêu khác nhau,vì vậy cách tập cũng cần được lựa chọn phù hợp.",
-      "emotion": "chuyên nghiệp, tư vấn",
+      "text": "Hãy đến ngay Gym Toàn Thắng hôm nay để bứt phá giới hạn bản thân!",
+      "emotion": "urgent",
       "pacing": "bình thường"
     }
   ]

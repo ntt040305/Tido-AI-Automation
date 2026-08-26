@@ -1,0 +1,369 @@
+{
+  "title": "Phase 7 Micro Dynamics Test Script",
+  "voice_id": "vo_mizaki_3",
+  "enable_humanization": true,
+  "pipeline_mode": "v2_micro_dynamics",
+  "resolved_profile": "commercial_soft",
+  "profile_config": {
+    "expression_limit": 2,
+    "pause_intensity": 0.5,
+    "emotion_strength": 0.7,
+    "spoken_style_strength": 0.6,
+    "ending_style": "confident_close"
+  },
+  "execution_time_s": 0.001,
+  "voice_behavior_dna": {
+    "pause_style": "punchy",
+    "sentence_length_preference": "short",
+    "breath_style": "minimal",
+    "energy_curve": "climax_end",
+    "ending_style": "crisp",
+    "question_style": "rising"
+  },
+  "segment_traces": [
+    {
+      "segment_id": "seg_001",
+      "original_text": "Bạn 35 tuổi có đang gặp khó khăn trong việc thay đổi vóc dáng không?",
+      "humanized_text": "Thật ra... Bạn 35 tuổi có đang gặp khó khăn trong việc thay đổi vóc dáng không?",
+      "expression_trace": {
+        "segment_id": "seg_001",
+        "expression_applied": "Thật ra...",
+        "total_expressions_used": 1,
+        "quota_limit": 2
+      },
+      "emotion_trace": {
+        "segment_id": "seg_001",
+        "primary_emotion": "curiosity",
+        "valence": 0.2,
+        "arousal": 0.6,
+        "energy_target": "medium_high"
+      },
+      "pause_metadata": {
+        "pause_before_ms": 0,
+        "pause_after_ms": 220,
+        "breath_inset": false
+      },
+      "acoustic_trace": {
+        "segment_id": "seg_001",
+        "rhythm_trace": {
+          "segment_id": "seg_001",
+          "speed_ratio": 0.96,
+          "rhythm_phase": "opening_settle"
+        },
+        "breath_meta": {
+          "breath_before_sentence": true,
+          "breath_duration_ms": 220,
+          "breath_intensity": 0.65,
+          "breath_style": "minimal"
+        },
+        "emphasis_meta": [],
+        "ending_meta": {
+          "ending_style": "confident_close",
+          "contour": "punchy_drop",
+          "pitch_shift_semitones": -0.5,
+          "decay_ms": 60
+        },
+        "micro_jitter_meta": {
+          "speed_jitter": "-0.41%",
+          "energy_jitter_db": "0.18 dB",
+          "pause_jitter_ms": 11,
+          "seed_used": 42
+        }
+      },
+      "semantic_acting_trace": {
+        "segment_id": "seg_001",
+        "intent_meta": {
+          "intent": "HOOK",
+          "emotion": "curiosity",
+          "audience_state": "attentive",
+          "importance_score": 0.9
+        },
+        "meaning_emphasis_meta": [
+          {
+            "phrase": "đổi vóc dáng không",
+            "importance": "high",
+            "energy_boost": "+1.5 dB",
+            "duration_scale": 1.1
+          }
+        ],
+        "semantic_pause_meta": {
+          "pause_after_ms": 220,
+          "boundary_type": "question",
+          "safety_checked": true
+        },
+        "pitch_contour_meta": {
+          "contour": "question_rise",
+          "pitch_shift_semitones": 1.2
+        },
+        "emotion_transition": {
+          "segment_id": "seg_001",
+          "primary_emotion": "curiosity",
+          "valence": 0.3,
+          "arousal": 0.7
+        }
+      },
+      "micro_dynamics_trace": {
+        "segment_id": "seg_001",
+        "dna_style": "punchy",
+        "micro_prosody_variation": {
+          "speed_variation": "-2.85%",
+          "energy_variation": "-0.16 dB",
+          "pitch_variation": "-0.03 semitones",
+          "seed_used": 1138526057
+        },
+        "biological_breath": {
+          "breath_probability": 0.85,
+          "breath_duration_ms": 240,
+          "breath_strength": 0.55
+        },
+        "vowel_duration_emphasis": [
+          {
+            "target_phrase": "ra... Bạn",
+            "duration_scale": 1.05,
+            "pitch_adjustment": "+0.2"
+          }
+        ],
+        "sentence_flow": {
+          "segment_id": "seg_001",
+          "previous_energy": 0.0,
+          "current_target_energy": 0.5,
+          "transition_curve": "smooth_rise"
+        },
+        "natural_ending": {
+          "ending_type": "curiosity_rise",
+          "pitch_shift_semitones": 1.0,
+          "decay_ms": 40
+        }
+      },
+      "adaptive_profile": "commercial_soft",
+      "safety_guard_status": "PASSED"
+    },
+    {
+      "segment_id": "seg_002",
+      "original_text": "Tại Gym Toàn Thắng, không gian rộng 65 mét vuông giúp bạn tập luyện rất tốt và hiệu quả.",
+      "humanized_text": "Đặc biệt là... Tại Gym Toàn Thắng, không gian rộng 65 mét vuông giúp bạn tập luyện rất tốt và hiệu quả.",
+      "expression_trace": {
+        "segment_id": "seg_002",
+        "expression_applied": "Đặc biệt là...",
+        "total_expressions_used": 2,
+        "quota_limit": 2
+      },
+      "emotion_trace": {
+        "segment_id": "seg_002",
+        "primary_emotion": "trust",
+        "valence": 0.7,
+        "arousal": 0.5,
+        "energy_target": "medium"
+      },
+      "pause_metadata": {
+        "pause_before_ms": 0,
+        "pause_after_ms": 200,
+        "breath_inset": false
+      },
+      "acoustic_trace": {
+        "segment_id": "seg_002",
+        "rhythm_trace": {
+          "segment_id": "seg_002",
+          "speed_ratio": 1.0,
+          "rhythm_phase": "middle_cadence"
+        },
+        "breath_meta": {
+          "breath_before_sentence": true,
+          "breath_duration_ms": 220,
+          "breath_intensity": 0.65,
+          "breath_style": "minimal"
+        },
+        "emphasis_meta": [],
+        "ending_meta": {
+          "ending_style": "confident_close",
+          "contour": "punchy_drop",
+          "pitch_shift_semitones": -0.5,
+          "decay_ms": 60
+        },
+        "micro_jitter_meta": {
+          "speed_jitter": "-0.71%",
+          "energy_jitter_db": "0.23 dB",
+          "pause_jitter_ms": 10,
+          "seed_used": 43
+        }
+      },
+      "semantic_acting_trace": {
+        "segment_id": "seg_002",
+        "intent_meta": {
+          "intent": "INTRODUCTION",
+          "emotion": "welcoming",
+          "audience_state": "open",
+          "importance_score": 0.8
+        },
+        "meaning_emphasis_meta": [],
+        "semantic_pause_meta": {
+          "pause_after_ms": 200,
+          "boundary_type": "clause",
+          "safety_checked": true
+        },
+        "pitch_contour_meta": {
+          "contour": "statement_fall",
+          "pitch_shift_semitones": -0.5
+        },
+        "emotion_transition": {
+          "segment_id": "seg_002",
+          "primary_emotion": "informative",
+          "valence": 0.1,
+          "arousal": 0.5
+        }
+      },
+      "micro_dynamics_trace": {
+        "segment_id": "seg_002",
+        "dna_style": "punchy",
+        "micro_prosody_variation": {
+          "speed_variation": "0.81%",
+          "energy_variation": "-0.13 dB",
+          "pitch_variation": "0.13 semitones",
+          "seed_used": 867460871
+        },
+        "biological_breath": {
+          "breath_probability": 0.85,
+          "breath_duration_ms": 240,
+          "breath_strength": 0.55
+        },
+        "vowel_duration_emphasis": [
+          {
+            "target_phrase": "rất tốt",
+            "duration_scale": 1.08,
+            "pitch_adjustment": "+0.3"
+          }
+        ],
+        "sentence_flow": {
+          "segment_id": "seg_002",
+          "previous_energy": 0.5,
+          "current_target_energy": 0.7,
+          "transition_curve": "maintain"
+        },
+        "natural_ending": {
+          "ending_type": "curiosity_rise",
+          "pitch_shift_semitones": 1.0,
+          "decay_ms": 40
+        }
+      },
+      "adaptive_profile": "commercial_soft",
+      "safety_guard_status": "PASSED"
+    },
+    {
+      "segment_id": "seg_003",
+      "original_text": "Hãy bắt đầu hành trình ngay hôm nay với ưu đãi 100%!",
+      "humanized_text": "Hãy bắt đầu hành trình ngay hôm nay với ưu đãi 100%!",
+      "expression_trace": {
+        "segment_id": "seg_003",
+        "expression_applied": "none",
+        "total_expressions_used": 2,
+        "quota_limit": 2
+      },
+      "emotion_trace": {
+        "segment_id": "seg_003",
+        "primary_emotion": "energy",
+        "valence": 0.8,
+        "arousal": 0.8,
+        "energy_target": "high"
+      },
+      "pause_metadata": {
+        "pause_before_ms": 0,
+        "pause_after_ms": 350,
+        "breath_inset": true
+      },
+      "acoustic_trace": {
+        "segment_id": "seg_003",
+        "rhythm_trace": {
+          "segment_id": "seg_003",
+          "speed_ratio": 1.06,
+          "rhythm_phase": "cta_acceleration"
+        },
+        "breath_meta": {
+          "breath_before_sentence": false,
+          "breath_duration_ms": 0,
+          "breath_intensity": 0.0,
+          "breath_style": "minimal"
+        },
+        "emphasis_meta": [],
+        "ending_meta": {
+          "ending_style": "confident_close",
+          "contour": "punchy_drop",
+          "pitch_shift_semitones": -0.5,
+          "decay_ms": 60
+        },
+        "micro_jitter_meta": {
+          "speed_jitter": "1.69%",
+          "energy_jitter_db": "-0.29 dB",
+          "pause_jitter_ms": -1,
+          "seed_used": 44
+        }
+      },
+      "semantic_acting_trace": {
+        "segment_id": "seg_003",
+        "intent_meta": {
+          "intent": "CTA",
+          "emotion": "confidence",
+          "audience_state": "action_oriented",
+          "importance_score": 0.95
+        },
+        "meaning_emphasis_meta": [
+          {
+            "phrase": "Hãy bắt đầu hành",
+            "importance": "critical",
+            "energy_boost": "+2.0 dB",
+            "duration_scale": 1.15
+          }
+        ],
+        "semantic_pause_meta": {
+          "pause_after_ms": 350,
+          "boundary_type": "sentence_end",
+          "safety_checked": true
+        },
+        "pitch_contour_meta": {
+          "contour": "cta_energy_rise",
+          "pitch_shift_semitones": 0.8
+        },
+        "emotion_transition": {
+          "segment_id": "seg_003",
+          "primary_emotion": "confidence",
+          "valence": 0.8,
+          "arousal": 0.85
+        }
+      },
+      "micro_dynamics_trace": {
+        "segment_id": "seg_003",
+        "dna_style": "punchy",
+        "micro_prosody_variation": {
+          "speed_variation": "-1.71%",
+          "energy_variation": "-0.15 dB",
+          "pitch_variation": "0.45 semitones",
+          "seed_used": 871184326
+        },
+        "biological_breath": {
+          "breath_probability": 0.15,
+          "breath_duration_ms": 80,
+          "breath_strength": 0.15
+        },
+        "vowel_duration_emphasis": [
+          {
+            "target_phrase": "bắt đầu",
+            "duration_scale": 1.05,
+            "pitch_adjustment": "+0.2"
+          }
+        ],
+        "sentence_flow": {
+          "segment_id": "seg_003",
+          "previous_energy": 0.7,
+          "current_target_energy": 0.85,
+          "transition_curve": "smooth_rise"
+        },
+        "natural_ending": {
+          "ending_type": "confident_close",
+          "pitch_shift_semitones": -0.4,
+          "decay_ms": 60
+        }
+      },
+      "adaptive_profile": "commercial_soft",
+      "safety_guard_status": "PASSED"
+    }
+  ]
+}

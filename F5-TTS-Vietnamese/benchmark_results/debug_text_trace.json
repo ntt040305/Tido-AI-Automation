@@ -1,0 +1,319 @@
+{
+  "task_id": "syn_1787643791926",
+  "pipeline_mode": "v2_safe",
+  "reference_validation": {
+    "reference_audio": "d:/Tido/Assets/Voices/VO_Mizaki_3_12s.wav",
+    "reference_duration": 12.0,
+    "reference_sample_rate": 44100,
+    "reference_text": "Ngay khi bước vào căn hộ, cảm nhận rõ nét nhất là không gian mở, khoáng đạt với bố cục liền mạch và lối thiết kế phóng khoáng. Với diện tích khoảng 65 mét vuông, căn hộ hai phòng ngủ được thiết kế tối.",
+    "reference_text_source": "verified_human_script",
+    "reference_validation_status": "PASSED"
+  },
+  "text_trace_logs": [
+    {
+      "segment_id": "seg_001",
+      "original_text": "Bạn muốn thay đổi vóc dáng, [nhấn mạnh] khỏe hơn và tự tin hơn mỗi ngày?",
+      "migrated_text": "Bạn muốn thay đổi vóc dáng, [nhấn mạnh] khỏe hơn và tự tin hơn mỗi ngày?",
+      "normalized_text": "bạn muốn thay đổi vóc dáng, khỏe hơn và tự tin hơn mỗi ngày?",
+      "pronunciation_processed_text": "bạn muốn thay đổi vóc dáng, khỏe hơn và tự tin hơn mỗi ngày?",
+      "emphasis_processed_text": "bạn muốn thay đổi vóc dáng, khỏe hơn và tự tin hơn mỗi ngày?",
+      "final_text_sent_to_f5": "bạn muốn thay đổi vóc dáng, khỏe hơn và tự tin hơn mỗi ngày?",
+      "dictionary_matches": [],
+      "status": "PASSED"
+    },
+    {
+      "segment_id": "seg_002",
+      "original_text": "Đừng chỉ nghĩ về nó! Hãy bắt đầu hành trình ngay tại Gym Toàn Thắng!",
+      "migrated_text": "Đừng chỉ nghĩ về nó! Hãy bắt đầu hành trình ngay tại Gym Toàn Thắng!",
+      "normalized_text": "đừng chỉ nghĩ về nó! hãy bắt đầu hành trình ngay tại gym toàn thắng!",
+      "pronunciation_processed_text": "đừng chỉ nghĩ về nó! hãy bắt đầu hành trình ngay tại Gim Toàn Thắng!",
+      "emphasis_processed_text": "đừng chỉ nghĩ về nó! hãy bắt đầu hành trình ngay tại Gim Toàn Thắng!",
+      "final_text_sent_to_f5": "đừng chỉ nghĩ về nó! hãy bắt đầu hành trình ngay tại Gim Toàn Thắng!",
+      "dictionary_matches": [
+        {
+          "original_phrase": "toàn thắng",
+          "matched_dictionary_key": "Toàn Thắng",
+          "replacement": "Toàn Thắng"
+        },
+        {
+          "original_phrase": "gym",
+          "matched_dictionary_key": "Gym",
+          "replacement": "Gim"
+        }
+      ],
+      "status": "PASSED"
+    },
+    {
+      "segment_id": "seg_003",
+      "original_text": "Một không gian tập luyện hiện đại, năng động và sẵn sàng tiếp thêm năng lượng cho bạn!",
+      "migrated_text": "Một không gian tập luyện hiện đại, năng động và sẵn sàng tiếp thêm năng lượng cho bạn!",
+      "normalized_text": "một không gian tập luyện hiện đại, năng động và sẵn sàng tiếp thêm năng lượng cho bạn!",
+      "pronunciation_processed_text": "một không gian tập luyện hiện đại, năng động và sẵn sàng tiếp thêm năng lượng cho bạn!",
+      "emphasis_processed_text": "một không gian tập luyện hiện đại, năng động và sẵn sàng tiếp thêm năng lượng cho bạn!",
+      "final_text_sent_to_f5": "một không gian tập luyện hiện đại, năng động và sẵn sàng tiếp thêm năng lượng cho bạn!",
+      "dictionary_matches": [],
+      "status": "PASSED"
+    },
+    {
+      "segment_id": "seg_004",
+      "original_text": "Tại Toàn Thắng, hệ thống máy tập được bố trí khoa học cho nhiều mục tiêu khác nhau.",
+      "migrated_text": "Tại Toàn Thắng, hệ thống máy tập được bố trí khoa học cho nhiều mục tiêu khác nhau.",
+      "normalized_text": "tại toàn thắng, hệ thống máy tập được bố trí khoa học cho nhiều mục tiêu khác nhau.",
+      "pronunciation_processed_text": "tại Toàn Thắng, hệ thống máy tập được bố trí khoa học cho nhiều mục tiêu khác nhau.",
+      "emphasis_processed_text": "tại Toàn Thắng, hệ thống máy tập được bố trí khoa học cho nhiều mục tiêu khác nhau.",
+      "final_text_sent_to_f5": "tại Toàn Thắng, hệ thống máy tập được bố trí khoa học cho nhiều mục tiêu khác nhau.",
+      "dictionary_matches": [
+        {
+          "original_phrase": "toàn thắng",
+          "matched_dictionary_key": "Toàn Thắng",
+          "replacement": "Toàn Thắng"
+        }
+      ],
+      "status": "PASSED"
+    },
+    {
+      "segment_id": "seg_005",
+      "original_text": "Từ tăng cơ, giảm mỡ, cải thiện sức bền đến duy trì một cơ thể khỏe mạnh!",
+      "migrated_text": "Từ tăng cơ, giảm mỡ, cải thiện sức bền đến duy trì một cơ thể khỏe mạnh!",
+      "normalized_text": "từ tăng cơ, giảm mỡ, cải thiện sức bền đến duy trì một cơ thể khỏe mạnh!",
+      "pronunciation_processed_text": "từ tăng cơ, giảm mỡ, cải thiện sức bền đến duy trì một cơ thể khỏe mạnh!",
+      "emphasis_processed_text": "từ tăng cơ, giảm mỡ, cải thiện sức bền đến duy trì một cơ thể khỏe mạnh!",
+      "final_text_sent_to_f5": "từ tăng cơ, giảm mỡ, cải thiện sức bền đến duy trì một cơ thể khỏe mạnh!",
+      "dictionary_matches": [],
+      "status": "PASSED"
+    },
+    {
+      "segment_id": "seg_006",
+      "original_text": "Khu vực tập tạ được trang bị đa dạng, giúp bạn dễ dàng xây dựng từng nhóm cơ.",
+      "migrated_text": "Khu vực tập tạ được trang bị đa dạng, giúp bạn dễ dàng xây dựng từng nhóm cơ.",
+      "normalized_text": "khu vực tập tạ được trang bị đa dạng, giúp bạn dễ dàng xây dựng từng nhóm cơ.",
+      "pronunciation_processed_text": "khu vực tập tạ được trang bị đa dạng, giúp bạn dễ dàng xây dựng từng nhóm cơ.",
+      "emphasis_processed_text": "khu vực tập tạ được trang bị đa dạng, giúp bạn dễ dàng xây dựng từng nhóm cơ.",
+      "final_text_sent_to_f5": "khu vực tập tạ được trang bị đa dạng, giúp bạn dễ dàng xây dựng từng nhóm cơ.",
+      "dictionary_matches": [],
+      "status": "PASSED"
+    },
+    {
+      "segment_id": "seg_007",
+      "original_text": "Từ ngực, vai, lưng, đến chân và tay đều có thiết bị hỗ trợ phù hợp.",
+      "migrated_text": "Từ ngực, vai, lưng, đến chân và tay đều có thiết bị hỗ trợ phù hợp.",
+      "normalized_text": "từ ngực, vai, lưng, đến chân và tay đều có thiết bị hỗ trợ phù hợp.",
+      "pronunciation_processed_text": "từ ngực, vai, lưng, đến chân và tay đều có thiết bị hỗ trợ phù hợp.",
+      "emphasis_processed_text": "từ ngực, vai, lưng, đến chân và tay đều có thiết bị hỗ trợ phù hợp.",
+      "final_text_sent_to_f5": "từ ngực, vai, lưng, đến chân và tay đều có thiết bị hỗ trợ phù hợp.",
+      "dictionary_matches": [],
+      "status": "PASSED"
+    },
+    {
+      "segment_id": "seg_008",
+      "original_text": "Muốn đốt cháy năng lượng? Khu các đi ô luôn sẵn sàng cho những buổi tập đầy hứng khởi!",
+      "migrated_text": "Muốn đốt cháy năng lượng? Khu các đi ô luôn sẵn sàng cho những buổi tập đầy hứng khởi!",
+      "normalized_text": "muốn đốt cháy năng lượng? khu các đi ô luôn sẵn sàng cho những buổi tập đầy hứng khởi!",
+      "pronunciation_processed_text": "muốn đốt cháy năng lượng? khu các đi ô luôn sẵn sàng cho những buổi tập đầy hứng khởi!",
+      "emphasis_processed_text": "muốn đốt cháy năng lượng? khu các đi ô luôn sẵn sàng cho những buổi tập đầy hứng khởi!",
+      "final_text_sent_to_f5": "muốn đốt cháy năng lượng? khu các đi ô luôn sẵn sàng cho những buổi tập đầy hứng khởi!",
+      "dictionary_matches": [],
+      "status": "PASSED"
+    },
+    {
+      "segment_id": "seg_009",
+      "original_text": "Máy chạy bộ, xe đạp và nhiều thiết bị khác, giúp buổi tập thêm đa dạng.",
+      "migrated_text": "Máy chạy bộ, xe đạp và nhiều thiết bị khác, giúp buổi tập thêm đa dạng.",
+      "normalized_text": "máy chạy bộ, xe đạp và nhiều thiết bị khác, giúp buổi tập thêm đa dạng.",
+      "pronunciation_processed_text": "máy chạy bộ, xe đạp và nhiều thiết bị khác, giúp buổi tập thêm đa dạng.",
+      "emphasis_processed_text": "máy chạy bộ, xe đạp và nhiều thiết bị khác, giúp buổi tập thêm đa dạng.",
+      "final_text_sent_to_f5": "máy chạy bộ, xe đạp và nhiều thiết bị khác, giúp buổi tập thêm đa dạng.",
+      "dictionary_matches": [],
+      "status": "PASSED"
+    },
+    {
+      "segment_id": "seg_010",
+      "original_text": "Bạn mới bắt đầu tập luyện? [thì thầm] Đừng lo, Toàn Thắng luôn có đội ngũ hỗ trợ đồng hành.",
+      "migrated_text": "Bạn mới bắt đầu tập luyện? [thì thầm] Đừng lo, Toàn Thắng luôn có đội ngũ hỗ trợ đồng hành.",
+      "normalized_text": "bạn mới bắt đầu tập luyện? đừng lo, toàn thắng luôn có đội ngũ hỗ trợ đồng hành.",
+      "pronunciation_processed_text": "bạn mới bắt đầu tập luyện? đừng lo, Toàn Thắng luôn có đội ngũ hỗ trợ đồng hành.",
+      "emphasis_processed_text": "bạn mới bắt đầu tập luyện? đừng lo, Toàn Thắng luôn có đội ngũ hỗ trợ đồng hành.",
+      "final_text_sent_to_f5": "bạn mới bắt đầu tập luyện? đừng lo, Toàn Thắng luôn có đội ngũ hỗ trợ đồng hành.",
+      "dictionary_matches": [
+        {
+          "original_phrase": "toàn thắng",
+          "matched_dictionary_key": "Toàn Thắng",
+          "replacement": "Toàn Thắng"
+        }
+      ],
+      "status": "PASSED"
+    },
+    {
+      "segment_id": "seg_011",
+      "original_text": "Các pi ti sẽ hướng dẫn kỹ thuật, giúp bạn tập đúng và hạn chế tối đa chấn thương!",
+      "migrated_text": "Các pi ti sẽ hướng dẫn kỹ thuật, giúp bạn tập đúng và hạn chế tối đa chấn thương!",
+      "normalized_text": "các pi ti sẽ hướng dẫn kỹ thuật, giúp bạn tập đúng và hạn chế tối đa chấn thương!",
+      "pronunciation_processed_text": "các pi ti sẽ hướng dẫn kỹ thuật, giúp bạn tập đúng và hạn chế tối đa chấn thương!",
+      "emphasis_processed_text": "các pi ti sẽ hướng dẫn kỹ thuật, giúp bạn tập đúng và hạn chế tối đa chấn thương!",
+      "final_text_sent_to_f5": "các pi ti sẽ hướng dẫn kỹ thuật, giúp bạn tập đúng và hạn chế tối đa chấn thương!",
+      "dictionary_matches": [],
+      "status": "PASSED"
+    },
+    {
+      "segment_id": "seg_012",
+      "original_text": "Hãy đến ngay Gym Toàn Thắng hôm nay để bứt phá giới hạn bản thân!",
+      "migrated_text": "Hãy đến ngay Gym Toàn Thắng hôm nay để bứt phá giới hạn bản thân!",
+      "normalized_text": "hãy đến ngay gym toàn thắng hôm nay để bứt phá giới hạn bản thân!",
+      "pronunciation_processed_text": "hãy đến ngay Gim Toàn Thắng hôm nay để bứt phá giới hạn bản thân!",
+      "emphasis_processed_text": "hãy đến ngay Gim Toàn Thắng hôm nay để bứt phá giới hạn bản thân!",
+      "final_text_sent_to_f5": "hãy đến ngay Gim Toàn Thắng hôm nay để bứt phá giới hạn bản thân!",
+      "dictionary_matches": [
+        {
+          "original_phrase": "toàn thắng",
+          "matched_dictionary_key": "Toàn Thắng",
+          "replacement": "Toàn Thắng"
+        },
+        {
+          "original_phrase": "gym",
+          "matched_dictionary_key": "Gym",
+          "replacement": "Gim"
+        }
+      ],
+      "status": "PASSED"
+    }
+  ],
+  "chunk_trace_logs": [
+    {
+      "chunk_id": "chunk_1",
+      "source_text": "Bạn muốn thay đổi vóc dáng, [nhấn mạnh] khỏe hơn và tự tin hơn mỗi ngày?",
+      "final_text_sent_to_f5": "bạn muốn thay đổi vóc dáng, khỏe hơn và tự tin hơn mỗi ngày?",
+      "start_padding": 80,
+      "end_padding": 180,
+      "pause_after": 300,
+      "peak_dbfs": -3.9,
+      "clipped_samples": 0,
+      "output_duration": 3.74
+    },
+    {
+      "chunk_id": "chunk_2",
+      "source_text": "Đừng chỉ nghĩ về nó! Hãy bắt đầu hành trình ngay tại Gym Toàn Thắng!",
+      "final_text_sent_to_f5": "đừng chỉ nghĩ về nó! hãy bắt đầu hành trình ngay tại Gim Toàn Thắng!",
+      "start_padding": 80,
+      "end_padding": 180,
+      "pause_after": 300,
+      "peak_dbfs": -2.29,
+      "clipped_samples": 0,
+      "output_duration": 4.23
+    },
+    {
+      "chunk_id": "chunk_3",
+      "source_text": "Một không gian tập luyện hiện đại, năng động và sẵn sàng tiếp thêm năng lượng cho bạn!",
+      "final_text_sent_to_f5": "một không gian tập luyện hiện đại, năng động và sẵn sàng tiếp thêm năng lượng cho bạn!",
+      "start_padding": 80,
+      "end_padding": 180,
+      "pause_after": 300,
+      "peak_dbfs": -2.51,
+      "clipped_samples": 0,
+      "output_duration": 5.34
+    },
+    {
+      "chunk_id": "chunk_4",
+      "source_text": "Tại Toàn Thắng, hệ thống máy tập được bố trí khoa học cho nhiều mục tiêu khác nhau.",
+      "final_text_sent_to_f5": "tại Toàn Thắng, hệ thống máy tập được bố trí khoa học cho nhiều mục tiêu khác nhau.",
+      "start_padding": 80,
+      "end_padding": 180,
+      "pause_after": 280,
+      "peak_dbfs": -1.86,
+      "clipped_samples": 0,
+      "output_duration": 5.11
+    },
+    {
+      "chunk_id": "chunk_5",
+      "source_text": "Từ tăng cơ, giảm mỡ, cải thiện sức bền đến duy trì một cơ thể khỏe mạnh!",
+      "final_text_sent_to_f5": "từ tăng cơ, giảm mỡ, cải thiện sức bền đến duy trì một cơ thể khỏe mạnh!",
+      "start_padding": 80,
+      "end_padding": 180,
+      "pause_after": 300,
+      "peak_dbfs": -1.77,
+      "clipped_samples": 0,
+      "output_duration": 4.72
+    },
+    {
+      "chunk_id": "chunk_6",
+      "source_text": "Khu vực tập tạ được trang bị đa dạng, giúp bạn dễ dàng xây dựng từng nhóm cơ.",
+      "final_text_sent_to_f5": "khu vực tập tạ được trang bị đa dạng, giúp bạn dễ dàng xây dựng từng nhóm cơ.",
+      "start_padding": 80,
+      "end_padding": 180,
+      "pause_after": 280,
+      "peak_dbfs": -1.0,
+      "clipped_samples": 0,
+      "output_duration": 4.89
+    },
+    {
+      "chunk_id": "chunk_7",
+      "source_text": "Từ ngực, vai, lưng, đến chân và tay đều có thiết bị hỗ trợ phù hợp.",
+      "final_text_sent_to_f5": "từ ngực, vai, lưng, đến chân và tay đều có thiết bị hỗ trợ phù hợp.",
+      "start_padding": 80,
+      "end_padding": 180,
+      "pause_after": 280,
+      "peak_dbfs": -2.25,
+      "clipped_samples": 0,
+      "output_duration": 4.31
+    },
+    {
+      "chunk_id": "chunk_8",
+      "source_text": "Muốn đốt cháy năng lượng? Khu các đi ô luôn sẵn sàng cho những buổi tập đầy hứng khởi!",
+      "final_text_sent_to_f5": "muốn đốt cháy năng lượng? khu các đi ô luôn sẵn sàng cho những buổi tập đầy hứng khởi!",
+      "start_padding": 80,
+      "end_padding": 180,
+      "pause_after": 300,
+      "peak_dbfs": -2.41,
+      "clipped_samples": 0,
+      "output_duration": 5.38
+    },
+    {
+      "chunk_id": "chunk_9",
+      "source_text": "Máy chạy bộ, xe đạp và nhiều thiết bị khác, giúp buổi tập thêm đa dạng.",
+      "final_text_sent_to_f5": "máy chạy bộ, xe đạp và nhiều thiết bị khác, giúp buổi tập thêm đa dạng.",
+      "start_padding": 80,
+      "end_padding": 180,
+      "pause_after": 280,
+      "peak_dbfs": -2.42,
+      "clipped_samples": 0,
+      "output_duration": 4.5
+    },
+    {
+      "chunk_id": "chunk_10",
+      "source_text": "Bạn mới bắt đầu tập luyện? [thì thầm] Đừng lo, Toàn Thắng luôn có đội ngũ hỗ trợ đồng hành.",
+      "final_text_sent_to_f5": "bạn mới bắt đầu tập luyện? đừng lo, Toàn Thắng luôn có đội ngũ hỗ trợ đồng hành.",
+      "start_padding": 80,
+      "end_padding": 180,
+      "pause_after": 280,
+      "peak_dbfs": -1.0,
+      "clipped_samples": 0,
+      "output_duration": 5.25
+    },
+    {
+      "chunk_id": "chunk_11",
+      "source_text": "Các pi ti sẽ hướng dẫn kỹ thuật, giúp bạn tập đúng và hạn chế tối đa chấn thương!",
+      "final_text_sent_to_f5": "các pi ti sẽ hướng dẫn kỹ thuật, giúp bạn tập đúng và hạn chế tối đa chấn thương!",
+      "start_padding": 80,
+      "end_padding": 180,
+      "pause_after": 300,
+      "peak_dbfs": -3.46,
+      "clipped_samples": 0,
+      "output_duration": 5.21
+    },
+    {
+      "chunk_id": "chunk_12",
+      "source_text": "Hãy đến ngay Gym Toàn Thắng hôm nay để bứt phá giới hạn bản thân!",
+      "final_text_sent_to_f5": "hãy đến ngay Gim Toàn Thắng hôm nay để bứt phá giới hạn bản thân!",
+      "start_padding": 80,
+      "end_padding": 180,
+      "pause_after": 300,
+      "peak_dbfs": -1.0,
+      "clipped_samples": 0,
+      "output_duration": 4.06
+    }
+  ],
+  "mastering": {
+    "final_peak_dbfs": -1.0,
+    "final_clipped_samples": 0,
+    "total_duration_s": 56.73
+  }
+}

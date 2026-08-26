@@ -1,0 +1,16 @@
+{
+  "total_feedbacks": 1,
+  "feedbacks": [
+    {
+      "feedback_id": "fb_1787638423770",
+      "user_id": "usr_agency_01",
+      "voice_id": "voice_mizaki_fem_01",
+      "candidate_id": "cand_seed_42",
+      "selected_candidate": "cand_seed_42",
+      "rating": 5.0,
+      "quality_score": 96.5,
+      "comment": "Giọng phát âm rất tự nhiên, truyền cảm!",
+      "timestamp": 1787638423.7707887
+    }
+  ]
+}

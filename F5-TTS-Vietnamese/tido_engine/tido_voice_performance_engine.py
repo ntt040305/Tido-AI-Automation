@@ -33,6 +33,8 @@ from tido_engine.continuity_engine import GlobalContinuityEngine
 from tido_engine.audio_mastering import AudioMastering
 from tido_engine.observability import ObservabilityLogger
 from tido_engine.emotion_modulator import EmotionModulator
+from tido_engine.tts_adapter_interface import TTSEngineAdapter
+from tido_engine.f5_tts_adapter import F5TTSAdapter
 
 class TidoVoicePerformanceEngine:
     def __init__(self, voice_lib_path: str, quality_mode: str = "STUDIO"):
@@ -55,34 +57,24 @@ class TidoVoicePerformanceEngine:
         self.emotion_modulator = EmotionModulator()
         self.logger = ObservabilityLogger()
 
-        self.f5tts = None
+        self.tts_adapter: TTSEngineAdapter = F5TTSAdapter(device=self.device)
         self.df_model = None
         self.df_state = None
 
     def init_models(self):
-        """Loads F5-TTS model and DeepFilterNet lazily."""
-        if self.f5tts is None:
-            print(f"🚀 [INIT] Loading TIDO ViVoice Model on {self.device}...")
-            from f5_tts.api import F5TTS
-            self.f5tts = F5TTS(
-                model="F5TTS_Base",
-                ckpt_file=r"d:\Tido\F5-TTS-Vietnamese\ckpt_vivoice\model_last.pt",
-                vocab_file=r"d:\Tido\F5-TTS-Vietnamese\ckpt_vivoice\config.json",
-                device=self.device,
-                hf_cache_dir=r"D:\hf_cache"
-            )
-            print("      ✅ F5-TTS Model initialized!")
+        """Loads TTS Adapter model and DeepFilterNet lazily."""
+        self.tts_adapter.initialize()
 
         if self.df_model is None:
             try:
-                print("🚀 [INIT] Loading DeepFilterNet3...")
+                print("[INIT] Loading DeepFilterNet3...")
                 from df.enhance import init_df
                 self.df_model, self.df_state, _ = init_df()
                 self.mastering.df_model = self.df_model
                 self.mastering.df_state = self.df_state
-                print("      ✅ DeepFilterNet initialized!")
+                print("      [OK] DeepFilterNet initialized!")
             except Exception as e:
-                print(f"⚠️ DeepFilterNet init skipped: {e}")
+                print(f"[WARN] DeepFilterNet init skipped: {e}")
 
     @staticmethod
     def replace_pause_markers(text: str) -> str:
@@ -118,9 +110,9 @@ class TidoVoicePerformanceEngine:
         # 1. REFERENCE VOICE LOCK & VOICE PROFILE
         profile: VoiceProfile = self.ref_pipeline.get_profile(voice_id)
         
-        print(f"\n🎙️  Script: {metadata.get('title', 'TIDO Script')}")
-        print(f"👤  Voice: {profile.name} (ID: {profile.voice_id} | Hash: {profile.reference_hash[:8]})")
-        print(f"🎛️  Quality Mode: {self.quality_mode}\n")
+        print(f"\n[SCRIPT] Title: {metadata.get('title', 'TIDO Script')}")
+        print(f"[VOICE] Name: {profile.name} (ID: {profile.voice_id} | Hash: {profile.reference_hash[:8]})")
+        print(f"[MODE] Quality: {self.quality_mode}\n")
 
         state = ProsodyState()
         rendered_chunks: List[tuple] = []  # [(AudioSegment, DeliveryPlan)]
@@ -138,9 +130,9 @@ class TidoVoicePerformanceEngine:
             # Pre-process: Replace [pause:X] with natural punctuation BEFORE text normalization!
             raw_text = self.replace_pause_markers(raw_text)
 
-            # Resolve Voice Profile per segment for Multi-Character Dialogue Support
+            # Resolve Voice Profile per segment with Emotional Reference Audio Resolution
             seg_voice_id = seg.get('voice_id') or seg.get('speaker') or voice_id
-            seg_profile: VoiceProfile = self.ref_pipeline.get_profile(seg_voice_id)
+            seg_profile: VoiceProfile = self.ref_pipeline.get_profile(seg_voice_id, emotion=raw_emotion)
 
             print(f" ▶ [SEGMENT {seg_idx+1}/{len(segments)}] [{seg_profile.name}] {raw_emotion} | {raw_pacing}")
             print(f"    Raw Text: \"{raw_text}\"")
@@ -182,28 +174,36 @@ class TidoVoicePerformanceEngine:
                 # Strip bracketed tags so F5-TTS does not pronounce them
                 clean_gen_text = re.sub(r'\[.*?\]', '', plan.text)
                 clean_gen_text = re.sub(r'[\[\]]', '', clean_gen_text)  # remove remaining orphaned brackets
+                # Convert hyphens (- or —) and ellipses (...) into clean commas/spaces so tokenizer doesn't hallucinate "khoảng" or "ớ"
+                clean_gen_text = re.sub(r'\.{2,}', ',', clean_gen_text)
+                clean_gen_text = re.sub(r'\s*[\-—–]\s*', ', ', clean_gen_text)
                 clean_gen_text = re.sub(r'\s+', ' ', clean_gen_text).strip()
+                # Lowercase for 100% ViVoice token vocabulary match
+                clean_gen_text = clean_gen_text.lower()
                 
                 temp_wave = os.path.join(os.path.dirname(output_path), f"_tmp_{seg_idx}_{chunk.chunk_index}.wav")
                 t0 = time.time()
                 
                 try:
-                    self.f5tts.infer(
-                        ref_file=seg_profile.reference_path,
+                    tts_config = {
+                        "speed": plan.speed_effective,
+                        "remove_silence": True,
+                        "nfe_step": plan.target_nfe_step,
+                        "cfg_strength": plan.target_cfg
+                    }
+                    self.tts_adapter.render(
+                        text=clean_gen_text,
+                        ref_audio_path=seg_profile.reference_path,
                         ref_text=seg_profile.reference_transcript,
-                        gen_text=clean_gen_text,
-                        file_wave=temp_wave,
-                        speed=plan.speed_effective,
-                        remove_silence=True,
-                        nfe_step=plan.target_nfe_step,
-                        cfg_strength=plan.target_cfg
+                        config=tts_config,
+                        output_wave_path=temp_wave
                     )
                 except Exception as e:
-                    print(f"    ❌ Inference error: {e}")
+                    print(f"    [ERR] Inference error: {e}")
                     continue
 
                 chunk_seg = AudioSegment.from_file(temp_wave)
-                print(f"     ✅ Rendered chunk in {time.time()-t0:.1f}s")
+                print(f"     [OK] Rendered chunk in {time.time()-t0:.1f}s")
 
                 if os.path.exists(temp_wave):
                     try: os.remove(temp_wave)
@@ -223,11 +223,11 @@ class TidoVoicePerformanceEngine:
             prev_segment_text = spoken_text
 
         # 9. AUDIO TIMELINE STITCHING
-        print(f"\n🧵 Stitching {len(rendered_chunks)} rendered chunks...")
+        print(f"\n[STITCH] Stitching {len(rendered_chunks)} rendered chunks...")
         stitched_audio = self.stitcher.stitch_chunks(rendered_chunks)
 
         # 10. AUDIO MASTERING (Bypass DeepFilterNet wet=0.0 for pure human clarity)
-        print("🎛️ Mastering final studio audio track...")
+        print("[MASTER] Mastering final studio audio track...")
         final_output_path = self.mastering.master_final_audio(stitched_audio, output_path, wet=0.0)
 
         # 11. OBSERVABILITY LOGGING
@@ -242,5 +242,5 @@ class TidoVoicePerformanceEngine:
             "logs": execution_logs
         })
 
-        print(f"🎉 MASTER DONE — {len(stitched_audio)/1000:.1f}s → {final_output_path}\n")
+        print(f"[DONE] MASTER DONE -- {len(stitched_audio)/1000:.1f}s -> {final_output_path}\n")
         return final_output_path
