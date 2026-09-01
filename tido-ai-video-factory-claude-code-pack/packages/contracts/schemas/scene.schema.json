@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tido.ai/schemas/scene.schema.json",
+  "title": "Scene",
+  "type": "object",
+  "required": [
+    "scene_id",
+    "project_id",
+    "sequence_number",
+    "version",
+    "duration",
+    "purpose",
+    "visual_direction",
+    "voice_direction",
+    "motion_direction",
+    "status"
+  ],
+  "properties": {
+    "scene_id": { "type": "string" },
+    "project_id": { "type": "string" },
+    "sequence_number": { "type": "integer" },
+    "version": {
+      "type": "integer",
+      "default": 1
+    },
+    "parent_scene_id": { "type": "string" },
+    "version_notes": { "type": "string" },
+    "duration": {
+      "type": "number",
+      "const": 8,
+      "default": 8,
+      "description": "Each scene in Layer 1 is strictly 8 seconds long"
+    },
+    "purpose": {
+      "type": "string",
+      "enum": ["hook", "problem", "solution", "hero", "proof", "cta"]
+    },
+    "visual_direction": { "type": "object" },
+    "voice_direction": { "type": "object" },
+    "motion_direction": { "type": "object" },
+    "production_instruction": { "type": "object" },
+    "reference_assets": {
+      "type": "array",
+      "items": { "type": "object" }
+    },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "script_approved", "image_approved", "video_rendering", "completed", "failed"]
+    },
+    "technique_card_ids": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "knowledge_node_ids": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}

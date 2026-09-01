@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
           let prodId = "PRODUCT_01";
           if (masterPromptPackage?.references) {
             const matchedRef = masterPromptPackage.references.find((r) => r.reference_id === refId || r.input_index === imgIdx - 1);
-            if (matchedRef) prodId = matchedRef.product_id;
+            if (matchedRef?.product_id) prodId = matchedRef.product_id;
           }
 
           productReferences.push({

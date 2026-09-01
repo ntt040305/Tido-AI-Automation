@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "CommonJS",
+    "declaration": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "./dist",
+    "rootDir": "..",
+    "paths": {
+      "@tido/contracts": ["../contracts/src/index.ts"],
+      "@tido/knowledge-base": ["../knowledge-base/src/index.ts"]
+    }
+  },
+  "include": ["src/**/*"]
+}

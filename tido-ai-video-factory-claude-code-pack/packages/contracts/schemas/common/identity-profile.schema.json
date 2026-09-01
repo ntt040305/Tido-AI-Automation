@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tido.ai/schemas/common/identity-profile.schema.json",
+  "title": "IdentityProfile",
+  "type": "object",
+  "properties": {
+    "identity_id": { "type": "string" },
+    "identity_type": {
+      "type": "string",
+      "enum": ["character", "product", "brand_style", "voice_persona"]
+    },
+    "face_embedding_id": { "type": "string" },
+    "product_dna_id": { "type": "string" },
+    "voice_id": { "type": "string" },
+    "style_anchor_urls": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}

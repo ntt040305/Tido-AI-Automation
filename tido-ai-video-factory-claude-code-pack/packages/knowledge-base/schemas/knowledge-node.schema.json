@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tido.ai/schemas/knowledge-node.schema.json",
+  "title": "KnowledgeNode",
+  "type": "object",
+  "required": [
+    "node_id",
+    "version",
+    "tenant_id",
+    "domain",
+    "category",
+    "title",
+    "context_matcher",
+    "payload",
+    "metadata"
+  ],
+  "properties": {
+    "node_id": {
+      "type": "string",
+      "pattern": "^kn_[a-z0-9_]+$"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "tenant_id": {
+      "type": "string",
+      "description": "System global 'global' or Enterprise SaaS Tenant ID",
+      "default": "global"
+    },
+    "domain": {
+      "type": "string",
+      "enum": ["marketing", "creative_direction", "cinematography", "audio_directing"]
+    },
+    "category": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "summary": {
+      "type": "string"
+    },
+    "context_matcher": {
+      "type": "object",
+      "required": ["suitable_industries", "suitable_objectives", "suitable_channels"],
+      "properties": {
+        "suitable_industries": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "suitable_objectives": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "suitable_channels": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "target_audiences": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "emotional_tones": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "payload": {
+      "type": "object",
+      "required": ["core_directives", "constraints"],
+      "properties": {
+        "core_directives": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "prompt_injection_hints": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "constraints": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "negative_directives": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["author", "confidence_score", "historical_pass_rate", "status"],
+      "properties": {
+        "author": { "type": "string" },
+        "confidence_score": { "type": "number", "minimum": 0, "maximum": 1 },
+        "historical_pass_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+        "status": { "type": "string", "enum": ["draft", "active", "deprecated", "archived"] },
+        "tags": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

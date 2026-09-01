@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tido.ai/schemas/technique-card.schema.json",
+  "title": "TechniqueCard",
+  "type": "object",
+  "required": [
+    "card_id",
+    "version",
+    "tenant_id",
+    "name",
+    "scene_role",
+    "visual_setup",
+    "lighting_setup",
+    "camera_setup",
+    "qc_rules"
+  ],
+  "properties": {
+    "card_id": {
+      "type": "string",
+      "pattern": "^tc_[a-z0-9_]+$"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "tenant_id": {
+      "type": "string",
+      "default": "global"
+    },
+    "name": {
+      "type": "string"
+    },
+    "scene_role": {
+      "type": "string",
+      "enum": ["hook", "problem_statement", "solution_reveal", "product_hero", "social_proof", "cta"]
+    },
+    "visual_setup": {
+      "type": "object",
+      "properties": {
+        "subject_blocking": { "type": "string" },
+        "background_depth": { "type": "string" },
+        "prop_arrangement": { "type": "string" },
+        "color_palette": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "lighting_setup": {
+      "type": "object",
+      "properties": {
+        "key_light": { "type": "string" },
+        "fill_light": { "type": "string" },
+        "rim_light": { "type": "string" },
+        "contrast_ratio": { "type": "string" }
+      }
+    },
+    "camera_setup": {
+      "type": "object",
+      "properties": {
+        "shot_size": { "type": "string", "enum": ["extreme_close_up", "close_up", "medium_shot", "wide_shot"] },
+        "angle": { "type": "string", "enum": ["eye_level", "low_angle", "high_angle", "top_down"] },
+        "lens_feel": { "type": "string" },
+        "motion_profile": { "type": "string" }
+      }
+    },
+    "qc_rules": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "provider_hints": {
+      "type": "object",
+      "properties": {
+        "picture_provider_prompt": { "type": "string" },
+        "video_provider_motion": { "type": "string" },
+        "voice_provider_emotion": { "type": "string" }
+      }
+    }
+  }
+}

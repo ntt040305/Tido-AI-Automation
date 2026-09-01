@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tido.ai/schemas/creative-score.schema.json",
+  "title": "CreativeScore",
+  "type": "object",
+  "required": [
+    "score_id",
+    "project_id",
+    "scene_id",
+    "pass_status",
+    "overall_score",
+    "score_breakdown"
+  ],
+  "properties": {
+    "score_id": {
+      "type": "string"
+    },
+    "project_id": {
+      "type": "string"
+    },
+    "scene_id": {
+      "type": "string"
+    },
+    "pass_status": {
+      "type": "boolean"
+    },
+    "overall_score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "score_breakdown": {
+      "type": "object",
+      "required": ["brand_alignment", "technical_quality", "commercial_appeal"],
+      "properties": {
+        "brand_alignment": { "type": "number", "minimum": 0, "maximum": 100 },
+        "technical_quality": { "type": "number", "minimum": 0, "maximum": 100 },
+        "commercial_appeal": { "type": "number", "minimum": 0, "maximum": 100 }
+      }
+    },
+    "feedback_comments": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}

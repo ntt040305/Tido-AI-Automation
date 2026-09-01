@@ -115,6 +115,10 @@ export async function POST(req: NextRequest) {
       imageUrl: result.imageUrl,
       useCase: result.useCase,
       aspectRatio: result.aspectRatio,
+      project: result.project,
+      renderJob: result.renderJob,
+      contractAsset: result.contractAsset,
+      strategy: result.strategy,
       diagnostics: result.diagnostics,
     });
   } catch (err: any) {

@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tido.ai/schemas/brief.schema.json",
+  "title": "Brief",
+  "type": "object",
+  "required": [
+    "brief_id",
+    "project_id",
+    "product_name",
+    "industry",
+    "target_audience",
+    "campaign_objective",
+    "target_channel",
+    "key_selling_points"
+  ],
+  "properties": {
+    "brief_id": { "type": "string" },
+    "project_id": { "type": "string" },
+    "product_name": { "type": "string" },
+    "industry": { "type": "string" },
+    "target_audience": { "type": "string" },
+    "campaign_objective": {
+      "type": "string",
+      "enum": ["awareness", "consideration", "conversion", "retention"]
+    },
+    "target_channel": {
+      "type": "string",
+      "enum": ["tiktok", "facebook_reels", "youtube_shorts", "tvc_broadcast", "digital_tvc"]
+    },
+    "brand_tone": { "type": "string" },
+    "key_selling_points": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "brand_dna_id": { "type": "string" },
+    "production_profile_id": {
+      "type": "string",
+      "enum": ["SHORT_VERTICAL_9_16_V1", "TVC_HORIZONTAL_16_9_V1"]
+    },
+    "budget_cap_usd": { "type": "number" },
+    "created_at": { "type": "string" }
+  }
+}

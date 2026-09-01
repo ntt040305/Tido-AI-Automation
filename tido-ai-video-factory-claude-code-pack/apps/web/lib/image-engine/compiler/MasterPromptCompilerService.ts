@@ -18,7 +18,9 @@ import { ExactCopyIntegrityValidator } from "./ExactCopyIntegrityValidator";
 import { InputFingerprint } from "./InputFingerprint";
 import { MasterPromptTemplateValidator } from "./MasterPromptTemplateValidator";
 import { PromptBudgetValidator } from "./PromptBudgetValidator";
+import { ProviderPromptOptimizer } from "./ProviderPromptOptimizer";
 import { ProductIdentityResolver } from "./ProductIdentityResolver";
+import { PromptCompressionService } from "./PromptCompressionService";
 import { RenderReadinessValidator } from "../validation/RenderReadinessValidator";
 
 export class MasterPromptCompilerService {
@@ -248,8 +250,74 @@ export class MasterPromptCompilerService {
       instanceLines.push(`- DISTINCT PRODUCT IDENTITY ISOLATION: Each listed PRODUCT_xx is a separate physical identity. Preserve each product's reference-supported characteristics and distinct differences. Do NOT clone one product identity to satisfy another, do NOT average identities into a hybrid, and do NOT transfer product-specific features across distinct identities.`);
     }
 
-    // Add Single Reference policy & uncertainty cautions
-    instanceLines.push(`- REFERENCE FIDELITY & IDENTITY RULE: Reference images define genuine product identity (proportions, materials, labels, colors, structural features). Do NOT alter product geometry or branding unless specified by User Hard Constraints.`);
+    // Phase 2.4 Explicit Reference Identity Lock Block
+    instanceLines.push(`\n[REFERENCE IDENTITY LOCK]`);
+    instanceLines.push(`The uploaded reference assets are commercial identity assets.`);
+    instanceLines.push(`Preserve:`);
+    instanceLines.push(`- exact product appearance`);
+    instanceLines.push(`- exact shape`);
+    instanceLines.push(`- exact packaging`);
+    instanceLines.push(`- exact logo`);
+    instanceLines.push(`Allowed:`);
+    instanceLines.push(`- new environment`);
+    instanceLines.push(`- new lighting`);
+    instanceLines.push(`- cinematic camera`);
+    instanceLines.push(`- premium composition`);
+    instanceLines.push(`Forbidden:`);
+    instanceLines.push(`- redesign`);
+    instanceLines.push(`- replacement`);
+    instanceLines.push(`- invented packaging`);
+    instanceLines.push(`- fake logo\n`);
+
+    // Inject Phase 2.2 & 2.4 Reference Manifest Identity Lock Rules
+    const refManifest = input.routingResult.reference_manifest;
+    if (refManifest) {
+      instanceLines.push(`- REFERENCE MANIFEST RELATIONSHIP TYPE: [${refManifest.relationship_type.toUpperCase()}]`);
+      instanceLines.push(`- REFERENCE MANIFEST METRICS: ${refManifest.total_references} Reference Image(s), ${refManifest.detected_products_count} Product(s), ${refManifest.detected_logos_count} Logo(s).`);
+
+      if (refManifest.identity_control_metadata) {
+        instanceLines.push(`- ${refManifest.identity_control_metadata.compact_directive}`);
+      }
+
+      if (refManifest.product_manifest) {
+        const pm = refManifest.product_manifest;
+        instanceLines.push(`- PRODUCT PLANNING MANIFEST (Target Count: ${pm.validation.target_count_requested}, Detected: ${pm.validation.detected_product_count}):`);
+        pm.compact_identity_locks.forEach((lock) => {
+          instanceLines.push(`  * ${lock}`);
+        });
+      }
+
+      if (refManifest.classifications && refManifest.classifications.length > 0) {
+        instanceLines.push(`- ASSET CLASSIFICATION DIRECTIVES:`);
+        refManifest.classifications.forEach((c) => {
+          instanceLines.push(`  * Asset (${c.reference_id}) [${c.classification}]: ${c.reason}`);
+        });
+      }
+
+      if (refManifest.identity_rules && refManifest.identity_rules.length > 0) {
+        instanceLines.push(`- REFERENCE IDENTITY LOCK RULES:`);
+        refManifest.identity_rules.forEach((rule) => {
+          instanceLines.push(`  * [${rule.priority}] [${rule.type.toUpperCase()}] Targets (${rule.target_reference_ids.join(", ")}): ${rule.instruction}`);
+          if (rule.rules && rule.rules.length > 0) {
+            instanceLines.push(`    Rules: ${rule.rules.join("; ")}`);
+          }
+        });
+      }
+
+      if (refManifest.product_identity_locks && refManifest.product_identity_locks.length > 0) {
+        instanceLines.push(`- PRODUCT IDENTITY LOCKS:`);
+        refManifest.product_identity_locks.forEach((lock) => {
+          instanceLines.push(`  * Product ID [${lock.product_id}] (${lock.canonical_name}): Preserve [${lock.preserve_aspects.join(", ")}]. Key Features: ${lock.key_features.join(", ")}.`);
+        });
+      }
+
+      if (refManifest.logo_locks && refManifest.logo_locks.length > 0) {
+        instanceLines.push(`- LOGO PRESERVATION LOCKS:`);
+        refManifest.logo_locks.forEach((logo) => {
+          instanceLines.push(`  * Logo Reference [${logo.reference_id}] for Brand [${logo.brand_name}]: ${logo.placement_rule}`);
+        });
+      }
+    }
 
     const singleRefProducts = resolvedGroups.filter((p) => p.reference_ids.length === 1);
     if (singleRefProducts.length > 0) {
@@ -406,22 +474,46 @@ export class MasterPromptCompilerService {
       };
     }
 
-    // 10. Prompt Budget & Stats Calculation
-    const budgetResult = PromptBudgetValidator.validate(compiledPrompt, {
-      userBrief: input.brief,
-      userHardConstraints: input.hardRequirements,
-      brandInfo: input.brandInfo,
-      copyItems: input.copyItems,
-      knowledgeText: relevantKnowledgeText,
-      referenceRequirementText: productInstanceRequirementsText,
+
+
+    // 10. Provider Prompt Optimization & Compression Layer
+    const optimizationRes = ProviderPromptOptimizer.optimize(compiledPrompt);
+    compiledPrompt = optimizationRes.optimizedPrompt;
+
+    // Phase 2.5.3 Pre-budget compression if > 19500 chars
+    let wasCompressed = optimizationRes.telemetry.compression_applied;
+    if (compiledPrompt.length > PromptCompressionService.COMPRESSION_THRESHOLD) {
+      const compressionRes = PromptCompressionService.compress(compiledPrompt);
+      compiledPrompt = compressionRes.compressed_prompt;
+      wasCompressed = true;
+    }
+
+    console.log("[MASTER_PROMPT_BUDGET]", {
+      before: optimizationRes.telemetry.before_chars,
+      after: compiledPrompt.length,
+      compressed: wasCompressed || compiledPrompt.length < optimizationRes.telemetry.before_chars,
     });
 
-    if (budgetResult.is_blocked) {
+    // 11. Prompt Budget & Stats Calculation (HARD LIMIT = 20,000)
+    const budgetResult = PromptBudgetValidator.validate(
+      compiledPrompt,
+      {
+        userBrief: input.brief,
+        userHardConstraints: input.hardRequirements,
+        brandInfo: input.brandInfo,
+        copyItems: input.copyItems,
+        knowledgeText: relevantKnowledgeText,
+        referenceRequirementText: productInstanceRequirementsText,
+      },
+      PromptCompressionService.MAX_PROMPT_LENGTH
+    );
+
+    if (budgetResult.is_blocked || compiledPrompt.length > PromptCompressionService.MAX_PROMPT_LENGTH) {
       return {
         success: false,
         error: {
           code: "PROMPT_BUDGET_EXCEEDED",
-          message: budgetResult.error || `Compiled prompt length (${compiledPrompt.length} chars) exceeds provider hard limit of ${budgetResult.provider_hard_limit} chars.`,
+          message: budgetResult.error || `Compiled prompt length (${compiledPrompt.length} chars) exceeds provider hard limit of ${PromptCompressionService.MAX_PROMPT_LENGTH} chars.`,
         },
       };
     }

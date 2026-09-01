@@ -64,7 +64,7 @@ async function runSimpleInputV2Tests() {
     brand_mentions: [],
     explicit_hard_requirements: [],
     local_attributes: ["cinematic lighting"],
-    creative_freedom_level: "RESTRICTED",
+    creative_freedom_level: "STRICT",
     asset_roles: [{ reference_id: "REF_01", role: "PRODUCT", confidence: 0.95 }],
   };
 

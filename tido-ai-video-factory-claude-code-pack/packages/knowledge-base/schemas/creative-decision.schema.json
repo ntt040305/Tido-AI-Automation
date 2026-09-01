@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tido.ai/schemas/creative-decision.schema.json",
+  "title": "CreativeDecision",
+  "type": "object",
+  "required": [
+    "decision_id",
+    "project_id",
+    "scene_id",
+    "selected_technique_card_ids",
+    "applied_knowledge_node_ids",
+    "decision_reasoning"
+  ],
+  "properties": {
+    "decision_id": {
+      "type": "string"
+    },
+    "project_id": {
+      "type": "string"
+    },
+    "scene_id": {
+      "type": "string"
+    },
+    "selected_technique_card_ids": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "applied_knowledge_node_ids": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "decision_reasoning": {
+      "type": "string"
+    },
+    "confidence_score": {
+      "type": "number"
+    },
+    "timestamp": {
+      "type": "string"
+    }
+  }
+}

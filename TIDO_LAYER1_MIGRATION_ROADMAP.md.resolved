@@ -1,0 +1,105 @@
+# TIDO CREATIVE OS — LAYER 1 MASTER ARCHITECTURE AUDIT & MIGRATION ROADMAP
+
+**Source of Truth:** `TIDO_LAYER1_MASTER_ARCHITECTURE_V1.md`  
+**Audit Date:** August 31, 2026  
+**Roles:** Senior AI System Architect • Senior Full-stack Engineer • Senior MLOps Engineer  
+
+---
+
+## 🎯 EXECUTIVE AUDIT SUMMARY
+
+### Core Vision Realignment
+According to **TIDO Layer 1 Master Architecture V1.0**, TIDO Layer 1 is **NOT a SaaS management or billing tool**. It is an **AI Marketing Content Production Factory**. 
+
+The sole objective of Layer 1 is to convert user concepts, brand assets, product references, and voice samples into ready-to-use commercial assets (Voice WAVs, Commercial Posters, Scene Videos, and Composed Final Marketing Videos). All SaaS features (workspaces, billing, team collaboration) belong strictly to Layer 9 / future iterations.
+
+---
+
+## 🔍 REPOSITORY GAP ANALYSIS VS. MASTER SPECIFICATION
+
+| Component / Layer | Master Architecture V1.0 Requirement | Current Repository Status | Gap & Action Required |
+| :--- | :--- | :--- | :--- |
+| **Foundation Contracts** (`packages/contracts`) | Simple `GenerationProject` (`voice` \| `image` \| `video`), `Scene` (8-second unit), `Asset`, `RenderJob`. No SaaS bloat. | Over-engineered with SaaS fields (`tenant_id`, `budget_cap_usd`). Schema named `creative-project` instead of `GenerationProject`. | **GAP:** Remove premature SaaS fields. Standardize `GenerationProject` schema with `type` enum. |
+| **Picture Engine** (`apps/web/features/picture-engine`) | Real commercial visual generation powered by Gemini / Nano Banana 2 adapters. | 3-Zone UI is complete, but `picture-engine.api.ts` uses `setTimeout()` and mock Unsplash assets. Backend `lib/image-engine` works with Gemini 3.1. | **GAP:** Connect UI `picture-engine.api.ts` directly to real backend endpoint `/api/image/generate-simple`. |
+| **Voice Engine** (`F5-TTS-Vietnamese`) | Standalone F5-TTS core producing WAV/MP3 files from script text, emotion, style, and persona parameters. | Python CLI core (`tido_voice_engine.py`) exists and works standalone. | **GAP:** Lacks a Node.js API bridge (`/api/voice/generate`) to expose synthesis to web UI. |
+| **Video Engine** | 8-step pipeline (Marketing Brain $\rightarrow$ 8s Scenes $\rightarrow$ Reference Images $\rightarrow$ Video Clips). | Only basic contract placeholder `video-engine.contract.ts` exists. | **GAP:** Build LLM Script Generator (AIDA/PAS) and first-frame scene reference generator. |
+| **AI Composer Engine** | FFmpeg / Remotion assembly of video clips, voice tracks, music, SFX, and subtitles into `Final_Marketing_Video.mp4`. | Only basic contract placeholder `composer-engine.contract.ts` exists. | **GAP:** Implement automated timeline assembler. |
+
+---
+
+## 🗺️ PHASE 1–9 MIGRATION ROADMAP
+
+```
+[Phase 1: Core Foundation] ➔ [Phase 2: Real Picture Engine] ➔ [Phase 3: Voice Engine API Bridge]
+                                                                          ↓
+[Phase 6: Video Gen Pipeline]  [Phase 5: Scene First-Frame Ref]  [Phase 4: Video Brain]
+            ↓
+[Phase 7: Approval Workflow] ➔ [Phase 8: AI Composer Engine] ➔ [Phase 9: SaaS Layer (Future)]
+```
+
+---
+
+### PHASE 1 — Core Foundation Refactoring
+* **Objective:** Clean `packages/contracts` to strictly mirror Section 2 of Master Spec.
+* **Tasks:**
+  1. Rename/refactor `creative-project.schema.json` to `generation-project.schema.json` with `type: ["voice", "image", "video"]`.
+  2. Simplify `scene.schema.json` around 8-second time blocks with `visual_direction`, `voice_direction`, and `motion_direction`.
+  3. Strip premature SaaS fields (`tenant_id`, `budget_cap_usd`, `billing_id`) from contract models.
+
+### PHASE 2 — Real Picture Engine Connection
+* **Objective:** Enable production-grade image generation in the studio UI.
+* **Tasks:**
+  1. Refactor `apps/web/features/picture-engine/services/picture-engine.api.ts` to call `/api/image/generate-simple`.
+  2. Wire `GeminiImageGenerationProvider` to return real 2K commercial visuals to the UI canvas.
+  3. Replace fake `NanoBanana2Adapter` in `packages/picture-engine` with active provider forwarding.
+
+### PHASE 3 — Voice Engine Productization
+* **Objective:** Expose F5-TTS Vietnamese voice synthesis through the Web OS.
+* **Tasks:**
+  1. Build `/api/voice/generate` route in `apps/web` to trigger `tido_voice_engine.py`.
+  2. Implement `VoiceEnginePanel` UI component allowing users to select styles (`commercial_seller`, `storytelling`) and emotions (`warm`, `excited`).
+  3. Support instant MP3/WAV download and asset registry logging.
+
+### PHASE 4 — Video Brain & Marketing Script Generator
+* **Objective:** Transform user concepts into structured 8-second scene scripts.
+* **Tasks:**
+  1. Implement Marketing Brain LLM prompt using commercial frameworks (AIDA, PAS, BAB).
+  2. Generate scene-based script output where every scene is exactly 8 seconds long.
+  3. Display scene timeline cards in the UI.
+
+### PHASE 5 — Reference Image Pipeline (First-Frame Scene Generation)
+* **Objective:** Ensure character and product consistency across video scenes.
+* **Tasks:**
+  1. Generate first-frame reference images for each 8-second scene using Picture Engine.
+  2. Enforce character Face/Hair/Outfit and product Logo/Shape consistency.
+
+### PHASE 6 — Video Generation Pipeline
+* **Objective:** Render 8-second video clips for each approved scene.
+* **Tasks:**
+  1. Integrate video provider adapters (Runway Gen-3, Kling AI, Veo 3).
+  2. Pass first-frame reference image and motion prompt to generate `scene_001.mp4`, `scene_002.mp4`.
+
+### PHASE 7 — Multi-Stage Approval Workflow
+* **Objective:** Give creators control to accept or regenerate specific assets.
+* **Tasks:**
+  1. Script Approval UI (Edit text, regenerate hook).
+  2. Scene Reference Image Approval UI (Regenerate single scene image without affecting others).
+  3. Video Clip Approval UI.
+
+### PHASE 8 — AI Composer Engine
+* **Objective:** Automated post-production assembly into final marketing videos.
+* **Tasks:**
+  1. Implement FFmpeg / Remotion automated video assembler.
+  2. Apply voice sync, background music ducking, SFX placement, and subtitle overlay.
+  3. Export `Final_Marketing_Video.mp4`.
+
+### PHASE 9 — SaaS & Enterprise Layer (Future)
+* **Objective:** Add commercial SaaS management features *only after* Layer 1 production factory is 100% operational.
+* **Scope:** Multi-tenant workspaces, subscription billing, team permissions, client review portals.
+
+---
+
+## 🚦 IMMEDIATE NEXT STEPS
+
+1. **Approve Phase 1 Contract Clean-up:** Standardize `packages/contracts` to reflect simple `GenerationProject`, 8s `Scene`, `Asset`, and `RenderJob` objects.
+2. **Execute Phase 2 Picture Engine Wiring:** Connect `apps/web/features/picture-engine` UI to real `/api/image/generate-simple` backend.

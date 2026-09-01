@@ -106,7 +106,7 @@ export const IMAGE_ENGINE_CONFIG = {
   GENERATION_TIMEOUT_MS: 90000,
   MAX_PRODUCT_REFERENCES: 10,
   SUPPORTED_ASPECT_RATIOS: ["1:1", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9"],
-  IMGSTUDIO_SUPPORTED_ASPECT_RATIOS: ["1:1", "3:4", "9:16"],
+  IMGSTUDIO_SUPPORTED_ASPECT_RATIOS: ["1:1", "4:5", "3:4", "4:3", "5:4", "9:16", "16:9"],
 };
 
 export function resolveDataPath(relativePath: string): string {

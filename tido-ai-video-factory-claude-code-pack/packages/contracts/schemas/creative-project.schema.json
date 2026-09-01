@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tido.ai/schemas/creative-project.schema.json",
+  "title": "CreativeProject",
+  "type": "object",
+  "required": [
+    "project_id",
+    "tenant_id",
+    "title",
+    "status",
+    "brief_id",
+    "scene_ids",
+    "created_at"
+  ],
+  "properties": {
+    "project_id": { "type": "string" },
+    "tenant_id": { "type": "string" },
+    "title": { "type": "string" },
+    "status": {
+      "type": "string",
+      "enum": [
+        "DRAFT",
+        "AWAITING_BRIEF_CONFIRMATION",
+        "CREATIVE_PLANNING",
+        "AWAITING_CREATIVE_APPROVAL",
+        "PRODUCTION_IN_PROGRESS",
+        "COMPOSING",
+        "FINAL_QC",
+        "COMPLETED",
+        "FAILED"
+      ]
+    },
+    "brief_id": { "type": "string" },
+    "campaign_id": { "type": "string" },
+    "scene_ids": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "asset_ids": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "created_at": { "type": "string" },
+    "updated_at": { "type": "string" }
+  }
+}

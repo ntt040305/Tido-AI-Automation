@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tido.ai/schemas/brand-dna.schema.json",
+  "title": "BrandDNA",
+  "type": "object",
+  "required": [
+    "brand_id",
+    "tenant_id",
+    "brand_name",
+    "visual_identity",
+    "voice_identity",
+    "forbidden_rules"
+  ],
+  "properties": {
+    "brand_id": {
+      "type": "string",
+      "pattern": "^brand_[a-z0-9_]+$"
+    },
+    "tenant_id": {
+      "type": "string"
+    },
+    "brand_name": {
+      "type": "string"
+    },
+    "industry": {
+      "type": "string"
+    },
+    "visual_identity": {
+      "type": "object",
+      "required": ["primary_colors", "brand_tone"],
+      "properties": {
+        "primary_colors": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "secondary_colors": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "brand_tone": {
+          "type": "string"
+        },
+        "aesthetic_keywords": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "logo_assets": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "voice_identity": {
+      "type": "object",
+      "required": ["preferred_speaker_gender", "tone_descriptors"],
+      "properties": {
+        "preferred_speaker_gender": {
+          "type": "string",
+          "enum": ["male", "female", "neutral", "any"]
+        },
+        "tone_descriptors": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "pacing_preference": {
+          "type": "string",
+          "enum": ["slow", "moderate", "fast", "dynamic"]
+        },
+        "pronunciation_lexicon": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        }
+      }
+    },
+    "forbidden_rules": {
+      "type": "object",
+      "required": ["forbidden_words", "forbidden_visuals"],
+      "properties": {
+        "forbidden_words": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "forbidden_visuals": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "forbidden_competitor_claims": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  }
+}

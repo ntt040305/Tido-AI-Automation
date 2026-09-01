@@ -1,6 +1,4 @@
-/**
- * Domain Models & Types for TIDO Image Intelligence Infrastructure (Stage 1 & 2)
- */
+import { ProductCompositionMode, ProductIdentityStrength } from "@tido/contracts";
 
 export type KnowledgeStatus = "DRAFT" | "ACTIVE" | "DEPRECATED";
 
@@ -218,6 +216,127 @@ export interface ProductRoutingEntry {
 /**
  * Shape F: Top-Level Routing Result
  */
+// ── PHASE 2.2 REFERENCE MANIFEST & IDENTITY LOCK SCHEMAS ───────────
+export type ReferenceRelationshipType =
+  | "single_product"
+  | "multi_product"
+  | "same_product_multi_view"
+  | "product_with_logo"
+  | "brand_only"
+  | "style_only";
+
+export type ReferenceClassificationCategory = "IDENTITY_REFERENCE" | "INSPIRATION_REFERENCE";
+
+export interface AssetReferenceClassification {
+  reference_id: string;
+  classification: ReferenceClassificationCategory;
+  role: string;
+  reason: string;
+}
+
+export interface ReferenceIdentityRule {
+  rule_id: string;
+  type:
+    | "product_lock"
+    | "logo_preservation"
+    | "packaging_lock"
+    | "multi_product_arrangement"
+    | "multi_view_consistency"
+    | "style_guideline";
+  target_reference_ids: string[];
+  instruction: string;
+  priority: "CRITICAL" | "HIGH" | "MEDIUM";
+  strength?: "hard" | "absolute" | "flexible";
+  rules?: string[];
+}
+
+export interface ProductIdentityLockEntry {
+  product_id: string;
+  reference_ids: string[];
+  canonical_name: string;
+  key_features: string[];
+  preserve_aspects: string[];
+}
+
+export interface LogoLockEntry {
+  reference_id: string;
+  brand_name: string;
+  placement_rule: string;
+}
+
+export interface ReferenceIdentityReport {
+  product_lock: boolean;
+  logo_lock: boolean;
+  identity_score: number;
+  transformation_allowed: boolean;
+  classifications: AssetReferenceClassification[];
+}
+
+export interface ProductExtractedTraits {
+  shape: string;
+  color: string;
+  material: string;
+  packaging: string;
+  label: string;
+  logo_relationship: string;
+}
+
+export interface ProductPlanEntry {
+  product_id: string;
+  canonical_name: string;
+  reference_ids: string[];
+  is_hero: boolean;
+  traits: ProductExtractedTraits;
+  compact_identity_lock: string;
+}
+
+export interface ProductManifestValidation {
+  target_count_requested: number;
+  detected_product_count: number;
+  is_valid: boolean;
+  notes: string;
+}
+
+export interface ProductManifest {
+  manifest_version: string;
+  relationship_type: ReferenceRelationshipType;
+  products: ProductPlanEntry[];
+  validation: ProductManifestValidation;
+  compact_identity_locks: string[];
+}
+
+export interface ReferencePriorityEntry {
+  reference_id: string;
+  priority_rank: number;
+  role_weight: number;
+  role: string;
+}
+
+export interface IdentityControlMetadata {
+  metadata_version: string;
+  reference_priority: ReferencePriorityEntry[];
+  preserve_features: string[];
+  flexible_features: string[];
+  forbidden_transformations: string[];
+  identity_confidence_score: number;
+  compact_directive: string;
+}
+
+export interface ReferenceManifest {
+  relationship_type: ReferenceRelationshipType;
+  total_references: number;
+  detected_products_count: number;
+  detected_logos_count: number;
+  same_product_views_count: number;
+  classifications?: AssetReferenceClassification[];
+  identity_rules: ReferenceIdentityRule[];
+  product_identity_locks: ProductIdentityLockEntry[];
+  logo_locks: LogoLockEntry[];
+  reference_identity_report?: ReferenceIdentityReport;
+  product_manifest?: ProductManifest;
+  identity_control_metadata?: IdentityControlMetadata;
+}
+
 export interface RoutingResultSchema {
   routing_version: string; // Must be "1.0"
   routing_mode: RoutingMode;
@@ -227,6 +346,7 @@ export interface RoutingResultSchema {
   routing_summary: string;
   structured_input_intent?: StructuredInputIntentV1;
   asset_roles?: ExtractedAssetRoleV1[];
+  reference_manifest?: ReferenceManifest;
 }
 
 // ── STAGE 2 ROUTER SERVICE & API TYPES ───────────────────────────
@@ -247,6 +367,8 @@ export interface RouterInput {
   hardRequirements?: string[];
   useCase?: string;
   aspectRatio?: string;
+  productCompositionMode?: ProductCompositionMode;
+  productIdentityStrength?: ProductIdentityStrength;
 }
 
 export type RouterErrorCode =
@@ -850,6 +972,30 @@ export interface SimpleInputValidationResultV1 {
   warnings: string[];
 }
 
+export interface ReferenceProcessingDiagnosticInfo {
+  reference_id: string;
+  original_size: string;
+  processed_size: string;
+  compression_applied: boolean;
+  width: number | string;
+  height: number | string;
+}
+
+export interface PictureStrategyDiagnostics {
+  creative_angle: string;
+  applied_knowledge_nodes: string[];
+  applied_technique_cards: string[];
+  compiled_prompt: string;
+  negative_prompt: string;
+  ai_creative_score_estimate: {
+    overall_score: number;
+    brand_alignment: number;
+    commercial_impact: number;
+    reasoning: string;
+  };
+  reference_processing?: ReferenceProcessingDiagnosticInfo[];
+}
+
 export interface SimpleImageGenerationResultV1 {
   success: boolean;
   generationId: string;
@@ -870,6 +1016,10 @@ export interface SimpleImageGenerationResultV1 {
   imageBuffer?: Buffer;
   useCase: string;
   aspectRatio: string;
+  project?: any;
+  renderJob?: any;
+  contractAsset?: any;
+  strategy?: PictureStrategyDiagnostics;
   diagnostics?: {
     routerDurationMs: number;
     adapterDurationMs: number;
@@ -884,12 +1034,14 @@ export interface SimpleImageGenerationResultV1 {
     supportReferenceCount: number;
     geminiCallCount: number;
     providerCallCount: number;
+    reference_processing?: ReferenceProcessingDiagnosticInfo[];
   };
   error?: {
     code: string;
     message: string;
   };
 }
+
 
 
 

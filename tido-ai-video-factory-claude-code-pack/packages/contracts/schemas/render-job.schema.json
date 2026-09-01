@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tido.ai/schemas/render-job.schema.json",
+  "title": "RenderJob",
+  "type": "object",
+  "required": [
+    "job_id",
+    "project_id",
+    "engine_type",
+    "status",
+    "created_at"
+  ],
+  "properties": {
+    "job_id": { "type": "string" },
+    "project_id": { "type": "string" },
+    "scene_id": { "type": "string" },
+    "engine_type": {
+      "type": "string",
+      "enum": ["picture", "voice", "video", "composer"]
+    },
+    "provider_name": { "type": "string" },
+    "provider_job_id": { "type": "string" },
+    "status": {
+      "type": "string",
+      "enum": ["queued", "running", "succeeded", "failed", "cancelled"]
+    },
+    "output_asset_ids": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "error_message": { "type": "string" },
+    "created_at": { "type": "string" },
+    "completed_at": { "type": "string" }
+  }
+}

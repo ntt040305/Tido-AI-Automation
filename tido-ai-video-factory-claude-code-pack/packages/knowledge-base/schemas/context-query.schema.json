@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tido.ai/schemas/context-query.schema.json",
+  "title": "ContextQuery",
+  "type": "object",
+  "required": [
+    "query_id",
+    "tenant_id",
+    "industry",
+    "campaign_objective",
+    "target_channel"
+  ],
+  "properties": {
+    "query_id": {
+      "type": "string"
+    },
+    "tenant_id": {
+      "type": "string"
+    },
+    "industry": {
+      "type": "string"
+    },
+    "campaign_objective": {
+      "type": "string"
+    },
+    "target_channel": {
+      "type": "string"
+    },
+    "brand_tone": {
+      "type": "string"
+    },
+    "target_audience": {
+      "type": "string"
+    },
+    "scene_role": {
+      "type": "string"
+    },
+    "budget_tier": {
+      "type": "string"
+    },
+    "query_embedding": {
+      "type": "array",
+      "items": { "type": "number" },
+      "description": "Optional vector embedding for dense retrieval"
+    },
+    "limit": {
+      "type": "integer",
+      "default": 10
+    }
+  }
+}

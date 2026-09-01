@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tido.ai/schemas/common/enums.schema.json",
+  "title": "CommonEnums",
+  "definitions": {
+    "ProjectType": {
+      "type": "string",
+      "enum": ["voice", "image", "video"]
+    },
+    "EngineType": {
+      "type": "string",
+      "enum": ["picture", "voice", "video", "composer"]
+    },
+    "AspectRatio": {
+      "type": "string",
+      "enum": ["1:1", "4:5", "9:16", "16:9"]
+    },
+    "ScenePurpose": {
+      "type": "string",
+      "enum": ["hook", "problem", "solution", "hero", "proof", "cta"]
+    },
+    "ProjectStatus": {
+      "type": "string",
+      "enum": ["pending", "processing", "completed", "failed"]
+    },
+    "RenderJobStatus": {
+      "type": "string",
+      "enum": ["queued", "running", "succeeded", "failed", "cancelled"]
+    }
+  }
+}

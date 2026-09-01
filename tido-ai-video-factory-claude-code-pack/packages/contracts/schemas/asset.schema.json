@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tido.ai/schemas/asset.schema.json",
+  "title": "Asset",
+  "type": "object",
+  "required": [
+    "asset_id",
+    "project_id",
+    "category",
+    "type",
+    "url",
+    "status",
+    "created_at"
+  ],
+  "properties": {
+    "asset_id": { "type": "string" },
+    "project_id": { "type": "string" },
+    "scene_id": { "type": "string" },
+    "category": {
+      "type": "string",
+      "enum": ["input", "generated"]
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "character_image",
+        "product_image",
+        "logo_image",
+        "style_reference",
+        "voice_sample",
+        "commercial_image",
+        "voice_audio",
+        "scene_video",
+        "final_video",
+        "music_track",
+        "sfx_audio"
+      ]
+    },
+    "url": { "type": "string" },
+    "storage_key": { "type": "string" },
+    "mime_type": { "type": "string" },
+    "file_size_bytes": { "type": "integer" },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "ready", "failed", "expired"]
+    },
+    "identity_profile": {
+      "$ref": "./common/identity-profile.schema.json"
+    },
+    "metadata": { "type": "object" },
+    "created_at": { "type": "string" }
+  }
+}

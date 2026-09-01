@@ -1,4 +1,4 @@
-import { GenerationErrorCode } from "../types";
+import { GenerationErrorCode, ReferenceManifest } from "../types";
 
 export interface ProviderReferenceImage {
   reference_id: string; // e.g. REF_01
@@ -18,6 +18,7 @@ export interface ProviderImageGenerationInput {
   mimeType: string;
   generationId?: string;
   idempotencyKey?: string;
+  reference_manifest?: ReferenceManifest;
 }
 
 export interface ProviderImageGenerationOutput {

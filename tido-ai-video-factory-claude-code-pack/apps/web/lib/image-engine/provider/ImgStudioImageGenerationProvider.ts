@@ -1,3 +1,4 @@
+import sharp from "sharp";
 import { IMAGE_ENGINE_CONFIG } from "../config";
 import {
   ImageGenerationProvider,
@@ -20,6 +21,18 @@ export interface ImgStudioProviderOutput extends ProviderImageGenerationOutput {
 
 export class ImgStudioImageGenerationProvider implements ImageGenerationProvider {
   /**
+   * Endpoint Selector Decision Layer for ImgStudio Adapter
+   */
+  private selectEndpoint(baseUrl: string, hasRealReferences: boolean): string {
+    if (hasRealReferences) {
+      // Commercial image generation with product/logo reference images uses ImgStudio edit pipeline
+      return `${baseUrl}/api/v1/images/edit`;
+    }
+    // Text-only generation without reference images uses ImgStudio generate pipeline
+    return `${baseUrl}/api/v1/images/generate`;
+  }
+
+  /**
    * Generates or edits an image using ImgStudio REST API (/api/v1/images/edit)
    * Model / Provider ID: flow-nano-banana-2
    */
@@ -32,6 +45,7 @@ export class ImgStudioImageGenerationProvider implements ImageGenerationProvider
 
     // 1. API Key Check
     if (!apiKey || apiKey.trim() === "" || apiKey === "YOUR_IMGSTUDIO_API_KEY") {
+      console.error("[ImgStudioProvider][CONFIG_ERROR] IMGSTUDIO_API_KEY is not configured.");
       return {
         success: false,
         error: {
@@ -51,65 +65,138 @@ export class ImgStudioImageGenerationProvider implements ImageGenerationProvider
         success: false,
         error: {
           code: "UNSUPPORTED_ASPECT_RATIO",
-          message: "Tỷ lệ ảnh này hiện chưa được hỗ trợ. Vui lòng chọn tỷ lệ khác.",
+          message: `Tỷ lệ ảnh ${input.aspectRatio} hiện chưa được hỗ trợ. Vui lòng chọn tỷ lệ khác.`,
         },
       };
     }
 
-    // 3. Determine Endpoint & Idempotency Key
-    // TIDO depends on product reference images -> POST /api/v1/images/edit
-    const endpoint = `${baseUrl}/api/v1/images/edit`;
+    // 3. Determine Endpoint, Payload & Headers based on reference images presence
     const idempotencyKey =
       input.idempotencyKey || `tido-${input.generationId || Date.now()}`;
-
-    // 3. Construct Multipart Form Data
-    const formData = new FormData();
-    formData.append("prompt", input.prompt);
-    formData.append("provider_id", providerId);
-    formData.append("aspect_ratio", input.aspectRatio || "1:1");
-    formData.append("resolution", resolution);
-    formData.append("quality", quality);
-
-    // 4. Attach Reference Images in repeated "images" multipart field
-    if (input.references && input.references.length > 0) {
-      for (let i = 0; i < input.references.length; i++) {
-        const ref = input.references[i];
-        const blob = new Blob([new Uint8Array(ref.buffer)], {
-          type: ref.mimeType || "image/png",
-        });
-        const filename = ref.filename || `${ref.reference_id || `ref_${i + 1}`}.png`;
-        formData.append("images", blob, filename);
-      }
-    }
-
     const timeoutMs = IMAGE_ENGINE_CONFIG.GENERATION_TIMEOUT_MS || 90000;
 
-    console.log("[SIMPLE RATIO][PROVIDER]", {
-      aspectRatio: input.aspectRatio,
-      providerId,
-      referenceCount: input.references ? input.references.length : 0,
-      endpoint,
+    const realReferences = (input.references || []).filter((ref) => {
+      if (!ref) return false;
+      if (ref.reference_id?.includes("CONCEPT_REF")) return false;
+      let bufLen = 0;
+      if (Buffer.isBuffer(ref.buffer)) {
+        bufLen = ref.buffer.length;
+      } else if (ref.buffer && (ref.buffer as any).data && Array.isArray((ref.buffer as any).data)) {
+        bufLen = (ref.buffer as any).data.length;
+      } else if (ref.buffer && typeof (ref.buffer as any).length === "number") {
+        bufLen = (ref.buffer as any).length;
+      }
+      return bufLen > 0;
     });
+    const hasRealReferences = realReferences.length > 0;
 
-    console.log("[SIMPLE RATIO][IMGSTUDIO PAYLOAD]", {
+    const endpoint = this.selectEndpoint(baseUrl, hasRealReferences);
+
+    let requestHeaders: Record<string, string> = {
+      Authorization: `Bearer ${apiKey}`,
+      "Idempotency-Key": idempotencyKey,
+    };
+    let requestBody: any;
+    const multipartKeys: string[] = [];
+
+    if (hasRealReferences) {
+      const formData = new FormData();
+      formData.append("prompt", input.prompt);
+      multipartKeys.push("prompt");
+      
+      formData.append("provider_id", providerId);
+      multipartKeys.push("provider_id");
+
+      formData.append("aspect_ratio", input.aspectRatio || "1:1");
+      multipartKeys.push("aspect_ratio");
+
+      formData.append("resolution", resolution);
+      multipartKeys.push("resolution");
+
+      formData.append("quality", quality);
+      multipartKeys.push("quality");
+
+      for (let i = 0; i < realReferences.length; i++) {
+        const ref = realReferences[i];
+        const rawBuf = Buffer.isBuffer(ref.buffer)
+          ? ref.buffer
+          : (ref.buffer as any)?.data
+          ? Buffer.from((ref.buffer as any).data)
+          : Buffer.from(ref.buffer || []);
+        
+        const filename = ref.filename || `${ref.reference_id || `ref_${i + 1}`}.png`;
+        const mimeType = ref.mimeType || "image/png";
+
+        // Create standard Blob/File object for multipart upload
+        const fileObj = typeof File !== "undefined"
+          ? new File([rawBuf], filename, { type: mimeType })
+          : new Blob([rawBuf], { type: mimeType });
+
+        formData.append("images", fileObj, filename);
+        multipartKeys.push(`images[${i}:${ref.reference_id || `ref_${i + 1}`}]`);
+      }
+      requestBody = formData;
+    } else {
+      requestHeaders["Content-Type"] = "application/json";
+      requestBody = JSON.stringify({
+        prompt: input.prompt,
+        provider_id: providerId,
+        aspect_ratio: input.aspectRatio || "1:1",
+        resolution,
+        quality,
+      });
+      multipartKeys.push("json_body");
+    }
+
+    // Detailed ImgStudio Request Logging with image dimensions
+    const imagesSummary = await Promise.all(
+      realReferences.map(async (ref, idx) => {
+        const rawBuf = Buffer.isBuffer(ref.buffer)
+          ? ref.buffer
+          : (ref.buffer as any)?.data
+          ? Buffer.from((ref.buffer as any).data)
+          : Buffer.from(ref.buffer || []);
+        const bufLen = rawBuf.length;
+        let dimensions = "unknown";
+        try {
+          const meta = await sharp(rawBuf).metadata();
+          if (meta.width && meta.height) {
+            dimensions = `${meta.width}x${meta.height}`;
+          }
+        } catch (_) {}
+
+        return {
+          index: idx + 1,
+          reference_id: ref.reference_id || `REF_${idx + 1}`,
+          product_id: ref.product_id,
+          role: ref.role || "UNKNOWN",
+          mimeType: ref.mimeType || "image/png",
+          sizeBytes: bufLen,
+          sizeKB: (bufLen / 1024).toFixed(2) + " KB",
+          dimensions,
+          filename: ref.filename || `${ref.reference_id || `ref_${idx + 1}`}.png`,
+        };
+      })
+    );
+
+    console.log("[ImgStudioProvider][REQUEST_LOG]", {
       endpoint,
       provider_id: providerId,
-      aspect_ratio: input.aspectRatio || "1:1",
-      length: (input.aspectRatio || "1:1").length,
-      charCodes: [...(input.aspectRatio || "1:1")].map((c) => c.charCodeAt(0)),
-      referenceCount: input.references ? input.references.length : 0,
-      formDataKeys: Array.from(formData.keys()),
+      imageCount: realReferences.length,
+      imagesSummary,
+      multipartKeys,
+      aspectRatio: input.aspectRatio,
+      resolution,
+      quality,
+      idempotencyKey,
     });
 
     // 5. Call ImgStudio API
     try {
       const fetchPromise = fetch(endpoint, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Idempotency-Key": idempotencyKey,
-        },
-        body: formData,
+        headers: requestHeaders,
+        body: requestBody,
       });
 
       const timeoutPromise = new Promise<Response>((_, reject) => {
@@ -123,6 +210,15 @@ export class ImgStudioImageGenerationProvider implements ImageGenerationProvider
         try {
           errBody = await res.text();
         } catch (_) { }
+
+        // Detailed API Error Logging
+        console.error(`[ImgStudioProvider][API_ERROR] HTTP ${res.status}:`, {
+          endpoint,
+          provider_id: providerId,
+          status: res.status,
+          statusText: res.statusText,
+          responseBody: errBody,
+        });
 
         if (res.status === 429) {
           return {
@@ -138,7 +234,11 @@ export class ImgStudioImageGenerationProvider implements ImageGenerationProvider
           success: false,
           error: {
             code: "PROVIDER_RESPONSE_INVALID",
-            message: `ImgStudio API returned status ${res.status}: ${errBody}`,
+            message: `ImgStudio API error (HTTP ${res.status}): ${errBody || res.statusText}`,
+            details: {
+              status: res.status,
+              responseBody: errBody,
+            },
           },
         };
       }
@@ -147,6 +247,7 @@ export class ImgStudioImageGenerationProvider implements ImageGenerationProvider
 
       // 6. Validate Response Status
       if (json.status !== "completed") {
+        console.error("[ImgStudioProvider][REJECTED]", json);
         return {
           success: false,
           error: {
@@ -184,6 +285,8 @@ export class ImgStudioImageGenerationProvider implements ImageGenerationProvider
           dlErrText = await imageDownloadRes.text();
         } catch (_) { }
 
+        console.error(`[ImgStudioProvider][DOWNLOAD_ERROR] HTTP ${imageDownloadRes.status}:`, dlErrText);
+
         return {
           success: false,
           error: {
@@ -208,6 +311,13 @@ export class ImgStudioImageGenerationProvider implements ImageGenerationProvider
 
       const contentType = imageDownloadRes.headers.get("content-type") || input.mimeType || "image/webp";
 
+      console.log("[ImgStudioProvider][SUCCESS]", {
+        generationId: input.generationId,
+        remoteImageId: json.id,
+        imageUrl: fileUrl,
+        bufferSize: imageBuffer.length,
+      });
+
       return {
         success: true,
         imageUrl: fileUrl,
@@ -224,6 +334,7 @@ export class ImgStudioImageGenerationProvider implements ImageGenerationProvider
       };
     } catch (err: any) {
       if (err.message === "PROVIDER_TIMEOUT") {
+        console.error(`[ImgStudioProvider][TIMEOUT] Timed out after ${timeoutMs / 1000}s`);
         return {
           success: false,
           error: {
@@ -232,6 +343,8 @@ export class ImgStudioImageGenerationProvider implements ImageGenerationProvider
           },
         };
       }
+
+      console.error("[ImgStudioProvider][EXECUTION_ERROR]", err);
 
       return {
         success: false,

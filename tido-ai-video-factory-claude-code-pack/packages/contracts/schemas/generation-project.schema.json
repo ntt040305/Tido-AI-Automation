@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tido.ai/schemas/generation-project.schema.json",
+  "title": "GenerationProject",
+  "type": "object",
+  "required": [
+    "id",
+    "type",
+    "input",
+    "status",
+    "created_at"
+  ],
+  "properties": {
+    "id": { "type": "string" },
+    "title": { "type": "string" },
+    "type": {
+      "type": "string",
+      "enum": ["voice", "image", "video"]
+    },
+    "input": {
+      "type": "object",
+      "description": "Task-specific input payload matching VoiceInput, ImageInput, or VideoInput"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "processing", "completed", "failed"]
+    },
+    "scene_ids": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "output_asset_ids": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "created_at": { "type": "string" },
+    "updated_at": { "type": "string" }
+  }
+}
