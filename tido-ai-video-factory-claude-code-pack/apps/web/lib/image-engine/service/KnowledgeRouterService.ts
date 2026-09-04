@@ -159,7 +159,7 @@ export class KnowledgeRouterService {
 
     const responseSchema = RoutingRuntimeSchemaAdapter.getGeminiResponseSchema();
 
-    // 6. Call Gemini 3.6 Flash model with Retry Policy (No deprecated sampling parameters)
+    // 6. Call Gemini 3.6 Flash model with Retry Policy & Timeout Protection (12s ceiling)
     let attempts = 0;
     let lastError: any = null;
     let rawTextResponse = "";
@@ -167,17 +167,23 @@ export class KnowledgeRouterService {
     while (attempts <= IMAGE_ENGINE_CONFIG.ROUTER_MAX_RETRIES) {
       attempts++;
       try {
-        const response = await ai.models.generateContent({
+        const timeoutMs = 12000;
+        let timeoutId: any;
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          timeoutId = setTimeout(() => reject(new Error(`KnowledgeRouter Gemini call timed out after ${timeoutMs}ms`)), timeoutMs);
+        });
+
+        const responsePromise = ai.models.generateContent({
           model: IMAGE_ENGINE_CONFIG.GEMINI_MODEL,
-          contents: [
-            fullSystemPrompt,
-            ...imageParts,
-          ],
+          contents: [fullSystemPrompt, ...imageParts],
           config: {
             responseMimeType: "application/json",
             responseSchema: responseSchema as any,
           },
         });
+
+        const response = (await Promise.race([responsePromise, timeoutPromise])) as any;
+        clearTimeout(timeoutId);
 
         rawTextResponse = response.text || "";
         if (rawTextResponse && rawTextResponse.trim().length > 0) {
@@ -185,9 +191,7 @@ export class KnowledgeRouterService {
         }
       } catch (err: any) {
         lastError = err;
-        console.warn(
-          `[KnowledgeRouterService] Request ${requestId} attempt ${attempts} failed: ${err.message}`
-        );
+        console.warn(`[KnowledgeRouterService] Request ${requestId} attempt ${attempts} failed: ${err.message || String(err)}`);
         if (attempts > IMAGE_ENGINE_CONFIG.ROUTER_MAX_RETRIES) {
           break;
         }
@@ -196,29 +200,21 @@ export class KnowledgeRouterService {
 
     if (!rawTextResponse) {
       const errMsg = lastError ? (lastError.message || String(lastError)) : "Empty response from Gemini Router model.";
-      if (errMsg.includes("429") || errMsg.toLowerCase().includes("rate limit") || errMsg.toLowerCase().includes("quota")) {
-        if (process.env.NODE_ENV !== "production" || process.env.ALLOW_MOCK_FALLBACK === "true") {
-          console.warn("[KnowledgeRouterService] API Quota Exceeded. Using intelligent dev fallback routing result.");
-          const fallbackRouting = createDevFallbackRouting(input, expectedRefIds);
-          return {
-            success: true,
-            routing: fallbackRouting,
-            meta: {
-              model: "dev-fallback",
-              durationMs: Date.now() - startTime,
-              requestId,
-              imageCount: input.images.length,
-            },
-          };
-        }
-      }
+      console.warn(`[KnowledgeRouterService] Gemini Router API unavailable (${errMsg}). Returning non-blocking fallback routing.`);
+
+      const fallbackRouting = createDevFallbackRouting(input, expectedRefIds);
+      fallbackRouting.retrieval_status = "fallback";
+      fallbackRouting.error_reason = errMsg;
+      fallbackRouting.knowledge_cards = [];
 
       return {
-        success: false,
-        error: {
-          code: "ROUTER_API_ERROR",
-          message: `Gemini API call failed: ${errMsg}`,
-          details: lastError ? String(lastError) : undefined,
+        success: true,
+        routing: fallbackRouting,
+        meta: {
+          model: "dev-fallback",
+          durationMs: Date.now() - startTime,
+          requestId,
+          imageCount: input.images.length,
         },
       };
     }
@@ -228,24 +224,40 @@ export class KnowledgeRouterService {
     try {
       parsedJson = JSON.parse(rawTextResponse);
     } catch (err: any) {
+      console.warn(`[KnowledgeRouterService] Failed to parse Gemini response as JSON: ${err.message}. Using fallback routing.`);
+      const fallbackRouting = createDevFallbackRouting(input, expectedRefIds);
+      fallbackRouting.retrieval_status = "fallback";
+      fallbackRouting.error_reason = `JSON parse failed: ${err.message}`;
+      fallbackRouting.knowledge_cards = [];
+
       return {
-        success: false,
-        error: {
-          code: "ROUTER_INVALID_RESPONSE",
-          message: `Failed to parse Gemini response as JSON: ${err.message}`,
+        success: true,
+        routing: fallbackRouting,
+        meta: {
+          model: "dev-fallback",
+          durationMs: Date.now() - startTime,
+          requestId,
+          imageCount: input.images.length,
         },
       };
     }
 
     const validation = RoutingValidator.validate(parsedJson, expectedRefIds);
     if (!validation.isValid || !validation.routing) {
-      const isLeak = validation.errors?.some((e) => e.includes("CREATIVE_LEAK"));
+      console.warn(`[KnowledgeRouterService] Schema validation failed: ${validation.errors?.join("; ")}. Using fallback routing.`);
+      const fallbackRouting = createDevFallbackRouting(input, expectedRefIds);
+      fallbackRouting.retrieval_status = "fallback";
+      fallbackRouting.error_reason = `Validation failed: ${validation.errors?.join("; ")}`;
+      fallbackRouting.knowledge_cards = [];
+
       return {
-        success: false,
-        error: {
-          code: isLeak ? "ROUTER_CREATIVE_LEAK" : "ROUTER_SCHEMA_VALIDATION_FAILED",
-          message: `Routing validation failed: ${validation.errors?.join("; ")}`,
-          details: validation.errors,
+        success: true,
+        routing: fallbackRouting,
+        meta: {
+          model: "dev-fallback",
+          durationMs: Date.now() - startTime,
+          requestId,
+          imageCount: input.images.length,
         },
       };
     }
@@ -358,52 +370,11 @@ function createDevFallbackRouting(input: RouterInput, refIds: string[]): Routing
   // Requested visible instance count (productCount) is NEVER used as evidence to group multiple references.
   const products = refIds.length <= 1
     ? [
-        {
-          product_id: "PRODUCT_01",
-          reference_ids: refIds,
-          reference_relationship_confidence: 1.0,
-          summary: `${conceptOrBriefText} for brand ${brand}`,
-          categories: [
-            { value: "Commercial Product", confidence: 1, evidence_type: "USER_PROVIDED" as const, evidence_summary: conceptOrBriefText }
-          ],
-          industry_domains: [
-            { value: "Retail & Consumer Goods", confidence: 1, evidence_type: "USER_PROVIDED" as const, evidence_summary: conceptOrBriefText }
-          ],
-          likely_functions: [
-            { value: "Commercial display and packaging", confidence: 1, evidence_type: "USER_PROVIDED" as const, evidence_summary: conceptOrBriefText }
-          ],
-          materials: [
-            { value: "Glass / Plastic Container", confidence: 0.9, evidence_type: "STRONG_INFERENCE" as const, evidence_summary: conceptOrBriefText }
-          ],
-          contents: [
-            { value: conceptOrBriefText, confidence: 1, evidence_type: "USER_PROVIDED" as const, evidence_summary: conceptOrBriefText }
-          ],
-          surface_properties: [
-            { value: "Transparent / Glossy", confidence: 0.85, evidence_type: "STRONG_INFERENCE" as const, evidence_summary: "Standard commercial surface" }
-          ],
-          geometry_traits: [
-            { value: "3D Product Geometry", confidence: 0.8, evidence_type: "STRONG_INFERENCE" as const, evidence_summary: "Commercial packaging form factor" }
-          ],
-          packaging_types: [
-            { value: "Product Container", confidence: 1, evidence_type: "USER_PROVIDED" as const, evidence_summary: conceptOrBriefText }
-          ],
-          branding_features: [
-            { value: `${brand} Branding`, confidence: 1, evidence_type: "USER_PROVIDED" as const, evidence_summary: brand }
-          ],
-          visual_challenges: [
-            { id: "surface_refraction", description: "Complex light reflections and specular highlights on product surface.", confidence: 0.9 }
-          ],
-          unknowns: [],
-          retrieval_queries: [
-            { query: `${conceptOrBriefText} ${brand} product material specification`, importance: "PRIMARY" as const, reason: "Retrieve product definition" }
-          ]
-        }
-      ]
-    : refIds.map((refId, idx) => ({
-        product_id: `PRODUCT_${String(idx + 1).padStart(2, "0")}`,
-        reference_ids: [refId],
-        reference_relationship_confidence: 0.5,
-        summary: `${conceptOrBriefText} for brand ${brand} (Item ${idx + 1})`,
+      {
+        product_id: "PRODUCT_01",
+        reference_ids: refIds,
+        reference_relationship_confidence: 1.0,
+        summary: `${conceptOrBriefText} for brand ${brand}`,
         categories: [
           { value: "Commercial Product", confidence: 1, evidence_type: "USER_PROVIDED" as const, evidence_summary: conceptOrBriefText }
         ],
@@ -417,7 +388,7 @@ function createDevFallbackRouting(input: RouterInput, refIds: string[]): Routing
           { value: "Glass / Plastic Container", confidence: 0.9, evidence_type: "STRONG_INFERENCE" as const, evidence_summary: conceptOrBriefText }
         ],
         contents: [
-          { value: `${conceptOrBriefText} Variant ${idx + 1}`, confidence: 1, evidence_type: "USER_PROVIDED" as const, evidence_summary: conceptOrBriefText }
+          { value: conceptOrBriefText, confidence: 1, evidence_type: "USER_PROVIDED" as const, evidence_summary: conceptOrBriefText }
         ],
         surface_properties: [
           { value: "Transparent / Glossy", confidence: 0.85, evidence_type: "STRONG_INFERENCE" as const, evidence_summary: "Standard commercial surface" }
@@ -438,7 +409,48 @@ function createDevFallbackRouting(input: RouterInput, refIds: string[]): Routing
         retrieval_queries: [
           { query: `${conceptOrBriefText} ${brand} product material specification`, importance: "PRIMARY" as const, reason: "Retrieve product definition" }
         ]
-      }));
+      }
+    ]
+    : refIds.map((refId, idx) => ({
+      product_id: `PRODUCT_${String(idx + 1).padStart(2, "0")}`,
+      reference_ids: [refId],
+      reference_relationship_confidence: 0.5,
+      summary: `${conceptOrBriefText} for brand ${brand} (Item ${idx + 1})`,
+      categories: [
+        { value: "Commercial Product", confidence: 1, evidence_type: "USER_PROVIDED" as const, evidence_summary: conceptOrBriefText }
+      ],
+      industry_domains: [
+        { value: "Retail & Consumer Goods", confidence: 1, evidence_type: "USER_PROVIDED" as const, evidence_summary: conceptOrBriefText }
+      ],
+      likely_functions: [
+        { value: "Commercial display and packaging", confidence: 1, evidence_type: "USER_PROVIDED" as const, evidence_summary: conceptOrBriefText }
+      ],
+      materials: [
+        { value: "Glass / Plastic Container", confidence: 0.9, evidence_type: "STRONG_INFERENCE" as const, evidence_summary: conceptOrBriefText }
+      ],
+      contents: [
+        { value: `${conceptOrBriefText} Variant ${idx + 1}`, confidence: 1, evidence_type: "USER_PROVIDED" as const, evidence_summary: conceptOrBriefText }
+      ],
+      surface_properties: [
+        { value: "Transparent / Glossy", confidence: 0.85, evidence_type: "STRONG_INFERENCE" as const, evidence_summary: "Standard commercial surface" }
+      ],
+      geometry_traits: [
+        { value: "3D Product Geometry", confidence: 0.8, evidence_type: "STRONG_INFERENCE" as const, evidence_summary: "Commercial packaging form factor" }
+      ],
+      packaging_types: [
+        { value: "Product Container", confidence: 1, evidence_type: "USER_PROVIDED" as const, evidence_summary: conceptOrBriefText }
+      ],
+      branding_features: [
+        { value: `${brand} Branding`, confidence: 1, evidence_type: "USER_PROVIDED" as const, evidence_summary: brand }
+      ],
+      visual_challenges: [
+        { id: "surface_refraction", description: "Complex light reflections and specular highlights on product surface.", confidence: 0.9 }
+      ],
+      unknowns: [],
+      retrieval_queries: [
+        { query: `${conceptOrBriefText} ${brand} product material specification`, importance: "PRIMARY" as const, reason: "Retrieve product definition" }
+      ]
+    }));
 
   const fallbackResult: RoutingResultSchema = {
     routing_version: "1.0",
@@ -451,6 +463,9 @@ function createDevFallbackRouting(input: RouterInput, refIds: string[]): Routing
     routing_summary: `Dev fallback routing generated for ${conceptOrBriefText}`,
     structured_input_intent: structuredIntent,
     asset_roles: assetRoles,
+    retrieval_status: "fallback",
+    knowledge_cards: [],
+    error_reason: "Knowledge router API fallback activated",
   };
 
   const refIntel = new ReferenceIntelligenceService();

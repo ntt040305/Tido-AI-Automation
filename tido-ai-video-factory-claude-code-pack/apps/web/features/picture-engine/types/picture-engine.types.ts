@@ -85,6 +85,7 @@ export interface BrandIdentity {
 
 export interface CreativeBrief {
   asset_type: AssetType;
+  creative_concept?: string;
   marketing_context: MarketingContext;
   sales_context: SalesContext;
   creative_direction: CreativeDirection;

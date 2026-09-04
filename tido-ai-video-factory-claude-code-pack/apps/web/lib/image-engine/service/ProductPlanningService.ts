@@ -9,8 +9,10 @@ import {
 export class ProductPlanningService {
   /**
    * Converts uploaded reference assets into a structured ProductManifest before generation,
-   * extracting product traits, evaluating reference relationships, validating target product count,
-   * and generating compact provider-ready identity locks.
+   * applying adaptive identity detail compression based on target product count:
+   *  - 1 product: HIGH identity detail
+   *  - 2-3 products: MEDIUM compact identity
+   *  - 4+ products: CATALOG compact identity
    */
   public buildProductManifest(
     routingResult: RoutingResultSchema,
@@ -57,9 +59,23 @@ export class ProductPlanningService {
     const isValidCount = targetCount > 0;
     const validationNotes = `Target requested: ${targetCount}, detected products: ${detectedCount}, relationship: ${relationshipType}.`;
 
+    // Determine Adaptive Detail Level based on Requirement 3:
+    // 1 product: HIGH, 2-10 products: MEDIUM, >10 products: CATALOG
+    let compressionMode: "HIGH" | "MEDIUM" | "CATALOG" = "HIGH";
+    if (targetCount > 10 || products.length > 10) {
+      compressionMode = "CATALOG";
+    } else if (targetCount >= 2 || products.length >= 2) {
+      compressionMode = "MEDIUM";
+    } else {
+      compressionMode = "HIGH";
+    }
+
     // Extract Product Entries & Compact Locks
     const productEntries: ProductPlanEntry[] = [];
     const compactLocks: string[] = [];
+
+    // Calculate raw string length before compression for telemetry
+    const before_chars = JSON.stringify(products).length;
 
     if (relationshipType === "brand_only") {
       compactLocks.push(`LOCK BRAND LOGO (${logoRefIds.join(", ") || "REF_LOGO"}): Maintain original vector geometry, font kerning, and brand color.`);
@@ -87,7 +103,24 @@ export class ProductPlanningService {
           logo_relationship: logoRelationship,
         };
 
-        const compactLock = `LOCK [${pId}] (${canonicalName}) [Refs: ${refs.join(", ")}]: Shape=${shapeTrait} | Color=${colorTrait} | Material=${materialTrait} | Package=${packagingTrait} | Logo=${logoRelationship}`;
+        let compactLock = "";
+        if (compressionMode === "CATALOG") {
+          // >10 products: CATALOG ultra-compact 1-line lock (under 60 chars per product)
+          compactLock = `LOCK [${pId}]: Preserve silhouette, packaging, colors & logo.`;
+        } else if (compressionMode === "MEDIUM") {
+          // 2-3 products: MEDIUM compact identity (compact 1-2 line summary)
+          compactLock = `LOCK [${pId}] (${canonicalName}) [Refs: ${refs.join(", ")}]: Shape=${shapeTrait} | Colors=${colorTrait} | Material=${materialTrait} | Package=${packagingTrait}. Preserve exact silhouette, packaging & logo. No redesign.`;
+        } else {
+          // 1 product: HIGH identity detail
+          compactLock =
+            `LOCK [${pId}] (${canonicalName}) [Refs: ${refs.join(", ")}]:\n` +
+            `  - Shape: ${shapeTrait}\n` +
+            `  - Material: ${materialTrait}\n` +
+            `  - Packaging: ${packagingTrait}\n` +
+            `  - Color: ${colorTrait}\n` +
+            `  - Label: ${labelTrait}\n` +
+            `  - Rules: Preserve exact silhouette, packaging appearance, colors & logo/label. No redesign, no replacement.`;
+        }
 
         productEntries.push({
           product_id: pId,
@@ -102,9 +135,22 @@ export class ProductPlanningService {
       });
     }
 
+    const after_chars = compactLocks.join("\n").length;
+    const compressionRatioNum = before_chars > 0 ? Math.max(0, (1 - after_chars / before_chars) * 100) : 0;
+    const compression_ratio = `${compressionRatioNum.toFixed(1)}%`;
+
+    console.log("[IDENTITY_COMPRESSION]", {
+      before_chars,
+      after_chars,
+      products_count: detectedCount,
+      compression_mode: compressionMode,
+      compression_ratio,
+    });
+
     return {
       manifest_version: "1.0",
       relationship_type: relationshipType,
+      compression_mode: compressionMode,
       products: productEntries,
       validation: {
         target_count_requested: targetCount,

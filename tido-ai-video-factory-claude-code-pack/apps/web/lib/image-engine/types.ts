@@ -1,4 +1,5 @@
 import { ProductCompositionMode, ProductIdentityStrength } from "@tido/contracts";
+import type { CreativeInterpretation } from "./service/CreativeInterpretationService";
 
 export type KnowledgeStatus = "DRAFT" | "ACTIVE" | "DEPRECATED";
 
@@ -104,17 +105,17 @@ export interface ValidationError {
   blockId?: string;
   file?: string;
   code:
-    | "DUPLICATE_ID"
-    | "INVALID_SCHEMA"
-    | "MISSING_METADATA"
-    | "MISSING_CONTENT"
-    | "PATH_TRAVERSAL"
-    | "CREATIVE_RECIPE_VIOLATION"
-    | "MISSING_DEPENDENCY"
-    | "INVALID_RELATED_BLOCK"
-    | "INVALID_COVERED_BLOCK"
-    | "INVALID_STATUS"
-    | "INVALID_TYPE";
+  | "DUPLICATE_ID"
+  | "INVALID_SCHEMA"
+  | "MISSING_METADATA"
+  | "MISSING_CONTENT"
+  | "PATH_TRAVERSAL"
+  | "CREATIVE_RECIPE_VIOLATION"
+  | "MISSING_DEPENDENCY"
+  | "INVALID_RELATED_BLOCK"
+  | "INVALID_COVERED_BLOCK"
+  | "INVALID_STATUS"
+  | "INVALID_TYPE";
   message: string;
 }
 
@@ -237,12 +238,12 @@ export interface AssetReferenceClassification {
 export interface ReferenceIdentityRule {
   rule_id: string;
   type:
-    | "product_lock"
-    | "logo_preservation"
-    | "packaging_lock"
-    | "multi_product_arrangement"
-    | "multi_view_consistency"
-    | "style_guideline";
+  | "product_lock"
+  | "logo_preservation"
+  | "packaging_lock"
+  | "multi_product_arrangement"
+  | "multi_view_consistency"
+  | "style_guideline";
   target_reference_ids: string[];
   instruction: string;
   priority: "CRITICAL" | "HIGH" | "MEDIUM";
@@ -300,6 +301,7 @@ export interface ProductManifestValidation {
 export interface ProductManifest {
   manifest_version: string;
   relationship_type: ReferenceRelationshipType;
+  compression_mode?: "HIGH" | "MEDIUM" | "CATALOG";
   products: ProductPlanEntry[];
   validation: ProductManifestValidation;
   compact_identity_locks: string[];
@@ -335,6 +337,63 @@ export interface ReferenceManifest {
   reference_identity_report?: ReferenceIdentityReport;
   product_manifest?: ProductManifest;
   identity_control_metadata?: IdentityControlMetadata;
+  reference_quality_profile?: ReferenceQualityProfile;
+  adaptive_constraints?: AdaptiveConstraintSet;
+}
+
+// ── PHASE 3.4 & 3.5 ADAPTIVE REFERENCE QUALITY & READINESS SCHEMAS ──
+
+export type ReferenceQualityClassification =
+  | "WEAK_STUDIO_WHITE_BG"
+  | "FLAT_MARKETPLACE_2D"
+  | "ISOLATED_PNG"
+  | "STRONG_ENVIRONMENTAL";
+
+export type ReferenceQualityCategory =
+  | "PROFESSIONAL_STUDIO"
+  | "LIFESTYLE_ENVIRONMENT"
+  | "MARKETPLACE_FLAT"
+  | "ISOLATED_OBJECT"
+  | "LOW_QUALITY";
+
+export type ReferenceBypassAction =
+  | "DIRECT_BYPASS"
+  | "PROMPT_COMPENSATION_ONLY"
+  | "QUALITY_WARNING_ADVISED";
+
+export interface ReferenceReadinessScore {
+  resolutionScore: number;
+  sharpnessScore: number;
+  backgroundContextScore: number;
+  lightingContextScore: number;
+  depthInformationScore: number;
+  overallScore: number;
+}
+
+export interface ReferenceQualityProfile {
+  quality_classification: ReferenceQualityClassification;
+  category?: ReferenceQualityCategory;
+  bypass_action?: ReferenceBypassAction;
+  readiness_score?: ReferenceReadinessScore;
+  is_weak_reference: boolean;
+  identity_completeness_score: number;
+  visual_context_score: number;
+  lacks_depth: boolean;
+  lacks_environmental_lighting: boolean;
+  lacks_contact_shadows: boolean;
+  lacks_material_reflections: boolean;
+  detected_background: "white_studio" | "isolated_transparent" | "flat_2d" | "natural_environment" | "unknown";
+  diagnostics_summary: string;
+}
+
+export interface AdaptiveConstraintSet {
+  requires_adaptation: boolean;
+  depth_enhancement: string;
+  lighting_enhancement: string;
+  material_realism: string;
+  environment_integration: string;
+  contact_shadow_generation: string;
+  compact_adaptation_directive: string;
 }
 
 export interface RoutingResultSchema {
@@ -347,6 +406,9 @@ export interface RoutingResultSchema {
   structured_input_intent?: StructuredInputIntentV1;
   asset_roles?: ExtractedAssetRoleV1[];
   reference_manifest?: ReferenceManifest;
+  retrieval_status?: "success" | "fallback";
+  error_reason?: string;
+  knowledge_cards?: string[];
 }
 
 // ── STAGE 2 ROUTER SERVICE & API TYPES ───────────────────────────
@@ -544,6 +606,86 @@ export interface ProductReferenceInput {
   name?: string;
 }
 
+export interface InspirationStyleManifest {
+  composition: string;
+  camera: string;
+  lighting: string;
+  colorMood: string;
+  environment: string;
+  visualMood: string;
+  compactDirective?: string;
+  analyzed_at?: string;
+  source_hash?: string;
+  /**
+   * True only when these attributes were read from the actual inspiration image by a
+   * vision-capable model. The current LLM transport is text-only, so an analysis pass
+   * infers style from the concept text instead of the image. Such a manifest must NOT
+   * be injected into the prompt as an authoritative style directive: it competes with
+   * the real attached image and reintroduces generic studio styling.
+   */
+  derived_from_image?: boolean;
+
+  // ---------------------------------------------------------------------------
+  // Deep analysis fields. All optional so an older or partial manifest stays valid.
+  // The six fields above are the summary; these carry the detail a photographer
+  // would need to rebuild the shot from scratch without seeing the reference.
+  // ---------------------------------------------------------------------------
+
+  /** Camera height and tilt, e.g. "slightly below product mid-line, level tilt". */
+  cameraAngle?: string;
+  /** Lens and perspective character, e.g. "85mm, mild compression, no wide distortion". */
+  focalLength?: string;
+  /** Aperture feel, focus plane and falloff. */
+  depthOfField?: string;
+  /** Distance and how much of the frame the subject occupies. */
+  cameraDistance?: string;
+
+  /** Key light direction, height and quality. */
+  keyLight?: string;
+  /** Fill ratio, shadow hardness and overall contrast. */
+  fillAndShadow?: string;
+  /** Rim/back light and specular behaviour on glass, metal and liquid. */
+  rimAndHighlights?: string;
+  /** Colour temperature and any gel or mixed-temperature lighting. */
+  lightColorTemperature?: string;
+
+  /** Where the subject sits in frame and its scale. */
+  subjectPlacement?: string;
+  /** Foreground, midground and background layering. */
+  depthLayering?: string;
+  /** Deliberate empty area reserved for headline or logo. */
+  negativeSpace?: string;
+
+  /** Dominant colours, named or hex. */
+  colorPalette?: string;
+  /** Saturation, contrast curve, highlight and shadow tint. */
+  colorGrading?: string;
+
+  /** Props present, their count and arrangement. */
+  propStyling?: string;
+  /** The surface the subject stands on, its material and reflectivity. */
+  surfaceAndSet?: string;
+  /** Backdrop treatment: gradient direction, vignette, falloff. */
+  backgroundTreatment?: string;
+  /** Splashes, droplets, floating elements, smoke, motion cues. */
+  motionAndEffects?: string;
+
+  /** Sharpness, glow/bloom, grain and other post-processing character. */
+  finishing?: string;
+  /** Overall commercial genre and era of the photography. */
+  photographicStyle?: string;
+}
+
+export interface InspirationPromptDirective {
+  composition: string;
+  camera: string;
+  lighting: string;
+  colorMood: string;
+  environment: string;
+  visualMood: string;
+  compactDirective: string;
+}
+
 export interface MasterPromptCompilerInput {
   productReferences?: (ProductReferenceInput | string)[];
   brief?: string;
@@ -556,6 +698,16 @@ export interface MasterPromptCompilerInput {
   aspectRatio?: string;
   routingResult: RoutingResultSchema;
   knowledgePackage: KnowledgePackageV1;
+  creativeInterpretation?: CreativeInterpretation;
+  hasInspirationReference?: boolean;
+  /**
+   * True when the inspiration image was analyzed into words and will NOT be attached to
+   * the image generator. The prompt must then describe the style verbally and must not
+   * refer the model to a second attached image that does not exist.
+   */
+  inspirationImageWithheld?: boolean;
+  inspirationReferenceRules?: string[];
+  inspirationStyleManifest?: InspirationStyleManifest;
 }
 
 export type CompilerWarningCode =
@@ -653,6 +805,7 @@ export type GenerationErrorCode =
   | "PROVIDER_REJECTED"
   | "PROVIDER_NO_IMAGE"
   | "PROVIDER_RESPONSE_INVALID"
+  | "PROVIDER_NETWORK_ERROR"
   | "ASSET_STORAGE_FAILED"
   | "GENERATION_FAILED"
   | "PROVIDER_UPSTREAM_ERROR";
@@ -895,7 +1048,19 @@ export const CONCEPT_LENGTH_POLICY = {
 export interface SimpleInputRequestV1 {
   referenceImages?: ReferenceImageInput[];
   referenceIds?: string[];
-  images?: { reference_id?: string; buffer?: Buffer; mimeType?: string; filename?: string }[];
+  images?: {
+    reference_id?: string;
+    buffer?: Buffer;
+    mimeType?: string;
+    filename?: string;
+    /**
+     * Explicit caller-supplied role. When present it is authoritative and overrides
+     * both the LLM router classification and the PRODUCT fallback in
+     * SimpleInputAdapterService. Used to transport INSPIRATION_REFERENCE from the
+     * client without it being reclassified as product identity.
+     */
+    role?: AssetRoleV1;
+  }[];
   concept: string;
   useCase: string;
   aspectRatio: string;
@@ -905,6 +1070,24 @@ export interface SimpleInputRequestV1 {
   hardRequirements?: string[];
   requestId?: string;
   projectId?: string;
+  marketingContext?: {
+    industry?: string;
+    objective?: string;
+    target_channel?: string;
+    target_audience?: string;
+  };
+  creativeDirection?: {
+    visual_style?: string;
+    emotional_tone?: string;
+    composition_layout?: string;
+  };
+  salesContext?: {
+    product_name?: string;
+    offer_text?: string;
+    benefit?: string;
+    cta_text?: string;
+  };
+  inspirationStyleManifest?: InspirationStyleManifest;
 }
 
 export type ExtractedCopyRoleV1 =
@@ -926,6 +1109,9 @@ export type AssetRoleV1 =
   | "PRODUCT"
   | "LOGO"
   | "SUPPORT_REFERENCE"
+  | "PRODUCT_REFERENCE"
+  | "INSPIRATION_REFERENCE"
+  | "STYLE"
   | "AMBIGUOUS"
   | "UNKNOWN";
 
@@ -994,24 +1180,25 @@ export interface PictureStrategyDiagnostics {
     reasoning: string;
   };
   reference_processing?: ReferenceProcessingDiagnosticInfo[];
+  creative_interpretation?: CreativeInterpretation;
 }
 
 export interface SimpleImageGenerationResultV1 {
   success: boolean;
   generationId: string;
   status:
-    | "COMPLETED"
-    | "VALIDATION_FAILED"
-    | "INTERPRETATION_FAILED"
-    | "NO_PRODUCT_REFERENCE"
-    | "COMPILATION_FAILED"
-    | "EXACT_COPY_FAILED"
-    | "PROMPT_BUDGET_EXCEEDED"
-    | "REFERENCE_ORDER_MISMATCH"
-    | "UNSUPPORTED_ASPECT_RATIO"
-    | "GENERATION_FAILED"
-    | "PROVIDER_TIMEOUT"
-    | "PROVIDER_UPSTREAM_ERROR";
+  | "COMPLETED"
+  | "VALIDATION_FAILED"
+  | "INTERPRETATION_FAILED"
+  | "NO_PRODUCT_REFERENCE"
+  | "COMPILATION_FAILED"
+  | "EXACT_COPY_FAILED"
+  | "PROMPT_BUDGET_EXCEEDED"
+  | "REFERENCE_ORDER_MISMATCH"
+  | "UNSUPPORTED_ASPECT_RATIO"
+  | "GENERATION_FAILED"
+  | "PROVIDER_TIMEOUT"
+  | "PROVIDER_UPSTREAM_ERROR";
   imageUrl?: string;
   imageBuffer?: Buffer;
   useCase: string;
@@ -1035,12 +1222,52 @@ export interface SimpleImageGenerationResultV1 {
     geminiCallCount: number;
     providerCallCount: number;
     reference_processing?: ReferenceProcessingDiagnosticInfo[];
+    pipeline_timing?: {
+      validation_ms: number;
+      groq_marketing_brain_ms: number;
+      router_ms: number;
+      adapter_ms: number;
+      retrieval_ms: number;
+      creative_interpretation_ms: number;
+      compiler_ms: number;
+      provider_wait_ms: number;
+      total_ms: number;
+    };
   };
   error?: {
     code: string;
     message: string;
   };
 }
+
+// ── CONCEPT PROFESSIONALIZER TYPES ────────────────────────────────
+
+export interface ProductIdentityContext {
+  referenceAvailable: boolean;
+  detectedCategory?: string;
+  detectedBrand?: string;
+  detectedProductType?: string;
+  identityLocks: string[];
+  preservationRules: string[];
+}
+
+export interface ConceptProfessionalizationRequest {
+  userConcept: string;
+  outputType?: string;
+  productCategory?: string;
+  productName?: string;
+  brandName?: string;
+  identityContext?: ProductIdentityContext;
+  referenceManifest?: ReferenceManifest;
+  productManifest?: ProductManifest;
+}
+
+export interface ConceptProfessionalizationResult {
+  originalConcept: string;
+  professionalConcept: string;
+  wasOptimized?: boolean;
+}
+
 
 
 

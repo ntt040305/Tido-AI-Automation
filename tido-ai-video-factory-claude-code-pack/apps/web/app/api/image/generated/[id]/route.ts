@@ -33,6 +33,7 @@ export async function GET(
 
     const searchParams = req.nextUrl.searchParams;
     const isDownload = searchParams.get("download") === "1" || searchParams.get("dl") === "1";
+    const customFilename = searchParams.get("filename");
 
     const fileBuffer = fs.readFileSync(assetPath);
 
@@ -42,7 +43,8 @@ export async function GET(
     };
 
     if (isDownload) {
-      headers["Content-Disposition"] = `attachment; filename="tido-${generationId}${ext || ".png"}"`;
+      const filename = customFilename || `tido-${generationId}${ext || ".png"}`;
+      headers["Content-Disposition"] = `attachment; filename="${filename}"`;
     }
 
     return new NextResponse(fileBuffer, {

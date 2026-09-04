@@ -60,6 +60,34 @@ export class ProviderPromptOptimizer {
         name: "AUDIENCE_ANALYSIS_EXPLANATION",
         pattern: /AUDIENCE ANALYSIS EXPLANATION:[\s\S]*?(?=\n\n|\n#|$)/gi,
       },
+      {
+        name: "EVIDENCE_TYPE_METADATA",
+        pattern: /evidence_type:?\s*[A-Z_]+/gi,
+      },
+      {
+        name: "CONFIDENCE_SCORE_METADATA",
+        pattern: /confidence:?\s*0?\.\d+/gi,
+      },
+      {
+        name: "EVIDENCE_SUMMARY_METADATA",
+        pattern: /evidence_summary:?\s*["'][^"']*["']/gi,
+      },
+      {
+        name: "RETRIEVAL_QUERIES_METADATA",
+        pattern: /retrieval_queries:?\s*\[[^\]]*\]/gi,
+      },
+      {
+        name: "RETRIEVAL_EXPLANATIONS",
+        pattern: /## RETRIEVAL EXPLANATION[\s\S]*?(?=\n##|\n#|$)/gi,
+      },
+      {
+        name: "REASONING_EXPLANATIONS",
+        pattern: /## REASONING EXPLANATION[\s\S]*?(?=\n##|\n#|$)/gi,
+      },
+      {
+        name: "KNOWLEDGE_METADATA_HEADER",
+        pattern: /## KNOWLEDGE METADATA[\s\S]*?(?=\n##|\n#|$)/gi,
+      },
     ];
 
     internalExplanations.forEach((item) => {

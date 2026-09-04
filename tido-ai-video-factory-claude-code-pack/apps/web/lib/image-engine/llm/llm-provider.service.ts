@@ -1,6 +1,14 @@
+/**
+ * Multimodal message parts, in the OpenAI /v1/chat/completions shape. Sending an image
+ * requires the array form; a plain string stays valid for text-only calls.
+ */
+export type LLMContentPart =
+  | { type: "text"; text: string }
+  | { type: "image_url"; image_url: { url: string; detail?: "low" | "high" | "auto" } };
+
 export interface LLMChatMessage {
   role: "system" | "user" | "assistant";
-  content: string;
+  content: string | LLMContentPart[];
 }
 
 export interface LLMProviderConfig {
@@ -41,14 +49,27 @@ export class LLMProviderService {
   public async generateChatCompletion(
     messages: LLMChatMessage[],
     purpose: string = "marketing_brain",
-    options?: { temperature?: number; max_tokens?: number }
+    options?: { temperature?: number; max_tokens?: number; timeoutMs?: number }
   ): Promise<string> {
     const startTime = Date.now();
-    const inputLength = messages.reduce((acc, m) => acc + (m.content ? m.content.length : 0), 0);
+
+    let inputLength = 0;
+    let imageParts = 0;
+    for (const m of messages) {
+      if (typeof m.content === "string") {
+        inputLength += m.content.length;
+      } else if (Array.isArray(m.content)) {
+        for (const part of m.content) {
+          if (part.type === "text") inputLength += part.text.length;
+          else if (part.type === "image_url") imageParts++;
+        }
+      }
+    }
 
     console.log("[LLM_REQUEST]", {
       model: this.model,
       inputLength,
+      imageParts,
       purpose,
     });
 
@@ -67,7 +88,8 @@ export class LLMProviderService {
           temperature: options?.temperature ?? 0.7,
           ...(options?.max_tokens ? { max_tokens: options.max_tokens } : {}),
         }),
-        signal: AbortSignal.timeout(15000),
+        // Vision calls carry an encoded image and need more headroom than a text call.
+        signal: AbortSignal.timeout(options?.timeoutMs ?? (imageParts > 0 ? 45000 : 15000)),
       });
 
       if (!response.ok) {

@@ -1,5 +1,6 @@
 import { CreativeBrief, GeneratedAsset, AIStrategy } from "../types/picture-engine.types";
 import { usePictureEngineStore } from "../stores/picture-engine.store";
+import { IMAGE_ENGINE_CONFIG } from "../../../lib/image-engine/config";
 
 /**
  * Service Layer Abstraction for Picture Engine API
@@ -51,6 +52,10 @@ export async function createPictureAsset(
       brief.sales_context.cta_text,
     ].filter(Boolean);
 
+    const marketingContext = brief.marketing_context;
+    const creativeDirection = brief.creative_direction;
+    const salesContext = brief.sales_context;
+
     // Step 3: Trigger Provider Render
     store.setGenerationJob({
       job_id: jobId,
@@ -61,66 +66,177 @@ export async function createPictureAsset(
 
     const productAssets = brief.brand_identity?.product_assets || [];
     const logoAsset = brief.brand_identity?.logo_asset;
-    const hasProductAssets = productAssets.length > 0 || Boolean(logoAsset);
+    const inspirationAssets = brief.brand_identity?.reference_assets || [];
+    const hasProductAssets =
+      productAssets.length > 0 || Boolean(logoAsset) || inspirationAssets.length > 0;
+
+    // Single global client timeout per request, configurable from config.ts
+    const clientTimeoutMs = IMAGE_ENGINE_CONFIG?.CLIENT_TIMEOUT_MS || 250000;
+    const requestStartTime = Date.now();
+    const startDateIso = new Date().toISOString();
+
+    let responseReceived = false;
+    let cleanupExecuted = false;
+    let abortTriggerSource: string = "NONE";
+    let wasAborted = false;
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      abortTriggerSource = "CLIENT_TIMEOUT_EXCEEDED";
+      controller.abort(`CLIENT_TIMEOUT_EXCEEDED (${clientTimeoutMs}ms)`);
+    }, clientTimeoutMs);
+
+    const cleanup = () => {
+      if (!cleanupExecuted) {
+        clearTimeout(timeoutId);
+        cleanupExecuted = true;
+      }
+    };
 
     let res: Response;
+    let data: any;
 
-    if (hasProductAssets) {
-      const formData = new FormData();
-      formData.append("concept", concept);
-      formData.append("useCase", useCase);
-      formData.append("aspectRatio", aspectRatio);
-      formData.append("brandName", brandName);
-      formData.append("requestId", jobId);
+    try {
+      if (hasProductAssets) {
+        const formData = new FormData();
+        formData.append("concept", concept);
+        formData.append("useCase", useCase);
+        formData.append("aspectRatio", aspectRatio);
+        formData.append("brandName", brandName);
+        formData.append("requestId", jobId);
+        formData.append("marketingContext", JSON.stringify(marketingContext || {}));
+        formData.append("creativeDirection", JSON.stringify(creativeDirection || {}));
+        formData.append("salesContext", JSON.stringify(salesContext || {}));
 
-      for (const asset of productAssets) {
-        if (asset.file) {
-          formData.append("images", asset.file, asset.filename || "product.png");
-        } else if (asset.file_url && asset.file_url.startsWith("blob:")) {
-          try {
-            const blobRes = await fetch(asset.file_url);
-            const blob = await blobRes.blob();
-            formData.append("images", blob, asset.filename || "product.png");
-          } catch (e) {
-            console.warn("[picture-engine.api] Could not fetch blob URL:", asset.file_url);
+        for (const asset of productAssets) {
+          if (asset.file) {
+            formData.append("images", asset.file, asset.filename || "product.png");
+          } else if (asset.file_url && asset.file_url.startsWith("blob:")) {
+            try {
+              const blobRes = await fetch(asset.file_url);
+              const blob = await blobRes.blob();
+              formData.append("images", blob, asset.filename || "product.png");
+            } catch (e) {
+              console.warn("[picture-engine.api] Could not fetch blob URL:", asset.file_url);
+            }
           }
         }
-      }
 
-      if (logoAsset) {
-        if (logoAsset.file) {
-          formData.append("images", logoAsset.file, logoAsset.filename || "logo.png");
-        } else if (logoAsset.file_url && logoAsset.file_url.startsWith("blob:")) {
-          try {
-            const blobRes = await fetch(logoAsset.file_url);
-            const blob = await blobRes.blob();
-            formData.append("images", blob, logoAsset.filename || "logo.png");
-          } catch (e) {}
+        if (logoAsset) {
+          if (logoAsset.file) {
+            formData.append("images", logoAsset.file, logoAsset.filename || "logo.png");
+          } else if (logoAsset.file_url && logoAsset.file_url.startsWith("blob:")) {
+            try {
+              const blobRes = await fetch(logoAsset.file_url);
+              const blob = await blobRes.blob();
+              formData.append("images", blob, logoAsset.filename || "logo.png");
+            } catch (e) { }
+          }
         }
+
+        // Inspiration / style references are transported under a DISTINCT FormData key.
+        // They must never be appended to "images", because the backend defaults every
+        // entry of that list to role PRODUCT and would treat the style reference as a
+        // second product identity.
+        for (const asset of inspirationAssets) {
+          if (asset.file) {
+            formData.append("inspirationImages", asset.file, asset.filename || "inspiration.png");
+          } else if (asset.file_url && asset.file_url.startsWith("blob:")) {
+            try {
+              const blobRes = await fetch(asset.file_url);
+              const blob = await blobRes.blob();
+              formData.append("inspirationImages", blob, asset.filename || "inspiration.png");
+            } catch (e) {
+              console.warn("[picture-engine.api] Could not fetch inspiration blob URL:", asset.file_url);
+            }
+          }
+        }
+
+        console.log("[INSPIRATION_TRANSPORT][CLIENT]", {
+          product_count: formData.getAll("images").length,
+          inspiration_count: formData.getAll("inspirationImages").length,
+          inspiration_filenames: formData
+            .getAll("inspirationImages")
+            .map((f) => (f instanceof File ? f.name : "blob")),
+        });
+
+        res = await fetch("/api/image/generate-simple", {
+          method: "POST",
+          body: formData,
+          signal: controller.signal,
+        });
+      } else {
+        res = await fetch("/api/image/generate-simple", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            concept,
+            useCase,
+            aspectRatio,
+            brandName,
+            copyItems,
+            requestId: jobId,
+            marketingContext,
+            creativeDirection,
+            salesContext,
+          }),
+          signal: controller.signal,
+        });
       }
 
-      res = await fetch("/api/image/generate-simple", {
-        method: "POST",
-        body: formData,
+      // Requirement 5: Ensure timeout cleanup runs IMMEDIATELY after fetch receives HTTP response
+      cleanup();
+      responseReceived = true;
+
+      // Safely parse JSON body
+      data = await res.json();
+    } catch (fetchErr: any) {
+      cleanup();
+      wasAborted = controller.signal.aborted || fetchErr.name === "AbortError";
+      if (wasAborted && abortTriggerSource === "NONE") {
+        abortTriggerSource = controller.signal.reason
+          ? String(controller.signal.reason)
+          : fetchErr.message || "EXTERNAL_ABORT_SIGNAL";
+      }
+
+      const elapsedTime = Date.now() - requestStartTime;
+      console.log("[REQUEST_ABORT_DEBUG]", {
+        timeout_value: clientTimeoutMs,
+        elapsed_time: elapsedTime,
+        abort_trigger_source: abortTriggerSource,
+        response_received: responseReceived,
+        cleanup_executed: cleanupExecuted,
       });
-    } else {
-      res = await fetch("/api/image/generate-simple", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          concept,
-          useCase,
-          aspectRatio,
-          brandName,
-          copyItems,
-          requestId: jobId,
-        }),
+
+      console.log("[CLIENT_REQUEST_TIMING]", {
+        start: startDateIso,
+        end: new Date().toISOString(),
+        duration: elapsedTime,
+        aborted: wasAborted,
+        abort_reason: abortTriggerSource !== "NONE" ? abortTriggerSource : null,
       });
+
+      throw fetchErr;
     }
 
-    const data = await res.json();
+    const elapsedTime = Date.now() - requestStartTime;
+    console.log("[REQUEST_ABORT_DEBUG]", {
+      timeout_value: clientTimeoutMs,
+      elapsed_time: elapsedTime,
+      abort_trigger_source: abortTriggerSource,
+      response_received: responseReceived,
+      cleanup_executed: cleanupExecuted,
+    });
+
+    console.log("[CLIENT_REQUEST_TIMING]", {
+      start: startDateIso,
+      end: new Date().toISOString(),
+      duration: elapsedTime,
+      aborted: false,
+      abort_reason: null,
+    });
 
     if (!res.ok || !data.success) {
       const errorMsg = data.error?.message || "Render visual thất bại từ AI Provider.";
@@ -236,3 +352,60 @@ export async function createPictureAsset(
     throw err;
   }
 }
+
+/**
+ * Service Layer Function to download the original high-quality 2K generated asset directly.
+ * Triggers an automatic file download without opening a new browser tab.
+ */
+export async function downloadPictureAsset(
+  imageUrl: string,
+  brandName?: string,
+  productName?: string
+): Promise<void> {
+  if (!imageUrl) {
+    throw new Error("Không tìm thấy đường dẫn ảnh để tải về.");
+  }
+
+  // Sanitize brand & product names for meaningful filename
+  const cleanBrand = (brandName || "TIDO")
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/gi, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "");
+
+  const cleanProduct = (productName || "Commercial_Image")
+    .trim()
+    .replace(/[^A-Z0-9]/gi, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "");
+
+  const filename = `${cleanBrand}_${cleanProduct}_Commercial_Image_2K.png`;
+
+  let fetchUrl = imageUrl;
+  if (fetchUrl.startsWith("/api/image/generated/")) {
+    const separator = fetchUrl.includes("?") ? "&" : "?";
+    fetchUrl = `${fetchUrl}${separator}download=1&filename=${encodeURIComponent(filename)}`;
+  }
+
+  const response = await fetch(fetchUrl);
+  if (!response.ok) {
+    throw new Error(`Tải ảnh thất bại: HTTP status ${response.status}`);
+  }
+
+  const blob = await response.blob();
+  const blobUrl = window.URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+  link.href = blobUrl;
+  link.download = filename;
+  link.style.display = "none";
+  document.body.appendChild(link);
+  link.click();
+
+  document.body.removeChild(link);
+  setTimeout(() => {
+    window.URL.revokeObjectURL(blobUrl);
+  }, 1000);
+}
+

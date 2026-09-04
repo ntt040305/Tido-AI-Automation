@@ -1,5 +1,6 @@
 import { ProductIdentityResolver } from "../compiler/ProductIdentityResolver";
 import {
+  AssetRoleV1,
   CopyItemInput,
   ExtractedAssetRoleV1,
   GenerationIntentBriefV1,
@@ -98,7 +99,7 @@ export class SimpleInputAdapterService {
       asset_roles: [],
     };
 
-    const assetRoles: ExtractedAssetRoleV1[] =
+    const inferredAssetRoles: ExtractedAssetRoleV1[] =
       routingResult.asset_roles ||
       structuredIntent.asset_roles ||
       (request.images || []).map((img, i) => ({
@@ -107,22 +108,62 @@ export class SimpleInputAdapterService {
         confidence: 0.9,
       }));
 
+    // Caller-supplied roles are AUTHORITATIVE. The client already knows which upload
+    // slot each file came from, so an explicit role must override both the LLM router
+    // classification and the PRODUCT fallback above. Without this, an inspiration
+    // reference is silently reclassified as a second product identity.
+    const explicitRoles = new Map<string, AssetRoleV1>();
+    (request.images || []).forEach((img, i) => {
+      const role = (img as any).role as AssetRoleV1 | undefined;
+      if (role) {
+        explicitRoles.set(img.reference_id || `REF_${String(i + 1).padStart(2, "0")}`, role);
+      }
+    });
+
+    const assetRoles: ExtractedAssetRoleV1[] = inferredAssetRoles.map((entry) => {
+      const explicit = explicitRoles.get(entry.reference_id);
+      return explicit ? { ...entry, role: explicit, confidence: 1, evidence: "EXPLICIT_CLIENT_ROLE" } : entry;
+    });
+
+    // Any explicitly-roled reference the router never returned must still be honored.
+    for (const [referenceId, role] of explicitRoles.entries()) {
+      if (!assetRoles.some((a) => a.reference_id === referenceId)) {
+        assetRoles.push({ reference_id: referenceId, role, confidence: 1, evidence: "EXPLICIT_CLIENT_ROLE" });
+      }
+    }
+
+    console.log("[INSPIRATION_TRANSPORT][ADAPTER]", {
+      explicit_roles: Array.from(explicitRoles.entries()).map(([id, role]) => `${id}=${role}`),
+      resolved_roles: assetRoles.map((a) => `${a.reference_id}=${a.role}`),
+    });
+
     // 3. Asset Gating: Categorize into eligible pools
     const productCandidates = assetRoles.filter((a) => a.role === "PRODUCT");
     const brandAssets = assetRoles.filter((a) => a.role === "LOGO");
-    const supportReferences = assetRoles.filter((a) => a.role === "SUPPORT_REFERENCE");
+    const supportReferences = assetRoles.filter((a) => a.role === "SUPPORT_REFERENCE" || (a.role as string) === "STYLE" || (a.role as string) === "INSPIRATION_REFERENCE");
     const ambiguousAssets = assetRoles.filter((a) => a.role === "AMBIGUOUS" || a.role === "UNKNOWN");
 
     const productCandidateRefIds = new Set(productCandidates.map((p) => p.reference_id));
 
-    // Filter routingResult products to only include eligible PRODUCT candidates
-    const eligibleProducts = (routingResult.products || []).filter((prod) =>
-      prod.reference_ids.some((r) => productCandidateRefIds.has(r))
-    );
+    // Filter routingResult products to only include eligible PRODUCT candidates.
+    // Critically, each surviving product must also have every NON-product reference
+    // stripped out of its reference_ids. Keeping an inspiration reference bound to a
+    // product makes the whole downstream stack (identity resolver, compiler, provider)
+    // treat that inspiration image as part of the product identity, which causes the
+    // inspiration product to be merged into the render instead of only its style.
+    const eligibleProducts = (routingResult.products || [])
+      .map((prod) => ({
+        ...prod,
+        reference_ids: (prod.reference_ids || []).filter((r) => productCandidateRefIds.has(r)),
+      }))
+      .filter((prod) => prod.reference_ids.length > 0);
 
     const filteredRoutingResult: RoutingResultSchema = {
       ...routingResult,
       products: eligibleProducts,
+      // asset_roles must reflect the resolved roles, not the raw router guess, or the
+      // compiler re-derives product membership from a stale classification.
+      asset_roles: assetRoles,
     };
 
     // 4. Product Identity Resolution (only run on eligible PRODUCT candidates)
@@ -167,13 +208,43 @@ export class SimpleInputAdapterService {
       generationReferences.push({
         reference_id: s.reference_id,
         input_index: productCandidates.length + brandAssets.length + idx,
-        role: "SUPPORT_REFERENCE",
+        // Preserve the distinction between a generic support reference and a true
+        // inspiration reference. Collapsing both into SUPPORT_REFERENCE erased the
+        // style-transfer signal before it reached the provider.
+        role: s.role === "INSPIRATION_REFERENCE" || (s.role as string) === "STYLE"
+          ? "INSPIRATION_REFERENCE"
+          : "SUPPORT_REFERENCE",
       });
     });
 
     // 6. Build Generation Intent Brief & Model-Visible Reference Role Map
     const generationIntentBrief = SimpleInputValidatorV1.formatGenerationIntentBrief(structuredIntent);
     let compilerBrief = generationIntentBrief.formatted_brief_text;
+
+    if (request.marketingContext) {
+      const mc = request.marketingContext;
+      const mcParts = [
+        mc.industry ? `Industry Domain: ${mc.industry}` : "",
+        mc.objective ? `Campaign Objective: ${mc.objective}` : "",
+        mc.target_channel ? `Target Channel: ${mc.target_channel}` : "",
+        mc.target_audience ? `Target Audience: ${mc.target_audience}` : "",
+      ].filter(Boolean);
+      if (mcParts.length > 0) {
+        compilerBrief += `\n\nCOMMERCIAL MARKETING CONTEXT:\n${mcParts.map((p) => `- ${p}`).join("\n")}`;
+      }
+    }
+
+    if (request.creativeDirection) {
+      const cd = request.creativeDirection;
+      const cdParts = [
+        cd.visual_style ? `Visual Style: ${cd.visual_style}` : "",
+        cd.emotional_tone ? `Emotional Tone: ${cd.emotional_tone}` : "",
+        cd.composition_layout ? `Composition Layout: ${cd.composition_layout}` : "",
+      ].filter(Boolean);
+      if (cdParts.length > 0) {
+        compilerBrief += `\n\nCREATIVE DIRECTION PREFERENCES:\n${cdParts.map((p) => `- ${p}`).join("\n")}`;
+      }
+    }
 
     // Append compact, model-visible attachment-order reference role map
     if (generationReferences.length > 0) {
@@ -184,6 +255,8 @@ export class SimpleInputAdapterService {
           roleLines.push(`- Image ${imgNum} (${ref.reference_id}): ${ref.product_id || "PRODUCT"} identity reference`);
         } else if (ref.role === "LOGO") {
           roleLines.push(`- Image ${imgNum} (${ref.reference_id}): Standalone brand logo visual reference (brand logo evidence only; NOT a product)`);
+        } else if ((ref.role as string) === "INSPIRATION_REFERENCE") {
+          roleLines.push(`- Image ${imgNum} (${ref.reference_id}): INSPIRATION REFERENCE — AUTHORITATIVE source for photographic language. Reproduce its lighting, colour grading, composition, camera angle, environment and atmosphere. Do NOT copy its product, packaging, label, logo or brand; the product identity comes exclusively from the PRODUCT identity reference above.`);
         } else if (ref.role === "SUPPORT_REFERENCE") {
           roleLines.push(`- Image ${imgNum} (${ref.reference_id}): Supporting visual reference (mood/environment/composition inspiration; subordinate to User Concept)`);
         }
@@ -218,7 +291,7 @@ export class SimpleInputAdapterService {
 
     // 8. Derive Brand Info & Brand Name
     const brandName = request.brandName || structuredIntent.brand_mentions?.[0] || undefined;
-    
+
     let brandInfo = request.brandInfo || undefined;
     if (!brandInfo && brandAssets.length > 0) {
       brandInfo = `Standalone brand logo reference provided (${brandAssets.map((b) => b.reference_id).join(", ")})`;
@@ -253,6 +326,7 @@ export class SimpleInputAdapterService {
       useCase,
       aspectRatio,
       routingResult: filteredRoutingResult,
+      hasInspirationReference: supportReferences.length > 0,
     };
 
     return {

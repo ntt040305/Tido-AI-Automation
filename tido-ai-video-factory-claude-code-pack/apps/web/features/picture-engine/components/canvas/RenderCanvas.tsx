@@ -15,6 +15,7 @@ import {
   AlertTriangle,
   ZoomIn,
   CheckCircle,
+  Loader2,
 } from "lucide-react";
 
 export interface RenderCanvasProps {
@@ -26,6 +27,7 @@ export interface RenderCanvasProps {
   error: PictureEngineError | null;
   reasoningSteps: TimelineStepItem[];
   progressPercent: number;
+  isDownloading?: boolean;
   onGenerate: () => void;
   onDownloadAsset?: () => void;
 }
@@ -39,6 +41,7 @@ export function RenderCanvas({
   error,
   reasoningSteps,
   progressPercent,
+  isDownloading = false,
   onGenerate,
   onDownloadAsset,
 }: RenderCanvasProps) {
@@ -184,11 +187,16 @@ export function RenderCanvas({
         {currentAsset && (
           <button
             type="button"
+            disabled={isDownloading}
             onClick={onDownloadAsset}
-            className="py-3 px-5 bg-accent hover:bg-accent/90 text-white font-semibold text-[13.5px] rounded-xl transition-all shadow-md shadow-accent/20 flex items-center justify-center gap-2 cursor-pointer outline-none"
+            className="py-3 px-5 bg-accent hover:bg-accent/90 disabled:opacity-50 text-white font-semibold text-[13.5px] rounded-xl transition-all shadow-md shadow-accent/20 flex items-center justify-center gap-2 cursor-pointer outline-none"
           >
-            <Download size={15} />
-            <span>Tải Ảnh 2K</span>
+            {isDownloading ? (
+              <Loader2 size={15} className="animate-spin" />
+            ) : (
+              <Download size={15} />
+            )}
+            <span>{isDownloading ? "Đang tải..." : "Tải Ảnh 2K"}</span>
           </button>
         )}
       </div>

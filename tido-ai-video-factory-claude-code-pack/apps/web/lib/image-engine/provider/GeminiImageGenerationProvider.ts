@@ -58,8 +58,18 @@ export class GeminiImageGenerationProvider implements ImageGenerationProvider {
     ];
 
     for (const ref of input.references) {
+      const isSupport = ref.role === "SUPPORT_REFERENCE" || (ref.role as string) === "INSPIRATION_REFERENCE" || ref.reference_id?.includes("INSPIRATION") || ref.reference_id?.includes("STYLE");
+      const isLogo = ref.role === "LOGO";
+
+      let roleLabel = `ROLE: PRODUCT_IDENTITY (${ref.product_id || "PRODUCT_01"})`;
+      if (isSupport) {
+        roleLabel = "ROLE: INSPIRATION_REFERENCE (VISUAL STYLE GUIDANCE ONLY; NOT A PRODUCT IDENTITY)";
+      } else if (isLogo) {
+        roleLabel = "ROLE: LOGO (BRAND LOGO EVIDENCE ONLY; NOT A PRODUCT)";
+      }
+
       contents.push({
-        text: `REFERENCE ATTACHMENT ${ref.reference_id} — ${ref.product_id}`,
+        text: `REFERENCE ATTACHMENT ${ref.reference_id} — ${roleLabel}`,
       });
       contents.push({
         inlineData: {
@@ -68,6 +78,31 @@ export class GeminiImageGenerationProvider implements ImageGenerationProvider {
         },
       });
     }
+
+    // Final transport assertion: proves what actually reached the provider, so the
+    // inspiration pipeline can be verified from logs instead of inferred from output.
+    const attachmentLedger = input.references.map((ref, i) => {
+      const isSupport =
+        ref.role === "SUPPORT_REFERENCE" ||
+        (ref.role as string) === "INSPIRATION_REFERENCE" ||
+        ref.reference_id?.includes("INSPIRATION") ||
+        ref.reference_id?.includes("STYLE");
+      return {
+        attachment: i + 1,
+        reference_id: ref.reference_id,
+        resolved_role: isSupport
+          ? "INSPIRATION_REFERENCE"
+          : ref.role === "LOGO"
+            ? "LOGO"
+            : "PRODUCT_IDENTITY",
+        bytes: ref.buffer.length,
+      };
+    });
+    console.log("[INSPIRATION_TRANSPORT][PROVIDER:GEMINI]", {
+      total_attachments: attachmentLedger.length,
+      inspiration_attached: attachmentLedger.some((a) => a.resolved_role === "INSPIRATION_REFERENCE"),
+      ledger: attachmentLedger,
+    });
 
     // 4. Initialize SDK
     let ai: GoogleGenAI;
@@ -88,7 +123,7 @@ export class GeminiImageGenerationProvider implements ImageGenerationProvider {
 
     try {
       const timeoutMs = IMAGE_ENGINE_CONFIG.GENERATION_TIMEOUT_MS || 90000;
-      
+
       const apiCallPromise = ai.models.generateContent({
         model: modelName,
         contents,
@@ -295,7 +330,7 @@ async function createPhotorealisticDevFallback(aspectRatio: string, prompt: stri
     );
     const seed = Math.floor(Math.random() * 1000000);
     const url = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=${width}&height=${height}&nologo=true&seed=${seed}`;
-    
+
     const res = await fetch(url, { signal: AbortSignal.timeout(20000) });
     if (res.ok) {
       const arrayBuf = await res.arrayBuffer();

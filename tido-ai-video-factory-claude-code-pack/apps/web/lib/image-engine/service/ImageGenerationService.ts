@@ -148,6 +148,7 @@ export class ImageGenerationService {
       const providerReferences: {
         reference_id: string;
         product_id: string;
+        role?: "PRODUCT" | "LOGO" | "SUPPORT_REFERENCE" | "INSPIRATION_REFERENCE" | "AMBIGUOUS" | "UNKNOWN";
         mimeType: string;
         buffer: Buffer;
       }[] = [];
@@ -158,10 +159,14 @@ export class ImageGenerationService {
         const prodId = ref.product_id || "PRODUCT_01";
         const sha256 = crypto.createHash("sha256").update(ref.buffer).digest("hex");
 
+        const rawRole = (ref as any).role;
+        const role = rawRole || (refId.includes("INSPIRATION") || refId.includes("STYLE") ? "INSPIRATION_REFERENCE" : "PRODUCT");
+
         referenceHashes[refId] = sha256;
         providerReferences.push({
           reference_id: refId,
           product_id: prodId,
+          role,
           mimeType: ref.mimeType || "image/png",
           buffer: ref.buffer,
         });

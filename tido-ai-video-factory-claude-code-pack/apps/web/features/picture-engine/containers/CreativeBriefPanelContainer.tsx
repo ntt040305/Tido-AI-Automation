@@ -14,6 +14,12 @@ export function CreativeBriefPanelContainer() {
   const canGenerate = usePictureEngineStore((state) => state.canGenerate());
 
   const updateBrief = usePictureEngineStore((state) => state.updateBrief);
+  const updateCreativeConcept = usePictureEngineStore(
+    (state) => state.updateCreativeConcept
+  );
+  const updateAssetConfiguration = usePictureEngineStore(
+    (state) => state.updateAssetConfiguration
+  );
   const updateMarketingContext = usePictureEngineStore(
     (state) => state.updateMarketingContext
   );
@@ -48,6 +54,8 @@ export function CreativeBriefPanelContainer() {
       canGenerate={canGenerate}
       isGenerating={isGenerating}
       onUpdateAssetType={(type: AssetType) => updateBrief({ asset_type: type })}
+      onUpdateCreativeConcept={updateCreativeConcept}
+      onUpdateAssetConfiguration={updateAssetConfiguration}
       onUpdateMarketingContext={updateMarketingContext}
       onUpdateSalesContext={updateSalesContext}
       onUpdateCreativeDirection={updateCreativeDirection}

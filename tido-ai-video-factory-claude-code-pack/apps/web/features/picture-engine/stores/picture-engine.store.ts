@@ -31,6 +31,12 @@ export interface PictureEngineStoreState {
   toggleStrategyPanel: () => void;
   toggleHistoryDrawer: () => void;
   updateBrief: (updates: Partial<CreativeBrief>) => void;
+  updateCreativeConcept: (concept: string) => void;
+  updateAssetConfiguration: (config: {
+    asset_type?: import("../types/picture-engine.types").AssetType;
+    target_product_count?: number | "multiple";
+    aspect_ratio?: import("../types/picture-engine.types").AspectRatioType;
+  }) => void;
   updateMarketingContext: (
     updates: Partial<CreativeBrief["marketing_context"]>
   ) => void;
@@ -58,33 +64,33 @@ export interface PictureEngineStoreState {
 export const defaultCreativeBrief: CreativeBrief = {
   asset_type: "poster",
   marketing_context: {
-    industry: "food_beverage",
+    industry: "beauty_skincare",
     objective: "conversion",
     target_channel: "social_media",
-    target_audience: "Phụ nữ hiện đại quan tâm đến sức khỏe & lối sống cao cấp",
+    target_audience: "Modern consumers seeking premium product quality",
   },
   sales_context: {
-    product_name: "Trà Việt Nam Cao Cấp",
-    offer_text: "Thương hiệu Trà Thảo Mộc Wellness",
-    pain_point: "Căng thẳng công việc & nhu cầu chăm sóc sức khỏe tự nhiên",
-    benefit: "Chiết xuất 100% thảo mộc tự nhiên, thanh lọc cơ thể & thư thái",
-    cta_text: "Mua Ngay Đón Ưu Đãi",
+    product_name: "Commercial Product",
+    offer_text: "Special Edition",
+    pain_point: "",
+    benefit: "High performance & premium aesthetic presentation",
+    cta_text: "Shop Now",
   },
   creative_direction: {
     visual_style: "commercial_advertising",
-    emotional_tone: "premium_wellness",
+    emotional_tone: "premium_luxury",
     aspect_ratio: "9:16",
-    composition_layout: "Hero center visual với vùng trống cho thông điệp quảng cáo",
+    composition_layout: "Hero center visual with clear space for copy layout",
     product_composition_mode: "single",
     product_identity_strength: "strict",
     target_product_count: 1,
   },
   brand_identity: {
-    brand_name: "TIDO Premium Tea",
+    brand_name: "",
     primary_colors: ["#10B981", "#064E3B"],
     product_assets: [],
   },
-  user_notes: "Ánh sáng tự nhiên ấm áp, phong cách nhiếp ảnh quảng cáo cao cấp.",
+  user_notes: "Studio lighting, clear product hero placement, commercial photography.",
 };
 
 export const usePictureEngineStore = create<PictureEngineStoreState>((set, get) => ({
@@ -131,6 +137,38 @@ export const usePictureEngineStore = create<PictureEngineStoreState>((set, get) 
 
   updateBrief: (updates) =>
     set((state) => ({ creativeBrief: { ...state.creativeBrief, ...updates } })),
+
+  updateCreativeConcept: (concept: string) =>
+    set((state) => ({
+      creativeBrief: {
+        ...state.creativeBrief,
+        creative_concept: concept,
+        user_notes: concept,
+      },
+    })),
+
+  updateAssetConfiguration: (config) =>
+    set((state) => {
+      const newBrief = { ...state.creativeBrief };
+      if (config.asset_type) {
+        newBrief.asset_type = config.asset_type;
+      }
+      if (config.aspect_ratio || config.target_product_count !== undefined) {
+        newBrief.creative_direction = {
+          ...newBrief.creative_direction,
+          ...(config.aspect_ratio ? { aspect_ratio: config.aspect_ratio } : {}),
+          ...(config.target_product_count !== undefined
+            ? {
+                target_product_count:
+                  typeof config.target_product_count === "number"
+                    ? config.target_product_count
+                    : 4,
+              }
+            : {}),
+        };
+      }
+      return { creativeBrief: newBrief };
+    }),
 
   updateMarketingContext: (updates) =>
     set((state) => ({
@@ -232,13 +270,14 @@ export const usePictureEngineStore = create<PictureEngineStoreState>((set, get) 
       generationJob.status === "interpreting" ||
       generationJob.status === "compiling" ||
       generationJob.status === "qc_evaluating";
-    return Boolean(
-      creativeBrief.asset_type &&
-        creativeBrief.marketing_context.industry &&
-        creativeBrief.marketing_context.objective &&
-        creativeBrief.sales_context.product_name &&
-        !isRunning
+
+    const hasConcept = Boolean(
+      (creativeBrief.creative_concept && creativeBrief.creative_concept.trim()) ||
+        (creativeBrief.user_notes && creativeBrief.user_notes.trim()) ||
+        (creativeBrief.sales_context && creativeBrief.sales_context.product_name && creativeBrief.sales_context.product_name.trim())
     );
+
+    return Boolean(creativeBrief.asset_type && hasConcept && !isRunning);
   },
 
   hasProductAssets: () => {

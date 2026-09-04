@@ -3,7 +3,7 @@ import { GenerationErrorCode, ReferenceManifest } from "../types";
 export interface ProviderReferenceImage {
   reference_id: string; // e.g. REF_01
   product_id?: string;  // e.g. PRODUCT_01 (optional for non-product references)
-  role?: "PRODUCT" | "LOGO" | "SUPPORT_REFERENCE" | "AMBIGUOUS" | "UNKNOWN";
+  role?: "PRODUCT" | "LOGO" | "SUPPORT_REFERENCE" | "INSPIRATION_REFERENCE" | "AMBIGUOUS" | "UNKNOWN";
   mimeType: string;
   buffer: Buffer;
   filename?: string;

@@ -20,7 +20,7 @@ function runPhase253PromptBudgetTest() {
   assert(PromptBudgetValidator.DEFAULT_PROVIDER_HARD_LIMIT === 20000, "PromptBudgetValidator hard limit restored to 20000");
   assert(ProviderPromptOptimizer.HARD_LIMIT === 20000, "ProviderPromptOptimizer hard limit restored to 20000");
   assert(PromptCompressionService.MAX_PROMPT_LENGTH === 20000, "PromptCompressionService MAX_PROMPT_LENGTH is 20000");
-  assert(PromptCompressionService.COMPRESSION_THRESHOLD === 19500, "PromptCompressionService COMPRESSION_THRESHOLD is 19500");
+  assert(PromptCompressionService.COMPRESSION_THRESHOLD === 18000, "PromptCompressionService COMPRESSION_THRESHOLD is 18000");
 
   // 2. Construct simulated oversize prompt (21,161 chars) with critical identity blocks + verbose cards
   const productIdentityLock = `[PRODUCT IDENTITY LOCK] Product ID [PRODUCT_01] (TIDO Cold Brew Bottle): Preserve [Glass Silhouette, Label Typography]. Key Features: Amber Refractive Glass.`;

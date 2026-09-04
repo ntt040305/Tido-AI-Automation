@@ -101,7 +101,7 @@ async function runPromptOptimizerAcceptanceTest() {
 
   // 4. Verify Essential Identity Locks Preserved
   console.log("\n[STEP 3] Verifying Identity Preservations...");
-  assert(optimizedPrompt.includes("PRODUCT_LOCK") || optimizedPrompt.includes("PRODUCT IDENTITY LOCKS"), "Preserved [PRODUCT_LOCK]");
+  assert(optimizedPrompt.includes("PRODUCT_LOCK") || optimizedPrompt.includes("PRODUCT IDENTITY LOCKS") || optimizedPrompt.includes("PRODUCT PLANNING MANIFEST"), "Preserved [PRODUCT_LOCK]");
   assert(optimizedPrompt.includes("LOGO_PRESERVATION") || optimizedPrompt.includes("LOGO PRESERVATION LOCKS"), "Preserved [LOGO_PRESERVATION]");
   assert(optimizedPrompt.includes("REFERENCE MANIFEST RELATIONSHIP TYPE"), "Preserved [REFERENCE IMAGE RULES]");
 

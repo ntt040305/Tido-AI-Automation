@@ -1,5 +1,6 @@
 import { MasterPromptCompilerService } from "../compiler/MasterPromptCompilerService";
 import { PromptBudgetValidator } from "../compiler/PromptBudgetValidator";
+import { IMAGE_ENGINE_CONFIG } from "../config";
 import {
   ImageGenerationProvider,
   ProviderImageGenerationInput,
@@ -21,6 +22,8 @@ import { SimpleInputAdapterService } from "./SimpleInputAdapterService";
 import { LocalGeneratedImageStorage } from "../storage/LocalGeneratedImageStorage";
 import { MarketingBrainService } from "../llm/marketing-brain.service";
 import { ReferenceImageProcessorService } from "./ReferenceImageProcessorService";
+import { CreativeInterpretationService } from "./CreativeInterpretationService";
+import { InspirationStyleIntelligenceService } from "./InspirationStyleIntelligenceService";
 import {
   GenerationProject,
   RenderJob,
@@ -54,16 +57,22 @@ export class SimpleImageGenerationOrchestratorService {
     let geminiCallCount = 0;
     let providerCallCount = 0;
 
+    let validationDurationMs = 0;
+    let groqMarketingBrainDurationMs = 0;
     let routerDurationMs = 0;
     let adapterDurationMs = 0;
     let retrievalDurationMs = 0;
+    let creativeInterpretationDurationMs = 0;
     let compilerDurationMs = 0;
     let providerDurationMs = 0;
 
     try {
       // 1. Validation Before Gemini Call
       console.log("[SIMPLE][01 VALIDATION] START");
+      const valStart = Date.now();
       const validation = SimpleInputValidatorV1.validateRequest(request);
+      validationDurationMs = Date.now() - valStart;
+
       if (!validation.isValid) {
         console.error("[SIMPLE][FAIL] stage=VALIDATION");
         console.error("[SIMPLE][ERROR]", {
@@ -72,6 +81,18 @@ export class SimpleImageGenerationOrchestratorService {
           message: validation.errors.join("; "),
           status: "VALIDATION_FAILED",
         });
+        const pipeline_timing = {
+          validation_ms: validationDurationMs,
+          groq_marketing_brain_ms: 0,
+          router_ms: 0,
+          adapter_ms: 0,
+          retrieval_ms: 0,
+          creative_interpretation_ms: 0,
+          compiler_ms: 0,
+          provider_wait_ms: 0,
+          total_ms: Date.now() - totalStart,
+        };
+        console.log("[PIPELINE_TIMING]", pipeline_timing);
         return {
           success: false,
           generationId,
@@ -92,6 +113,7 @@ export class SimpleImageGenerationOrchestratorService {
             supportReferenceCount: 0,
             geminiCallCount: 0,
             providerCallCount: 0,
+            pipeline_timing,
           },
           error: {
             code: "VALIDATION_FAILED",
@@ -103,6 +125,7 @@ export class SimpleImageGenerationOrchestratorService {
 
       // 1.5 GROQ Marketing Brain Stage (Real LLM Commercial Strategy)
       console.log("[SIMPLE][01.5 GROQ MARKETING BRAIN] START");
+      const mbStart = Date.now();
       const marketingBrain = new MarketingBrainService();
       const groqStrategy = await marketingBrain.generateStrategy({
         concept: request.concept,
@@ -112,6 +135,7 @@ export class SimpleImageGenerationOrchestratorService {
         brandInfo: request.brandInfo,
         copyItems: (request.copyItems || []).map((item) => (typeof item === "string" ? item : item.text)),
       });
+      groqMarketingBrainDurationMs = Date.now() - mbStart;
       console.log("[SIMPLE][01.5 GROQ MARKETING BRAIN] PASS", {
         creative_angle: groqStrategy.creative_angle,
       });
@@ -333,6 +357,78 @@ export class SimpleImageGenerationOrchestratorService {
       }
       console.log("[SIMPLE][04 RETRIEVAL] PASS");
 
+      // 4.5 Stage 4A Creative Interpretation Pass
+      console.log("[SIMPLE][04.5 CREATIVE INTERPRETATION] START");
+      const ciStart = Date.now();
+      const creativeInterpretation = CreativeInterpretationService.interpret({
+        concept: request.concept,
+        assetType: (adapted.useCase as any) || request.useCase || "poster",
+        productCount: adapted.resolvedProductCount,
+        aspectRatio: adapted.aspectRatio || request.aspectRatio || "4:5",
+        referenceAnalysis: adapted.resolvedRoutingResult,
+        productIdentity: adapted.resolvedRoutingResult.products?.[0],
+        retrievedKnowledge: (retrievalRes.package?.selected_blocks || []).map((b) => b.title),
+        brandContext: {
+          brandName: adapted.brandName,
+          brandInfo: adapted.brandInfo,
+        },
+      });
+      creativeInterpretationDurationMs = Date.now() - ciStart;
+      console.log("[SIMPLE][04.5 CREATIVE INTERPRETATION] PASS", {
+        locked_subject: creativeInterpretation.locked_intent.subject,
+        focus_mode: creativeInterpretation.ai_enhancement.creative_objective,
+      });
+
+      // 4.6 Stage 4A.5 Inspiration Style Intelligence Pass (Phase 3.6 Additive Layer)
+      let inspirationStyleManifest = request.inspirationStyleManifest;
+      if (
+        IMAGE_ENGINE_CONFIG.ENABLE_INSPIRATION_STYLE_ANALYSIS &&
+        adapted.supportReferences &&
+        adapted.supportReferences.length > 0 &&
+        !inspirationStyleManifest
+      ) {
+        try {
+          const inspirationService = new InspirationStyleIntelligenceService();
+          const firstInspirationRef = request.images?.find((img) =>
+            adapted.supportReferences.some((sr) => sr.reference_id === (img as any).reference_id)
+          );
+          if (firstInspirationRef && (firstInspirationRef as any).buffer) {
+            inspirationStyleManifest = await inspirationService.analyzeStyle({
+              imageBuffer: (firstInspirationRef as any).buffer,
+              mimeType: (firstInspirationRef as any).mimeType,
+              hintText: request.concept,
+            });
+          }
+        } catch (err: any) {
+          console.warn("[SIMPLE][INSPIRATION_STYLE_FALLBACK] Inspiration style analysis pass failed cleanly:", err.message || err);
+        }
+      }
+
+      // 4.7 Inspiration Image Withholding Decision
+      // Decided BEFORE compilation so the prompt describes the attachments that will
+      // actually be sent. The inspiration image is a second product photo; handing it to
+      // the image generator is what merges two different bottles into one frame. Once the
+      // vision pass has put its look into words, the image is no longer needed.
+      const styleCapturedInWords = inspirationStyleManifest?.derived_from_image === true;
+      const withholdInspirationImage =
+        IMAGE_ENGINE_CONFIG.WITHHOLD_INSPIRATION_IMAGE_FROM_PROVIDER &&
+        styleCapturedInWords &&
+        adapted.supportReferences.length > 0;
+
+      const withheldReferenceIds = withholdInspirationImage
+        ? adapted.supportReferences.map((s) => s.reference_id)
+        : [];
+
+      // Inspiration references are always ordered last, so dropping their lines from the
+      // attachment role map leaves the remaining Image N numbering correct.
+      let compilerBriefText = (adapted.compilerInput as any)?.brief || "";
+      if (withheldReferenceIds.length > 0 && typeof compilerBriefText === "string") {
+        compilerBriefText = compilerBriefText
+          .split("\n")
+          .filter((line: string) => !withheldReferenceIds.some((id) => line.includes(`(${id})`)))
+          .join("\n");
+      }
+
       // 5. Stage 4B Master Prompt Compiler Pass
       console.log("[SIMPLE][05 COMPILER] START");
       const compilerStart = Date.now();
@@ -340,8 +436,12 @@ export class SimpleImageGenerationOrchestratorService {
 
       const fullCompilerInput: MasterPromptCompilerInput = {
         ...(adapted.compilerInput as MasterPromptCompilerInput),
+        brief: compilerBriefText,
         routingResult: adapted.resolvedRoutingResult,
         knowledgePackage: retrievalRes.package,
+        creativeInterpretation,
+        inspirationStyleManifest,
+        inspirationImageWithheld: withholdInspirationImage,
       };
 
       const compilerRes = await compilerService.compile(fullCompilerInput);
@@ -383,6 +483,26 @@ export class SimpleImageGenerationOrchestratorService {
         };
       }
       console.log("[SIMPLE][05 COMPILER] PASS");
+
+      // Phase 3.5 Reference Quality Decision Telemetry Log
+      const refManifest = adapted.resolvedRoutingResult?.reference_manifest;
+      if (refManifest?.reference_quality_profile) {
+        const prof = refManifest.reference_quality_profile;
+        const adaptApplied = refManifest.adaptive_constraints?.requires_adaptation ?? false;
+        console.log("[REFERENCE_QUALITY_DECISION]", {
+          profile: prof.category || prof.quality_classification,
+          action: prof.bypass_action || (prof.is_weak_reference ? "PROMPT_COMPENSATION_ONLY" : "DIRECT_BYPASS"),
+          score: prof.readiness_score?.overallScore ? prof.readiness_score.overallScore / 100 : (prof.visual_context_score / 100),
+          adaptationApplied: adaptApplied,
+        });
+
+        if (prof.bypass_action === "QUALITY_WARNING_ADVISED") {
+          console.warn("[REFERENCE_QUALITY_WARNING]", {
+            message: "Uploaded reference image has low resolution or degraded quality. Proceeding with generation.",
+            readiness_score: prof.readiness_score,
+          });
+        }
+      }
 
       const masterPrompt = compilerRes.package.compiled_prompt;
 
@@ -538,6 +658,28 @@ export class SimpleImageGenerationOrchestratorService {
         };
       }
 
+      // 6.9 Inspiration Image Withholding
+      // Once the vision pass has described the inspiration image in words, that image has
+      // done its job. Sending it on to the image generator only gives the generator a
+      // second product photo to blend, which is what puts two different bottles in one
+      // frame. The style now travels as text; only product and logo references are
+      // attached. If the vision pass produced nothing trustworthy, the image is still
+      // attached so style transfer degrades rather than disappears.
+      const attachedReferences = withholdInspirationImage
+        ? providerReferences.filter((ref) => !withheldReferenceIds.includes(ref.reference_id))
+        : providerReferences;
+
+      if (adapted.supportReferences.length > 0) {
+        console.log("[INSPIRATION_TRANSPORT][WITHHOLD]", {
+          style_captured_in_words: styleCapturedInWords,
+          withheld_from_generator: withholdInspirationImage ? withheldReferenceIds : [],
+          reason: withholdInspirationImage
+            ? "style travels as analyzed text; image withheld so the generator cannot blend a second product"
+            : "no image-derived style manifest; attaching inspiration image as fallback",
+          attached_to_generator: attachedReferences.map((r) => `${r.reference_id}:${r.role}`),
+        });
+      }
+
       // 7. Stage 5 Provider Generation Pass (Exactly 1 provider call made)
       console.log("[SIMPLE][06 PROVIDER] START");
       const providerStart = Date.now();
@@ -546,7 +688,7 @@ export class SimpleImageGenerationOrchestratorService {
       const providerInput: ProviderImageGenerationInput = {
         model: "flow-nano-banana-2",
         prompt: masterPrompt,
-        references: providerReferences,
+        references: attachedReferences,
         aspectRatio: adapted.aspectRatio || "4:5",
         imageSize: "1K",
         mimeType: "image/png",
@@ -703,12 +845,16 @@ export class SimpleImageGenerationOrchestratorService {
         updated_at: new Date().toISOString(),
       };
 
+      const negConstraints = creativeInterpretation?.execution_directives?.negative_composition_constraints || [];
+      const extraNeg = negConstraints.length > 0 ? `, ${negConstraints.join(", ")}` : "";
+      const finalNegativePrompt = `${groqStrategy.negative_prompt || "distorted, blurry, low resolution, bad anatomy, text overlap, ugly, watermarks, bad quality"}${extraNeg}`;
+
       const strategy: PictureStrategyDiagnostics = {
         creative_angle: groqStrategy.creative_angle || routingResult?.routing_summary || "Commercial Visual Hero Focus",
         applied_knowledge_nodes: (retrievalRes.package?.selected_blocks || []).map((b) => b.id),
         applied_technique_cards: (retrievalRes.package?.selected_blocks || []).filter((b) => b.knowledge_type === "COMPOSITION" || b.knowledge_type === "LIGHTING").map((b) => b.title),
         compiled_prompt: masterPrompt,
-        negative_prompt: groqStrategy.negative_prompt || "distorted, blurry, low resolution, bad anatomy, text overlap, ugly, watermarks, bad quality",
+        negative_prompt: finalNegativePrompt,
         ai_creative_score_estimate: {
           overall_score: 94,
           brand_alignment: 96,
@@ -716,7 +862,22 @@ export class SimpleImageGenerationOrchestratorService {
           reasoning: `GROQ LLM Marketing Brain: ${groqStrategy.visual_direction} | Camera: ${groqStrategy.camera_direction} | Lighting: ${groqStrategy.lighting}`,
         },
         reference_processing: processorResult.diagnostics,
+        creative_interpretation: creativeInterpretation,
       };
+
+      const pipeline_timing = {
+        validation_ms: validationDurationMs,
+        groq_marketing_brain_ms: groqMarketingBrainDurationMs,
+        router_ms: routerDurationMs,
+        adapter_ms: adapterDurationMs,
+        retrieval_ms: retrievalDurationMs,
+        creative_interpretation_ms: creativeInterpretationDurationMs,
+        compiler_ms: compilerDurationMs,
+        provider_wait_ms: providerDurationMs,
+        total_ms: Date.now() - totalStart,
+      };
+
+      console.log("[PIPELINE_TIMING]", pipeline_timing);
 
       return {
         success: true,
@@ -745,6 +906,7 @@ export class SimpleImageGenerationOrchestratorService {
           geminiCallCount,
           providerCallCount,
           reference_processing: processorResult.diagnostics,
+          pipeline_timing,
         },
       };
     } catch (err: any) {

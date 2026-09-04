@@ -11,15 +11,19 @@ import {
 
 import { ProductPlanningService } from "./ProductPlanningService";
 import { ReferenceControlService } from "./ReferenceControlService";
+import { ReferenceQualityAnalyzerService } from "./ReferenceQualityAnalyzerService";
+import { AdaptiveReferenceConstraintService } from "./AdaptiveReferenceConstraintService";
 
 export class ReferenceIntelligenceService {
   private planner = new ProductPlanningService();
   private controlService = new ReferenceControlService();
+  private qualityAnalyzer = new ReferenceQualityAnalyzerService();
+  private adaptiveConstraintService = new AdaptiveReferenceConstraintService();
 
   /**
    * Generates a structured ReferenceManifest from Stage 2 RoutingResultSchema
    * featuring Phase 2.4 Reference Identity Preservation locks, classifications,
-   * Phase 2.5.2 Product Manifest, and diagnostics.
+   * Phase 2.5.2 Product Manifest, Phase 3.4 Adaptive Reference Intelligence, and diagnostics.
    */
   public generateManifest(
     routingResult: RoutingResultSchema,
@@ -37,8 +41,8 @@ export class ReferenceIntelligenceService {
 
     // Identify product vs logo vs style roles
     const logoRefIds = assetRoles.filter((ar) => ar.role === "LOGO").map((ar) => ar.reference_id);
-    const productRefIds = assetRoles.filter((ar) => ar.role === "PRODUCT").map((ar) => ar.reference_id);
-    const styleRefIds = assetRoles.filter((ar) => (ar.role as string) === "STYLE" || ar.role === "SUPPORT_REFERENCE").map((ar) => ar.reference_id);
+    const productRefIds = assetRoles.filter((ar) => ar.role === "PRODUCT" || (ar.role as string) === "PRODUCT_REFERENCE").map((ar) => ar.reference_id);
+    const styleRefIds = assetRoles.filter((ar) => (ar.role as string) === "STYLE" || ar.role === "SUPPORT_REFERENCE" || (ar.role as string) === "INSPIRATION_REFERENCE").map((ar) => ar.reference_id);
 
     const detectedProductsCount = Math.max(products.length, productRefIds.length, 1);
     const detectedLogosCount = logoRefIds.length;
@@ -206,6 +210,10 @@ export class ReferenceIntelligenceService {
     const productManifest = this.planner.buildProductManifest(routingResult, targetProductCountRequested);
     const identityControlMetadata = this.controlService.generateControlMetadata(routingResult);
 
+    // Phase 3.4: Adaptive Reference Intelligence Layer (Pure Analysis & Rendering Compensation Directives)
+    const referenceQualityProfile = this.qualityAnalyzer.analyze(routingResult);
+    const adaptiveConstraints = this.adaptiveConstraintService.generateConstraints(referenceQualityProfile);
+
     return {
       relationship_type: relationshipType,
       total_references: totalReferences,
@@ -219,6 +227,8 @@ export class ReferenceIntelligenceService {
       reference_identity_report: referenceIdentityReport,
       product_manifest: productManifest,
       identity_control_metadata: identityControlMetadata,
+      reference_quality_profile: referenceQualityProfile,
+      adaptive_constraints: adaptiveConstraints,
     };
   }
 }

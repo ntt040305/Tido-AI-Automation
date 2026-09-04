@@ -4,16 +4,18 @@ import React from "react";
 import { GeneratedAsset } from "../../types/picture-engine.types";
 import { CommercialQCScorecard } from "./CommercialQCScorecard";
 import { VariantActions } from "./VariantActions";
-import { Sparkles, Download, Share2, Award, CheckCircle2, ArrowRight } from "lucide-react";
+import { Sparkles, Download, Share2, Award, CheckCircle2, ArrowRight, Loader2 } from "lucide-react";
 
 export interface ResultReviewPanelProps {
   asset: GeneratedAsset;
+  isDownloading?: boolean;
   onDownload: () => void;
   onIterationAction: (actionType: string) => void;
 }
 
 export function ResultReviewPanel({
   asset,
+  isDownloading = false,
   onDownload,
   onIterationAction,
 }: ResultReviewPanelProps) {
@@ -100,11 +102,16 @@ export function ResultReviewPanel({
       <div className="pt-3 border-t border-border flex items-center gap-3">
         <button
           type="button"
+          disabled={isDownloading}
           onClick={onDownload}
-          className="flex-1 py-3 px-4 bg-accent hover:bg-accent/90 text-white font-semibold text-[14px] rounded-xl transition-all shadow-lg shadow-accent/25 flex items-center justify-center gap-2 cursor-pointer outline-none"
+          className="flex-1 py-3 px-4 bg-accent hover:bg-accent/90 disabled:opacity-50 text-white font-semibold text-[14px] rounded-xl transition-all shadow-lg shadow-accent/25 flex items-center justify-center gap-2 cursor-pointer outline-none"
         >
-          <Download size={16} />
-          <span>Tải Xuất Visual 2K (PNG)</span>
+          {isDownloading ? (
+            <Loader2 size={16} className="animate-spin" />
+          ) : (
+            <Download size={16} />
+          )}
+          <span>{isDownloading ? "Đang tải ảnh 2K..." : "Tải Xuất Visual 2K (PNG)"}</span>
         </button>
 
         <button

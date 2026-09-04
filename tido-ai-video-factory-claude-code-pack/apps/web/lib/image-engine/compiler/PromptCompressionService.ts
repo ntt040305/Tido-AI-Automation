@@ -7,7 +7,7 @@ export interface CompressionResult {
 }
 
 export class PromptCompressionService {
-  public static readonly COMPRESSION_THRESHOLD = 19500;
+  public static readonly COMPRESSION_THRESHOLD = 18000;
   public static readonly MAX_PROMPT_LENGTH = 20000;
 
   /**

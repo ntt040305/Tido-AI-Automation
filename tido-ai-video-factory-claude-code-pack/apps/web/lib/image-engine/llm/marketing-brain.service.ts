@@ -92,13 +92,15 @@ Generate the complete structured JSON commercial strategy now.`;
 
   public createFallbackStrategy(input: MarketingBrainInput): MarketingBrainStrategy {
     const concept = input.concept || "Commercial Product Visual";
-    const brand = input.brandName || "TIDO Brand";
+    const brand = input.brandName || "Commercial Brand";
     const format = input.useCase || "Poster";
 
-    const creativeAngle = `${brand} ${format} - Premium Commercial Positioning`;
+    const creativeAngle = input.brandName
+      ? `${brand} ${format} - Premium Commercial Positioning`
+      : `${concept} - ${format} Commercial Visual`;
     const visualStrategy = `High-end commercial advertising visual for ${concept}. 85mm prime lens, eye-level product hero angle, 3-point studio lighting with soft key and crisp rim highlights. Warm natural tones and reflections.`;
     const compositionStrategy = `Hero product placement following the golden ratio with top visual space preserved for typography.`;
-    const guidance = `Commercial photography of ${brand} ${concept}. Studio lighting, refractive surface details, sharp focal clarity.`;
+    const guidance = `Commercial photography of ${brand !== "Commercial Brand" ? brand + " " : ""}${concept}. Studio lighting, refractive surface details, sharp focal clarity.`;
 
     return {
       creative_angle: creativeAngle,

@@ -2,7 +2,7 @@
 
 import React, { useRef } from "react";
 import { BrandIdentity, BrandAsset } from "../../types/picture-engine.types";
-import { Image, Upload, X, ShieldCheck, Tag } from "lucide-react";
+import { Image, Upload, X, ShieldCheck, Tag, Sparkles } from "lucide-react";
 
 export interface BrandIdentityUploaderProps {
   brandIdentity: BrandIdentity;
@@ -15,6 +15,7 @@ export function BrandIdentityUploader({
 }: BrandIdentityUploaderProps) {
   const productInputRef = useRef<HTMLInputElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const inspirationInputRef = useRef<HTMLInputElement>(null);
 
   function handleProductFiles(e: React.ChangeEvent<HTMLInputElement>) {
     if (e.target.files && e.target.files.length > 0) {
@@ -49,6 +50,25 @@ export function BrandIdentityUploader({
     }
   }
 
+  function handleInspirationFiles(e: React.ChangeEvent<HTMLInputElement>) {
+    if (e.target.files && e.target.files.length > 0) {
+      const newAssets: BrandAsset[] = Array.from(e.target.files).map(
+        (file, idx) => ({
+          asset_id: `asset_style_${Date.now()}_${idx}`,
+          type: "style_reference",
+          file_url: URL.createObjectURL(file),
+          filename: file.name,
+          file,
+        })
+      );
+      const existing = brandIdentity.reference_assets || [];
+      onChange({
+        reference_assets: [...existing, ...newAssets],
+      });
+      e.target.value = "";
+    }
+  }
+
   function removeProductAsset(assetId: string) {
     onChange({
       product_assets: brandIdentity.product_assets.filter(
@@ -59,6 +79,13 @@ export function BrandIdentityUploader({
 
   function removeLogoAsset() {
     onChange({ logo_asset: undefined });
+  }
+
+  function removeInspirationAsset(assetId: string) {
+    const existing = brandIdentity.reference_assets || [];
+    onChange({
+      reference_assets: existing.filter((a) => a.asset_id !== assetId),
+    });
   }
 
   return (
@@ -186,6 +213,66 @@ export function BrandIdentityUploader({
             <Upload size={14} />
             <span>Tải lên Logo (PNG tách nền / SVG)</span>
           </button>
+        )}
+      </div>
+
+      {/* Optional Inspiration / Style Reference Upload */}
+      <div>
+        <div className="flex items-center justify-between mb-1.5">
+          <label className="text-[12.5px] font-medium text-text2 flex items-center gap-1">
+            <Sparkles size={13} className="text-accent" />
+            <span>Ảnh ý tưởng / Phong cách Visual (Optional)</span>
+          </label>
+          <span className="text-[11px] font-mono text-text3">
+            {(brandIdentity.reference_assets || []).length} ảnh
+          </span>
+        </div>
+
+        <input
+          ref={inspirationInputRef}
+          type="file"
+          multiple
+          accept="image/png,image/jpeg,image/webp"
+          onChange={handleInspirationFiles}
+          className="hidden"
+        />
+
+        <div
+          onClick={() => inspirationInputRef.current?.click()}
+          className="border border-dashed border-borderStrong hover:border-accent bg-surface2/40 hover:bg-surface2 rounded-xl p-3 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-200"
+        >
+          <Upload size={16} className="text-text3 mb-1" />
+          <div className="text-[12px] font-medium text-text">
+            Tải lên ảnh ý tưởng (Học bố cục, ánh sáng, tone màu)
+          </div>
+          <div className="text-[10px] text-text3 mt-0.5 font-mono">
+            Không thay đổi hình dáng / bao bì sản phẩm chính
+          </div>
+        </div>
+
+        {/* Inspiration Reference Thumbnails */}
+        {brandIdentity.reference_assets && brandIdentity.reference_assets.length > 0 && (
+          <div className="grid grid-cols-4 gap-2 mt-2">
+            {brandIdentity.reference_assets.map((asset) => (
+              <div
+                key={asset.asset_id}
+                className="relative aspect-square bg-surface border border-borderStrong rounded-lg overflow-hidden group"
+              >
+                <img
+                  src={asset.file_url}
+                  alt="Inspiration reference"
+                  className="w-full h-full object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeInspirationAsset(asset.asset_id)}
+                  className="absolute top-1 right-1 w-5 h-5 rounded-full bg-accent text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                >
+                  <X size={12} />
+                </button>
+              </div>
+            ))}
+          </div>
         )}
       </div>
     </div>
