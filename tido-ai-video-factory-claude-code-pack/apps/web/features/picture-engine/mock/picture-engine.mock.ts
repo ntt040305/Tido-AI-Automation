@@ -69,15 +69,29 @@ export const mockGeneratedAsset: GeneratedAsset = {
   image_url:
     "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=1080&auto=format&fit=crop",
   aspect_ratio: "9:16",
-  qc_scorecard: {
-    overall_score: 0.94,
-    brand_alignment_score: 0.92,
-    technical_quality_score: 0.96,
-    commercial_impact_score: 0.94,
-    validation_result: "pass",
-    issues: [],
+  creative_angle: "TIDO Cafe fruit tea positioned as the fastest route to feeling cool again.",
+  diagnostics: {
+    interpretation_source: "LLM_STRUCTURED",
+    art_direction_provenance: { camera: "USER", lighting: "KNOWLEDGE", composition: "STRATEGY" },
+    art_direction_suppressed: ["camera<-ASSET_DEFAULT", "lighting<-ASSET_DEFAULT"],
+    knowledge_blocks_applied: ["universal.commercial_visual_hierarchy", "specialist.social_ad_foundation"],
+    prompt_chars: 11840,
+    prompt_sections_kept: ["ROLE", "CREATIVE INTENT", "ART DIRECTION", "PROFESSIONAL KNOWLEDGE"],
+    prompt_sections_removed: [],
+    duplicate_lines_removed: 4,
+    prompt_hard_truncated: false,
+    references_analyzed: 2,
+    products_detected: 1,
+    logos_detected: 1,
+    inspiration_references: 0,
+    generation_parameters: {
+      model: "flow-nano-banana-2",
+      aspect_ratio: "9:16",
+      resolution: "2K",
+      references_attached: 2,
+    },
+    pipeline_warnings: [],
+    layout_zones: ["HEADLINE", "PRODUCT_FOCAL", "CTA", "LOGO"],
   },
-  ai_explanation:
-    "Visual được thiết kế chuyên biệt cho Ngành F&B (Chuyển đổi). Ánh sáng chiếu góc 45° tôn vinh màu sắc quả tươi, vùng an toàn top 30% sẵn sàng cho Headline 'HÈ BAY LÊN'.",
   created_at: new Date().toISOString(),
 };

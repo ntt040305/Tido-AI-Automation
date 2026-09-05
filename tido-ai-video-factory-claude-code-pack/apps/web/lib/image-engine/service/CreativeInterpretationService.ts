@@ -1,4 +1,6 @@
 import { AssetType } from "../../../features/picture-engine/types/picture-engine.types";
+import { LLMProviderService } from "../llm/llm-provider.service";
+import { StructuredInputIntentV1 } from "../types";
 import { CreativeExecutionPlannerService } from "./CreativeExecutionPlannerService";
 import { CinematicArtDirection, VisualDirectorService } from "./VisualDirectorService";
 
@@ -30,7 +32,27 @@ export interface LockedIntent {
   lighting_requirements: string[];
   non_negotiable_constraints: string[];
   important_user_requirements: string[];
+  /** What the viewer should feel / the brief's persuasive goal. */
+  emotional_goal?: string;
+  /** Explicit composition asks read from the brief (layout, placement, framing). */
+  composition_requirements?: string[];
+  /** Explicit material, surface and texture asks read from the brief. */
+  material_requirements?: string[];
 }
+
+/**
+ * Which producer built the locked intent. Recorded so the resolver knows how much
+ * to trust the camera/lighting arrays and so diagnostics can show it honestly.
+ *
+ * - LLM_STRUCTURED: dedicated multilingual interpretation call
+ * - ROUTER_STRUCTURED_INTENT: reused from the Gemini router's structured_input_intent,
+ *   which is already an LLM reading of the brief in the user's own language
+ * - DETERMINISTIC_FALLBACK: the original English regex parser
+ */
+export type InterpretationSource =
+  | "LLM_STRUCTURED"
+  | "ROUTER_STRUCTURED_INTENT"
+  | "DETERMINISTIC_FALLBACK";
 
 export interface AIEnhancement {
   creative_objective: string;
@@ -51,6 +73,7 @@ export interface CreativeInterpretation {
   locked_intent: LockedIntent;
   ai_enhancement: AIEnhancement;
   execution_directives?: VisualExecutionDirectives;
+  interpretation_source?: InterpretationSource;
 }
 
 export interface CreativeInterpretationInput {
@@ -136,10 +159,86 @@ export class CreativeInterpretationService {
     // 1. Extract Locked User Intent dynamically via Semantic Parsing
     const lockedIntent = this.extractLockedIntent(rawConcept, input);
 
-    // 2. Synthesize Hybrid AI Enhancement combining Knowledge, Reference Analysis, and Asset Commercial Profile
-    const aiEnhancement = this.synthesizeHybridAIEnhancement(rawConcept, assetType, lockedIntent, input);
+    return this.assemble(rawConcept, assetType, lockedIntent, input, "DETERMINISTIC_FALLBACK");
+  }
 
-    // 3. Synthesize Concrete Visual Execution Directives via Creative Execution Planner Layer
+  /**
+   * Preferred producer. Reads the brief the way a person would, in whatever
+   * language it was written, and returns the same CreativeInterpretation shape.
+   *
+   * Three tiers, best available wins:
+   *   1. A dedicated structured LLM interpretation call.
+   *   2. The Gemini router's `structured_input_intent`, which is already an LLM
+   *      reading of this same brief and costs nothing extra — it was being
+   *      computed and then ignored while this service re-parsed the raw string.
+   *   3. The original deterministic parser.
+   *
+   * Tiers 1 and 2 fix the failure that mattered most: the old parser split on
+   * English prepositions and matched an English-only aesthetic word list, so a
+   * Vietnamese brief produced one giant subject token, an empty camera array and
+   * an empty lighting array — exactly the state in which the asset-type template
+   * defaults took over and contradicted the user.
+   */
+  public static async interpretAsync(
+    input: CreativeInterpretationInput,
+    options?: { llmProvider?: LLMProviderService; routerIntent?: StructuredInputIntentV1 }
+  ): Promise<CreativeInterpretation> {
+    const rawConcept = input.concept || "";
+    const assetType = input.assetType || "poster";
+
+    // Tier 1 — dedicated structured interpretation.
+    try {
+      const provider = options?.llmProvider || new LLMProviderService();
+      if (provider.isConfigured() && rawConcept.trim()) {
+        const parsed = await this.callInterpretationLLM(provider, rawConcept, input);
+        if (parsed) {
+          const locked = this.buildLockedIntentFromLLM(parsed, rawConcept, input);
+          console.log("[CREATIVE_INTERPRETATION]", {
+            source: "LLM_STRUCTURED",
+            subject: locked.subject.join(", ").slice(0, 80),
+            camera_requirements: locked.camera_requirements,
+            lighting_requirements: locked.lighting_requirements,
+          });
+          return this.assemble(rawConcept, assetType, locked, input, "LLM_STRUCTURED");
+        }
+      }
+    } catch (err: any) {
+      console.warn(
+        `[CreativeInterpretationService] Structured LLM interpretation unavailable (${err?.message || err}). Falling back.`
+      );
+    }
+
+    // Tier 2 — reuse the router's multilingual reading of the same brief.
+    const routerIntent = options?.routerIntent;
+    if (routerIntent && (routerIntent.core_creative_intent || "").trim()) {
+      const locked = this.buildLockedIntentFromRouter(routerIntent, rawConcept, input);
+      console.log("[CREATIVE_INTERPRETATION]", {
+        source: "ROUTER_STRUCTURED_INTENT",
+        subject: locked.subject.join(", ").slice(0, 80),
+        camera_requirements: locked.camera_requirements,
+        lighting_requirements: locked.lighting_requirements,
+      });
+      return this.assemble(rawConcept, assetType, locked, input, "ROUTER_STRUCTURED_INTENT");
+    }
+
+    // Tier 3 — deterministic.
+    console.log("[CREATIVE_INTERPRETATION]", { source: "DETERMINISTIC_FALLBACK" });
+    return this.interpret(input);
+  }
+
+  /**
+   * Shared tail: enhancement synthesis and execution planning are identical no
+   * matter which producer built the locked intent, so downstream consumers see
+   * exactly the same contract they always did.
+   */
+  private static assemble(
+    rawConcept: string,
+    assetType: AssetType,
+    lockedIntent: LockedIntent,
+    input: CreativeInterpretationInput,
+    source: InterpretationSource
+  ): CreativeInterpretation {
+    const aiEnhancement = this.synthesizeHybridAIEnhancement(rawConcept, assetType, lockedIntent, input);
     const executionDirectives = CreativeExecutionPlannerService.plan(input, lockedIntent, aiEnhancement);
 
     return {
@@ -148,6 +247,205 @@ export class CreativeInterpretationService {
       locked_intent: lockedIntent,
       ai_enhancement: aiEnhancement,
       execution_directives: executionDirectives,
+      interpretation_source: source,
+    };
+  }
+
+  private static async callInterpretationLLM(
+    provider: LLMProviderService,
+    concept: string,
+    input: CreativeInterpretationInput
+  ): Promise<Record<string, any> | null> {
+    const productHint =
+      input.productIdentity?.canonical_name ||
+      input.productIdentity?.summary ||
+      input.referenceAnalysis?.routing_summary ||
+      "";
+
+    const system =
+      "You are a commercial art director reading a client brief. You extract exactly what the client asked for and nothing more. " +
+      "The brief may be in Vietnamese, English, or a mix. Read it in its original language and answer in English. " +
+      "You never invent camera angles, lighting setups, environments or moods that the brief does not state or clearly imply. " +
+      "An empty array is the correct answer when the brief is silent on something.";
+
+    const user = `CLIENT BRIEF:
+"""
+${concept.trim()}
+"""
+
+ASSET FORMAT: ${input.assetType || "poster"}${input.aspectRatio ? ` (${input.aspectRatio})` : ""}
+${productHint ? `PRODUCT IN REFERENCE PHOTO: ${productHint}` : ""}
+${input.brandContext?.brandName ? `BRAND: ${input.brandContext.brandName}` : ""}
+
+Return ONLY a JSON object with exactly these keys:
+{
+  "subject": "the single thing being photographed, as a short noun phrase",
+  "environment": "where it sits — the scene, surface and setting the brief describes; empty string if the brief does not say",
+  "mood": ["short mood adjectives the brief conveys"],
+  "emotional_goal": "one sentence: what the viewer should feel and why that sells this product",
+  "visual_style": "the photographic or design style the brief implies, as a short phrase",
+  "camera_requirements": ["explicit camera asks ONLY: angle, height, lens, framing, distance. Translate faithfully, e.g. 'góc top view hơi nghiêng' -> 'slightly tilted top-down view'. Empty array if the brief is silent."],
+  "lighting_requirements": ["explicit lighting asks ONLY: direction, quality, colour, time of day, reflections. Empty array if silent."],
+  "composition_requirements": ["explicit layout, placement or negative-space asks. Empty array if silent."],
+  "material_requirements": ["explicit material, texture, surface or finish asks. Empty array if silent."],
+  "non_negotiable_constraints": ["things the brief says must be true or must not happen"]
+}
+
+Rules:
+- Never put the whole brief into "subject". Subject is the thing, not the sentence.
+- Anything the brief does not state is an empty string or empty array. Do not fill gaps with commercial defaults.
+- Preserve the client's meaning exactly; do not upgrade "top view" into "hero angle" or "soft light" into "three-point studio lighting".`;
+
+    const raw = await provider.generateChatCompletion(
+      [
+        { role: "system", content: system },
+        { role: "user", content: user },
+      ],
+      "creative_interpretation",
+      { temperature: 0.2, max_tokens: 900, timeoutMs: 20000 }
+    );
+
+    const match = raw.match(/\{[\s\S]*\}/);
+    if (!match) return null;
+
+    const parsed = JSON.parse(match[0]);
+    // A response that lost the subject is not usable; fall through to the next tier.
+    if (!parsed || typeof parsed !== "object" || !parsed.subject) return null;
+    return parsed;
+  }
+
+  private static toArray(value: any): string[] {
+    if (Array.isArray(value)) {
+      return value.map((v) => String(v).trim()).filter((v) => v.length > 0);
+    }
+    if (typeof value === "string" && value.trim()) return [value.trim()];
+    return [];
+  }
+
+  private static buildLockedIntentFromLLM(
+    parsed: Record<string, any>,
+    rawConcept: string,
+    input: CreativeInterpretationInput
+  ): LockedIntent {
+    const subject = String(parsed.subject || "").trim() || rawConcept.slice(0, 120);
+    const environment = String(parsed.environment || "").trim();
+    const camera = this.toArray(parsed.camera_requirements);
+    const lighting = this.toArray(parsed.lighting_requirements);
+    const composition = this.toArray(parsed.composition_requirements);
+    const materials = this.toArray(parsed.material_requirements);
+    const mood = this.toArray(parsed.mood);
+    const style = this.toArray(parsed.visual_style);
+
+    return this.finalizeLockedIntent({
+      subject,
+      environment,
+      mood,
+      style,
+      camera,
+      lighting,
+      composition,
+      materials,
+      emotionalGoal: String(parsed.emotional_goal || "").trim() || undefined,
+      extraConstraints: this.toArray(parsed.non_negotiable_constraints),
+      input,
+    });
+  }
+
+  private static buildLockedIntentFromRouter(
+    intent: StructuredInputIntentV1,
+    rawConcept: string,
+    input: CreativeInterpretationInput
+  ): LockedIntent {
+    const splitClauses = (v?: string) =>
+      (v || "")
+        .split(/[;|]|(?:,\s(?=[A-ZĐÀ-Ỹ]))/)
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0);
+
+    return this.finalizeLockedIntent({
+      subject: (intent.core_creative_intent || rawConcept).trim(),
+      environment: (intent.scene_environment || "").trim(),
+      mood: splitClauses(intent.mood_emotion),
+      style: [intent.global_visual_language, ...(intent.local_attributes || [])]
+        .map((s) => (s || "").trim())
+        .filter(Boolean),
+      camera: splitClauses(intent.camera_requests),
+      lighting: splitClauses(intent.lighting_requests),
+      composition: [
+        ...splitClauses(intent.composition_requests),
+        ...splitClauses(intent.subject_relationships),
+      ],
+      materials: splitClauses(intent.material_or_visual_effect_requests),
+      emotionalGoal: (intent.communication_intent || intent.promotion_intent || "").trim() || undefined,
+      extraConstraints: intent.explicit_hard_requirements || [],
+      input,
+    });
+  }
+
+  /**
+   * Common assembly for the two structured producers: attaches the reference and
+   * brand locks that must hold regardless of what the brief said, and derives the
+   * important-requirements summary the compiler prints.
+   */
+  private static finalizeLockedIntent(args: {
+    subject: string;
+    environment: string;
+    mood: string[];
+    style: string[];
+    camera: string[];
+    lighting: string[];
+    composition: string[];
+    materials: string[];
+    emotionalGoal?: string;
+    extraConstraints: string[];
+    input: CreativeInterpretationInput;
+  }): LockedIntent {
+    const { input } = args;
+    const nonNegotiable: string[] = [];
+
+    const refProd = input.productIdentity || input.referenceAnalysis?.products?.[0] || input.referenceAnalysis;
+    if (refProd) {
+      const refDesc = refProd.color || refProd.canonical_name || refProd.product_name || refProd.description;
+      nonNegotiable.push(
+        refDesc
+          ? `Reference Identity Lock: Uploaded product reference identity (${refDesc}) overrides concept attribute conflicts.`
+          : `Reference Identity Lock: Uploaded product reference identity takes strict priority over concept conflicts.`
+      );
+    }
+
+    nonNegotiable.push(`Preserve core subject: "${args.subject}"`);
+    if (args.environment) {
+      nonNegotiable.push(`Preserve scene environment: "${args.environment}"`);
+    }
+    if (input.brandContext?.brandName) {
+      nonNegotiable.push(`Respect brand identity: "${input.brandContext.brandName}"`);
+    }
+    args.extraConstraints.forEach((c) => {
+      if (c && !nonNegotiable.includes(c)) nonNegotiable.push(c);
+    });
+
+    return {
+      subject: [args.subject],
+      // An unstated environment stays unstated. The old parser wrote the literal
+      // string "commercial background" here, which then propagated into ten
+      // generated sentences as if the user had asked for it.
+      environment: args.environment ? [args.environment] : [],
+      mood: args.mood,
+      style: args.style,
+      camera_requirements: args.camera,
+      lighting_requirements: args.lighting,
+      composition_requirements: args.composition,
+      material_requirements: args.materials,
+      emotional_goal: args.emotionalGoal,
+      non_negotiable_constraints: nonNegotiable,
+      important_user_requirements: [
+        `Core subject: "${args.subject}"`,
+        ...(args.environment ? [`Environment: "${args.environment}"`] : []),
+        ...args.lighting.map((l) => `Lighting directive: "${l}"`),
+        ...args.camera.map((c) => `Camera directive: "${c}"`),
+        ...args.composition.map((c) => `Composition directive: "${c}"`),
+        ...args.materials.map((m) => `Material directive: "${m}"`),
+      ],
     };
   }
 
@@ -268,6 +566,7 @@ export class CreativeInterpretationService {
     const subjectsStr = lockedIntent.subject.join(", ");
     const envStr = lockedIntent.environment.join(", ");
     const moodStr = lockedIntent.mood.join(", ");
+    const hasEnv = envStr.trim().length > 0;
 
     // Knowledge fusion context
     const knowledgeList = input.knowledgeCards || input.retrievedKnowledge || [];
@@ -281,26 +580,32 @@ export class CreativeInterpretationService {
       ? ` showcasing ${refAnalysis.packaging_material || refAnalysis.material} texture`
       : "";
 
-    // Creative Objective: Preserve user subject & environment while applying asset commercial focus & knowledge
-    const creative_objective = `Preserve subject '${subjectsStr}' in environment '${envStr}', enhancing overall visual impact to achieve ${profile.focusMode.replace("_", " ")} commercial objectives for ${assetType}${knowledgeSynthesisText}.`;
+    // Every clause below used to restate the full subject string. When the subject
+    // was a whole paragraph — which it always was for a Vietnamese brief — that
+    // paragraph appeared six times here and four more times downstream, crowding
+    // out the knowledge payload and burying the actual instruction. The subject is
+    // now named once per field at most, and clauses about things the brief never
+    // mentioned are omitted rather than filled with placeholders.
+    const creative_objective = `Preserve the subject '${subjectsStr}'${hasEnv ? ` within '${envStr}'` : ""} and raise its commercial impact for ${assetType} (${profile.focusMode.replace(/_/g, " ")})${knowledgeSynthesisText}.`;
 
-    // Composition Decision
-    const composition_decision = `Position '${subjectsStr}' with a ${profile.primaryFocalWeight}% primary focal weight in '${envStr}'${refMaterialText}, maintaining dedicated ${profile.textClearanceZone.replace("_", " ")} clearance for commercial text.`;
+    const composition_decision = `Give the subject ${profile.primaryFocalWeight}% primary focal weight${hasEnv ? ` against '${envStr}'` : ""}${refMaterialText}, holding a clear ${profile.textClearanceZone.replace(/_/g, " ")} clearance zone for commercial copy.`;
 
-    // Camera Improvement
-    const userCam = lockedIntent.camera_requirements.length > 0 ? ` satisfying user requirement '${lockedIntent.camera_requirements.join(", ")}' and` : "";
-    const camera_improvement = `Determine lens perspective tailored for ${profile.viewingDistance.replace("_", " ")} viewing,${userCam} focusing sharp optics on ${subjectsStr} while preserving natural depth in ${envStr}.`;
+    const userCam = lockedIntent.camera_requirements.length > 0
+      ? `Honour the client camera directive '${lockedIntent.camera_requirements.join("; ")}' exactly.`
+      : `Choose a lens and viewpoint suited to ${profile.viewingDistance.replace(/_/g, " ")} viewing.`;
+    const camera_improvement = `${userCam} Keep optics sharp on the subject${hasEnv ? " and depth natural behind it" : ""}.`;
 
-    // Lighting Improvement (fusing knowledge cards & user lighting directives)
-    const userLight = lockedIntent.lighting_requirements.length > 0 ? ` incorporating user directive '${lockedIntent.lighting_requirements.join(", ")}'` : "";
-    const lightKnowledgeText = knowledgeList.length > 0 ? ` and applying specialist knowledge [${knowledgeList[0]}]` : "";
-    const lighting_improvement = `Direct light sources to illuminate ${subjectsStr} in a ${moodStr} key tone,${userLight}${lightKnowledgeText} while preserving foreground-to-background contrast against ${envStr}.`;
+    const userLight = lockedIntent.lighting_requirements.length > 0
+      ? `Execute the client lighting directive '${lockedIntent.lighting_requirements.join("; ")}' exactly.`
+      : `Light the subject in a ${moodStr || "clean commercial"} key.`;
+    const lightKnowledgeText = knowledgeList.length > 0 ? ` Apply specialist knowledge [${knowledgeList[0]}].` : "";
+    const lighting_improvement = `${userLight}${lightKnowledgeText} Preserve foreground-to-background separation.`;
 
-    // Visual Hierarchy
-    const visual_hierarchy = `Primary Anchor: ${subjectsStr} (${profile.primaryFocalWeight}%), Secondary Anchor: ${envStr} (${profile.secondaryFocalWeight}%), Ambient Environment (${100 - profile.primaryFocalWeight - profile.secondaryFocalWeight}%).`;
+    const visual_hierarchy = hasEnv
+      ? `Primary anchor: subject (${profile.primaryFocalWeight}%). Secondary anchor: '${envStr}' (${profile.secondaryFocalWeight}%). Remainder ambient.`
+      : `Primary anchor: subject (${profile.primaryFocalWeight}%). Remaining ${100 - profile.primaryFocalWeight}% is supporting space and atmosphere.`;
 
-    // Commercial Reasoning (explains WHY this choice is optimal for the selected asset_type)
-    const commercial_reasoning = `The '${subjectsStr}' remains the hero subject. The '${envStr}' environment is fully preserved, while framing and lighting are optimized for '${assetType}' (${profile.focusMode.replace("_", " ")}) channel performance.`;
+    const commercial_reasoning = `${lockedIntent.emotional_goal ? `${lockedIntent.emotional_goal} ` : ""}The subject stays the hero${hasEnv ? " and the requested environment is preserved" : ""}; framing and light are tuned for '${assetType}' (${profile.focusMode.replace(/_/g, " ")}) delivery.`;
 
     return {
       creative_objective,

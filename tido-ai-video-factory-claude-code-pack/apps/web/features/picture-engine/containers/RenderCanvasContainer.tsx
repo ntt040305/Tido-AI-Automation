@@ -15,79 +15,35 @@ export function RenderCanvasContainer() {
   const canGenerate = usePictureEngineStore((state) => state.canGenerate());
   const hasProductAssets = usePictureEngineStore((state) => state.hasProductAssets());
 
+  // Step descriptions name the stage that is actually running. They previously
+  // described an iced-tea F&B campaign — rim light on droplets, a top 30% safe zone
+  // for a "HÈ BAY LÊN" headline — on every generation, whatever the brief was.
+  const step = (
+    id: string,
+    label: string,
+    description: string,
+    doneAt: number,
+    startsAt: number
+  ): TimelineStepItem => ({
+    id,
+    label,
+    description,
+    status:
+      jobState.progress_percent >= doneAt
+        ? 'completed'
+        : jobState.progress_percent >= startsAt
+        ? 'active'
+        : 'pending',
+  });
+
   const reasoningSteps: TimelineStepItem[] = [
-    {
-      id: "1",
-      label: "Understanding Campaign Brief",
-      description: "Phân tích bối cảnh ngành F&B và mục tiêu Conversion Sales",
-      status: jobState.progress_percent >= 15 ? "completed" : "active",
-    },
-    {
-      id: "2",
-      label: "Retrieving Knowledge Nodes",
-      description: "Tải quy chuẩn visual cho sản phẩm đồ uống giải nhiệt",
-      status:
-        jobState.progress_percent >= 30
-          ? "completed"
-          : jobState.progress_percent >= 15
-          ? "active"
-          : "pending",
-    },
-    {
-      id: "3",
-      label: "Applying Creative Strategy",
-      description: "Xây dựng góc quay sản phẩm Macro kết hợp rim light",
-      status:
-        jobState.progress_percent >= 45
-          ? "completed"
-          : jobState.progress_percent >= 30
-          ? "active"
-          : "pending",
-    },
-    {
-      id: "4",
-      label: "Enforcing Brand Rules",
-      description: "Khóa diện mạo ly trà tươi và màu sắc chủ đạo TIDO",
-      status:
-        jobState.progress_percent >= 60
-          ? "completed"
-          : jobState.progress_percent >= 45
-          ? "active"
-          : "pending",
-    },
-    {
-      id: "5",
-      label: "Building Composition",
-      description: "Tối ưu vùng safe zone top 30% cho Mobile Feed",
-      status:
-        jobState.progress_percent >= 75
-          ? "completed"
-          : jobState.progress_percent >= 60
-          ? "active"
-          : "pending",
-    },
-    {
-      id: "6",
-      label: "Rendering Visual",
-      description: "Khởi chạy Nano Banana 2 Provider Adapter API...",
-      status:
-        jobState.progress_percent >= 90
-          ? "completed"
-          : jobState.progress_percent >= 75
-          ? "active"
-          : "pending",
-    },
-    {
-      id: "7",
-      label: "Quality Checking",
-      description: "Đánh giá điểm thương mại ImageQCScorecard",
-      status:
-        jobState.progress_percent >= 100
-          ? "completed"
-          : jobState.progress_percent >= 90
-          ? "active"
-          : "pending",
-    },
+    step('1', 'Đọc brief', 'Phân tích ý tưởng của bạn thành chủ thể, bối cảnh, góc máy và ánh sáng', 15, 0),
+    step('2', 'Chiến lược chiến dịch', 'Xác định góc tiếp cận thương mại và tâm lý khách hàng mục tiêu', 30, 15),
+    step('3', 'Phân tích ảnh tham khảo', 'Khoá nhận diện sản phẩm, logo và phong cách từ ảnh bạn tải lên', 45, 30),
+    step('4', 'Truy xuất tri thức', 'Chọn khối tri thức nhiếp ảnh và thiết kế thương mại phù hợp', 60, 45),
+    step('5', 'Chốt art direction', 'Giải quyết xung đột góc máy / ánh sáng / bố cục thành một quyết định duy nhất', 75, 60),
+    step('6', 'Biên dịch prompt', 'Ghép brief, khoá nhận diện, art direction và bố cục thành prompt cuối', 88, 75),
+    step('7', 'Render', 'Gửi tới provider và lưu ảnh gốc', 100, 88),
   ];
 
   async function handleGenerate() {

@@ -1,0 +1,34 @@
+=================================================
+🚀 STARTING TIDO IMAGE ENGINE STAGE 1 TEST SUITE
+=================================================
+
+ ✅ PASS: Master Prompt V2 file exists
+ ✅ PASS: Knowledge Router Prompt V1 file exists
+ ✅ PASS: Master Prompt contains required placeholders & creative execution authority
+ ✅ PASS: Knowledge Block Schema V1 JSON exists
+ ✅ PASS: Routing Schema V1 JSON exists
+ ✅ PASS: Routing Schema V1 is valid JSON schema
+ ✅ PASS: Discovered sample knowledge blocks (found 20)
+ ✅ PASS: Loaded 'material.glass' block
+ ✅ PASS: 'material.glass' metadata matches ID
+ ✅ PASS: 'material.glass' has creative_recipe === false
+ ✅ PASS: 'material.glass' content loaded correctly
+ ✅ PASS: Local knowledge repository validation passed
+ ✅ PASS: Zero validation errors in clean repository
+ ✅ PASS: manifest.json built & saved to indexes directory
+ ✅ PASS: manifest contains registered knowledge blocks
+
+🧪 Running Negative / Error Rule Detection Tests...
+ ✅ PASS: Validator correctly rejected invalid repository
+ ✅ PASS: Detected DUPLICATE_ID error
+ ✅ PASS: Detected CREATIVE_RECIPE_VIOLATION error
+ ✅ PASS: Detected MISSING_CONTENT error
+
+🧪 Running Knowledge Service Layer Tests...
+ ✅ PASS: KnowledgeService status is 'ok'
+ ✅ PASS: KnowledgeService counts blocks accurately
+
+=================================================
+🎉 ALL 21/21 TESTS PASSED SUCCESSFULLY!
+=================================================
+

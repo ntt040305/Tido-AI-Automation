@@ -24,6 +24,8 @@ import { PromptCompressionService } from "./PromptCompressionService";
 import { PromptBudgetManagerService } from "../service/PromptBudgetManagerService";
 import { CreativeKnowledgeService } from "../service/CreativeKnowledgeService";
 import { CreativeConstraintService } from "../service/CreativeConstraintService";
+import { ArtDirectionResolverService } from "../service/ArtDirectionResolverService";
+import { CommercialLayoutService } from "../service/CommercialLayoutService";
 import { RenderReadinessValidator } from "../validation/RenderReadinessValidator";
 
 export class MasterPromptCompilerService {
@@ -233,15 +235,12 @@ export class MasterPromptCompilerService {
 
     // 6. Build Dynamic Placeholders
 
-    // When a shot sheet was genuinely read from the user's inspiration image, it becomes
-    // the SINGLE source of truth for camera, lighting, composition and colour.
-    //
-    // Three other layers otherwise emit their own camera orders — the creative
-    // interpretation art direction, the strategy blueprint, and the creative knowledge
-    // guidance. All three default to "eye-level 50mm commercial hero", all three sit
-    // earlier in the prompt than the art direction, and together they simply outvote it.
-    // That is why renders kept their own camera angle no matter what the reference showed.
-    const inspirationStyleAuthority = input.inspirationStyleManifest?.derived_from_image === true;
+    // Camera, lighting, composition and colour are decided in exactly one place:
+    // ArtDirectionResolverService, further down in step 6.5. The ad-hoc suppression
+    // that used to live here — only active when an inspiration image happened to be
+    // analysed — is now the general rule for every request. Sections below state
+    // WHAT the client wants and WHAT the product is; they no longer state HOW to
+    // shoot it.
 
     // A. USER_BRIEF & CREATIVE INTERPRETATION DIRECTIVES
     let userBriefText = input.brief && input.brief.trim()
@@ -253,48 +252,39 @@ export class MasterPromptCompilerService {
       const locked = ci.locked_intent;
       const enh = ci.ai_enhancement;
 
+      // CREATIVE INTENT states WHAT the client asked for. It no longer states HOW to
+      // shoot it: camera, lighting and composition are resolved once, by
+      // ArtDirectionResolverService, and printed once, in the ART DIRECTION section.
+      // This block used to emit its own camera and lighting orders that sat above
+      // the art direction and silently outranked it.
       const interpLines: string[] = [
-        `\n[CREATIVE INTERPRETATION REASONING DIRECTIVES]`,
-        `ORIGINAL CONCEPT: "${ci.original_concept}"`,
-        `ASSET TYPE TARGET: ${ci.asset_type.toUpperCase()}`,
-        `LOCKED USER INTENT (PRESERVE STRICTLY):`,
+        `LOCKED CLIENT INTENT — PRESERVE STRICTLY:`,
         `- Subject: ${locked.subject.join(", ")}`,
-        `- Environment: ${locked.environment.join(", ")}`,
-        `- Mood: ${locked.mood.join(", ")}`,
-        ...(locked.camera_requirements?.length ? [`- Explicit Camera Directives: ${locked.camera_requirements.join("; ")}`] : []),
-        ...(locked.lighting_requirements?.length ? [`- Explicit Lighting Directives: ${locked.lighting_requirements.join("; ")}`] : []),
-        ...locked.non_negotiable_constraints.map((c) => `- Non-negotiable Constraint: ${c}`),
-        `AI COMMERCIAL ENHANCEMENT:`,
+        ...(locked.environment.length ? [`- Environment: ${locked.environment.join(", ")}`] : []),
+        ...(locked.mood.length ? [`- Mood: ${locked.mood.join(", ")}`] : []),
+        ...(locked.style?.length ? [`- Visual style: ${locked.style.join(", ")}`] : []),
+        ...(locked.emotional_goal ? [`- Emotional goal: ${locked.emotional_goal}`] : []),
+        ...locked.non_negotiable_constraints.map((c) => `- Non-negotiable: ${c}`),
+        ``,
+        `COMMERCIAL FRAMING:`,
         `- Objective: ${enh.creative_objective}`,
-        `- Composition Decision: ${enh.composition_decision}`,
-        `- Camera Improvement: ${enh.camera_improvement}`,
-        `- Lighting Improvement: ${enh.lighting_improvement}`,
-        `- Visual Hierarchy: ${enh.visual_hierarchy}`,
-        `- Commercial Reasoning: ${enh.commercial_reasoning}`,
+        `- Visual hierarchy: ${enh.visual_hierarchy}`,
+        `- Why this works: ${enh.commercial_reasoning}`,
       ];
 
-      if (ci.execution_directives?.cinematic_art_direction) {
-        const cad = ci.execution_directives.cinematic_art_direction;
-        if (cad.user_photographer_lock) {
-          interpLines.push(`LOCKED USER PHOTOGRAPHER COMPLIANCE: ${cad.user_photographer_lock}`);
-        }
-        interpLines.push(`CINEMATIC ART DIRECTION & ARTISTIC PERSPECTIVE:`);
-        if (inspirationStyleAuthority) {
-          // Camera and lighting are owned by the analyzed shot sheet. Emitting a second,
-          // conflicting set of orders here is what overrode the reference.
-          interpLines.push(
-            `- Camera & Lighting Art Direction: DEFER ENTIRELY to the [ART DIRECTION — TARGET PHOTOGRAPHIC TREATMENT] block below. Do not apply any default hero angle, lens or lighting setup.`
-          );
-        } else {
-          interpLines.push(
-            `- Camera Art Direction: ${cad.cinematic_camera_direction}`,
-            `- Lighting Art Direction: ${cad.photographic_lighting_design}`
-          );
-        }
+      // Explicit client directives are repeated here as intent (not as execution)
+      // so they survive even if a later section is trimmed under budget pressure.
+      const explicitAsks = [
+        ...(locked.camera_requirements || []).map((c) => `camera: ${c}`),
+        ...(locked.lighting_requirements || []).map((c) => `lighting: ${c}`),
+        ...(locked.composition_requirements || []).map((c) => `composition: ${c}`),
+        ...(locked.material_requirements || []).map((c) => `material: ${c}`),
+      ];
+      if (explicitAsks.length > 0) {
         interpLines.push(
-          `- Visual Storytelling: ${cad.visual_storytelling_composition}`,
-          `- Focal Emphasis: ${cad.subject_focal_emphasis}`,
-          `- Typography Clearance: ${cad.typography_clearance_art_direction}`
+          ``,
+          `EXPLICIT CLIENT DIRECTIVES — these are requirements, not suggestions. Execute them exactly; never substitute a house default:`,
+          ...explicitAsks.map((a) => `- ${a}`)
         );
       }
 
@@ -468,50 +458,78 @@ export class MasterPromptCompilerService {
     const useCaseText = input.useCase && input.useCase.trim() ? input.useCase.trim() : "Standard Commercial Advertising Visual";
     const aspectRatioText = input.aspectRatio && input.aspectRatio.trim() ? input.aspectRatio.trim() : "Unspecified";
 
-    let strategyBlueprint = "";
-
-    if (input.creativeInterpretation?.execution_directives) {
-      const exec = input.creativeInterpretation.execution_directives;
-      const cad = exec.cinematic_art_direction;
-      const negList = exec.negative_composition_constraints.map((c) => `- ${c}`).join("\n");
-      const userLockBlock = cad?.user_photographer_lock
-        ? `\n- STRICT USER COMPLIANCE: ${cad.user_photographer_lock}`
-        : "";
-
-      // With an analyzed shot sheet in play, every camera/lighting/composition line here
-      // would compete with it. Only the non-visual constraints are kept.
-      const cameraBlock = inspirationStyleAuthority
-        ? `- CAMERA, LIGHTING & COMPOSITION: GOVERNED EXCLUSIVELY by the [ART DIRECTION — TARGET PHOTOGRAPHIC TREATMENT] block below. Ignore any default commercial hero angle, lens choice, shot distance or lighting rig; use the analyzed values instead.`
-        : `- CINEMATIC CAMERA DIRECTION: ${cad?.cinematic_camera_direction || exec.camera_execution}
-- PHOTOGRAPHIC LIGHTING DESIGN: ${cad?.photographic_lighting_design || exec.lighting_execution}
-- VISUAL STORYTELLING COMPOSITION: ${cad?.visual_storytelling_composition || exec.composition_layout}
-- SUBJECT FOCAL EMPHASIS: ${cad?.subject_focal_emphasis || exec.subject_scale_ratio}
-- TECHNICAL SPECS & DISTANCE: ${exec.camera_execution} (${exec.shot_distance}, ${exec.depth_of_field})`;
-
-      strategyBlueprint = `
-[CINEMATIC ART DIRECTION & COMMERCIAL PHOTOGRAPHY]${userLockBlock}
-${cameraBlock}
-- TYPOGRAPHY CLEARANCE ART DIRECTION: ${cad?.typography_clearance_art_direction || exec.text_clearance}
-- NEGATIVE COMPOSITION CONSTRAINTS (STRICT EXCLUSIONS):
-${negList}`;
-    } else {
-      // Fallback Strategy Blueprint without hardcoded pedestal assumptions
-      strategyBlueprint = `
-[CREATIVE TYPE STRATEGY: ${useCaseText.toUpperCase()}]
-- VISUAL LAYOUT: Commercial presentation tailored for ${useCaseText} in ${aspectRatioText} aspect ratio.
-- CAMERA & ANGLE: Eye-level to slight low hero perspective with subject in clear focus.
-- LIGHTING DESIGN: 3-point softbox studio illumination featuring clean specular highlights.
-- SAFE ZONES: Reserve clean surrounding area for commercial branding and copy clearance.`;
-    }
-
-    const outputContextText = `INTENDED USE CASE: ${useCaseText}\nTARGET ASPECT RATIO: ${aspectRatioText}\n${strategyBlueprint}`;
+    // OUTPUT CONTEXT is now metadata only. Every camera, lighting and composition
+    // line that used to live here has moved into the single resolved ART DIRECTION
+    // section — this block was one of the four competing authorities.
+    const outputContextText = `INTENDED USE CASE: ${useCaseText}\nTARGET ASPECT RATIO: ${aspectRatioText}\nAll styling decisions for this output are stated once, in the ART DIRECTION and COMMERCIAL LAYOUT sections. Apply no additional house defaults.`;
     provenance.output_context = { source: "user", useCase: useCaseText, aspectRatio: aspectRatioText };
 
-    // G. RELEVANT_KNOWLEDGE
-    const knowledgeLines: string[] = [
-      "NOTICE: Retrieved professional knowledge provides supportive physical principles. Non-exhaustive; does not restrict valid creative solutions.\n",
-    ];
+    // F.2 CAMPAIGN STRATEGY — commercial reasoning that used to be discarded.
+    const strategy = input.marketingStrategy;
+    const mc = input.marketingContext;
+    // The chain matters more than any single line: a model told only "luxury
+    // skincare" renders the category, while a model told what the buyer actually
+    // wants and what that should feel like has something to make decisions with.
+    const strategyLines: string[] = [];
+    if (mc?.industry || mc?.objective || mc?.target_channel) {
+      strategyLines.push(
+        `BUSINESS GOAL: ${[
+          mc.objective ? `${mc.objective}` : "",
+          mc.industry ? `in ${mc.industry}` : "",
+          mc.target_channel ? `for ${mc.target_channel}` : "",
+        ].filter(Boolean).join(" ")}`
+      );
+    } else if (strategy?.commercial_goal) {
+      strategyLines.push(`BUSINESS GOAL: ${strategy.commercial_goal}`);
+    }
+    if (strategy?.consumer_insight) strategyLines.push(`CONSUMER INSIGHT: ${strategy.consumer_insight}`);
+    if (strategy?.target_customer_psychology) {
+      strategyLines.push(`WHO THIS IS FOR: ${strategy.target_customer_psychology}`);
+    } else if (mc?.target_audience) {
+      strategyLines.push(`WHO THIS IS FOR: ${mc.target_audience}`);
+    }
+    if (strategy?.emotional_response) strategyLines.push(`EMOTIONAL RESPONSE TO CREATE: ${strategy.emotional_response}`);
+    if (strategy?.creative_message) strategyLines.push(`CREATIVE MESSAGE: ${strategy.creative_message}`);
+    else if (strategy?.creative_angle) strategyLines.push(`CREATIVE ANGLE: ${strategy.creative_angle}`);
 
+    const vt = strategy?.visual_translation;
+    if (vt) {
+      const vtLines = [
+        vt.subject_representation ? `- Subject treatment: ${vt.subject_representation}` : "",
+        vt.atmosphere ? `- Atmosphere: ${vt.atmosphere}` : "",
+        vt.lighting_character ? `- Light should feel: ${vt.lighting_character}` : "",
+        vt.material_treatment ? `- Materials should read: ${vt.material_treatment}` : "",
+        vt.composition_principle ? `- Organising principle: ${vt.composition_principle}` : "",
+        vt.colour_direction ? `- Colour signals: ${vt.colour_direction}` : "",
+      ].filter(Boolean);
+      if (vtLines.length > 0) {
+        strategyLines.push("VISUAL TRANSLATION OF THAT MESSAGE:", ...vtLines);
+      }
+    } else if (strategy?.prompt_guidance) {
+      strategyLines.push(`VISUAL DIRECTION: ${strategy.prompt_guidance}`);
+    }
+
+    const campaignStrategyText = strategyLines.length > 0
+      ? `${strategyLines.join("\n")}\n\nThis is the persuasive job the image has to do, and the reasoning behind it. Serve the message, not the product category — a literal depiction of the category is a failure even when it is well lit. The exact camera, lighting and layout that deliver this are resolved in the ART DIRECTION and COMMERCIAL LAYOUT sections; where those conflict with this section, they win, and an explicit client directive beats both.`
+      : "No campaign strategy supplied. Serve the creative intent directly.";
+    provenance.campaign_strategy = {
+      source: strategy ? "marketing_brain" : "none",
+      angle: strategy?.creative_angle,
+      has_insight: Boolean(strategy?.consumer_insight),
+      has_visual_translation: Boolean(vt),
+    };
+
+    // G. RELEVANT_KNOWLEDGE
+    //
+    // Knowledge is the largest and the only naturally divisible section, so it is
+    // the one that gets budgeted. Everything else in the prompt is either a client
+    // requirement, an identity lock or a single resolved decision — none of those
+    // can be partially kept, and sacrificing a 500-character strategy section to
+    // relieve overage caused by a 10,000-character knowledge dump helps nobody.
+    //
+    // Blocks are emitted in retrieval-rank order and the lowest-ranked specialist
+    // blocks are dropped first, which is exactly the ordering the retrieval layer
+    // already computed. Universal core blocks are never dropped here.
     let universalTokens = 0;
     let specialistTokens = 0;
 
@@ -524,39 +542,260 @@ ${negList}`;
         .trim();
     };
 
-    if (universalContentBlocks.length > 0) {
-      knowledgeLines.push("### UNIVERSAL PROFESSIONAL KNOWLEDGE");
-      universalContentBlocks.forEach(({ entry, content }) => {
-        const cleaned = compactBlockContent(content);
-        knowledgeLines.push(`\n#### [${entry.id}] ${entry.title}\n${cleaned}`);
-        universalTokens += KnowledgeBudgetManager.estimateTokens(cleaned);
-      });
-    }
+    const renderKnowledge = (
+      specialistLimit: number,
+      universalLimit: number = universalContentBlocks.length
+    ): { text: string; droppedIds: string[] } => {
+      const lines: string[] = [
+        "NOTICE: Retrieved professional knowledge provides supportive physical principles. Non-exhaustive; does not restrict valid creative solutions.\n",
+      ];
+      universalTokens = 0;
+      specialistTokens = 0;
+      const droppedIds: string[] = [];
 
-    if (specialistContentBlocks.length > 0) {
-      knowledgeLines.push("\n### SPECIALIST PROFESSIONAL KNOWLEDGE");
-      specialistContentBlocks.forEach(({ entry, content }) => {
-        const cleaned = compactBlockContent(content);
-        knowledgeLines.push(`\n#### [${entry.id}] ${entry.title}\n${cleaned}`);
-        specialistTokens += KnowledgeBudgetManager.estimateTokens(cleaned);
-      });
-    }
+      const keptUniversal = universalContentBlocks.slice(0, Math.max(0, universalLimit));
+      universalContentBlocks
+        .slice(Math.max(0, universalLimit))
+        .forEach((b) => droppedIds.push(b.entry.id));
 
-    const relevantKnowledgeText = knowledgeLines.join("\n");
+      if (keptUniversal.length > 0) {
+        lines.push("### UNIVERSAL PROFESSIONAL KNOWLEDGE");
+        keptUniversal.forEach(({ entry, content }) => {
+          const cleaned = compactBlockContent(content);
+          lines.push(`\n#### [${entry.id}] ${entry.title}\n${cleaned}`);
+          universalTokens += KnowledgeBudgetManager.estimateTokens(cleaned);
+        });
+      }
+
+      const ranked = [...specialistContentBlocks].sort(
+        (a, b) => (b.entry.final_score || 0) - (a.entry.final_score || 0)
+      );
+      const kept = ranked.slice(0, Math.max(0, specialistLimit));
+      ranked.slice(Math.max(0, specialistLimit)).forEach((b) => droppedIds.push(b.entry.id));
+
+      if (kept.length > 0) {
+        lines.push("\n### SPECIALIST PROFESSIONAL KNOWLEDGE");
+        kept.forEach(({ entry, content }) => {
+          const cleaned = compactBlockContent(content);
+          lines.push(`\n#### [${entry.id}] ${entry.title}\n${cleaned}`);
+          specialistTokens += KnowledgeBudgetManager.estimateTokens(cleaned);
+        });
+      }
+
+      return { text: lines.join("\n"), droppedIds };
+    };
+
+    let knowledgeRender = renderKnowledge(specialistContentBlocks.length);
+    let relevantKnowledgeText = knowledgeRender.text;
     provenance.relevant_knowledge = {
       universal_ids: universalBlockEntries.map((b) => b.id),
       specialist_ids: specialistBlockEntries.map((b) => b.id),
     };
 
+    // 6.5 Resolve the ONE art direction, and the commercial layout for this format.
+    //
+    // Ordering matters: the knowledge layer's creative direction has to exist
+    // before the resolver runs, because it is one of the five candidate tiers.
+    // It used to be appended after substitution, which is why its hardcoded
+    // "eye-level 50mm commercial hero" line competed with everything else.
+    const creativeKnowledgeService = new CreativeKnowledgeService();
+    const creativeRes = creativeKnowledgeService.resolveCreativeDirection({
+      useCase: input.useCase,
+      brief: input.brief,
+      routingResult: input.routingResult,
+      knowledgePackage: input.knowledgePackage,
+    });
+
+    const artDirection = ArtDirectionResolverService.resolve({
+      lockedIntent: input.creativeInterpretation?.locked_intent || {
+        subject: [],
+        environment: [],
+        mood: [],
+        style: [],
+        camera_requirements: [],
+        lighting_requirements: [],
+        non_negotiable_constraints: [],
+        important_user_requirements: [],
+      },
+      inspirationStyleManifest: input.inspirationStyleManifest,
+      marketingStrategy: input.marketingStrategy,
+      knowledgeDirection: creativeRes.creativeDirection,
+      assetDefaults: input.creativeInterpretation?.execution_directives,
+      assetType: input.useCase,
+      aspectRatio: input.aspectRatio,
+    });
+    provenance.art_direction = {
+      resolved_from: artDirection.provenance,
+      // Scoring detail, so a surprising decision can be explained rather than guessed at.
+      decisions: Object.entries(artDirection.fields).map(([dim, f]) => ({
+        dimension: dim,
+        source: f!.source,
+        confidence: f!.confidence,
+        specificity: f!.specificity,
+        score: f!.score,
+        client_locked: f!.source === "USER" && f!.specificity === "HIGH",
+        qualifiers: f!.qualifiers,
+      })),
+      suppressed: artDirection.suppressed.map((s) => `${s.dimension}<-${s.source} (${s.reason})`),
+    };
+
+    const layoutPlan = CommercialLayoutService.plan({
+      assetType: input.useCase,
+      aspectRatio: input.aspectRatio,
+      copyItems: input.copyItems,
+      hasLogoAsset: input.hasLogoAsset ?? ((input.routingResult.reference_manifest?.detected_logos_count || 0) > 0),
+      objective: input.marketingContext?.objective,
+      targetChannel: input.marketingContext?.target_channel,
+    });
+    provenance.commercial_layout = {
+      format: layoutPlan.format,
+      zones: layoutPlan.zones.map((z) => z.role),
+      visual_priority: layoutPlan.visual_priority.map((p) => `${p.element}:${p.importance}`),
+      eye_flow: layoutPlan.eye_flow,
+      negative_space_strategy: layoutPlan.negative_space_strategy,
+      renders_copy: layoutPlan.rendersCopy,
+    };
+
+    // Identity, logo and typography guidance from the knowledge layer are kept.
+    // Its composition and cinematic-style lines are dropped unconditionally — the
+    // resolver already consumed them as tier-4 candidates and printed whatever won.
+    const creativeGuidanceText = creativeRes.compactGuidanceText
+      .split("\n")
+      .filter((line) => {
+        const t = line.trim();
+        return !t.startsWith("3. COMMERCIAL COMPOSITION:") && !t.startsWith("5. CINEMATIC STYLE:");
+      })
+      .join("\n");
+
+    // 6.9 Trailing blocks.
+    //
+    // Built BEFORE assembly so their real size is known. They used to be appended
+    // after the knowledge-fit loop had already run against a fixed 2,500-character
+    // guess, so a large inspiration subject-lock block pushed the finished prompt
+    // past the ceiling and the budget reducer then deleted the campaign strategy to
+    // claw it back. Measuring instead of guessing removes that whole failure.
+    const appendedBlocks: string[] = [];
+
+    // 9.5 Creative Quality & Anti-Text Regression Constraints
+    const creativeConstraintService = new CreativeConstraintService();
+    const creativeConstraints = creativeConstraintService.resolveConstraints({
+      copyItems: input.copyItems,
+      productCount: input.productCount,
+    });
+    appendedBlocks.push(creativeConstraintService.getPromptDirective(creativeConstraints));
+
+    // 9.6 Inspiration Reference Rules
+    //
+    // Style no longer lives here. Camera, lighting, composition and colour read from
+    // an inspiration image are resolved at tier 2 by ArtDirectionResolverService and
+    // printed once, in ART DIRECTION, together with the full shot sheet. What remains
+    // is the part only this block can say: which attached image is the product, and
+    // the anti-merge rules that stop a second bottle appearing in frame.
+    const hasInspiration = Boolean(
+      input.hasInspirationReference ||
+      (Array.isArray(input.inspirationReferenceRules) && input.inspirationReferenceRules.length > 0) ||
+      (input.routingResult?.asset_roles && input.routingResult.asset_roles.some((ar) => (ar.role as string) === "STYLE" || (ar.role as string) === "INSPIRATION_REFERENCE"))
+    );
+
+    if (hasInspiration) {
+      const extraRules = input.inspirationReferenceRules?.map((r) => `- ${r}`).join("\n") || "";
+
+      const productRefIds = (input.routingResult?.products || []).flatMap((p) => p.reference_ids || []);
+      const inspirationRefIds = (input.routingResult?.asset_roles || [])
+        .filter((ar) => (ar.role as string) === "INSPIRATION_REFERENCE" || (ar.role as string) === "STYLE")
+        .map((ar) => ar.reference_id);
+      const productRefLabel = productRefIds.length ? productRefIds.join(", ") : "REF_01";
+      const inspirationRefLabel = inspirationRefIds.length ? inspirationRefIds.join(", ") : "REF_02";
+      const productUnitCount = (input.routingResult?.products || []).length || 1;
+      const withheld = input.inspirationImageWithheld;
+
+      const inspirationBlock = [
+        "[INSPIRATION REFERENCE — SUBJECT LOCK]",
+        withheld
+          ? "A reference photograph was analysed by an art director and is NOT attached. Its photographic treatment is written out in full in the ART DIRECTION section above; reproduce that treatment."
+          : `The inspiration image (${inspirationRefLabel}) is attached as a lighting and composition reference ONLY. Its photographic treatment is stated in the ART DIRECTION section above.`,
+        "",
+        `ONLY ONE SUBJECT EXISTS: the product in the attached product photograph (IMAGE 1 / ${productRefLabel}).`,
+        `- The finished image must contain EXACTLY ${productUnitCount} product unit(s), every one of them that product.`,
+        "- Preserve its exact shape, cap, label artwork, typography, brand name and proportions. It is the sole source of truth for product identity.",
+        "- Do NOT invent, add or imagine a second product, bottle, jar, tube, can or package. This is not a duo, set, bundle or comparison shot.",
+        withheld
+          ? "- The analysed reference showed a DIFFERENT product. That product does not exist here. Reproduce its lighting, colour, staging and mood only, never its packaging, label or brand."
+          : "- The product depicted inside the inspiration image MUST NOT appear in the output: not in the foreground, not beside the product, not in the background, and not reflected in any surface.",
+        `- Any brand name, logo, wordmark or label belonging to the inspiration image's product is FORBIDDEN. Only branding from ${productRefLabel} may appear.`,
+        "- Do NOT render any reference identifier, slot label, caption or watermark such as REF_01 or IMAGE 1 anywhere in the picture.",
+        "- Do NOT invent an environment from the product's name, ingredients or origin story. The scene is defined in ART DIRECTION and nowhere else.",
+        extraRules,
+      ].filter(Boolean).join("\n");
+
+      appendedBlocks.push(inspirationBlock);
+    }
+
+
     // 7. Substitute Placeholders in Template
-    let compiledPrompt = templateVal.templateContent;
-    compiledPrompt = compiledPrompt.replace("{{USER_BRIEF}}", userBriefText);
-    compiledPrompt = compiledPrompt.replace("{{PRODUCT_INSTANCE_REQUIREMENTS}}", productInstanceRequirementsText);
-    compiledPrompt = compiledPrompt.replace("{{USER_HARD_CONSTRAINTS}}", userHardConstraintsText);
-    compiledPrompt = compiledPrompt.replace("{{TYPOGRAPHY_AND_READABLE_COPY}}", typographyAndReadableCopyText);
-    compiledPrompt = compiledPrompt.replace("{{BRAND_KNOWLEDGE}}", brandKnowledgeText);
-    compiledPrompt = compiledPrompt.replace("{{OUTPUT_CONTEXT}}", outputContextText);
-    compiledPrompt = compiledPrompt.replace("{{RELEVANT_KNOWLEDGE}}", relevantKnowledgeText);
+    const substitute = (knowledgeText: string): string => {
+      let out = templateVal.templateContent;
+      out = out.replace("{{USER_BRIEF}}", userBriefText);
+      out = out.replace("{{CAMPAIGN_STRATEGY}}", campaignStrategyText);
+      out = out.replace("{{PRODUCT_INSTANCE_REQUIREMENTS}}", `${productInstanceRequirementsText}\n\n${creativeGuidanceText}`);
+      out = out.replace("{{USER_HARD_CONSTRAINTS}}", userHardConstraintsText);
+      out = out.replace("{{TYPOGRAPHY_AND_READABLE_COPY}}", typographyAndReadableCopyText);
+      out = out.replace("{{BRAND_KNOWLEDGE}}", brandKnowledgeText);
+      out = out.replace("{{ART_DIRECTION}}", artDirection.promptBlock);
+      out = out.replace("{{COMMERCIAL_LAYOUT}}", layoutPlan.promptBlock);
+      out = out.replace("{{OUTPUT_CONTEXT}}", outputContextText);
+      out = out.replace("{{RELEVANT_KNOWLEDGE}}", knowledgeText);
+      return appendedBlocks.length > 0 ? `${out}\n\n${appendedBlocks.join("\n\n")}` : out;
+    };
+
+    let compiledPrompt = substitute(relevantKnowledgeText);
+
+    // Fit knowledge to the budget before anything else is considered for removal.
+    //
+    // The whole prompt is now measured, trailing blocks included, so this loop knows
+    // the true size. Knowledge is the only naturally divisible section: everything
+    // else is a client requirement, an identity lock or a single resolved decision,
+    // none of which can be partially kept. Specialist blocks go first, lowest
+    // retrieval rank first, and only then universal core blocks — never below a
+    // floor of two, because the universal set is what keeps a render physically
+    // coherent.
+    const knowledgeFitCeiling = PromptBudgetManagerService.EMERGENCY_TARGET;
+    const droppedKnowledgeIds: string[] = [];
+    let specialistLimit = specialistContentBlocks.length;
+    let universalLimit = universalContentBlocks.length;
+    const UNIVERSAL_FLOOR = 2;
+
+    while (compiledPrompt.length > knowledgeFitCeiling && specialistLimit > 0) {
+      specialistLimit--;
+      knowledgeRender = renderKnowledge(specialistLimit, universalLimit);
+      relevantKnowledgeText = knowledgeRender.text;
+      compiledPrompt = substitute(relevantKnowledgeText);
+    }
+
+    while (compiledPrompt.length > knowledgeFitCeiling && universalLimit > UNIVERSAL_FLOOR) {
+      universalLimit--;
+      knowledgeRender = renderKnowledge(specialistLimit, universalLimit);
+      relevantKnowledgeText = knowledgeRender.text;
+      compiledPrompt = substitute(relevantKnowledgeText);
+    }
+
+    if (knowledgeRender.droppedIds.length > 0) {
+      droppedKnowledgeIds.push(...knowledgeRender.droppedIds);
+      warnings.push("KNOWLEDGE_TRIMMED_FOR_BUDGET");
+      console.warn("[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED]", {
+        message: "Prompt budget required dropping the lowest-ranked knowledge blocks.",
+        dropped: knowledgeRender.droppedIds,
+        kept_specialist_blocks: specialistLimit,
+        kept_universal_blocks: universalLimit,
+      });
+    }
+    provenance.relevant_knowledge = {
+      ...(provenance.relevant_knowledge as Record<string, unknown>),
+      specialist_ids_rendered: specialistBlockEntries
+        .map((b) => b.id)
+        .filter((id) => !droppedKnowledgeIds.includes(id)),
+      dropped_for_budget: droppedKnowledgeIds,
+    };
 
     // 8. Template Validation & Placeholders Check
     const unresolved = MasterPromptTemplateValidator.findUnresolvedPlaceholders(compiledPrompt);
@@ -582,207 +821,6 @@ ${negList}`;
       };
     }
 
-    // 9.5 Phase 2.6 Intermediate Creative Knowledge Intelligence Layer
-    const creativeKnowledgeService = new CreativeKnowledgeService();
-    const creativeRes = creativeKnowledgeService.resolveCreativeDirection({
-      useCase: input.useCase,
-      brief: input.brief,
-      routingResult: input.routingResult,
-      knowledgePackage: input.knowledgePackage,
-    });
-    // This layer hard-codes "Eye-level commercial hero angle (50mm lens)" and a default
-    // lighting/colour recipe. Those lines are stripped when the analyzed shot sheet owns
-    // the look; the product identity, logo and typography lines are always kept.
-    let creativeGuidanceText = creativeRes.compactGuidanceText;
-    if (inspirationStyleAuthority) {
-      creativeGuidanceText = creativeGuidanceText
-        .split("\n")
-        .filter((line) => {
-          const t = line.trim();
-          return !t.startsWith("3. COMMERCIAL COMPOSITION:") && !t.startsWith("5. CINEMATIC STYLE:");
-        })
-        .join("\n");
-    }
-    compiledPrompt += `\n\n${creativeGuidanceText}`;
-
-    // 9.6 Creative Quality & Anti-Text Regression Constraints
-    const creativeConstraintService = new CreativeConstraintService();
-    const creativeConstraints = creativeConstraintService.resolveConstraints({
-      copyItems: input.copyItems,
-      productCount: input.productCount,
-    });
-    compiledPrompt += `\n\n${creativeConstraintService.getPromptDirective(creativeConstraints)}`;
-
-    // 9.7 Inspiration Reference Guidance Block (Phase 3.6 Additive Layer)
-    const hasInspiration = Boolean(
-      input.hasInspirationReference ||
-      (Array.isArray(input.inspirationReferenceRules) && input.inspirationReferenceRules.length > 0) ||
-      (input.routingResult?.asset_roles && input.routingResult.asset_roles.some((ar) => (ar.role as string) === "STYLE" || (ar.role as string) === "INSPIRATION_REFERENCE"))
-    );
-
-    if (hasInspiration) {
-      const extraRules = input.inspirationReferenceRules?.map((r) => `- ${r}`).join("\n") || "";
-      const manifest = input.inspirationStyleManifest;
-
-      // Only inject an explicit style directive when it was actually read from the
-      // inspiration image. A text-inferred manifest describes generic studio styling
-      // and competes with the real attached reference, which is what produced the
-      // "inspiration ignored, generic commercial photo" outcome.
-      // Emit every dimension the analysis actually returned, grouped the way a
-      // photographer reads a shot sheet. Missing fields are dropped rather than printed
-      // as empty headings, so a partial analysis degrades to the summary lines.
-      // Vision models happily return a paragraph per field. Each line is capped so a
-      // verbose analysis cannot inflate the prompt past the provider limit, and the
-      // whole block is capped again below.
-      const MAX_STYLE_LINE_CHARS = 220;
-      const MAX_STYLE_BLOCK_CHARS = 2600;
-      const styleLine = (label: string, value?: string) => {
-        if (!value || !value.trim()) return "";
-        const clean = value.trim().replace(/\s+/g, " ");
-        const body = clean.length > MAX_STYLE_LINE_CHARS
-          ? `${clean.slice(0, MAX_STYLE_LINE_CHARS - 1).trimEnd()}…`
-          : clean;
-        return `${label}: ${body}`;
-      };
-
-      let styleDirectiveBlock = "";
-      if (manifest && manifest.derived_from_image === true) {
-        const groups: { heading: string; lines: string[] }[] = [
-          {
-            heading: "CAMERA",
-            lines: [
-              styleLine("  Angle", manifest.cameraAngle),
-              styleLine("  Lens & Perspective", manifest.focalLength),
-              styleLine("  Distance & Framing", manifest.cameraDistance),
-              styleLine("  Depth of Field", manifest.depthOfField),
-              styleLine("  Summary", manifest.camera),
-            ],
-          },
-          {
-            heading: "LIGHTING",
-            lines: [
-              styleLine("  Key Light", manifest.keyLight),
-              styleLine("  Fill & Shadow", manifest.fillAndShadow),
-              styleLine("  Rim & Speculars", manifest.rimAndHighlights),
-              styleLine("  Colour Temperature", manifest.lightColorTemperature),
-              styleLine("  Summary", manifest.lighting),
-            ],
-          },
-          {
-            heading: "COMPOSITION",
-            lines: [
-              styleLine("  Subject Placement", manifest.subjectPlacement),
-              styleLine("  Depth Layering", manifest.depthLayering),
-              styleLine("  Negative Space", manifest.negativeSpace),
-              styleLine("  Summary", manifest.composition),
-            ],
-          },
-          {
-            heading: "COLOUR",
-            lines: [
-              styleLine("  Palette", manifest.colorPalette),
-              styleLine("  Grading", manifest.colorGrading),
-              styleLine("  Summary", manifest.colorMood),
-            ],
-          },
-          {
-            heading: "SET, PROPS & EFFECTS",
-            lines: [
-              styleLine("  Prop Styling", manifest.propStyling),
-              styleLine("  Surface & Set", manifest.surfaceAndSet),
-              styleLine("  Background", manifest.backgroundTreatment),
-              styleLine("  Motion & Effects", manifest.motionAndEffects),
-              styleLine("  Summary", manifest.environment),
-            ],
-          },
-          {
-            heading: "FINISHING",
-            lines: [
-              styleLine("  Post Character", manifest.finishing),
-              styleLine("  Atmosphere", manifest.visualMood),
-            ],
-          },
-        ];
-
-        const rendered: string[] = ["[INSPIRED VISUAL STYLE DIRECTIVE]"];
-        const overall = styleLine("Overall Look", manifest.photographicStyle || manifest.visualMood);
-        if (overall) rendered.push(overall);
-
-        for (const group of groups) {
-          const populated = group.lines.filter((l) => l !== "");
-          // A heading with nothing under it is noise, so the group is dropped entirely.
-          if (populated.length === 0) continue;
-          rendered.push("", group.heading, ...populated);
-        }
-
-        styleDirectiveBlock = rendered.join("\n");
-
-        // Whole-block ceiling. Groups are dropped from the end (finishing and atmosphere
-        // matter least) rather than truncating mid-sentence.
-        while (styleDirectiveBlock.length > MAX_STYLE_BLOCK_CHARS && rendered.length > 2) {
-          rendered.pop();
-          styleDirectiveBlock = rendered.join("\n");
-        }
-      }
-
-      // Resolve the real reference ids so the hierarchy never points at a wrong slot.
-      const productRefIds = (input.routingResult?.products || [])
-        .flatMap((p) => p.reference_ids || []);
-      const inspirationRefIds = (input.routingResult?.asset_roles || [])
-        .filter((ar) => (ar.role as string) === "INSPIRATION_REFERENCE" || (ar.role as string) === "STYLE")
-        .map((ar) => ar.reference_id);
-      const productRefLabel = productRefIds.length ? productRefIds.join(", ") : "REF_01";
-      const inspirationRefLabel = inspirationRefIds.length ? inspirationRefIds.join(", ") : "REF_02";
-      const productUnitCount = (input.routingResult?.products || []).length || 1;
-
-      const inspirationBlock = input.inspirationImageWithheld
-        ? [
-          // The inspiration image is NOT attached. It was analyzed by a vision pass and
-          // its look is carried entirely by the written direction below. The prompt must
-          // never point the model at an attachment that was not sent.
-          "[ART DIRECTION — TARGET PHOTOGRAPHIC TREATMENT]",
-          "A reference photograph was analyzed by an art director. It is NOT attached. The written direction below is the complete description of the look you must reproduce.",
-          "HIGHEST VISUAL AUTHORITY: this block OUTRANKS every other styling instruction here. On any conflict over camera, lighting, composition, colour or background, THIS BLOCK WINS.",
-          "Do NOT invent an environment from the product's name, ingredients or origin story. The scene is defined here and nowhere else.",
-          "",
-          styleDirectiveBlock,
-          "",
-          `ONLY ONE SUBJECT EXISTS: the product shown in the attached product photograph (IMAGE 1 / ${productRefLabel}).`,
-          `- SUBJECT LOCK: The finished image must contain EXACTLY ${productUnitCount} product unit(s), and every one of them must be the product from the attached product photograph.`,
-          "- Preserve that product's exact bottle shape, cap, label artwork, typography, brand name and proportions. It is the absolute source of truth for product identity.",
-          "- Do NOT invent, add, or imagine any second product, bottle, jar, tube, can or package. This is a single-product photograph, not a duo, set, bundle or comparison.",
-          "- The analyzed reference described a DIFFERENT product. That product does not exist here. Reproduce its lighting, colour, staging and mood only, never its packaging, label or brand.",
-          "- Do NOT render any reference identifier, slot label, caption or watermark such as REF_01 or IMAGE 1 anywhere in the picture.",
-          "",
-          "Rebuild the scene above around the attached product, matching EVERY line of the shot sheet. Where a line cannot be applied literally, approximate it as closely as the product allows.",
-          extraRules,
-        ].filter(Boolean).join("\n")
-        : [
-          "[INSPIRATION REFERENCE RULES & STYLE SYNTHESIS]",
-          "PRIORITY HIERARCHY:",
-          `1. PRIORITY 1 — PRODUCT REFERENCE IMAGE (IMAGE 1 / ${productRefLabel}): Absolute source of truth for product identity, shape, logo, packaging, and brand marks.`,
-          "2. PRIORITY 2 — USER CONCEPT: Defines advertising campaign purpose, messaging, and commercial objective.",
-          `3. PRIORITY 3 — INSPIRATION IMAGE (IMAGE 2 / ${inspirationRefLabel}): Visual style guidance only (composition, camera, lighting, atmosphere, color palette).`,
-          "",
-          styleDirectiveBlock,
-          "",
-          "THE INSPIRATION IMAGE IS A LIGHTING AND COMPOSITION REFERENCE, NOT A SUBJECT.",
-          `- The inspiration image (${inspirationRefLabel}) is NOT part of the subject matter. Treat it as a photograph whose lighting setup, lens choice, camera angle, staging and post-processing you are reproducing.`,
-          `- SUBJECT LOCK: The finished image must contain EXACTLY ${productUnitCount} product unit(s), and every one of them must be the product from ${productRefLabel}.`,
-          `- The product, package, can, bottle, container or item depicted inside the inspiration image MUST NOT appear in the output, not in the foreground, not beside the product, not in the background, and not reflected in any surface.`,
-          "- Do NOT place the product next to, paired with, or grouped with any product taken from the inspiration image. This is NOT a duo, bundle, comparison, side-by-side or combination shot unless the User Concept explicitly asks for one.",
-          `- Any brand name, logo, wordmark, flavour text or label that belongs to the inspiration image's product is FORBIDDEN in the output. Only branding from ${productRefLabel} may appear.`,
-          "- Do NOT render any reference identifier, slot label, caption or watermark such as REF_01 or REF_02 anywhere in the picture.",
-          "",
-          "- ADAPT ONLY: composition, camera angle, lighting, atmosphere, color mood, and visual style.",
-          "- DO NOT ADAPT OR MODIFY: product identity, logo, packaging, brand name, or physical product structure.",
-          "- DO NOT copy logos, foreign brand text, or unrelated objects from the inspiration reference image.",
-          extraRules,
-        ].filter(Boolean).join("\n");
-
-      compiledPrompt += `\n\n${inspirationBlock}`;
-    }
-
     // 10. Provider Prompt Optimization & Phase 2.5.4 Mandatory Prompt Budget Manager System
     const optimizationRes = ProviderPromptOptimizer.optimize(compiledPrompt);
     compiledPrompt = optimizationRes.optimizedPrompt;
@@ -793,6 +831,21 @@ ${negList}`;
 
     const budgetRes = budgetManager.enforceBudget(compiledPrompt, productCount, mode);
     compiledPrompt = budgetRes.final_prompt;
+
+    // Truncation is never silent. Anything the reducer dropped is recorded on the
+    // compiled package and travels out through the API response, so an operator can
+    // see that a render shipped without, say, its professional knowledge.
+    provenance.budget = {
+      before_chars: budgetRes.before,
+      after_chars: budgetRes.after,
+      duplicate_lines_removed: budgetRes.duplicate_lines_removed,
+      sections_removed: budgetRes.removals,
+      sections_kept: budgetRes.sections_kept,
+      hard_truncated: budgetRes.truncated,
+    };
+    if (budgetRes.removals.length > 0 || budgetRes.truncated) {
+      warnings.push("PROMPT_SECTIONS_REMOVED");
+    }
 
     const totalPromptTokens = KnowledgeBudgetManager.estimateTokens(compiledPrompt);
     if (totalPromptTokens > 3500) {

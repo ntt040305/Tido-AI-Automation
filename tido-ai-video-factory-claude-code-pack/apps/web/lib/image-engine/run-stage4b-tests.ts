@@ -3,6 +3,7 @@ import { InputFingerprint } from "./compiler/InputFingerprint";
 import { MasterPromptCompilerService } from "./compiler/MasterPromptCompilerService";
 import { MasterPromptTemplateValidator } from "./compiler/MasterPromptTemplateValidator";
 import { PromptBudgetValidator } from "./compiler/PromptBudgetValidator";
+import { PromptBudgetManagerService } from "./service/PromptBudgetManagerService";
 import { LocalKnowledgeRepository } from "./repository/LocalKnowledgeRepository";
 import {
   KnowledgePackageV1,
@@ -106,7 +107,7 @@ export async function runStage4BTests() {
   const templateVal = MasterPromptTemplateValidator.loadAndValidateTemplate();
   assert(templateVal.isValid, "Master Prompt V2 template file loads and validates successfully");
   assert(templateVal.templateId === "master_prompt_v2", "Template ID is 'master_prompt_v2'");
-  assert(templateVal.templateVersion === "2.0.9", "Template version is '2.0.9'");
+  assert(templateVal.templateVersion === "3.0.0", "Template version is '3.0.0'");
   assert(templateVal.templateHash.length > 0, `Template hash generated: ${templateVal.templateHash}`);
 
   // Test detection of unresolved placeholders
@@ -235,7 +236,12 @@ export async function runStage4BTests() {
   const compiledLower = compiledText.toLowerCase();
 
   // Check forbidden TIDO-invented recipes unless user supplied them
-  const forbiddenInventedPhrases = ["50mm lens", "softbox", "golden hour", "olive background"];
+  // "50mm lens" and "softbox" left this list deliberately. They are legitimate
+  // tier-5 asset-profile defaults in the resolved art direction, used only when
+  // the client specified nothing, and the model needs a concrete value. The
+  // invariant that replaced this check lives in section 10: a default must never
+  // be presented as a client directive. Invented scenes stay forbidden.
+  const forbiddenInventedPhrases = ["golden hour", "olive background"];
   for (const phrase of forbiddenInventedPhrases) {
     assert(!compiledLower.includes(phrase), `Compiler did NOT invent creative decision '${phrase}'`);
   }
@@ -269,46 +275,61 @@ export async function runStage4BTests() {
   // ── 10. Stage 5.5 & 5.6 Scene-Native & Reference Semantics Verification ──
   console.log("\n🔹 10. Stage 5.5 & 5.6 Scene-Native & Reference Semantics Verification");
 
-  assert(compiledText.includes("## SCENE-NATIVE PRODUCT INTEGRATION"), "Master Prompt contains '## SCENE-NATIVE PRODUCT INTEGRATION' section");
+  assert(compiledText.includes("**Scene-native integration:**"), "Scene-native integration rules present (folded into REFERENCE SEMANTICS in template v3)");
   assert(compiledText.includes("## REFERENCE SEMANTICS"), "Master Prompt contains '## REFERENCE SEMANTICS' section");
-  assert(compiledText.includes("Ensure all scene elements share coherent photographic conditions"), "Scene-Native Integration section includes Global Image-Formation Coherence requirements");
-  assert(!compiledLower.includes("50mm lens") && !compiledLower.includes("studio softbox"), "No fixed camera, lens, or lighting setup was introduced");
-  assert(compiledText.includes("1. **Real Product Identity & Reference-Supported Identity Evidence** (Highest priority"), "Product Identity priority hierarchy is refined to Reference-Supported Identity Evidence (Highest priority)");
+  assert(compiledText.includes("so every element shares one set of photographic conditions"), "Scene-native rules still require one coherent set of photographic conditions");
+  {
+    // A default camera/lighting recipe IS allowed when the client said nothing —
+    // that is tier 5 of the art direction resolver, and the model needs something
+    // concrete. What must never happen is a default being presented to the model
+    // as a client requirement, or contradicting an explicit client ask.
+    const clientDirectiveLines = compiledText
+      .split("\n")
+      .filter((l) => l.includes("CLIENT DIRECTIVE — EXECUTE EXACTLY"));
+    const userGaveCamera = (sampleInput.creativeInterpretation?.locked_intent.camera_requirements || []).length > 0;
+    assert(
+      userGaveCamera || clientDirectiveLines.length === 0,
+      "No invented decision is presented to the model as a client directive"
+    );
+    const artBlockCount = (compiledText.match(/\[RESOLVED ART DIRECTION\]/g) || []).length;
+    assert(artBlockCount === 1, "Camera, lens and lighting are stated in exactly one place");
+  }
+  assert(compiledText.includes("1. **Real product identity supported by reference evidence**"), "Conflict priority still ranks reference-supported product identity first");
   assert(compiledText.includes("## TYPOGRAPHY & READABLE COPY"), "Typography & Readable Copy section present");
-  assert(compiledText.includes("## FULL CREATIVE AUTHORITY"), "Creative Authority section remains unchanged");
-  assert(compiledText.includes("Does each referenced product look physically photographed inside the final environment rather than pasted from source references?"), "Internal final check includes physical integration verification item");
+  assert(compiledText.includes("## CREATIVE EXECUTION"), "Creative execution authority section present (renamed in template v3)");
+  assert(compiledText.includes("it looks photographed inside the scene rather than pasted"), "Final check still verifies physical integration rather than pasting");
 
   // ── 11. Stage 5.6 Reference Semantics Invariant Tests ──
   console.log("\n🔹 11. Stage 5.6 Reference Semantics Invariant Tests");
   assert(compiledText.includes("Reference images are evidence of PRODUCT IDENTITY, not source canvases"), "Reference Semantics explicitly defines reference as identity evidence, not source canvas");
   assert(compiledText.includes("Do not treat source-image pixels, crop boundaries, background, studio illumination"), "Reference Semantics explicitly excludes source-photo artifacts from protected identity");
-  assert(compiledText.includes("PROTECTED (What the product is)"), "Product Identity explicitly defines PROTECTED (What the product is)");
-  assert(compiledText.includes("RE-SYNTHESIZED (How the product is photographed"), "Product Identity explicitly defines RE-SYNTHESIZED (How the product is photographed)");
-  assert(compiledText.includes("excludes reference background, source lighting"), "Conflict Priority #1 explicitly excludes photographic scene artifacts");
+  assert(compiledText.includes("**Protected (what the product is):**"), "Product identity explicitly defines what is protected");
+  assert(compiledText.includes("**Re-synthesized (how it is photographed):**"), "Product identity explicitly defines what is re-synthesized");
+  assert(compiledText.includes("Excludes the reference photo"), "Conflict priority #1 excludes photographic scene artifacts");
 
   // ── 12. Stage 5.7 Viewpoint Decoupling Invariant Tests ──
   console.log("\n🔹 12. Stage 5.7 Viewpoint Decoupling Invariant Tests");
-  assert(compiledText.includes("## VIEWPOINT DECOUPLING"), "Master Prompt contains '## VIEWPOINT DECOUPLING' section");
-  assert(compiledText.includes("Reference images define physical product identity, not required camera viewpoint."), "Viewpoint Decoupling explicitly defines reference as product identity, not camera requirement");
-  assert(compiledText.includes("Do not preserve the source photograph's camera geometry or shot distance by default."), "Viewpoint Decoupling excludes source camera geometry by default");
-  assert(compiledText.includes("Camera angle, viewpoint height, framing, crop, perspective, hero scale"), "Product Identity explicitly places camera/framing under RE-SYNTHESIZED");
-  assert(compiledText.includes("The downstream model retains full authority over camera geometry and reframing unless explicitly locked by user constraints"), "Creative Authority explicitly protects reframing freedom");
-  assert(compiledText.includes("excludes reference background, source lighting, source camera angle"), "Conflict Priority resolves viewpoint tension in favor of identity evidence");
+  assert(compiledText.includes("Re-synthesized (how it is photographed)"), "Viewpoint decoupling expressed via the protected/re-synthesized split in template v3");
+  assert(compiledText.includes("Reference images are evidence of PRODUCT IDENTITY, not source canvases"), "References defined as identity evidence, not a camera requirement");
+  assert(compiledText.includes("camera angle, shot distance, perspective"), "Source camera geometry excluded from protected identity");
+  assert(compiledText.includes("camera angle, viewpoint height, framing, crop, perspective, hero scale"), "Camera and framing sit under re-synthesized");
+  assert(compiledText.includes("you hold full authority over every remaining creative decision"), "Creative execution authority explicitly granted for undecided choices");
+  assert(compiledText.includes("baked shadows, exposure and depth of field"), "Conflict priority resolves viewpoint tension in favour of identity evidence");
   // ── 13. Stage 5.8 Prompt Compression Invariant & Size Tests ──
   console.log("\n🔹 13. Stage 5.8 Semantic-Preserving Prompt Compression Invariants");
-  assert(compiledText.length < 19000, `Compiled prompt length (${compiledText.length} chars) is strictly below hard max 19,000 chars`);
-  assert(compiledText.includes("PROTECTED (What the product is)"), "Preserves Product Identity protection");
+  assert(compiledText.length < PromptBudgetManagerService.HARD_MAXIMUM, `Compiled prompt length (${compiledText.length} chars) is below the hard maximum (${PromptBudgetManagerService.HARD_MAXIMUM} chars)`);
+  assert(compiledText.includes("**Protected (what the product is):**"), "Preserves Product Identity protection");
   assert(compiledText.includes("Reference images are evidence of PRODUCT IDENTITY, not source canvases"), "Preserves Identity vs Source Photo distinction");
-  assert(compiledText.includes("## SCENE-NATIVE PRODUCT INTEGRATION"), "Preserves Scene-Native Integration section");
-  assert(compiledText.includes("## VIEWPOINT DECOUPLING"), "Preserves Viewpoint Decoupling section");
-  assert(compiledText.includes("Unseen product surfaces must be reconstructed conservatively"), "Preserves Conservative Unseen-Surface Inference");
+  assert(compiledText.includes("**Scene-native integration:**"), "Preserves Scene-Native Integration rules");
+  assert(compiledText.includes("**Re-synthesized (how it is photographed):**"), "Preserves Viewpoint Decoupling rules");
+  assert(compiledText.includes("unseen surfaces are reconstructed conservatively"), "Preserves Conservative Unseen-Surface Inference");
   assert(compiledText.includes("## TYPOGRAPHY & READABLE COPY"), "Preserves Typography & Readable Copy section");
   assert(compiledText.includes("## BRAND KNOWLEDGE"), "Preserves Brand Knowledge section");
-  assert(compiledText.includes("UNKNOWN PRODUCT != UNSUPPORTED PRODUCT") || compiledText.includes("An unknown product is not an unsupported product") || compiledText.includes("Unknown product != unsupported product"), "Preserves Open-World Reasoning");
-  assert(compiledText.includes("YOU HAVE FULL CREATIVE AUTHORITY"), "Preserves Full Creative Authority section");
+  assert(compiledText.includes("an unknown product is not an unsupported one"), "Preserves Open-World Reasoning");
+  assert(compiledText.includes("you hold full authority over every remaining creative decision"), "Preserves Creative Execution authority");
   assert(compiledText.includes("## PROFESSIONAL KNOWLEDGE"), "Preserves Professional Knowledge section");
-  assert(compiledText.includes("1. **Real Product Identity"), "Preserves Conflict Priority hierarchy");
-  assert(compiledText.includes("## INTERNAL FINAL CHECK"), "Preserves Internal Final Check section");
+  assert(compiledText.includes("## CONFLICT PRIORITY"), "Preserves Conflict Priority hierarchy");
+  assert(compiledText.includes("Before rendering, verify:"), "Preserves the pre-render verification checklist");
 
   // ── 14. Stage 5.8.1 Multi-Product Identity Regression & Dynamic Mapping Tests ──
   console.log("\n🔹 14. Stage 5.8.1 Multi-Product Identity Invariant Tests");
@@ -406,7 +427,7 @@ export async function runStage4BTests() {
   assert(Boolean(caseERes.success && caseERes.package), "Case E compilation succeeded");
   const caseEText = caseERes.package!.compiled_prompt;
   assert(caseEText.includes("Preserve each product's reference-supported characteristics and distinct differences"), "Case E: Distinct differences mandatory despite shared brand family");
-  assert(caseEText.includes("## MULTI-PRODUCT IDENTITY ISOLATION"), "Case E: Master Prompt includes static multi-product identity isolation contract");
+  assert(caseEText.includes("**Multi-product isolation:**"), "Case E: Master Prompt includes the static multi-product identity isolation contract");
 
   // ── 15. Stage 5.9.2 Exact Copy Hard Firewall Invariant Tests ─────────
   console.log("\n🔹 15. Stage 5.9.2 Exact Copy Hard Firewall Invariant Tests");
@@ -510,10 +531,11 @@ export async function runStage4BTests() {
   const val20000 = PromptBudgetValidator.validate(dummyPrompt20000, {});
   assert(val20000.status === "CRITICAL" && !val20000.is_blocked, "20,000 chars classified as CRITICAL");
 
-  const dummyPrompt20001 = "x".repeat(20001);
-  const val20001 = PromptBudgetValidator.validate(dummyPrompt20001, {});
-  assert(val20001.status === "BLOCKED" && val20001.is_blocked, "20,001 chars classified as BLOCKED");
-  assert(Boolean(val20001.error && val20001.error.includes("PROMPT_BUDGET_EXCEEDED")), "BLOCKED validator returns PROMPT_BUDGET_EXCEEDED error");
+  const overLimit = PromptBudgetValidator.DEFAULT_PROVIDER_HARD_LIMIT + 1;
+  const dummyPromptOverLimit = "x".repeat(overLimit);
+  const valOverLimit = PromptBudgetValidator.validate(dummyPromptOverLimit, {});
+  assert(valOverLimit.status === "BLOCKED" && valOverLimit.is_blocked, `${overLimit} chars (over the provider hard limit) classified as BLOCKED`);
+  assert(Boolean(valOverLimit.error && valOverLimit.error.includes("PROMPT_BUDGET_EXCEEDED")), "BLOCKED validator returns PROMPT_BUDGET_EXCEEDED error");
 
   // Knowledge & User Data Byte-Equivalence Proof
   const eqRes = await compiler.compile(sampleInput);

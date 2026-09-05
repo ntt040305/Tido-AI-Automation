@@ -36,6 +36,18 @@ export async function POST(req: NextRequest) {
       let marketingContext: any;
       let creativeDirection: any;
       let salesContext: any;
+      let copyItems: any;
+
+      // Authorized visible copy travels on the multipart branch too. Without this
+      // the compiler saw an empty copy list on every request that carried an image
+      // and emitted "do NOT render words" into the prompt.
+      try {
+        const copyRaw = formData.get("copyItems") as string;
+        if (copyRaw) {
+          const parsed = JSON.parse(copyRaw);
+          if (Array.isArray(parsed) && parsed.length > 0) copyItems = parsed;
+        }
+      } catch (e) { }
 
       try {
         const mcRaw = formData.get("marketingContext") as string;
@@ -120,6 +132,7 @@ export async function POST(req: NextRequest) {
         useCase,
         aspectRatio,
         brandName,
+        copyItems,
         marketingContext,
         creativeDirection,
         salesContext,

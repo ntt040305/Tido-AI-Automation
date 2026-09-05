@@ -1,0 +1,295 @@
+▲ Next.js 16.3.0 (Turbopack)
+- Environments: .env.local
+✓ Running next.config.ts took 129ms
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 11.3s
+  Running TypeScript ...
+  Finished TypeScript in 3.6s ...
+  Collecting page data using 15 workers ...
+[LLM_PROVIDER] {
+  provider: 'claude-sonnet-4-6',
+  baseUrl: 'http://127.0.0.1:8317/v1',
+  status: 'CONNECTED'
+}
+[LLM_PROVIDER] {
+  provider: 'claude-sonnet-4-6',
+  baseUrl: 'http://127.0.0.1:8317/v1',
+  status: 'CONNECTED'
+}
+  Generating static pages using 15 workers (0/20) ...
+[LLM_PROVIDER] {
+  provider: 'claude-sonnet-4-6',
+  baseUrl: 'http://127.0.0.1:8317/v1',
+  status: 'CONNECTED'
+}
+  Generating static pages using 15 workers (5/20) 
+  Generating static pages using 15 workers (10/20) 
+  Generating static pages using 15 workers (15/20) 
+✓ Generating static pages using 15 workers (20/20) in 470ms
+Turbopack build encountered 7 warnings:
+./apps/web/lib/image-engine/config.ts:7:7
+Warning: Dynamic filesystem access causes tracing of the whole project
+  [90m 5 |[0m   [36mconst[0m cwd = process.cwd();
+  [90m 6 |[0m   [36mconst[0m directPath = path.resolve(cwd, relPath);
+[33m[1m>[0m [90m 7 |[0m   [36mif[0m (fs.existsSync(directPath)) [36mreturn[0m directPath;
+  [90m   |[0m       [33m[1m^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m 8 |[0m   [36mconst[0m webPath = path.resolve(cwd, [32m"apps/web"[0m, relPath);
+  [90m 9 |[0m   [36mif[0m (fs.existsSync(webPath)) [36mreturn[0m webPath;
+  [90m10 |[0m   [36mreturn[0m directPath;
+
+Static analysis determined that this filesystem access causes the whole project to be traced and included in the output.
+This is usually unintentional and leads to all source files (including the public folder) to be deployed as part of the server code.
+This can slow down deployments or lead to failures when size limits are exceeded.
+To resolve this, you can
+- make sure the path is statically scoped to some subfolder, for example path.join(process.cwd(), 'data', bar), or
+- only use them in development, or
+- opt out by adding an ignore comment to the highlighted call: fs.existsSync(/*turbopackIgnore: true*/ ...), or
+- remove them.
+
+Import traces:
+  #1 [App Route]:
+    ./apps/web/lib/image-engine/config.ts
+    ./apps/web/lib/image-engine/storage/LocalGeneratedImageStorage.ts
+    ./apps/web/app/api/image/generated/[id]/route.ts
+
+  #2 [App Route]:
+    ./apps/web/lib/image-engine/config.ts
+    ./apps/web/lib/image-engine/repository/LocalKnowledgeRepository.ts
+    ./apps/web/app/api/image/knowledge/index/status/route.ts
+
+  #3 [Client Component Browser]:
+    ./apps/web/lib/image-engine/config.ts [Client Component Browser]
+    ./apps/web/features/picture-engine/services/picture-engine.api.ts [Client Component Browser]
+    ./apps/web/features/picture-engine/containers/RenderCanvasContainer.tsx [Client Component Browser]
+    ./apps/web/features/picture-engine/containers/PictureEngineContainer.tsx [Client Component Browser]
+    ./apps/web/app/render-image/page.tsx [Client Component Browser]
+    ./apps/web/app/render-image/page.tsx [Server Component]
+
+  #4 [Client Component SSR]:
+    ./apps/web/lib/image-engine/config.ts [Client Component SSR]
+    ./apps/web/features/picture-engine/services/picture-engine.api.ts [Client Component SSR]
+    ./apps/web/features/picture-engine/containers/RenderCanvasContainer.tsx [Client Component SSR]
+    ./apps/web/features/picture-engine/containers/PictureEngineContainer.tsx [Client Component SSR]
+    ./apps/web/app/render-image/page.tsx [Client Component SSR]
+    ./apps/web/app/render-image/page.tsx [Server Component]
+
+
+./apps/web/lib/image-engine/config.ts:6:22
+Warning: Dynamic filesystem access causes tracing of the whole project
+  [90m4 |[0m   [36mconst[0m path = require([32m"path"[0m);
+  [90m5 |[0m   [36mconst[0m cwd = process.cwd();
+[33m[1m>[0m [90m6 |[0m   [36mconst[0m directPath = path.resolve(cwd, relPath);
+  [90m  |[0m                      [33m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m7 |[0m   [36mif[0m (fs.existsSync(directPath)) [36mreturn[0m directPath;
+  [90m8 |[0m   [36mconst[0m webPath = path.resolve(cwd, [32m"apps/web"[0m, relPath);
+  [90m9 |[0m   [36mif[0m (fs.existsSync(webPath)) [36mreturn[0m webPath;
+
+Static analysis determined that this filesystem access causes the whole project to be traced and included in the output.
+This is usually unintentional and leads to all source files (including the public folder) to be deployed as part of the server code.
+This can slow down deployments or lead to failures when size limits are exceeded.
+To resolve this, you can
+- make sure the path is statically scoped to some subfolder, for example path.join(process.cwd(), 'data', bar), or
+- only use them in development, or
+- opt out by adding an ignore comment to the highlighted call: path.resolve(/*turbopackIgnore: true*/ ...), or
+- remove them.
+
+Import traces:
+  #1 [App Route]:
+    ./apps/web/lib/image-engine/config.ts
+    ./apps/web/lib/image-engine/storage/LocalGeneratedImageStorage.ts
+    ./apps/web/app/api/image/generated/[id]/route.ts
+
+  #2 [App Route]:
+    ./apps/web/lib/image-engine/config.ts
+    ./apps/web/lib/image-engine/repository/LocalKnowledgeRepository.ts
+    ./apps/web/app/api/image/knowledge/index/status/route.ts
+
+  #3 [Client Component Browser]:
+    ./apps/web/lib/image-engine/config.ts [Client Component Browser]
+    ./apps/web/features/picture-engine/services/picture-engine.api.ts [Client Component Browser]
+    ./apps/web/features/picture-engine/containers/RenderCanvasContainer.tsx [Client Component Browser]
+    ./apps/web/features/picture-engine/containers/PictureEngineContainer.tsx [Client Component Browser]
+    ./apps/web/app/render-image/page.tsx [Client Component Browser]
+    ./apps/web/app/render-image/page.tsx [Server Component]
+
+  #4 [Client Component SSR]:
+    ./apps/web/lib/image-engine/config.ts [Client Component SSR]
+    ./apps/web/features/picture-engine/services/picture-engine.api.ts [Client Component SSR]
+    ./apps/web/features/picture-engine/containers/RenderCanvasContainer.tsx [Client Component SSR]
+    ./apps/web/features/picture-engine/containers/PictureEngineContainer.tsx [Client Component SSR]
+    ./apps/web/app/render-image/page.tsx [Client Component SSR]
+    ./apps/web/app/render-image/page.tsx [Server Component]
+
+
+./apps/web/lib/image-engine/repository/LocalKnowledgeRepository.ts:115:13
+Warning: Dynamic filesystem access causes tracing of the whole project
+  [90m113 |[0m
+  [90m114 |[0m         [36mlet[0m content = [32m""[0m;
+[33m[1m>[0m [90m115 |[0m         [36mif[0m (fs.existsSync(contentPath)) {
+  [90m    |[0m             [33m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m116 |[0m           content = fs.readFileSync(contentPath, [32m"utf-8"[0m);
+  [90m117 |[0m         }
+  [90m118 |[0m
+
+Static analysis determined that this filesystem access causes the whole project to be traced and included in the output.
+This is usually unintentional and leads to all source files (including the public folder) to be deployed as part of the server code.
+This can slow down deployments or lead to failures when size limits are exceeded.
+To resolve this, you can
+- make sure the path is statically scoped to some subfolder, for example path.join(process.cwd(), 'data', bar), or
+- only use them in development, or
+- opt out by adding an ignore comment to the highlighted call: fs.existsSync(/*turbopackIgnore: true*/ ...), or
+- remove them.
+
+Import traces:
+  #1 [App Route]:
+    ./apps/web/lib/image-engine/repository/LocalKnowledgeRepository.ts
+    ./apps/web/app/api/image/knowledge/index/status/route.ts
+
+  #2 [App Route]:
+    ./apps/web/lib/image-engine/repository/LocalKnowledgeRepository.ts
+    ./apps/web/lib/image-engine/storage/LocalGeneratedImageStorage.ts
+    ./apps/web/app/api/image/generated/[id]/route.ts
+
+
+./apps/web/lib/image-engine/repository/LocalKnowledgeRepository.ts:116:21
+Warning: Dynamic filesystem access causes tracing of the whole project
+  [90m114 |[0m         [36mlet[0m content = [32m""[0m;
+  [90m115 |[0m         [36mif[0m (fs.existsSync(contentPath)) {
+[33m[1m>[0m [90m116 |[0m           content = fs.readFileSync(contentPath, [32m"utf-8"[0m);
+  [90m    |[0m                     [33m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m117 |[0m         }
+  [90m118 |[0m
+  [90m119 |[0m         results.push({
+
+Static analysis determined that this filesystem access causes the whole project to be traced and included in the output.
+This is usually unintentional and leads to all source files (including the public folder) to be deployed as part of the server code.
+This can slow down deployments or lead to failures when size limits are exceeded.
+To resolve this, you can
+- make sure the path is statically scoped to some subfolder, for example path.join(process.cwd(), 'data', bar), or
+- only use them in development, or
+- opt out by adding an ignore comment to the highlighted call: fs.readFileSync(/*turbopackIgnore: true*/ ...), or
+- remove them.
+
+Import traces:
+  #1 [App Route]:
+    ./apps/web/lib/image-engine/repository/LocalKnowledgeRepository.ts
+    ./apps/web/app/api/image/knowledge/index/status/route.ts
+
+  #2 [App Route]:
+    ./apps/web/lib/image-engine/repository/LocalKnowledgeRepository.ts
+    ./apps/web/lib/image-engine/storage/LocalGeneratedImageStorage.ts
+    ./apps/web/app/api/image/generated/[id]/route.ts
+
+
+./apps/web/lib/image-engine/repository/LocalKnowledgeRepository.ts:112:29
+Warning: Dynamic filesystem access causes tracing of the whole project
+  [90m110 |[0m         [36mconst[0m blockDir = path.dirname(metaPath);
+  [90m111 |[0m         [36mconst[0m contentFileName = metadata.content_file || [32m"knowledge.md"[0m;
+[33m[1m>[0m [90m112 |[0m         [36mconst[0m contentPath = path.join(blockDir, contentFileName);
+  [90m    |[0m                             [33m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m113 |[0m
+  [90m114 |[0m         [36mlet[0m content = [32m""[0m;
+  [90m115 |[0m         [36mif[0m (fs.existsSync(contentPath)) {
+
+Static analysis determined that this filesystem access causes the whole project to be traced and included in the output.
+This is usually unintentional and leads to all source files (including the public folder) to be deployed as part of the server code.
+This can slow down deployments or lead to failures when size limits are exceeded.
+To resolve this, you can
+- make sure the path is statically scoped to some subfolder, for example path.join(process.cwd(), 'data', bar), or
+- only use them in development, or
+- opt out by adding an ignore comment to the highlighted call: path.join(/*turbopackIgnore: true*/ ...), or
+- remove them.
+
+Import traces:
+  #1 [App Route]:
+    ./apps/web/lib/image-engine/repository/LocalKnowledgeRepository.ts
+    ./apps/web/app/api/image/knowledge/index/status/route.ts
+
+  #2 [App Route]:
+    ./apps/web/lib/image-engine/repository/LocalKnowledgeRepository.ts
+    ./apps/web/lib/image-engine/storage/LocalGeneratedImageStorage.ts
+    ./apps/web/app/api/image/generated/[id]/route.ts
+
+
+./apps/web/lib/image-engine/storage/LocalGeneratedImageStorage.ts:74:11
+Warning: Dynamic filesystem access causes tracing of the whole project
+  [90m72 |[0m     [36mfor[0m ([36mconst[0m f [36mof[0m possibleFiles) {
+  [90m73 |[0m       [36mconst[0m p = path.join(targetDir, f);
+[33m[1m>[0m [90m74 |[0m       [36mif[0m (fs.existsSync(p)) {
+  [90m   |[0m           [33m[1m^^^^^^^^^^^^^^^^[0m
+  [90m75 |[0m         [36mreturn[0m p;
+  [90m76 |[0m       }
+  [90m77 |[0m     }
+
+Static analysis determined that this filesystem access causes the whole project to be traced and included in the output.
+This is usually unintentional and leads to all source files (including the public folder) to be deployed as part of the server code.
+This can slow down deployments or lead to failures when size limits are exceeded.
+To resolve this, you can
+- make sure the path is statically scoped to some subfolder, for example path.join(process.cwd(), 'data', bar), or
+- only use them in development, or
+- opt out by adding an ignore comment to the highlighted call: fs.existsSync(/*turbopackIgnore: true*/ ...), or
+- remove them.
+
+Import trace:
+  App Route:
+    ./apps/web/lib/image-engine/storage/LocalGeneratedImageStorage.ts
+    ./apps/web/app/api/image/generated/[id]/route.ts
+
+
+./apps/web/lib/image-engine/storage/LocalGeneratedImageStorage.ts:73:17
+Warning: Dynamic filesystem access causes tracing of the whole project
+  [90m71 |[0m     [36mconst[0m possibleFiles = [[32m"output.png"[0m, [32m"output.jpg"[0m, [32m"output.jpeg"[0m, [32m"output.webp"[0m, [32m"outp...[0m
+  [90m72 |[0m     [36mfor[0m ([36mconst[0m f [36mof[0m possibleFiles) {
+[33m[1m>[0m [90m73 |[0m       [36mconst[0m p = path.join(targetDir, f);
+  [90m   |[0m                 [33m[1m^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m74 |[0m       [36mif[0m (fs.existsSync(p)) {
+  [90m75 |[0m         [36mreturn[0m p;
+  [90m76 |[0m       }
+
+Static analysis determined that this filesystem access causes the whole project to be traced and included in the output.
+This is usually unintentional and leads to all source files (including the public folder) to be deployed as part of the server code.
+This can slow down deployments or lead to failures when size limits are exceeded.
+To resolve this, you can
+- make sure the path is statically scoped to some subfolder, for example path.join(process.cwd(), 'data', bar), or
+- only use them in development, or
+- opt out by adding an ignore comment to the highlighted call: path.join(/*turbopackIgnore: true*/ ...), or
+- remove them.
+
+Import trace:
+  App Route:
+    ./apps/web/lib/image-engine/storage/LocalGeneratedImageStorage.ts
+    ./apps/web/app/api/image/generated/[id]/route.ts
+
+
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /api/generate-script
+├ ƒ /api/image/concept-professionalize
+├ ƒ /api/image/edit
+├ ƒ /api/image/generate
+├ ƒ /api/image/generate-simple
+├ ƒ /api/image/generated/[id]
+├ ƒ /api/image/knowledge/blocks
+├ ƒ /api/image/knowledge/index/status
+├ ƒ /api/image/knowledge/retrieve
+├ ƒ /api/image/knowledge/status
+├ ƒ /api/image/prompt/compile
+├ ƒ /api/image/provider
+├ ƒ /api/image/router/analyze
+├ ƒ /api/render-voice
+├ ƒ /api/voices
+├ ○ /cost
+├ ƒ /projects/[id]
+├ ƒ /projects/[id]/creative
+├ ƒ /projects/[id]/production
+├ ○ /projects/new
+└ ○ /render-image
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

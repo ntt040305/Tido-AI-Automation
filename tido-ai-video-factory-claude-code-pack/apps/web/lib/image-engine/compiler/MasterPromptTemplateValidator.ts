@@ -21,6 +21,11 @@ export class MasterPromptTemplateValidator {
     "{{BRAND_KNOWLEDGE}}",
     "{{RELEVANT_KNOWLEDGE}}",
     "{{OUTPUT_CONTEXT}}",
+    // v3: campaign reasoning, the single art-direction authority, and format layout
+    // geometry each occupy their own section so the budget reducer can rank them.
+    "{{CAMPAIGN_STRATEGY}}",
+    "{{ART_DIRECTION}}",
+    "{{COMMERCIAL_LAYOUT}}",
   ];
 
   /**

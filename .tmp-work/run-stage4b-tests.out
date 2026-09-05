@@ -1,0 +1,858 @@
+
+=================================================
+⚡ STAGE 4B — MASTER PROMPT COMPILER V2 TEST SUITE
+=================================================
+
+🔹 1. Master Prompt V2 Template Validation Tests
+  ✓ PASSED: Master Prompt V2 template file loads and validates successfully
+  ✓ PASSED: Template ID is 'master_prompt_v2'
+  ✓ PASSED: Template version is '3.0.0'
+  ✓ PASSED: Template hash generated: 275adaf85d57afdb
+  ✓ PASSED: Template validator correctly detects unresolved placeholders
+
+🔹 2. Determinism & Traceability Tests
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    camera: 'KNOWLEDGE',
+    lighting: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE',
+    atmosphere: 'KNOWLEDGE'
+  },
+  decisions: [
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'lighting<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'atmosphere<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 0
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 19347,
+  after_chars: 18978,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 18978,
+  after: 18978,
+  duplicate_lines_removed: 0,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 116,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    camera: 'KNOWLEDGE',
+    lighting: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE',
+    atmosphere: 'KNOWLEDGE'
+  },
+  decisions: [
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'lighting<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'atmosphere<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 0
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 19347,
+  after_chars: 18978,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 18978,
+  after: 18978,
+  duplicate_lines_removed: 0,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 116,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+  ✓ PASSED: Compilation 1 succeeded
+  ✓ PASSED: Compilation 2 succeeded
+  ✓ PASSED: Compiled prompt is 100% identical across independent runs (Deterministic)
+  ✓ PASSED: Template hash is identical across runs
+  ✓ PASSED: Input fingerprint is identical for identical inputs
+  ✓ PASSED: Includes all 5 Universal Core block IDs
+  ✓ PASSED: Includes selected specialist block ID 'material.glass'
+  ✓ PASSED: Knowledge versions object is fully traceable for every injected block
+
+🔹 3. Exact Copy Integrity & Vietnamese Unicode Tests
+  ✓ PASSED: Exact Copy Validator confirms exact text copy strings exist in compiled prompt
+  ✓ PASSED: Exact Copy Validator correctly detects missing text copy items
+
+🔹 4. Knowledge Boundary & Injection Safety Tests
+  ✓ PASSED: Includes Universal Block 'commercial_visual_hierarchy'
+  ✓ PASSED: Includes Universal Block 'physical_scene_coherence'
+  ✓ PASSED: Includes Specialist Block 'material.glass'
+  ✓ PASSED: Excludes rejected candidate 'property.transparent'
+  ✓ PASSED: Does not pollute prompt with internal retrieval score fields
+  ✓ PASSED: Does not pollute prompt with internal rejection reason codes
+
+🔹 5. Product Instance Semantics & Conflict Tests
+  ✓ PASSED: Compiler correctly rejects product count conflict (requested 1 instance for 2 routed products)
+  ✓ PASSED: Error code is 'PRODUCT_INSTANCE_CONFLICT' (found 'PRODUCT_INSTANCE_CONFLICT')
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    camera: 'KNOWLEDGE',
+    lighting: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE',
+    atmosphere: 'KNOWLEDGE'
+  },
+  decisions: [
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'lighting<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'atmosphere<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 0
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 20096,
+  after_chars: 19727,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 19727,
+  after: 19727,
+  duplicate_lines_removed: 0,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 116,
+  product_count: 2,
+  compression_mode: 'MEDIUM'
+}
+  ✓ PASSED: Compiler successfully processes multi-product request when productCount matches routed identities
+  ✓ PASSED: Compiled prompt contains separate mapping for PRODUCT_01 and PRODUCT_02
+
+🔹 6. Governance & Draft Knowledge Rejection Tests
+  ✓ PASSED: Compiler correctly rejects unindexed/draft Knowledge blocks for production compilation
+
+🔹 7. Creative Leak & Compiler Safety Net Tests
+  ✓ PASSED: Compiler did NOT invent creative decision 'golden hour'
+  ✓ PASSED: Compiler did NOT invent creative decision 'olive background'
+
+🔹 8. Input Staleness Fingerprint Tests
+  ✓ PASSED: InputFingerprint detects changes in input fields and returns different fingerprint hash
+
+🔹 9. Human Quality Guardrails & Master Prompt Hardening (Stage 4B.1)
+  ✓ PASSED: Knowledge traceability reports version 1.0.1 for typography_graphic_integration
+  ✓ PASSED: Compiled prompt contains NO stale typography phrase 'clean negative space backing'
+  ✓ PASSED: Compiled prompt contains NO stale typography phrase 'align systematically with composition anchors'
+  ✓ PASSED: Master Prompt contains NO hardcoded '8K commercial resolution'
+  ✓ PASSED: Master Prompt contains NO hardcoded 'medium-format camera quality'
+  ✓ PASSED: Master Prompt contains NO hardcoded 'multi-million dollar'
+  ✓ PASSED: Role contains NO forced 'hyper-realistic' aesthetic requirement
+  ✓ PASSED: Commercial principles contain NO forced 'appetizing' requirement
+
+🔹 10. Stage 5.5 & 5.6 Scene-Native & Reference Semantics Verification
+  ✓ PASSED: Scene-native integration rules present (folded into REFERENCE SEMANTICS in template v3)
+  ✓ PASSED: Master Prompt contains '## REFERENCE SEMANTICS' section
+  ✓ PASSED: Scene-native rules still require one coherent set of photographic conditions
+  ✓ PASSED: No invented decision is presented to the model as a client directive
+  ✓ PASSED: Camera, lens and lighting are stated in exactly one place
+  ✓ PASSED: Conflict priority still ranks reference-supported product identity first
+  ✓ PASSED: Typography & Readable Copy section present
+  ✓ PASSED: Creative execution authority section present (renamed in template v3)
+  ✓ PASSED: Final check still verifies physical integration rather than pasting
+
+🔹 11. Stage 5.6 Reference Semantics Invariant Tests
+  ✓ PASSED: Reference Semantics explicitly defines reference as identity evidence, not source canvas
+  ✓ PASSED: Reference Semantics explicitly excludes source-photo artifacts from protected identity
+  ✓ PASSED: Product identity explicitly defines what is protected
+  ✓ PASSED: Product identity explicitly defines what is re-synthesized
+  ✓ PASSED: Conflict priority #1 excludes photographic scene artifacts
+
+🔹 12. Stage 5.7 Viewpoint Decoupling Invariant Tests
+  ✓ PASSED: Viewpoint decoupling expressed via the protected/re-synthesized split in template v3
+  ✓ PASSED: References defined as identity evidence, not a camera requirement
+  ✓ PASSED: Source camera geometry excluded from protected identity
+  ✓ PASSED: Camera and framing sit under re-synthesized
+  ✓ PASSED: Creative execution authority explicitly granted for undecided choices
+  ✓ PASSED: Conflict priority resolves viewpoint tension in favour of identity evidence
+
+🔹 13. Stage 5.8 Semantic-Preserving Prompt Compression Invariants
+  ✓ PASSED: Compiled prompt length (18978 chars) is below the hard maximum (24000 chars)
+  ✓ PASSED: Preserves Product Identity protection
+  ✓ PASSED: Preserves Identity vs Source Photo distinction
+  ✓ PASSED: Preserves Scene-Native Integration rules
+  ✓ PASSED: Preserves Viewpoint Decoupling rules
+  ✓ PASSED: Preserves Conservative Unseen-Surface Inference
+  ✓ PASSED: Preserves Typography & Readable Copy section
+  ✓ PASSED: Preserves Brand Knowledge section
+  ✓ PASSED: Preserves Open-World Reasoning
+  ✓ PASSED: Preserves Creative Execution authority
+  ✓ PASSED: Preserves Professional Knowledge section
+  ✓ PASSED: Preserves Conflict Priority hierarchy
+  ✓ PASSED: Preserves the pre-render verification checklist
+
+🔹 14. Stage 5.8.1 Multi-Product Identity Invariant Tests
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    camera: 'KNOWLEDGE',
+    lighting: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE',
+    atmosphere: 'KNOWLEDGE'
+  },
+  decisions: [
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'lighting<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'atmosphere<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 0
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 19458,
+  after_chars: 19089,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 19089,
+  after: 19089,
+  duplicate_lines_removed: 0,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 116,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+  ✓ PASSED: Case A compilation succeeded
+  ✓ PASSED: Case A: 1 product identity correctly specified
+  ✓ PASSED: Case A: 1 reference correctly bound
+  ✓ PASSED: Case A: Clean single-product request without multi-product pollution
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    camera: 'KNOWLEDGE',
+    lighting: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE',
+    atmosphere: 'KNOWLEDGE'
+  },
+  decisions: [
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'lighting<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'atmosphere<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 0
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 19355,
+  after_chars: 18986,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 18986,
+  after: 18986,
+  duplicate_lines_removed: 0,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 116,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+  ✓ PASSED: Case B compilation succeeded
+  ✓ PASSED: Case B: Multiple references bound to single product
+  ✓ PASSED: Case B: Multiple references correctly identified as complementary evidence for ONE identity
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    camera: 'KNOWLEDGE',
+    lighting: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE',
+    atmosphere: 'KNOWLEDGE'
+  },
+  decisions: [
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'lighting<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'atmosphere<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 0
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 20043,
+  after_chars: 19674,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 19674,
+  after: 19674,
+  duplicate_lines_removed: 0,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 116,
+  product_count: 2,
+  compression_mode: 'MEDIUM'
+}
+  ✓ PASSED: Case C compilation succeeded
+  ✓ PASSED: Case C: PRODUCT_01 strictly bound to REF_01
+  ✓ PASSED: Case C: PRODUCT_02 strictly bound to REF_02
+  ✓ PASSED: Case C: Explicit distinct identity isolation contract present
+  ✓ PASSED: Case C: Explicit anti-cloning prohibition present
+  ✓ PASSED: Case C: Explicit anti-averaging prohibition present
+  ✓ PASSED: Case C: Explicit anti-cross-transfer prohibition present
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    camera: 'KNOWLEDGE',
+    lighting: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE',
+    atmosphere: 'KNOWLEDGE'
+  },
+  decisions: [
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'lighting<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'atmosphere<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 0
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 20185,
+  after_chars: 19816,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 19816,
+  after: 19816,
+  duplicate_lines_removed: 0,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 116,
+  product_count: 3,
+  compression_mode: 'MEDIUM'
+}
+  ✓ PASSED: Case D compilation succeeded
+  ✓ PASSED: Case D: 3 distinct identities correctly specified
+  ✓ PASSED: Case D: PRODUCT_03 strictly bound to REF_03
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    camera: 'KNOWLEDGE',
+    lighting: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE',
+    atmosphere: 'KNOWLEDGE'
+  },
+  decisions: [
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'lighting<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'atmosphere<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 0
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 20057,
+  after_chars: 19688,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 19688,
+  after: 19688,
+  duplicate_lines_removed: 0,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 116,
+  product_count: 2,
+  compression_mode: 'MEDIUM'
+}
+  ✓ PASSED: Case E compilation succeeded
+  ✓ PASSED: Case E: Distinct differences mandatory despite shared brand family
+  ✓ PASSED: Case E: Master Prompt includes the static multi-product identity isolation contract
+
+🔹 15. Stage 5.9.2 Exact Copy Hard Firewall Invariant Tests
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    camera: 'KNOWLEDGE',
+    lighting: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE',
+    atmosphere: 'KNOWLEDGE'
+  },
+  decisions: [
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'lighting<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'atmosphere<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 0
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 19312,
+  after_chars: 18943,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 18943,
+  after: 18943,
+  duplicate_lines_removed: 0,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 116,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+  ✓ PASSED: Copy Case A compilation succeeded
+  ✓ PASSED: Copy Case A: Exact visible string present
+  ✓ PASSED: Copy Case A: No bracketed [HEADLINE]
+  ✓ PASSED: Copy Case A: No label 'Headline:'
+  ✓ PASSED: Copy Case A: No label 'Role: headline'
+  ✓ PASSED: Copy Case A: No parenthetical '(Role: headline)'
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    camera: 'KNOWLEDGE',
+    lighting: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE',
+    atmosphere: 'KNOWLEDGE'
+  },
+  decisions: [
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'lighting<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'atmosphere<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 0
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 19316,
+  after_chars: 18947,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 18947,
+  after: 18947,
+  duplicate_lines_removed: 0,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 116,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+  ✓ PASSED: Copy Case B compilation succeeded
+  ✓ PASSED: Copy Case B: Product name authorized string present
+  ✓ PASSED: Copy Case B: No label 'Product Name:'
+  ✓ PASSED: Copy Case B: No bracketed '[PRODUCT_NAME]:'
+  ✓ PASSED: Copy Case B: No Vietnamese label 'Tên sản phẩm:'
+  ✓ PASSED: Copy Case B: No system metadata 'Role: product_name'
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    camera: 'KNOWLEDGE',
+    lighting: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE',
+    atmosphere: 'KNOWLEDGE'
+  },
+  decisions: [
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'lighting<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'atmosphere<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 0
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 19309,
+  after_chars: 18940,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 18940,
+  after: 18940,
+  duplicate_lines_removed: 0,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 116,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+  ✓ PASSED: Copy Case C compilation succeeded
+  ✓ PASSED: Copy Case C: CTA visible string present
+  ✓ PASSED: Copy Case C: No label 'CTA:'
+  ✓ PASSED: Copy Case C: No system metadata 'Role: cta'
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    camera: 'KNOWLEDGE',
+    lighting: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE',
+    atmosphere: 'KNOWLEDGE'
+  },
+  decisions: [
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'lighting<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'atmosphere<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 0
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 19320,
+  after_chars: 18951,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 18951,
+  after: 18951,
+  duplicate_lines_removed: 0,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 116,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+  ✓ PASSED: Copy Case D compilation succeeded
+  ✓ PASSED: Copy Case D: User-supplied text 'Headline: Siêu sale' preserved exactly 100%
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    camera: 'KNOWLEDGE',
+    lighting: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE',
+    atmosphere: 'KNOWLEDGE'
+  },
+  decisions: [
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'lighting<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'atmosphere<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 0
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 19373,
+  after_chars: 19004,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 19004,
+  after: 19004,
+  duplicate_lines_removed: 0,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 116,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+  ✓ PASSED: Copy Case E compilation succeeded
+  ✓ PASSED: Copy Case E: String 'Mùa thu đến' appears exactly ONCE in compiled prompt
+  ✓ PASSED: Copy Case E: String 'Trải nghiệm món mới' appears exactly ONCE in compiled prompt
+  ✓ PASSED: Copy Case E: String 'Trà sữa Caramel' appears exactly ONCE in compiled prompt
+  ✓ PASSED: Copy Case E: String '49.000đ' appears exactly ONCE in compiled prompt
+  ✓ PASSED: Copy Case E: String 'Mua ngay' appears exactly ONCE in compiled prompt
+  ✓ PASSED: Copy Case E: Zero 'Role:' system metadata in prompt
+  ✓ PASSED: Copy Case E: Zero '[HEADLINE]' system metadata in prompt
+  ✓ PASSED: Copy Case E: Zero '[SUBHEADLINE]' system metadata in prompt
+  ✓ PASSED: Copy Case E: Zero '[PRODUCT_NAME]' system metadata in prompt
+
+--- 16. Prompt Budget Validator & Byte-Equivalence Tests ---
+  ✓ PASSED: 17,500 chars classified as COMFORTABLE
+  ✓ PASSED: 18,500 chars classified as NORMAL
+  ✓ PASSED: 19,000 chars classified as HIGH
+  ✓ PASSED: 20,000 chars classified as CRITICAL
+  ✓ PASSED: 24001 chars (over the provider hard limit) classified as BLOCKED
+  ✓ PASSED: BLOCKED validator returns PROMPT_BUDGET_EXCEEDED error
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    camera: 'KNOWLEDGE',
+    lighting: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE',
+    atmosphere: 'KNOWLEDGE'
+  },
+  decisions: [
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'lighting<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'atmosphere<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 0
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 19347,
+  after_chars: 18978,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 18978,
+  after: 18978,
+  duplicate_lines_removed: 0,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 116,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+  ✓ PASSED: Equivalence test compilation succeeded
+  ✓ PASSED: User Brief is 100% byte-identical in compiled prompt
+  ✓ PASSED: Brand Name is 100% byte-identical in compiled prompt
+  ✓ PASSED: Brand Info is 100% byte-identical in compiled prompt
+  ✓ PASSED: User Hard Constraint #1 is 100% byte-identical
+  ✓ PASSED: User Hard Constraint #2 is 100% byte-identical
+  ✓ PASSED: Exact Copy item is 100% byte-identical
+
+=================================================
+🎉 ALL STAGE 4B MASTER PROMPT COMPILER TESTS PASSED!
+=================================================
+

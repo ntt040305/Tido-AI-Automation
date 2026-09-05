@@ -42,19 +42,45 @@ export async function createPictureAsset(
       current_step_label: "Master Prompt Compiler: Áp dụng Technique Cards & Kho tri thức...",
     });
 
-    const concept = `${brief.sales_context.product_name || "Commercial Product"} - ${brief.creative_direction.visual_style || "Commercial Style"}. ${brief.sales_context.benefit || ""} ${brief.sales_context.offer_text || ""} ${brief.user_notes || ""}`;
+    // The concept is what the user typed, and nothing else.
+    //
+    // This used to prepend product name, visual style, benefit and offer — all of
+    // which were store defaults nobody had entered. Downstream the whole string is
+    // treated as locked, non-negotiable user intent, so those placeholders became
+    // creative constraints and drowned the real brief. Optional fields are now
+    // passed as separate, clearly-labelled context and only when actually filled in.
+    const concept = (brief.creative_concept || brief.user_notes || "").trim();
     const useCase = brief.asset_type || "Poster";
     const aspectRatio = brief.creative_direction.aspect_ratio || "1:1";
-    const brandName = brief.brand_identity?.brand_name || "Commercial Brand";
+    const brandName = brief.brand_identity?.brand_name?.trim() || undefined;
+
+    // Only text the user explicitly authored may become visible typography.
     const copyItems = [
       brief.sales_context.product_name,
       brief.sales_context.offer_text,
       brief.sales_context.cta_text,
-    ].filter(Boolean);
+    ]
+      .map((t) => (t || "").trim())
+      .filter((t) => t.length > 0);
 
-    const marketingContext = brief.marketing_context;
-    const creativeDirection = brief.creative_direction;
-    const salesContext = brief.sales_context;
+    // Drop empty optional context objects entirely rather than shipping blank
+    // fields the backend would render as dangling "Target Audience:" headers.
+    const compact = <T extends Record<string, unknown>>(obj: T | undefined) => {
+      if (!obj) return undefined;
+      const out: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(obj)) {
+        if (typeof v === "string" ? v.trim() : v) out[k] = v;
+      }
+      return Object.keys(out).length > 0 ? out : undefined;
+    };
+
+    const marketingContext = compact(brief.marketing_context as any);
+    const creativeDirection = compact({
+      visual_style: brief.creative_direction?.visual_style,
+      emotional_tone: brief.creative_direction?.emotional_tone,
+      composition_layout: brief.creative_direction?.composition_layout,
+    });
+    const salesContext = compact(brief.sales_context as any);
 
     // Step 3: Trigger Provider Render
     store.setGenerationJob({
@@ -102,11 +128,17 @@ export async function createPictureAsset(
         formData.append("concept", concept);
         formData.append("useCase", useCase);
         formData.append("aspectRatio", aspectRatio);
-        formData.append("brandName", brandName);
+        if (brandName) formData.append("brandName", brandName);
         formData.append("requestId", jobId);
-        formData.append("marketingContext", JSON.stringify(marketingContext || {}));
-        formData.append("creativeDirection", JSON.stringify(creativeDirection || {}));
-        formData.append("salesContext", JSON.stringify(salesContext || {}));
+        // Authorized visible copy was previously appended only on the JSON branch,
+        // so uploading any image silently dropped every copy item and the compiler
+        // then instructed the model to render no text at all.
+        if (copyItems.length > 0) {
+          formData.append("copyItems", JSON.stringify(copyItems));
+        }
+        if (marketingContext) formData.append("marketingContext", JSON.stringify(marketingContext));
+        if (creativeDirection) formData.append("creativeDirection", JSON.stringify(creativeDirection));
+        if (salesContext) formData.append("salesContext", JSON.stringify(salesContext));
 
         for (const asset of productAssets) {
           if (asset.file) {
@@ -276,19 +308,28 @@ export async function createPictureAsset(
     const assetId = data.contractAsset?.asset_id || data.project?.output_asset_ids?.[0] || `asset_${data.generationId}`;
     const imageUrl = data.imageUrl || (data.generationId ? `/api/image/generated/${data.generationId}` : "");
 
+    // Reported, not invented. Every field below comes from the backend run.
+    const backendDiagnostics = data.strategy?.run_diagnostics;
     const resultAsset: GeneratedAsset = {
       asset_id: assetId,
       image_url: imageUrl,
       aspect_ratio: brief.creative_direction.aspect_ratio,
-      qc_scorecard: {
-        overall_score: data.strategy?.ai_creative_score_estimate?.overall_score ? data.strategy.ai_creative_score_estimate.overall_score / 100 : 0.9,
-        brand_alignment_score: data.strategy?.ai_creative_score_estimate?.brand_alignment ? data.strategy.ai_creative_score_estimate.brand_alignment / 100 : 0.94,
-        technical_quality_score: 0.92,
-        commercial_impact_score: data.strategy?.ai_creative_score_estimate?.commercial_impact ? data.strategy.ai_creative_score_estimate.commercial_impact / 100 : 0.88,
-        validation_result: "pass",
-        issues: [],
+      diagnostics: backendDiagnostics || {
+        knowledge_blocks_applied: [],
+        prompt_chars: data.diagnostics?.promptChars || 0,
+        references_analyzed: data.diagnostics?.referenceCount || 0,
+        products_detected: data.diagnostics?.productCount || 0,
+        logos_detected: data.diagnostics?.logoCount || 0,
+        inspiration_references: data.diagnostics?.supportReferenceCount || 0,
+        generation_parameters: {
+          model: "unknown",
+          aspect_ratio: data.aspectRatio || brief.creative_direction.aspect_ratio,
+          resolution: "unknown",
+          references_attached: data.diagnostics?.referenceCount || 0,
+        },
+        pipeline_warnings: [],
       },
-      ai_explanation: data.strategy?.ai_creative_score_estimate?.reasoning || "Tự động tối ưu hóa bố cục, ánh sáng và diện mạo sản phẩm theo chuẩn Quảng cáo Commercial.",
+      creative_angle: data.strategy?.creative_angle || "",
       created_at: new Date().toISOString(),
     };
 

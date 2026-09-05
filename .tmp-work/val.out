@@ -1,0 +1,935 @@
+[LLM_PROVIDER] {
+  provider: 'claude-sonnet-4-6',
+  baseUrl: 'http://127.0.0.1:8317/v1',
+  status: 'CONNECTED'
+}
+
+╔══════════════════════════════════════════════════════════════════════════╗
+║  TIDO IMAGE ENGINE — CREATIVE VALIDATION (5 COMMERCIAL CASES)            ║
+╚══════════════════════════════════════════════════════════════════════════╝
+
+══════════════════════════════════════════════════════════════════════════════
+CASE 1 — Luxury skincare poster (Vietnamese brief, explicit top-down camera + vague 'premium')
+══════════════════════════════════════════════════════════════════════════════
+
+  1. USER INPUT
+  ------------------------------------------------------------------------
+     brief   : Làm visual cho sản phẩm skincare này với góc top view hơi nghiêng, chai đặt giữa mặt nước trong, ánh sáng phản chiếu đẹp. Nhìn phải thật premium.
+     format  : poster @ 4:5   brand: Centella
+     copy    : "DƯỠNG ẨM CHUYÊN SÂU"
+     context : {"industry":"beauty_skincare","objective":"conversion","target_channel":"social_media"}
+[CREATIVE_INTERPRETATION] {
+  source: 'ROUTER_STRUCTURED_INTENT',
+  subject: 'Premium skincare serum bottle photographed from above on still clear water',
+  camera_requirements: [
+    'slightly tilted top-down view looking straight down at the bottle'
+  ],
+  lighting_requirements: [
+    'soft reflective light producing clean reflections on the water surface'
+  ]
+}
+
+  2. STRUCTURED INTERPRETATION
+  ------------------------------------------------------------------------
+     source      : ROUTER_STRUCTURED_INTENT
+     subject     : Premium skincare serum bottle photographed from above on still clear water
+     environment : shallow still clear water surface
+     mood        : premium
+     camera      : ["slightly tilted top-down view looking straight down at the bottle"]
+     lighting    : ["soft reflective light producing clean reflections on the water surface"]
+     materials   : ["glass refraction and water reflections"]
+     ✓ Subject is a noun phrase, not the whole brief
+
+  3. MARKETING REASONING
+  ------------------------------------------------------------------------
+     insight  : Skincare buyers distrust claims but trust evidence — they are looking for proof of purity, not another promise of it.
+     emotion  : calm, clean, reassured
+     message  : This is clarity you can look straight into.
+     visual   : one object, centred, surrounded by quiet
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    camera: 'USER',
+    lighting: 'USER',
+    materials: 'USER',
+    environment: 'USER',
+    atmosphere: 'STRATEGY',
+    composition: 'STRATEGY',
+    colour: 'STRATEGY'
+  },
+  decisions: [
+    'camera<-USER (conf 0.95, HIGH, score 0.975)',
+    'lighting<-USER (conf 0.95, HIGH, score 0.975)',
+    'materials<-USER (conf 0.95, HIGH, score 0.975)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'atmosphere<-STRATEGY (conf 0.70, MEDIUM, score 0.3867)',
+    'composition<-STRATEGY (conf 0.70, MEDIUM, score 0.3867)',
+    'colour<-STRATEGY (conf 0.75, HIGH, score 0.5687)'
+  ],
+  client_locks: [ 'camera', 'lighting', 'materials' ],
+  suppressed_count: 8
+}
+
+  4. RESOLVED ART DIRECTION
+  ------------------------------------------------------------------------
+     camera       USER           conf 0.95  HIGH   score 0.975 [LOCKED]
+                  → slightly tilted top-down view looking straight down at the bottle
+     lighting     USER           conf 0.95  HIGH   score 0.975 [LOCKED]
+                  → soft reflective light producing clean reflections on the water surface
+     materials    USER           conf 0.95  HIGH   score 0.975 [LOCKED]
+                  → glass refraction and water reflections
+     environment  USER           conf 0.70  MEDIUM score 0.595
+                  → shallow still clear water surface
+     atmosphere   STRATEGY       conf 0.70  MEDIUM score 0.387
+                  → still, cool and clinical without feeling cold  ← client tone: premium
+     composition  STRATEGY       conf 0.70  MEDIUM score 0.387
+                  → one object, centred, surrounded by quiet
+     colour       STRATEGY       conf 0.75  HIGH   score 0.569
+                  → cool neutrals with a single green cue for the botanical claim
+     eye flow     : center_out_product_first
+     attention    : product=85, headline=65, cta=35
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    camera: 'USER',
+    lighting: 'USER',
+    materials: 'USER',
+    environment: 'USER',
+    atmosphere: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'STRATEGY'
+  },
+  decisions: [
+    'camera<-USER (conf 0.95, HIGH, score 0.975)',
+    'lighting<-USER (conf 0.95, HIGH, score 0.975)',
+    'materials<-USER (conf 0.95, HIGH, score 0.975)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'atmosphere<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-STRATEGY (conf 0.75, HIGH, score 0.5687)'
+  ],
+  client_locks: [ 'camera', 'lighting', 'materials' ],
+  suppressed_count: 13
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [ 'specialist.poster_foundation', 'material.glass' ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 5
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 21938,
+  after_chars: 21566,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 21566,
+  after: 21566,
+  duplicate_lines_removed: 0,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+     ✓ Compilation succeeded
+
+  5. FINAL PROMPT STRUCTURE
+  ------------------------------------------------------------------------
+     ROLE → CREATIVE INTENT → CAMPAIGN STRATEGY → USER HARD REQUIREMENTS → TYPOGRAPHY & READABLE COPY → BRAND KNOWLEDGE → REFERENCE SEMANTICS → PRODUCT INSTANCE REQUIREMENTS → ART DIRECTION → COMMERCIAL LAYOUT → PROFESSIONAL KNOWLEDGE → OUTPUT CONTEXT → CREATIVE EXECUTION → CONFLICT PRIORITY → FINAL OUTPUT
+     length: 21566 chars
+
+  6. DIAGNOSTICS
+  ------------------------------------------------------------------------
+     interpretation source : ROUTER_STRUCTURED_INTENT
+     art direction         : {"camera":"USER","lighting":"USER","materials":"USER","environment":"USER","atmosphere":"STRATEGY","composition":"STRATEGY","colour":"STRATEGY"}
+     client locks          : camera, lighting, materials
+     candidates considered : 15, suppressed 8
+     knowledge blocks      : 5 universal + 2 specialist
+     duplicate lines cut   : 0
+     sections removed      : []
+     warnings              : ["KNOWLEDGE_TRIMMED_FOR_BUDGET","PROMPT_TOKEN_BUDGET_HIGH"]
+
+     CHECKS
+     ✓ User intent survived: "top-down" present
+     ✓ User intent survived: "water" present
+     ✓ No contradiction/placeholder: "low to the ground looking up" absent
+     ✓ No contradiction/placeholder: "15° hero elevation" absent
+     ✓ No contradiction/placeholder: "Commercial Product" absent
+     ✓ No contradiction/placeholder: "Shop Now" absent
+     ✓ Explicit client camera is locked (got USER/HIGH)
+     ✓ Explicit client lighting is locked (got USER/HIGH)
+     ✓ Vague client word "premium" did not hard-lock atmosphere
+     ✓ Vague client word "premium" still reached the prompt as intent
+     ✓ Campaign strategy section present
+     ✓ Consumer insight reached the prompt
+     ✓ Creative message reached the prompt
+     ✓ Visual translation reached the prompt
+     ✓ Retrieved knowledge present at render time
+     ✓ Professional knowledge section present
+     ✓ Typography section present
+     ✓ Conflict priority present
+     ✓ Final output instruction present
+     ✓ Art direction stated exactly once (found 1)
+     ✓ No competing cinematic block
+     ✓ Attention budget reached the prompt
+     ✓ Eye flow reached the prompt
+     ✓ Negative space strategy reached the prompt
+     ✓ Product carries an explicit attention weight
+     ✓ Authorized copy present verbatim
+     ✓ No simultaneous authorize-and-forbid on text
+     ✓ Prompt not hard-truncated
+     ✓ No prompt section had to be dropped
+
+══════════════════════════════════════════════════════════════════════════════
+CASE 2 — Fashion social advertisement (mobile-first, explicit backlight)
+══════════════════════════════════════════════════════════════════════════════
+
+  1. USER INPUT
+  ------------------------------------------------------------------------
+     brief   : Quảng cáo áo khoác denim cho Gen Z, chụp ngoài phố lúc hoàng hôn, ánh sáng ngược ấm từ phía sau, năng lượng trẻ trung, khung dọc cho feed.
+     format  : social_ad @ 9:16   brand: NOMAD
+     copy    : "MỚI RA MẮT"
+     context : {"industry":"fashion_apparel","objective":"awareness","target_channel":"tiktok"}
+[CREATIVE_INTERPRETATION] {
+  source: 'ROUTER_STRUCTURED_INTENT',
+  subject: 'Denim jacket streetwear advertisement shot on a city street at sunset',
+  camera_requirements: [ 'vertical framing for mobile feed, subject full-body' ],
+  lighting_requirements: [ 'warm backlight from the setting sun directly behind the subject' ]
+}
+
+  2. STRUCTURED INTERPRETATION
+  ------------------------------------------------------------------------
+     source      : ROUTER_STRUCTURED_INTENT
+     subject     : Denim jacket streetwear advertisement shot on a city street at sunset
+     environment : city street at golden hour
+     mood        : youthful, energetic
+     camera      : ["vertical framing for mobile feed, subject full-body"]
+     lighting    : ["warm backlight from the setting sun directly behind the subject"]
+     materials   : []
+     ✓ Subject is a noun phrase, not the whole brief
+
+  3. MARKETING REASONING
+  ------------------------------------------------------------------------
+     insight  : Gen Z buys clothing as social proof of a life already being lived; a studio product shot reads as a brand talking about itself.
+     emotion  : belonging, momentum, ease
+     message  : This is what tonight looks like.
+     visual   : subject off-centre with the street receding, room above for the hook
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    camera: 'USER',
+    lighting: 'USER',
+    environment: 'USER',
+    atmosphere: 'USER',
+    materials: 'STRATEGY',
+    composition: 'STRATEGY',
+    colour: 'STRATEGY'
+  },
+  decisions: [
+    'camera<-USER (conf 0.95, HIGH, score 0.975)',
+    'lighting<-USER (conf 0.95, HIGH, score 0.975)',
+    'environment<-USER (conf 0.95, HIGH, score 0.975)',
+    'atmosphere<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'materials<-STRATEGY (conf 0.75, HIGH, score 0.5687)',
+    'composition<-STRATEGY (conf 0.75, HIGH, score 0.5687)',
+    'colour<-STRATEGY (conf 0.70, MEDIUM, score 0.3867)'
+  ],
+  client_locks: [ 'camera', 'lighting', 'environment' ],
+  suppressed_count: 7
+}
+
+  4. RESOLVED ART DIRECTION
+  ------------------------------------------------------------------------
+     camera       USER           conf 0.95  HIGH   score 0.975 [LOCKED]
+                  → vertical framing for mobile feed, subject full-body
+     lighting     USER           conf 0.95  HIGH   score 0.975 [LOCKED]
+                  → warm backlight from the setting sun directly behind the subject
+     environment  USER           conf 0.95  HIGH   score 0.975 [LOCKED]
+                  → city street at golden hour
+     atmosphere   USER           conf 0.70  MEDIUM score 0.595
+                  → youthful, energetic
+     materials    STRATEGY       conf 0.75  HIGH   score 0.569
+                  → denim texture and stitching legible even in backlight
+     composition  STRATEGY       conf 0.75  HIGH   score 0.569
+                  → subject off-centre with the street receding, room above for the hook
+     colour       STRATEGY       conf 0.70  MEDIUM score 0.387
+                  → warm amber highlights against cool street shadow
+     eye flow     : top_to_bottom_product_first
+     attention    : product=90, headline=60, cta=30
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    camera: 'USER',
+    lighting: 'USER',
+    environment: 'USER',
+    atmosphere: 'USER',
+    materials: 'STRATEGY',
+    composition: 'STRATEGY',
+    colour: 'KNOWLEDGE'
+  },
+  decisions: [
+    'camera<-USER (conf 0.95, HIGH, score 0.975)',
+    'lighting<-USER (conf 0.95, HIGH, score 0.975)',
+    'environment<-USER (conf 0.95, HIGH, score 0.975)',
+    'atmosphere<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'materials<-STRATEGY (conf 0.75, HIGH, score 0.5687)',
+    'composition<-STRATEGY (conf 0.75, HIGH, score 0.5687)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [ 'camera', 'lighting', 'environment' ],
+  suppressed_count: 12
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [ 'specialist.social_ad_foundation', 'material.glass' ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 5
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 21480,
+  after_chars: 21108,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 21108,
+  after: 21108,
+  duplicate_lines_removed: 0,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+     ✓ Compilation succeeded
+
+  5. FINAL PROMPT STRUCTURE
+  ------------------------------------------------------------------------
+     ROLE → CREATIVE INTENT → CAMPAIGN STRATEGY → USER HARD REQUIREMENTS → TYPOGRAPHY & READABLE COPY → BRAND KNOWLEDGE → REFERENCE SEMANTICS → PRODUCT INSTANCE REQUIREMENTS → ART DIRECTION → COMMERCIAL LAYOUT → PROFESSIONAL KNOWLEDGE → OUTPUT CONTEXT → CREATIVE EXECUTION → CONFLICT PRIORITY → FINAL OUTPUT
+     length: 21108 chars
+
+  6. DIAGNOSTICS
+  ------------------------------------------------------------------------
+     interpretation source : ROUTER_STRUCTURED_INTENT
+     art direction         : {"camera":"USER","lighting":"USER","environment":"USER","atmosphere":"USER","materials":"STRATEGY","composition":"STRATEGY","colour":"STRATEGY"}
+     client locks          : camera, lighting, environment
+     candidates considered : 14, suppressed 7
+     knowledge blocks      : 5 universal + 2 specialist
+     duplicate lines cut   : 0
+     sections removed      : []
+     warnings              : ["KNOWLEDGE_TRIMMED_FOR_BUDGET","PROMPT_TOKEN_BUDGET_HIGH"]
+
+     CHECKS
+     ✓ User intent survived: "backlight" present
+     ✓ User intent survived: "sunset" present
+     ✓ No contradiction/placeholder: "Commercial Product" absent
+     ✓ No contradiction/placeholder: "3-point commercial studio lighting" absent
+     ✓ Explicit client lighting is locked (got USER/HIGH)
+     ✓ Marketing strategy drives colour (got STRATEGY)
+     ✓ Campaign strategy section present
+     ✓ Consumer insight reached the prompt
+     ✓ Creative message reached the prompt
+     ✓ Visual translation reached the prompt
+     ✓ Retrieved knowledge present at render time
+     ✓ Professional knowledge section present
+     ✓ Typography section present
+     ✓ Conflict priority present
+     ✓ Final output instruction present
+     ✓ Art direction stated exactly once (found 1)
+     ✓ No competing cinematic block
+     ✓ Attention budget reached the prompt
+     ✓ Eye flow reached the prompt
+     ✓ Negative space strategy reached the prompt
+     ✓ Product carries an explicit attention weight
+     ✓ Authorized copy present verbatim
+     ✓ No simultaneous authorize-and-forbid on text
+     ✓ Prompt not hard-truncated
+     ✓ No prompt section had to be dropped
+
+══════════════════════════════════════════════════════════════════════════════
+CASE 3 — Premium technology product hero (no camera stated — strategy and knowledge must lead)
+══════════════════════════════════════════════════════════════════════════════
+
+  1. USER INPUT
+  ------------------------------------------------------------------------
+     brief   : Ảnh sản phẩm cao cấp cho tai nghe không dây, nền tối, tôn chất liệu nhôm phay và da.
+     format  : product_hero @ 1:1   brand: AURA
+     copy    : (none authorised)
+     context : {"industry":"electronics_tech","objective":"branding","target_channel":"website"}
+[CREATIVE_INTERPRETATION] {
+  source: 'ROUTER_STRUCTURED_INTENT',
+  subject: 'Premium wireless headphones product photograph on a dark background',
+  camera_requirements: [],
+  lighting_requirements: []
+}
+
+  2. STRUCTURED INTERPRETATION
+  ------------------------------------------------------------------------
+     source      : ROUTER_STRUCTURED_INTENT
+     subject     : Premium wireless headphones product photograph on a dark background
+     environment : dark seamless background
+     mood        : premium
+     camera      : []
+     lighting    : []
+     materials   : ["brushed aluminium and leather"]
+     ✓ Subject is a noun phrase, not the whole brief
+
+  3. MARKETING REASONING
+  ------------------------------------------------------------------------
+     insight  : At this price the decision is made by the hand, not the ear — buyers are checking whether the object deserves to be owned.
+     emotion  : precision, restraint, permanence
+     message  : Every surface was decided by someone.
+     visual   : single object, generous even emptiness, no props
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    materials: 'USER',
+    environment: 'USER',
+    atmosphere: 'STRATEGY',
+    lighting: 'STRATEGY',
+    composition: 'STRATEGY',
+    colour: 'STRATEGY',
+    camera: 'ASSET_DEFAULT'
+  },
+  decisions: [
+    'materials<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'atmosphere<-STRATEGY (conf 0.70, MEDIUM, score 0.3867)',
+    'lighting<-STRATEGY (conf 0.75, HIGH, score 0.5687)',
+    'composition<-STRATEGY (conf 0.70, MEDIUM, score 0.3867)',
+    'colour<-STRATEGY (conf 0.70, MEDIUM, score 0.3867)',
+    'camera<-ASSET_DEFAULT (conf 0.50, HIGH, score 0.2625)'
+  ],
+  client_locks: [],
+  suppressed_count: 6
+}
+
+  4. RESOLVED ART DIRECTION
+  ------------------------------------------------------------------------
+     materials    USER           conf 0.70  MEDIUM score 0.595
+                  → brushed aluminium and leather
+     environment  USER           conf 0.70  MEDIUM score 0.595
+                  → dark seamless background
+     atmosphere   STRATEGY       conf 0.70  MEDIUM score 0.387
+                  → quiet, museum-like restraint  ← client tone: premium
+     lighting     STRATEGY       conf 0.75  HIGH   score 0.569
+                  → controlled gradient light that travels along an edge to describe form
+     composition  STRATEGY       conf 0.70  MEDIUM score 0.387
+                  → single object, generous even emptiness, no props
+     colour       STRATEGY       conf 0.70  MEDIUM score 0.387
+                  → near-monochrome with one warm metal accent
+     camera       ASSET_DEFAULT  conf 0.50  HIGH   score 0.263
+                  → Mount camera on a high-precision commercial studio rig elevated at a 40° angle with a 90mm macro prime lens. L…
+     eye flow     : center_lock_product_only
+     attention    : product=100
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    materials: 'USER',
+    environment: 'USER',
+    atmosphere: 'KNOWLEDGE',
+    lighting: 'STRATEGY',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE',
+    camera: 'KNOWLEDGE'
+  },
+  decisions: [
+    'materials<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'atmosphere<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'lighting<-STRATEGY (conf 0.75, HIGH, score 0.5687)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 11
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [ 'material.glass' ],
+  kept_specialist_blocks: 1,
+  kept_universal_blocks: 5
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 21567,
+  after_chars: 21194,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 21194,
+  after: 21194,
+  duplicate_lines_removed: 0,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 116,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+     ✓ Compilation succeeded
+
+  5. FINAL PROMPT STRUCTURE
+  ------------------------------------------------------------------------
+     ROLE → CREATIVE INTENT → CAMPAIGN STRATEGY → USER HARD REQUIREMENTS → TYPOGRAPHY & READABLE COPY → BRAND KNOWLEDGE → REFERENCE SEMANTICS → PRODUCT INSTANCE REQUIREMENTS → ART DIRECTION → COMMERCIAL LAYOUT → PROFESSIONAL KNOWLEDGE → OUTPUT CONTEXT → CREATIVE EXECUTION → CONFLICT PRIORITY → FINAL OUTPUT
+     length: 21194 chars
+
+  6. DIAGNOSTICS
+  ------------------------------------------------------------------------
+     interpretation source : ROUTER_STRUCTURED_INTENT
+     art direction         : {"materials":"USER","environment":"USER","atmosphere":"STRATEGY","lighting":"STRATEGY","composition":"STRATEGY","colour":"STRATEGY","camera":"ASSET_DEFAULT"}
+     client locks          : (none)
+     candidates considered : 13, suppressed 6
+     knowledge blocks      : 5 universal + 2 specialist
+     duplicate lines cut   : 0
+     sections removed      : []
+     warnings              : ["NO_EXACT_COPY","KNOWLEDGE_TRIMMED_FOR_BUDGET","PROMPT_TOKEN_BUDGET_HIGH"]
+
+     CHECKS
+     ✓ User intent survived: "dark" present
+     ✓ No contradiction/placeholder: "Commercial Product" absent
+     ✓ No contradiction/placeholder: "Special Edition" absent
+     ✓ Vague client word "premium" did not hard-lock atmosphere
+     ✓ Vague client word "premium" still reached the prompt as intent
+     ✓ Client statement owns materials (got USER)
+     ✓ Marketing strategy drives colour (got STRATEGY)
+     ✓ Campaign strategy section present
+     ✓ Consumer insight reached the prompt
+     ✓ Creative message reached the prompt
+     ✓ Visual translation reached the prompt
+     ✓ Retrieved knowledge present at render time
+     ✓ Professional knowledge section present
+     ✓ Typography section present
+     ✓ Conflict priority present
+     ✓ Final output instruction present
+     ✓ Art direction stated exactly once (found 1)
+     ✓ No competing cinematic block
+     ✓ Attention budget reached the prompt
+     ✓ Eye flow reached the prompt
+     ✓ Negative space strategy reached the prompt
+     ✓ Product carries an explicit attention weight
+     ✓ Prompt not hard-truncated
+     ✓ No prompt section had to be dropped
+
+══════════════════════════════════════════════════════════════════════════════
+CASE 4 — Food commercial banner (reference image supplied — must override strategy and knowledge)
+══════════════════════════════════════════════════════════════════════════════
+
+  1. USER INPUT
+  ------------------------------------------------------------------------
+     brief   : Banner web cho món phở, dùng ảnh tham khảo này làm phong cách.
+     format  : banner @ 16:9   brand: Phở Hà
+     copy    : "MỞ CỬA 6:00", "Đặt bàn"
+     context : {"industry":"food_beverage","objective":"promotion","target_channel":"website"}
+[CREATIVE_INTERPRETATION] {
+  source: 'ROUTER_STRUCTURED_INTENT',
+  subject: 'Vietnamese pho bowl web banner styled after a supplied reference photograph',
+  camera_requirements: [],
+  lighting_requirements: []
+}
+
+  2. STRUCTURED INTERPRETATION
+  ------------------------------------------------------------------------
+     source      : ROUTER_STRUCTURED_INTENT
+     subject     : Vietnamese pho bowl web banner styled after a supplied reference photograph
+     environment : (unstated — left empty)
+     mood        : warm, appetising
+     camera      : []
+     lighting    : []
+     materials   : []
+     ✓ Subject is a noun phrase, not the whole brief
+
+  3. MARKETING REASONING
+  ------------------------------------------------------------------------
+     insight  : People choose a pho shop by how the steam looks, not by the menu.
+     emotion  : warmth, appetite, morning ritual
+     message  : Breakfast worth getting up for.
+     visual   : bowl left, breathing room right for the message
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    atmosphere: 'USER',
+    camera: 'REFERENCE',
+    lighting: 'REFERENCE',
+    composition: 'REFERENCE',
+    colour: 'REFERENCE',
+    environment: 'REFERENCE',
+    materials: 'STRATEGY'
+  },
+  decisions: [
+    'atmosphere<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'camera<-REFERENCE (conf 0.90, HIGH, score 0.8075)',
+    'lighting<-REFERENCE (conf 0.90, HIGH, score 0.8075)',
+    'composition<-REFERENCE (conf 0.90, HIGH, score 0.8075)',
+    'colour<-REFERENCE (conf 0.75, MEDIUM, score 0.5206)',
+    'environment<-REFERENCE (conf 0.90, HIGH, score 0.8075)',
+    'materials<-STRATEGY (conf 0.70, MEDIUM, score 0.3867)'
+  ],
+  client_locks: [],
+  suppressed_count: 10
+}
+
+  4. RESOLVED ART DIRECTION
+  ------------------------------------------------------------------------
+     atmosphere   USER           conf 0.70  MEDIUM score 0.595
+                  → warm, appetising
+     camera       REFERENCE      conf 0.90  HIGH   score 0.807
+                  → low three-quarter, roughly 20 degrees above the bowl rim. 50mm, mild compression, natural perspective
+     lighting     REFERENCE      conf 0.90  HIGH   score 0.807
+                  → hard window light from camera-left at 9 o'clock, raking. minimal fill, deep shadow on the right, high contrast
+     composition  REFERENCE      conf 0.90  HIGH   score 0.807
+                  → bowl occupies the lower right third, steam rises through the upper left
+     colour       REFERENCE      conf 0.75  MEDIUM score 0.521
+                  → amber broth, charcoal table, green herb accents
+     environment  REFERENCE      conf 0.90  HIGH   score 0.807
+                  → dark oiled wood, scattered coriander and chilli. unlit falloff to near black behind the bowl
+     materials    STRATEGY       conf 0.70  MEDIUM score 0.387
+                  → broth clarity and herb freshness legible
+     eye flow     : left_to_right_message_first
+     attention    : headline=85, cta=70, product=60, logo=30
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    atmosphere: 'USER',
+    camera: 'REFERENCE',
+    lighting: 'REFERENCE',
+    composition: 'REFERENCE',
+    colour: 'REFERENCE',
+    environment: 'REFERENCE',
+    materials: 'STRATEGY'
+  },
+  decisions: [
+    'atmosphere<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'camera<-REFERENCE (conf 0.90, HIGH, score 0.8075)',
+    'lighting<-REFERENCE (conf 0.90, HIGH, score 0.8075)',
+    'composition<-REFERENCE (conf 0.90, HIGH, score 0.8075)',
+    'colour<-REFERENCE (conf 0.75, MEDIUM, score 0.5206)',
+    'environment<-REFERENCE (conf 0.90, HIGH, score 0.8075)',
+    'materials<-STRATEGY (conf 0.70, MEDIUM, score 0.3867)'
+  ],
+  client_locks: [],
+  suppressed_count: 15
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'universal.physical_scene_coherence',
+    'specialist.website_banner_foundation',
+    'material.glass'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 4
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 21283,
+  after_chars: 20905,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 20905,
+  after: 20905,
+  duplicate_lines_removed: 0,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+     ✓ Compilation succeeded
+
+  5. FINAL PROMPT STRUCTURE
+  ------------------------------------------------------------------------
+     ROLE → CREATIVE INTENT → CAMPAIGN STRATEGY → USER HARD REQUIREMENTS → TYPOGRAPHY & READABLE COPY → BRAND KNOWLEDGE → REFERENCE SEMANTICS → PRODUCT INSTANCE REQUIREMENTS → ART DIRECTION → COMMERCIAL LAYOUT → PROFESSIONAL KNOWLEDGE → OUTPUT CONTEXT → CREATIVE EXECUTION → CONFLICT PRIORITY → FINAL OUTPUT
+     length: 20905 chars
+
+  6. DIAGNOSTICS
+  ------------------------------------------------------------------------
+     interpretation source : ROUTER_STRUCTURED_INTENT
+     art direction         : {"atmosphere":"USER","camera":"REFERENCE","lighting":"REFERENCE","composition":"REFERENCE","colour":"REFERENCE","environment":"REFERENCE","materials":"STRATEGY"}
+     client locks          : (none)
+     candidates considered : 17, suppressed 10
+     knowledge blocks      : 5 universal + 2 specialist
+     duplicate lines cut   : 0
+     sections removed      : []
+     warnings              : ["KNOWLEDGE_TRIMMED_FOR_BUDGET","PROMPT_TOKEN_BUDGET_HIGH"]
+
+     CHECKS
+     ✓ User intent survived: "three-quarter" present
+     ✓ User intent survived: "camera-left" present
+     ✓ No contradiction/placeholder: "Commercial Product" absent
+     ✓ No contradiction/placeholder: "Shop Now" absent
+     ✓ Reference image owns camera (got REFERENCE)
+     ✓ Reference image owns lighting (got REFERENCE)
+     ✓ Reference image owns composition (got REFERENCE)
+     ✓ Reference image owns colour (got REFERENCE)
+     ✓ Campaign strategy section present
+     ✓ Consumer insight reached the prompt
+     ✓ Creative message reached the prompt
+     ✓ Visual translation reached the prompt
+     ✓ Retrieved knowledge present at render time
+     ✓ Professional knowledge section present
+     ✓ Typography section present
+     ✓ Conflict priority present
+     ✓ Final output instruction present
+     ✓ Art direction stated exactly once (found 1)
+     ✓ No competing cinematic block
+     ✓ Attention budget reached the prompt
+     ✓ Eye flow reached the prompt
+     ✓ Negative space strategy reached the prompt
+     ✓ Product carries an explicit attention weight
+     ✓ Authorized copy present verbatim
+     ✓ No simultaneous authorize-and-forbid on text
+     ✓ Prompt not hard-truncated
+     ✓ No prompt section had to be dropped
+
+══════════════════════════════════════════════════════════════════════════════
+CASE 5 — Real estate social advertisement (no reference, no explicit camera, generic 'modern' only)
+══════════════════════════════════════════════════════════════════════════════
+
+  1. USER INPUT
+  ------------------------------------------------------------------------
+     brief   : Quảng cáo căn hộ cao cấp view sông, phong cách modern, đăng Facebook.
+     format  : social_ad @ 1:1   brand: Riverside
+     copy    : "Nhận bảng giá"
+     context : {"industry":"real_estate","objective":"conversion","target_channel":"facebook","target_audience":"Young families upgrading from a first apartment"}
+[CREATIVE_INTERPRETATION] {
+  source: 'ROUTER_STRUCTURED_INTENT',
+  subject: 'Premium riverside apartment advertisement',
+  camera_requirements: [],
+  lighting_requirements: []
+}
+
+  2. STRUCTURED INTERPRETATION
+  ------------------------------------------------------------------------
+     source      : ROUTER_STRUCTURED_INTENT
+     subject     : Premium riverside apartment advertisement
+     environment : apartment interior with river view
+     mood        : modern
+     camera      : []
+     lighting    : []
+     materials   : []
+     ✓ Subject is a noun phrase, not the whole brief
+
+  3. MARKETING REASONING
+  ------------------------------------------------------------------------
+     insight  : Upgrading families are not buying square metres, they are buying the feeling of having arrived somewhere they can stay.
+     emotion  : settled, spacious, aspirational but attainable
+     message  : Room to stop moving.
+     visual   : the window opening as the brightest area, drawing the eye outward
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    environment: 'USER',
+    atmosphere: 'STRATEGY',
+    lighting: 'STRATEGY',
+    materials: 'STRATEGY',
+    composition: 'STRATEGY',
+    colour: 'STRATEGY',
+    camera: 'ASSET_DEFAULT'
+  },
+  decisions: [
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'atmosphere<-STRATEGY (conf 0.70, MEDIUM, score 0.3867)',
+    'lighting<-STRATEGY (conf 0.75, HIGH, score 0.5687)',
+    'materials<-STRATEGY (conf 0.75, HIGH, score 0.5687)',
+    'composition<-STRATEGY (conf 0.75, HIGH, score 0.5687)',
+    'colour<-STRATEGY (conf 0.75, HIGH, score 0.5687)',
+    'camera<-ASSET_DEFAULT (conf 0.50, HIGH, score 0.2625)'
+  ],
+  client_locks: [],
+  suppressed_count: 5
+}
+
+  4. RESOLVED ART DIRECTION
+  ------------------------------------------------------------------------
+     environment  USER           conf 0.70  MEDIUM score 0.595
+                  → apartment interior with river view
+     atmosphere   STRATEGY       conf 0.70  MEDIUM score 0.387
+                  → late afternoon calm, lived-in rather than staged  ← client tone: modern
+     lighting     STRATEGY       conf 0.75  HIGH   score 0.569
+                  → daylight from the window doing all the work, interior lights off
+     materials    STRATEGY       conf 0.75  HIGH   score 0.569
+                  → matte surfaces and textile softness over glossy showroom finish
+     composition  STRATEGY       conf 0.75  HIGH   score 0.569
+                  → the window opening as the brightest area, drawing the eye outward
+     colour       STRATEGY       conf 0.75  HIGH   score 0.569
+                  → warm neutrals inside against the cooler river light outside
+     camera       ASSET_DEFAULT  conf 0.50  HIGH   score 0.263
+                  → Place camera at a dynamic 25° high-contrast angle with a 35mm wide-standard lens, creating a punchy, scroll-st…
+     eye flow     : top_to_bottom_product_first
+     attention    : product=90, headline=60, cta=30
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    environment: 'USER',
+    atmosphere: 'KNOWLEDGE',
+    lighting: 'STRATEGY',
+    materials: 'STRATEGY',
+    composition: 'STRATEGY',
+    colour: 'STRATEGY',
+    camera: 'KNOWLEDGE'
+  },
+  decisions: [
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'atmosphere<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'lighting<-STRATEGY (conf 0.75, HIGH, score 0.5687)',
+    'materials<-STRATEGY (conf 0.75, HIGH, score 0.5687)',
+    'composition<-STRATEGY (conf 0.75, HIGH, score 0.5687)',
+    'colour<-STRATEGY (conf 0.75, HIGH, score 0.5687)',
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 10
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [ 'material.glass' ],
+  kept_specialist_blocks: 1,
+  kept_universal_blocks: 5
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 21651,
+  after_chars: 21278,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 21278,
+  after: 21278,
+  duplicate_lines_removed: 0,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 116,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+     ✓ Compilation succeeded
+
+  5. FINAL PROMPT STRUCTURE
+  ------------------------------------------------------------------------
+     ROLE → CREATIVE INTENT → CAMPAIGN STRATEGY → USER HARD REQUIREMENTS → TYPOGRAPHY & READABLE COPY → BRAND KNOWLEDGE → REFERENCE SEMANTICS → PRODUCT INSTANCE REQUIREMENTS → ART DIRECTION → COMMERCIAL LAYOUT → PROFESSIONAL KNOWLEDGE → OUTPUT CONTEXT → CREATIVE EXECUTION → CONFLICT PRIORITY → FINAL OUTPUT
+     length: 21278 chars
+
+  6. DIAGNOSTICS
+  ------------------------------------------------------------------------
+     interpretation source : ROUTER_STRUCTURED_INTENT
+     art direction         : {"environment":"USER","atmosphere":"STRATEGY","lighting":"STRATEGY","materials":"STRATEGY","composition":"STRATEGY","colour":"STRATEGY","camera":"ASSET_DEFAULT"}
+     client locks          : (none)
+     candidates considered : 12, suppressed 5
+     knowledge blocks      : 5 universal + 2 specialist
+     duplicate lines cut   : 0
+     sections removed      : []
+     warnings              : ["KNOWLEDGE_TRIMMED_FOR_BUDGET","PROMPT_TOKEN_BUDGET_HIGH"]
+
+     CHECKS
+     ✓ User intent survived: "window" present
+     ✓ No contradiction/placeholder: "Commercial Product" absent
+     ✓ No contradiction/placeholder: "Special Edition" absent
+     ✓ Vague client word "modern" did not hard-lock atmosphere
+     ✓ Vague client word "modern" still reached the prompt as intent
+     ✓ Marketing strategy drives lighting (got STRATEGY)
+     ✓ Marketing strategy drives composition (got STRATEGY)
+     ✓ Marketing strategy drives colour (got STRATEGY)
+     ✓ Campaign strategy section present
+     ✓ Consumer insight reached the prompt
+     ✓ Creative message reached the prompt
+     ✓ Visual translation reached the prompt
+     ✓ Retrieved knowledge present at render time
+     ✓ Professional knowledge section present
+     ✓ Typography section present
+     ✓ Conflict priority present
+     ✓ Final output instruction present
+     ✓ Art direction stated exactly once (found 1)
+     ✓ No competing cinematic block
+     ✓ Attention budget reached the prompt
+     ✓ Eye flow reached the prompt
+     ✓ Negative space strategy reached the prompt
+     ✓ Product carries an explicit attention weight
+     ✓ Authorized copy present verbatim
+     ✓ No simultaneous authorize-and-forbid on text
+     ✓ Prompt not hard-truncated
+     ✓ No prompt section had to be dropped
+
+══════════════════════════════════════════════════════════════════════════════
+SUMMARY
+══════════════════════════════════════════════════════════════════════════════
+┌─────────┬──────────┬───────┬─────────────────┬─────────────┬─────────────┬───────┬───────────────────────────────┬─────────┐
+│ (index) │ case     │ chars │ camera          │ lighting    │ colour      │ locks │ eye_flow                      │ dropped │
+├─────────┼──────────┼───────┼─────────────────┼─────────────┼─────────────┼───────┼───────────────────────────────┼─────────┤
+│ 0       │ 'CASE 1' │ 21566 │ 'USER'          │ 'USER'      │ 'STRATEGY'  │ 3     │ 'center_out_product_first'    │ 0       │
+│ 1       │ 'CASE 2' │ 21108 │ 'USER'          │ 'USER'      │ 'STRATEGY'  │ 3     │ 'top_to_bottom_product_first' │ 0       │
+│ 2       │ 'CASE 3' │ 21194 │ 'ASSET_DEFAULT' │ 'STRATEGY'  │ 'STRATEGY'  │ 0     │ 'center_lock_product_only'    │ 0       │
+│ 3       │ 'CASE 4' │ 20905 │ 'REFERENCE'     │ 'REFERENCE' │ 'REFERENCE' │ 0     │ 'left_to_right_message_first' │ 0       │
+│ 4       │ 'CASE 5' │ 21278 │ 'ASSET_DEFAULT' │ 'STRATEGY'  │ 'STRATEGY'  │ 0     │ 'top_to_bottom_product_first' │ 0       │
+└─────────┴──────────┴───────┴─────────────────┴─────────────┴─────────────┴───────┴───────────────────────────────┴─────────┘
+
+142 passed, 0 failed
+

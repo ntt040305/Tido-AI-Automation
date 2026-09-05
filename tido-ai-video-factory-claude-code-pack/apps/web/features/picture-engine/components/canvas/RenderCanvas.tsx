@@ -109,9 +109,9 @@ export function RenderCanvas({
                 alt="Commercial output"
                 className="w-full h-full object-cover"
               />
-              <div className="absolute bottom-3 left-3 bg-surface/90 backdrop-blur-md border border-borderStrong px-3 py-1.5 rounded-lg text-[11px] font-mono text-emerald-400 font-semibold flex items-center gap-1.5 shadow-lg">
+              <div className="absolute bottom-3 left-3 bg-surface/90 backdrop-blur-md border border-borderStrong px-3 py-1.5 rounded-lg text-[11px] font-mono text-text2 font-semibold flex items-center gap-1.5 shadow-lg">
                 <CheckCircle size={13} />
-                <span>QC PASS {currentAsset.qc_scorecard.overall_score * 100}%</span>
+                <span>{currentAsset.diagnostics.generation_parameters.resolution} · {currentAsset.aspect_ratio}</span>
               </div>
             </div>
           </div>
@@ -139,9 +139,9 @@ export function RenderCanvas({
                 alt="Commercial output"
                 className="w-full h-full object-cover"
               />
-              <div className="absolute bottom-3 left-3 bg-surface/95 backdrop-blur-md border border-borderStrong px-3 py-1.5 rounded-lg text-[11.5px] font-mono text-emerald-400 font-semibold flex items-center gap-1.5 shadow-lg">
+              <div className="absolute bottom-3 left-3 bg-surface/95 backdrop-blur-md border border-borderStrong px-3 py-1.5 rounded-lg text-[11.5px] font-mono text-text2 font-semibold flex items-center gap-1.5 shadow-lg">
                 <CheckCircle size={14} />
-                <span>QC SCORE {currentAsset.qc_scorecard.overall_score * 100}%</span>
+                <span>{currentAsset.diagnostics.generation_parameters.model} · {currentAsset.diagnostics.generation_parameters.resolution}</span>
               </div>
             </div>
           </div>

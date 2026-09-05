@@ -40,8 +40,9 @@ async function runStage1Tests() {
   assert(
     masterPromptContent.includes("{{USER_BRIEF}}") &&
       masterPromptContent.includes("{{RELEVANT_KNOWLEDGE}}") &&
-      masterPromptContent.includes("FULL CREATIVE AUTHORITY"),
-    "Master Prompt V2 contains required placeholders & creative authority rules"
+      masterPromptContent.includes("{{ART_DIRECTION}}") &&
+      masterPromptContent.includes("full authority over every remaining creative decision"),
+    "Master Prompt contains required placeholders & creative execution authority"
   );
 
   // ── TEST 2: Canonical Schemas Exist & Load ─────────────────────

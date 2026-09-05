@@ -9,6 +9,7 @@ import {
 import { ImgStudioImageGenerationProvider } from "../provider/ImgStudioImageGenerationProvider";
 import { SmartKnowledgeRetriever } from "../retrieval/SmartKnowledgeRetriever";
 import {
+  GenerationRunDiagnostics,
   MasterPromptCompilerInput,
   PictureStrategyDiagnostics,
   RouterInput,
@@ -134,6 +135,12 @@ export class SimpleImageGenerationOrchestratorService {
         brandName: request.brandName,
         brandInfo: request.brandInfo,
         copyItems: (request.copyItems || []).map((item) => (typeof item === "string" ? item : item.text)),
+        // Campaign context reaches the reasoning step instead of only the prompt
+        // text. Undefined fields stay undefined: the brain must not be told the
+        // audience is "modern consumers seeking premium quality" when nobody said so.
+        targetAudience: request.marketingContext?.target_audience,
+        marketingGoal: request.marketingContext?.objective,
+        productName: request.salesContext?.product_name,
       });
       groqMarketingBrainDurationMs = Date.now() - mbStart;
       console.log("[SIMPLE][01.5 GROQ MARKETING BRAIN] PASS", {
@@ -358,25 +365,33 @@ export class SimpleImageGenerationOrchestratorService {
       console.log("[SIMPLE][04 RETRIEVAL] PASS");
 
       // 4.5 Stage 4A Creative Interpretation Pass
+      //
+      // Structured, language-agnostic reading of the brief. Falls back to the
+      // router's own structured_input_intent, then to the deterministic parser.
       console.log("[SIMPLE][04.5 CREATIVE INTERPRETATION] START");
       const ciStart = Date.now();
-      const creativeInterpretation = CreativeInterpretationService.interpret({
-        concept: request.concept,
-        assetType: (adapted.useCase as any) || request.useCase || "poster",
-        productCount: adapted.resolvedProductCount,
-        aspectRatio: adapted.aspectRatio || request.aspectRatio || "4:5",
-        referenceAnalysis: adapted.resolvedRoutingResult,
-        productIdentity: adapted.resolvedRoutingResult.products?.[0],
-        retrievedKnowledge: (retrievalRes.package?.selected_blocks || []).map((b) => b.title),
-        brandContext: {
-          brandName: adapted.brandName,
-          brandInfo: adapted.brandInfo,
+      const creativeInterpretation = await CreativeInterpretationService.interpretAsync(
+        {
+          concept: request.concept,
+          assetType: (adapted.useCase as any) || request.useCase || "poster",
+          productCount: adapted.resolvedProductCount,
+          aspectRatio: adapted.aspectRatio || request.aspectRatio || "4:5",
+          referenceAnalysis: adapted.resolvedRoutingResult,
+          productIdentity: adapted.resolvedRoutingResult.products?.[0],
+          retrievedKnowledge: (retrievalRes.package?.selected_blocks || []).map((b) => b.title),
+          brandContext: {
+            brandName: adapted.brandName,
+            brandInfo: adapted.brandInfo,
+          },
         },
-      });
+        { routerIntent: adapted.resolvedRoutingResult.structured_input_intent }
+      );
       creativeInterpretationDurationMs = Date.now() - ciStart;
       console.log("[SIMPLE][04.5 CREATIVE INTERPRETATION] PASS", {
+        source: creativeInterpretation.interpretation_source,
         locked_subject: creativeInterpretation.locked_intent.subject,
-        focus_mode: creativeInterpretation.ai_enhancement.creative_objective,
+        camera_requirements: creativeInterpretation.locked_intent.camera_requirements,
+        lighting_requirements: creativeInterpretation.locked_intent.lighting_requirements,
       });
 
       // 4.6 Stage 4A.5 Inspiration Style Intelligence Pass (Phase 3.6 Additive Layer)
@@ -442,6 +457,11 @@ export class SimpleImageGenerationOrchestratorService {
         creativeInterpretation,
         inspirationStyleManifest,
         inspirationImageWithheld: withholdInspirationImage,
+        // The commercial reasoning produced back at stage 01.5 now reaches the
+        // prompt. It was previously computed on every request and discarded.
+        marketingStrategy: groqStrategy,
+        marketingContext: request.marketingContext,
+        hasLogoAsset: adapted.brandAssets.length > 0,
       };
 
       const compilerRes = await compilerService.compile(fullCompilerInput);
@@ -849,20 +869,55 @@ export class SimpleImageGenerationOrchestratorService {
       const extraNeg = negConstraints.length > 0 ? `, ${negConstraints.join(", ")}` : "";
       const finalNegativePrompt = `${groqStrategy.negative_prompt || "distorted, blurry, low resolution, bad anatomy, text overlap, ugly, watermarks, bad quality"}${extraNeg}`;
 
+      // Measured facts only. No image was evaluated, so no quality score is claimed.
+      const compilerProvenance = (compilerRes.package?.provenance || {}) as Record<string, any>;
+      const budgetProv = compilerProvenance.budget || {};
+      const artProv = compilerProvenance.art_direction || {};
+
+      const runDiagnostics: GenerationRunDiagnostics = {
+        interpretation_source: creativeInterpretation.interpretation_source,
+        art_direction_provenance: artProv.resolved_from,
+        art_direction_decisions: artProv.decisions,
+        art_direction_suppressed: artProv.suppressed,
+        strategy_chain: {
+          has_consumer_insight: Boolean(groqStrategy.consumer_insight),
+          has_visual_translation: Boolean(groqStrategy.visual_translation),
+          creative_angle: groqStrategy.creative_angle,
+        },
+        layout_visual_priority: compilerProvenance.commercial_layout?.visual_priority,
+        layout_eye_flow: compilerProvenance.commercial_layout?.eye_flow,
+        knowledge_blocks_applied: [
+          ...(retrievalRes.package?.universal_blocks || []).map((b) => b.id),
+          ...(retrievalRes.package?.selected_blocks || []).map((b) => b.id),
+        ],
+        prompt_chars: masterPrompt.length,
+        prompt_sections_kept: budgetProv.sections_kept,
+        prompt_sections_removed: budgetProv.sections_removed,
+        duplicate_lines_removed: budgetProv.duplicate_lines_removed,
+        prompt_hard_truncated: budgetProv.hard_truncated,
+        references_analyzed: (request.images || []).length,
+        products_detected: adapted.resolvedProductCount,
+        logos_detected: adapted.brandAssets.length,
+        inspiration_references: adapted.supportReferences.length,
+        generation_parameters: {
+          model: providerInput.model,
+          aspect_ratio: providerInput.aspectRatio,
+          resolution: providerInput.imageSize,
+          references_attached: attachedReferences.length,
+        },
+        pipeline_warnings: (compilerRes.package?.compiler_warnings || []) as string[],
+        layout_zones: compilerProvenance.commercial_layout?.zones,
+      };
+
       const strategy: PictureStrategyDiagnostics = {
-        creative_angle: groqStrategy.creative_angle || routingResult?.routing_summary || "Commercial Visual Hero Focus",
+        creative_angle: groqStrategy.creative_angle || routingResult?.routing_summary || "",
         applied_knowledge_nodes: (retrievalRes.package?.selected_blocks || []).map((b) => b.id),
         applied_technique_cards: (retrievalRes.package?.selected_blocks || []).filter((b) => b.knowledge_type === "COMPOSITION" || b.knowledge_type === "LIGHTING").map((b) => b.title),
         compiled_prompt: masterPrompt,
         negative_prompt: finalNegativePrompt,
-        ai_creative_score_estimate: {
-          overall_score: 94,
-          brand_alignment: 96,
-          commercial_impact: 92,
-          reasoning: `GROQ LLM Marketing Brain: ${groqStrategy.visual_direction} | Camera: ${groqStrategy.camera_direction} | Lighting: ${groqStrategy.lighting}`,
-        },
         reference_processing: processorResult.diagnostics,
         creative_interpretation: creativeInterpretation,
+        run_diagnostics: runDiagnostics,
       };
 
       const pipeline_timing = {

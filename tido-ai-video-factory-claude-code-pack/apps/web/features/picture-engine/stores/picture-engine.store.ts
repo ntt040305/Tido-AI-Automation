@@ -61,36 +61,51 @@ export interface PictureEngineStoreState {
   hasProductAssets: () => boolean;
 }
 
+/**
+ * Placeholder-free brief.
+ *
+ * Everything a user did not type stays empty. The previous defaults
+ * ("Commercial Product", "Special Edition", "Shop Now", "High performance &
+ * premium aesthetic presentation", a generic audience line) were concatenated in
+ * front of the real concept on every request and then locked in as
+ * non-negotiable user intent by the interpretation layer, which is why unrelated
+ * briefs produced the same picture.
+ *
+ * Only asset_type, aspect_ratio and product count carry defaults, because those
+ * three are format switches the UI always shows as selected — they are never
+ * mistaken for creative intent.
+ */
 export const defaultCreativeBrief: CreativeBrief = {
   asset_type: "poster",
+  creative_concept: "",
   marketing_context: {
-    industry: "beauty_skincare",
-    objective: "conversion",
-    target_channel: "social_media",
-    target_audience: "Modern consumers seeking premium product quality",
+    industry: "" as CreativeBrief["marketing_context"]["industry"],
+    objective: "" as CreativeBrief["marketing_context"]["objective"],
+    target_channel: "",
+    target_audience: "",
   },
   sales_context: {
-    product_name: "Commercial Product",
-    offer_text: "Special Edition",
+    product_name: "",
+    offer_text: "",
     pain_point: "",
-    benefit: "High performance & premium aesthetic presentation",
-    cta_text: "Shop Now",
+    benefit: "",
+    cta_text: "",
   },
   creative_direction: {
-    visual_style: "commercial_advertising",
-    emotional_tone: "premium_luxury",
-    aspect_ratio: "9:16",
-    composition_layout: "Hero center visual with clear space for copy layout",
+    visual_style: "",
+    emotional_tone: "",
+    aspect_ratio: "4:5",
+    composition_layout: "",
     product_composition_mode: "single",
     product_identity_strength: "strict",
     target_product_count: 1,
   },
   brand_identity: {
     brand_name: "",
-    primary_colors: ["#10B981", "#064E3B"],
+    primary_colors: [],
     product_assets: [],
   },
-  user_notes: "Studio lighting, clear product hero placement, commercial photography.",
+  user_notes: "",
 };
 
 export const usePictureEngineStore = create<PictureEngineStoreState>((set, get) => ({
@@ -271,10 +286,11 @@ export const usePictureEngineStore = create<PictureEngineStoreState>((set, get) 
       generationJob.status === "compiling" ||
       generationJob.status === "qc_evaluating";
 
+    // A product name is not a creative concept. Accepting one as the trigger is
+    // what allowed a generation to start on nothing but store defaults.
     const hasConcept = Boolean(
       (creativeBrief.creative_concept && creativeBrief.creative_concept.trim()) ||
-        (creativeBrief.user_notes && creativeBrief.user_notes.trim()) ||
-        (creativeBrief.sales_context && creativeBrief.sales_context.product_name && creativeBrief.sales_context.product_name.trim())
+        (creativeBrief.user_notes && creativeBrief.user_notes.trim())
     );
 
     return Boolean(creativeBrief.asset_type && hasConcept && !isRunning);

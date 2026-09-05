@@ -1,0 +1,31 @@
+==================================================
+TIDO IMAGE ENGINE — STAGE 6.0 INTEGRATION TEST SUITE
+==================================================
+
+🔹 1. Mode A: Render Again & Same/Changed Input Fingerprint Tests
+{"event":"IMAGE_GENERATION_SUCCESS","generation_id":"imggen_61fc48fe512953ba","provider":"google-gemini","model":"gemini-3.1-flash-image","referenceCount":1,"aspectRatio":"4:5","imageSize":"2K","compiledPromptHash":"prompt_hash_aaa","cost_vnd":100,"balance_vnd":50000,"durationMs":5}
+  ✓ PASSED: G1 initial generation succeeded (generation_id: imggen_61fc48fe512953ba )
+{"event":"IMAGE_GENERATION_SUCCESS","generation_id":"imggen_2280fab3a43ef4f4","provider":"google-gemini","model":"gemini-3.1-flash-image","referenceCount":1,"aspectRatio":"4:5","imageSize":"2K","compiledPromptHash":"prompt_hash_aaa","cost_vnd":100,"balance_vnd":50000,"durationMs":2}
+  ✓ PASSED: Same-input Render Again reuses fingerprint preparation but creates NEW generation_id & idempotency key
+{"event":"IMAGE_GENERATION_SUCCESS","generation_id":"imggen_ed788ea124c4f3b5","provider":"google-gemini","model":"gemini-3.1-flash-image","referenceCount":1,"aspectRatio":"4:5","imageSize":"2K","compiledPromptHash":"prompt_hash_bbb","cost_vnd":100,"balance_vnd":50000,"durationMs":5}
+  ✓ PASSED: Changed input Render Again invalidates stale preparation snapshot
+
+🔹 2. Mode B: Targeted Edit & Lineage Hierarchy Tests
+  ✓ PASSED: E2.1 created with parent_image_id = G2 (edit_id: edit_dbff3f00d209bd28 )
+  ✓ PASSED: E2.2 editing an Edit correctly preserves lineage (parent = E2.1, root = G2)
+  ✓ PASSED: G3 generation is independent of E2.x edits
+
+🔹 3. Edit Reference Ordering & Contract Rules
+  ✓ PASSED: Edit request places current parent generated image as Image 0 in provider payload
+
+🔹 4. Edit Classification & Compact Prompt Compiler Tests
+  ✓ PASSED: EditPromptCompiler accurately classifies edit instructions (TEXT_EDIT, OBJECT_EDIT, LIGHTING_EDIT)
+  ✓ PASSED: Edit prompt is compact ( 2061 chars) and respects Readable Text Firewall
+
+🔹 5. Duplicate In-Flight Protection Tests
+  ✓ PASSED: Duplicate in-flight request protection prevents multiple concurrent executions
+
+==================================================
+🎉 ALL STAGE 6.0 REGRESSION TESTS PASSED (100%)
+==================================================
+

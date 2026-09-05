@@ -122,20 +122,61 @@ export interface GenerationJobState {
   error?: PictureEngineError;
 }
 
-export interface ImageQCScorecard {
-  overall_score: number; // 0.0 to 1.0
-  brand_alignment_score: number;
-  technical_quality_score: number;
-  commercial_impact_score: number;
-  validation_result: "pass" | "warn" | "fail";
-  issues: string[];
+/**
+ * What the pipeline actually did, as reported by the backend.
+ *
+ * This replaces ImageQCScorecard, which displayed a fixed 94/100 "Creative Score",
+ * a fixed 96% "Brand Consistency", an always-PASS badge and an empty issue list on
+ * every render, including ones that went badly. Nothing in the pipeline inspects
+ * the generated image, so no quality judgement can honestly be shown. These are
+ * measurements instead.
+ */
+export interface GenerationDiagnostics {
+  interpretation_source?: string;
+  art_direction_provenance?: Record<string, string>;
+  art_direction_decisions?: {
+    dimension: string;
+    source: string;
+    confidence: number;
+    specificity: string;
+    score: number;
+    client_locked: boolean;
+    qualifiers?: string[];
+  }[];
+  art_direction_suppressed?: string[];
+  strategy_chain?: {
+    has_consumer_insight: boolean;
+    has_visual_translation: boolean;
+    creative_angle?: string;
+  };
+  layout_visual_priority?: string[];
+  layout_eye_flow?: string;
+  knowledge_blocks_applied: string[];
+  prompt_chars: number;
+  prompt_sections_kept?: string[];
+  prompt_sections_removed?: { section: string; priority: number; chars: number }[];
+  duplicate_lines_removed?: number;
+  prompt_hard_truncated?: boolean;
+  references_analyzed: number;
+  products_detected: number;
+  logos_detected: number;
+  inspiration_references: number;
+  generation_parameters: {
+    model: string;
+    aspect_ratio: string;
+    resolution: string;
+    references_attached: number;
+  };
+  pipeline_warnings: string[];
+  layout_zones?: string[];
 }
 
 export interface GeneratedAsset {
   asset_id: string;
   image_url: string;
   aspect_ratio: AspectRatioType;
-  qc_scorecard: ImageQCScorecard;
-  ai_explanation: string;
+  diagnostics: GenerationDiagnostics;
+  /** The campaign angle the strategy layer decided on. Empty when unavailable. */
+  creative_angle: string;
   created_at: string;
 }

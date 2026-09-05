@@ -1,0 +1,25 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "ES2022",
+    "outDir": "./.verify-build",
+    "jsx": "react-jsx",
+    "isolatedModules": false,
+    "incremental": false,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"],
+      "@tido/contracts": ["../../packages/contracts/src/index.ts"]
+    }
+  },
+  "include": [
+    "lib/image-engine/**/*.ts",
+    "features/picture-engine/types/*.ts",
+    "../../packages/contracts/src/**/*.ts"
+  ],
+  "exclude": ["node_modules", ".next"]
+}

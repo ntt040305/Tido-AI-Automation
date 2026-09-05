@@ -20,7 +20,14 @@ export interface PromptBudgetValidationResult {
 }
 
 export class PromptBudgetValidator {
-  public static readonly DEFAULT_PROVIDER_HARD_LIMIT = 20000;
+  /**
+   * Must stay >= PromptBudgetManagerService.HARD_MAXIMUM, otherwise the manager
+   * produces a prompt this validator then refuses, and the render is blocked after
+   * the work is already done.
+   */
+  public static readonly DEFAULT_PROVIDER_HARD_LIMIT = Number(
+    process.env.PROMPT_HARD_MAXIMUM_CHARS || 24000
+  );
 
   /**
    * Deterministically validates the compiled prompt length and calculates detailed segment breakdown

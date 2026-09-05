@@ -708,6 +708,23 @@ export interface MasterPromptCompilerInput {
   inspirationImageWithheld?: boolean;
   inspirationReferenceRules?: string[];
   inspirationStyleManifest?: InspirationStyleManifest;
+  /**
+   * Commercial reasoning for this campaign, produced by MarketingBrainService.
+   *
+   * Previously computed on every request and then dropped on the floor: it reached
+   * a UI panel and a negative_prompt string that no provider reads, but never the
+   * compiled prompt. It now enters the prompt as CAMPAIGN STRATEGY and feeds the
+   * art direction resolver at tier 3.
+   */
+  marketingStrategy?: import("./llm/prompt-strategy.schema").MarketingBrainStrategy;
+  /** Explicit marketing context, used for audience and objective framing. */
+  marketingContext?: {
+    industry?: string;
+    objective?: string;
+    target_channel?: string;
+    target_audience?: string;
+  };
+  hasLogoAsset?: boolean;
 }
 
 export type CompilerWarningCode =
@@ -717,6 +734,8 @@ export type CompilerWarningCode =
   | "ROUTER_HAS_HIGH_IMPORTANCE_UNKNOWNS"
   | "PRODUCT_INSTANCE_AMBIGUITY"
   | "PROMPT_TOKEN_BUDGET_HIGH"
+  | "PROMPT_SECTIONS_REMOVED"
+  | "KNOWLEDGE_TRIMMED_FOR_BUDGET"
   | "OPEN_WORLD_REASONING_ONLY";
 
 export type CompilerErrorCode =
@@ -1167,20 +1186,67 @@ export interface ReferenceProcessingDiagnosticInfo {
   height: number | string;
 }
 
+/**
+ * Honest, measured facts about how a render was produced.
+ *
+ * `ai_creative_score_estimate` used to live here with the constants 94 / 96 / 92
+ * baked in. Nothing in the pipeline looks at the generated image, so no quality
+ * score can be reported. Everything below is something the pipeline actually did.
+ */
+export interface GenerationRunDiagnostics {
+  interpretation_source?: string;
+  /** Dimension -> which authority tier won it. */
+  art_direction_provenance?: Record<string, string>;
+  /** Per-dimension scoring detail: source, confidence, specificity, whether client-locked. */
+  art_direction_decisions?: {
+    dimension: string;
+    source: string;
+    confidence: number;
+    specificity: string;
+    score: number;
+    client_locked: boolean;
+    qualifiers?: string[];
+  }[];
+  /** Lower-tier art direction values that were overridden. */
+  art_direction_suppressed?: string[];
+  /** Campaign reasoning chain that reached the prompt. */
+  strategy_chain?: {
+    has_consumer_insight: boolean;
+    has_visual_translation: boolean;
+    creative_angle?: string;
+  };
+  /** Attention budget the layout planner assigned, e.g. "product:90". */
+  layout_visual_priority?: string[];
+  layout_eye_flow?: string;
+  knowledge_blocks_applied: string[];
+  prompt_chars: number;
+  prompt_sections_kept?: string[];
+  prompt_sections_removed?: { section: string; priority: number; chars: number }[];
+  duplicate_lines_removed?: number;
+  prompt_hard_truncated?: boolean;
+  references_analyzed: number;
+  products_detected: number;
+  logos_detected: number;
+  inspiration_references: number;
+  generation_parameters: {
+    model: string;
+    aspect_ratio: string;
+    resolution: string;
+    references_attached: number;
+  };
+  pipeline_warnings: string[];
+  layout_zones?: string[];
+}
+
 export interface PictureStrategyDiagnostics {
   creative_angle: string;
   applied_knowledge_nodes: string[];
   applied_technique_cards: string[];
   compiled_prompt: string;
   negative_prompt: string;
-  ai_creative_score_estimate: {
-    overall_score: number;
-    brand_alignment: number;
-    commercial_impact: number;
-    reasoning: string;
-  };
   reference_processing?: ReferenceProcessingDiagnosticInfo[];
   creative_interpretation?: CreativeInterpretation;
+  run_diagnostics?: GenerationRunDiagnostics;
 }
 
 export interface SimpleImageGenerationResultV1 {
