@@ -11,6 +11,7 @@ import {
   BrandIdentity,
 } from "../../types/picture-engine.types";
 import { AssetTypeSelector } from "./AssetTypeSelector";
+import { VisualDirectionControlPanel } from "@/components/VisualDirectionControlPanel";
 import { BrandIdentityUploader } from "./BrandIdentityUploader";
 import { Sparkles, FileText, Package, Ratio, Lightbulb } from "lucide-react";
 
@@ -320,6 +321,17 @@ export function CreativeBriefPanel({
           </div>
         )}
       </div>
+
+      {/* Visual Direction Plan — Phase 4.1.5.
+          Last, deliberately. The AI has read the assets, the concept and the
+          format by this point, so it can show what it intends to do rather than
+          asking the user to specify it up front. */}
+      <VisualDirectionControlPanel
+        value={brief.creative_direction?.visual_controls || {}}
+        onChange={(next) => onUpdateCreativeDirection({ visual_controls: next })}
+        concept={brief.creative_concept || brief.user_notes || ""}
+        assetType={brief.asset_type}
+      />
 
       {/* Submit CTA */}
       <div className="pt-2 border-t border-border/80">

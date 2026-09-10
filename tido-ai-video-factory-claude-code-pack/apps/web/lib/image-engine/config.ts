@@ -22,6 +22,42 @@ export const IMAGE_ENGINE_CONFIG = {
   PROMPTS_DIR: getEngineDataPath("data/prompts"),
   SCHEMAS_DIR: getEngineDataPath("data/schemas"),
   KNOWLEDGE_DIR: getEngineDataPath("data/knowledge"),
+
+  // ── CIOS Layer 2 — Reasoning Knowledge ────────────────────────────────
+  //
+  // Kept strictly separate from KNOWLEDGE_DIR above. Layer 1 tells the image
+  // model how to execute and is injected into the render prompt; Layer 2 tells
+  // the reasoning LLM what to decide and must never enter that prompt
+  // (Governance §1). Separate directory, schema, index and budget is what makes
+  // that separation enforceable rather than a convention.
+  REASONING_KNOWLEDGE_DIR: getEngineDataPath("data/cios-knowledge"),
+  REASONING_INDEX_PATH: getEngineDataPath("data/indexes/reasoning_embeddings_v1.json"),
+  /**
+   * Budget for reasoning knowledge injected into an LLM message. This is the
+   * model's context window, NOT the image prompt — the render prompt keeps its
+   * own ceiling (MAX_SAFE_PROMPT_CHARS) and the two never compete.
+   */
+  REASONING_CONTEXT_BUDGET_CHARS: Number(process.env.REASONING_CONTEXT_BUDGET_CHARS || 12000),
+  REASONING_RETRIEVAL_DEFAULT_LIMIT: Number(process.env.REASONING_RETRIEVAL_DEFAULT_LIMIT || 12),
+  /**
+   * Phase 3.1 — run the CIOS reasoning stack alongside the production pipeline.
+   *
+   * OFF by default, and off means byte-identical behaviour: the orchestrator does
+   * not construct the repository, does not read the corpus and attaches only a
+   * "FLAG_DISABLED" note. On, it produces an inspectable comparison and still
+   * changes no prompt, no resolver input and no render. Phase 3.2 is what makes
+   * the result authoritative; this flag only makes it visible.
+   */
+  CIOS_REASONING_ENABLED: process.env.CIOS_REASONING_ENABLED === "true",
+
+  // ── Phase 3.1.5 — Creative Benchmark ──────────────────────────────────
+  // Test infrastructure, not a runtime dependency: nothing in the render path
+  // reads these. They live here so the benchmark resolves its data the same way
+  // every other engine component does.
+  CREATIVE_BENCHMARK_PATH: getEngineDataPath("data/benchmarks/creative_benchmark_v1.json"),
+  CREATIVE_BENCHMARK_SCHEMA_PATH: getEngineDataPath(
+    "data/benchmarks/_schema/creative_benchmark_schema_v1.json"
+  ),
   BRANDS_DIR: getEngineDataPath("data/brands"),
   CREATIVE_REFS_DIR: getEngineDataPath("data/creative_references"),
   INDEXES_DIR: getEngineDataPath("data/indexes"),
@@ -108,8 +144,17 @@ export const IMAGE_ENGINE_CONFIG = {
   WITHHOLD_INSPIRATION_IMAGE_FROM_PROVIDER: process.env.WITHHOLD_INSPIRATION_IMAGE_FROM_PROVIDER !== "false",
   CLIENT_TIMEOUT_MS: typeof process !== "undefined" && process.env?.NEXT_PUBLIC_CLIENT_TIMEOUT_MS ? parseInt(process.env.NEXT_PUBLIC_CLIENT_TIMEOUT_MS) : 250000,
   MAX_PRODUCT_REFERENCES: 10,
-  SUPPORTED_ASPECT_RATIOS: ["1:1", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9"],
-  IMGSTUDIO_SUPPORTED_ASPECT_RATIOS: ["1:1", "4:5", "3:4", "4:3", "5:4", "9:16", "16:9"],
+  /**
+   * The three delivery ratios this system supports: square, vertical, horizontal.
+   *
+   * The near-square portrait ratios (4:5, 5:4) and the legacy 3:4 / 4:3 pair were
+   * removed because every placement the studio actually ships maps onto one of
+   * these three, and each extra ratio multiplied the layout and preset work
+   * without changing what a client receives. Anything outside the set is derived
+   * at delivery time by documented crop — see delivery/export-presets.ts.
+   */
+  SUPPORTED_ASPECT_RATIOS: ["1:1", "9:16", "16:9"],
+  IMGSTUDIO_SUPPORTED_ASPECT_RATIOS: ["1:1", "9:16", "16:9"],
 };
 
 export function resolveDataPath(relativePath: string): string {

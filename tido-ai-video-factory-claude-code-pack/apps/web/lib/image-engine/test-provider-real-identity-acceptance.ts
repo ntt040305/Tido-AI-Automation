@@ -108,7 +108,7 @@ async function runRealProviderIdentityAcceptanceTest() {
     prompt: `[REFERENCE INTELLIGENCE LOCK] Create a luxury commercial poster for TIDO Cold Brew.
 [PRODUCT IDENTITY LOCK] Product PRODUCT_01 (REF_01_PROD): Lock amber glass bottle geometry, white label, and cap contours.
 [LOGO PRESERVATION LOCK] Logo (REF_02_LOGO): Place high-contrast vector logo in top center visual area without font distortion.`,
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     imageSize: "1K",
     mimeType: "image/png",
     generationId: `gen_real_val_${Date.now()}`,

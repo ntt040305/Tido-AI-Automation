@@ -1,4 +1,6 @@
 import { ProductIdentityResolver } from "../compiler/ProductIdentityResolver";
+import { VisualDirectionPlanner } from "../director/VisualDirectionPlanner";
+import { VisualDirectionResolver } from "../director/VisualDirectionResolver";
 import {
   AssetRoleV1,
   CopyItemInput,
@@ -298,9 +300,69 @@ export class SimpleInputAdapterService {
     }
 
     // 9. Derive Hard Requirements & Options
+    //
+    // Phase 4.1.5. A visual control the user set is the client speaking, so it
+    // enters through the same channel as any other client requirement and lands
+    // in USER_HARD_CONSTRAINTS — the one section the art-direction resolver
+    // already ranks above every other tier. Controls left on Tự chọn contribute
+    // nothing, so an untouched panel costs no prompt characters at all.
+    // The same plan the panel displayed, re-derived rather than transported.
+    // `VisualDirectionPlanner` is deterministic on (concept, format), so the
+    // browser and this code reach the same conclusion from the same inputs. Only
+    // genuine overrides travel in the request — which also means a client that
+    // never rendered the panel still gets the plan applied.
+    const visualPlan = VisualDirectionPlanner.plan({
+      concept: request.concept || "",
+      assetType: request.useCase || "Poster",
+    });
+    const plannedOptions: Record<string, string> = {};
+    for (const [key, planned] of Object.entries(visualPlan)) {
+      if (planned) plannedOptions[key] = planned.option;
+    }
+
+    const visualDirection = VisualDirectionResolver.resolve({
+      selected: request.creativeDirection?.visual_controls,
+      concept: request.concept || "",
+      plan: plannedOptions,
+    });
+    // ONLY what the user actually chose becomes a hard requirement.
+    //
+    // Previously `explicit` was used here, and after the plan tier was added
+    // that included `ai_suggested` — so six lines of machine-derived camera,
+    // lens, lighting, composition, typography and colour direction were injected
+    // into USER_HARD_CONSTRAINTS on every single render, whether or not the user
+    // had touched anything.
+    //
+    // Two things went wrong with that. It diluted the section that is supposed
+    // to be the client's own voice, and it created a second authority on camera
+    // and lighting: the ART DIRECTION block declares itself "the ONLY authority
+    // on camera, lighting, composition, colour, environment, material and
+    // atmosphere", while CONFLICT PRIORITY ranks user hard requirements above
+    // art direction. The prompt contradicted itself on precisely the two
+    // dimensions that felt unintentional in the output.
+    //
+    // A suggestion is not a requirement. Only a deliberate user choice — a
+    // click, or an instruction they typed into the concept — is hard. Anything
+    // the machine proposed stays where it belongs, with the art director.
+    const userChosen = visualDirection.explicit.filter(
+      (c) => c.source === "user_selected" || c.source === "concept_detected"
+    );
+    const visualDirectionRequirements = userChosen
+      .filter((c) => c.instruction)
+      .map((c) => `${c.label}: ${c.instruction}`);
+    if (visualDirectionRequirements.length > 0) {
+      console.log("[SIMPLE][VISUAL_CONTROLS]", {
+        hard: userChosen.map((c) => `${c.key}=${c.option} (${c.source})`),
+        suggested_not_forced: visualDirection.explicit
+          .filter((c) => c.source === "ai_suggested")
+          .map((c) => c.key),
+      });
+    }
+
     const hardRequirements = [
       ...(request.hardRequirements || []),
       ...(structuredIntent.explicit_hard_requirements || []),
+      ...visualDirectionRequirements,
     ].filter((req, idx, self) => self.indexOf(req) === idx);
 
     const useCase = request.useCase || "Poster";

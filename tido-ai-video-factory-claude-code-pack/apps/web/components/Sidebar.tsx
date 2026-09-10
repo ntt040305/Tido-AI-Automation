@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
-import { Grid, Settings, TrendingUp, Image as ImageIcon } from "lucide-react";
+import { Grid, Settings, TrendingUp, Image as ImageIcon, Layers } from "lucide-react";
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -34,7 +34,7 @@ export default function Sidebar() {
       <div className="flex flex-col gap-1.5 flex-1 w-full px-3 items-center">
         <Link
           href="/"
-          title="Bộ sưu tập"
+          title="Không gian chiến dịch"
           className={`w-10 h-10 rounded-pill flex items-center justify-center cursor-pointer border relative transition-colors ${
             pathname === "/" || pathname.startsWith("/projects")
               ? "text-text bg-surface2 border-border"
@@ -60,6 +60,21 @@ export default function Sidebar() {
             <div className="absolute -left-[9px] w-[3px] h-[14px] bg-accent rounded-[2px]" />
           )}
           <ImageIcon size={19} strokeWidth={1.6} />
+        </Link>
+
+        <Link
+          href="/campaign-site"
+          title="Studio Chiến Dịch"
+          className={`w-10 h-10 rounded-pill flex items-center justify-center cursor-pointer border relative transition-colors ${
+            pathname.startsWith("/campaign-site")
+              ? "text-text bg-surface2 border-border"
+              : "text-text3 bg-transparent border-transparent hover:text-text2 hover:bg-surface"
+          }`}
+        >
+          {pathname.startsWith("/campaign-site") && (
+            <div className="absolute -left-[9px] w-[3px] h-[14px] bg-accent rounded-[2px]" />
+          )}
+          <Layers size={19} strokeWidth={1.6} />
         </Link>
       </div>
 

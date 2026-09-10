@@ -1,0 +1,4 @@
+compiled=true
+campaign-test route=true
+render-asset route=true
+generate route=true

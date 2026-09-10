@@ -1,0 +1,30 @@
+{"timestamp":"00:31:38.783","source":"Server","level":"LOG","message":"[LLM_REQUEST] {}"}
+{"timestamp":"00:31:43.242","source":"Server","level":"LOG","message":"[LLM_RESPONSE] {}"}
+{"timestamp":"00:31:43.246","source":"Server","level":"LOG","message":"[LLM_PROVIDER] {}"}
+{"timestamp":"00:31:43.247","source":"Server","level":"LOG","message":"[LLM_REQUEST] {}"}
+{"timestamp":"00:32:20.466","source":"Server","level":"LOG","message":"[LLM_RESPONSE] {}"}
+{"timestamp":"00:34:39.026","source":"Server","level":"LOG","message":"[LLM_REQUEST] {}"}
+{"timestamp":"00:34:54.034","source":"Server","level":"WARN","message":"[LLMProviderService] Chat completion request failed (The operation was aborted due to timeout)"}
+{"timestamp":"00:34:54.036","source":"Server","level":"WARN","message":"[MarketingBrainService] LLM call failed (Marketing brain unavailable: The operation was aborted due to timeout). Using fallback strategy."}
+{"timestamp":"00:34:56.437","source":"Server","level":"LOG","message":"[LLM_PROVIDER] {}"}
+{"timestamp":"00:34:56.443","source":"Server","level":"LOG","message":"[LLM_REQUEST] {}"}
+{"timestamp":"00:35:01.836","source":"Server","level":"LOG","message":"[LLM_RESPONSE] {}"}
+{"timestamp":"00:35:01.844","source":"Server","level":"LOG","message":"[LLM_PROVIDER] {}"}
+{"timestamp":"00:35:01.848","source":"Server","level":"LOG","message":"[LLM_REQUEST] {}"}
+{"timestamp":"00:35:35.703","source":"Server","level":"LOG","message":"[LLM_RESPONSE] {}"}
+{"timestamp":"00:36:59.667","source":"Server","level":"LOG","message":"[LLM_REQUEST] {}"}
+{"timestamp":"00:37:14.686","source":"Server","level":"WARN","message":"[LLMProviderService] Chat completion request failed (The operation was aborted due to timeout)"}
+{"timestamp":"00:37:14.687","source":"Server","level":"WARN","message":"[MarketingBrainService] LLM call failed (Marketing brain unavailable: The operation was aborted due to timeout). Using fallback strategy."}
+{"timestamp":"00:37:16.878","source":"Server","level":"LOG","message":"[LLM_PROVIDER] {}"}
+{"timestamp":"00:37:16.879","source":"Server","level":"LOG","message":"[LLM_REQUEST] {}"}
+{"timestamp":"00:37:22.077","source":"Server","level":"LOG","message":"[LLM_RESPONSE] {}"}
+{"timestamp":"00:37:22.080","source":"Server","level":"LOG","message":"[LLM_PROVIDER] {}"}
+{"timestamp":"00:37:22.082","source":"Server","level":"LOG","message":"[LLM_REQUEST] {}"}
+{"timestamp":"00:37:57.832","source":"Server","level":"LOG","message":"[LLM_RESPONSE] {}"}
+{"timestamp":"03:49:36.254","source":"Server","level":"LOG","message":"[LLM_PROVIDER] {}"}
+{"timestamp":"03:49:36.267","source":"Server","level":"LOG","message":"[LLM_PROVIDER] {}"}
+{"timestamp":"03:49:36.268","source":"Server","level":"LOG","message":"[LLM_REQUEST] {}"}
+{"timestamp":"03:49:40.667","source":"Server","level":"LOG","message":"[LLM_RESPONSE] {}"}
+{"timestamp":"03:49:40.673","source":"Server","level":"LOG","message":"[LLM_REQUEST] {}"}
+{"timestamp":"03:49:55.688","source":"Server","level":"WARN","message":"[LLMProviderService] Chat completion request failed (The operation was aborted due to timeout)"}
+{"timestamp":"03:49:55.689","source":"Server","level":"WARN","message":"[MarketingBrainService] LLM call failed (Marketing brain unavailable: The operation was aborted due to timeout). Using fallback strategy."}

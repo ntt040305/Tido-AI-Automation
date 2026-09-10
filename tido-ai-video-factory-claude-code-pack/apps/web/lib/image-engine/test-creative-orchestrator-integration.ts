@@ -157,7 +157,7 @@ async function runCreativeOrchestratorIntegrationTests() {
   const reqPoster: SimpleInputRequestV1 = {
     concept: sharedConcept,
     useCase: "poster",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     images: [mockImage],
   };
 

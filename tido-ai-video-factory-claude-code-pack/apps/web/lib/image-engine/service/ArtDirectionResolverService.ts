@@ -55,7 +55,17 @@ export type ArtDirectionDimension =
   | "colour"
   | "environment"
   | "materials"
-  | "atmosphere";
+  | "atmosphere"
+  /**
+   * Phase 3.1.6.6.
+   *
+   * Typography was the one CreativeDirection slot with no resolver dimension, so
+   * a typographic decision filled its field and stopped there — measured on all
+   * five shadow cases in 3.1.6.5. Making it a dimension puts it under the same
+   * tier arbitration as everything else: a client instruction still outranks it,
+   * and the winner prints in the one block that claims authority.
+   */
+  | "typography";
 
 export interface ResolvedField {
   value: string;
@@ -236,6 +246,18 @@ export class ArtDirectionResolverService {
       push("composition", "KNOWLEDGE", kd.composition_strategy);
       push("colour", "KNOWLEDGE", kd.color_strategy);
       push("atmosphere", "KNOWLEDGE", kd.visual_style);
+      // `materials` has been a resolvable dimension and a rendered prompt line all
+      // along; it simply had no KNOWLEDGE-tier push, so material decisions reached
+      // CreativeDirection and stopped there. A no-op for the Layer 1 service,
+      // which does not produce this field.
+      push("materials", "KNOWLEDGE", kd.material_direction);
+      // Typography, from Phase 3.1.6.6. Unlike materials this is NOT a no-op for
+      // the Layer 1 service, which does produce a typography_strategy. Its text
+      // therefore moves out of the compiler's creative-guidance block and into
+      // this one — the same relocation composition and cinematic style already
+      // went through. The compiler drops the guidance line to match, so the
+      // instruction appears exactly once either way.
+      push("typography", "KNOWLEDGE", kd.typography_strategy);
     }
 
     // ── Tier 5: asset-type profile default ────────────────────────────────
@@ -474,14 +496,18 @@ export class ArtDirectionResolverService {
       environment: "ENVIRONMENT & SET",
       materials: "MATERIALS & SURFACES",
       atmosphere: "ATMOSPHERE",
+      typography: "TYPOGRAPHY",
     };
+    // Typography sits after composition: it is a decision about how the layout is
+    // filled, and a reader who has just been told where the subject goes is in the
+    // right frame of mind for what occupies the space beside it.
     const order: ArtDirectionDimension[] = [
-      "camera", "lighting", "composition", "colour", "environment", "materials", "atmosphere",
+      "camera", "lighting", "composition", "typography", "colour", "environment", "materials", "atmosphere",
     ];
 
     const lines: string[] = [
       "[RESOLVED ART DIRECTION]",
-      "This block is the ONLY authority on camera, lighting, composition, colour, environment, material and atmosphere. No other instruction in this prompt overrides it. Where any other section implies a different angle, lens, lighting rig or layout, this block wins.",
+      "This block is the ONLY authority on camera, lighting, composition, typography, colour, environment, material and atmosphere. No other instruction in this prompt overrides it. Where any other section implies a different angle, lens, lighting rig or layout, this block wins.",
       "",
     ];
 

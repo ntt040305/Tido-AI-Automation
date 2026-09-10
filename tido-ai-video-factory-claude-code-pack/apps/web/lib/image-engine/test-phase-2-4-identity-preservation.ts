@@ -122,7 +122,7 @@ async function runPhase24IdentityPreservationTest() {
   const compileRes = await compiler.compile({
     useCase: "Poster",
     brief: "Place product in a high-end dark luxury marble setting with volumetric warm cinematic lighting.",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     routingResult,
     knowledgePackage: mockKnowledgePackage,
   });

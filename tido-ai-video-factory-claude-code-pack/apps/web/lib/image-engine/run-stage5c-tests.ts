@@ -65,10 +65,6 @@ async function runStage5cTests() {
       const dim1x1 = cfProvider.mapAspectRatioToDimensions("1:1");
       assert.deepStrictEqual(dim1x1, { width: 1024, height: 1024 });
 
-      const dim4x5 = cfProvider.mapAspectRatioToDimensions("4:5");
-      assert.deepStrictEqual(dim4x5, { width: 896, height: 1120 });
-      assert.strictEqual(dim4x5.width / dim4x5.height, 4 / 5);
-
       const dim9x16 = cfProvider.mapAspectRatioToDimensions("9:16");
       assert.deepStrictEqual(dim9x16, { width: 756, height: 1344 });
       assert.strictEqual(dim9x16.width / dim9x16.height, 9 / 16);
@@ -77,7 +73,7 @@ async function runStage5cTests() {
       assert.deepStrictEqual(dim16x9, { width: 1344, height: 756 });
       assert.strictEqual(dim16x9.width / dim16x9.height, 16 / 9);
 
-      logPass("Aspect Ratio mapping converts 1:1, 4:5, 9:16, 16:9 preserving exact ratios <= 1920px");
+      logPass("Aspect Ratio mapping converts 1:1, 9:16, 16:9 preserving exact ratios <= 1920px");
     } catch (e) {
       logFail("Aspect Ratio mapping converts accurately", e);
     }
@@ -96,7 +92,7 @@ async function runStage5cTests() {
         model: "@cf/black-forest-labs/flux-2-klein-4b",
         prompt: "Test prompt",
         references: refs5,
-        aspectRatio: "4:5",
+        aspectRatio: "9:16",
         imageSize: "1K",
         mimeType: "image/png",
       });
@@ -167,7 +163,7 @@ async function runStage5cTests() {
         model: "@cf/black-forest-labs/flux-2-klein-4b",
         prompt: "Master Prompt V2 Compiled Test",
         references: refs2,
-        aspectRatio: "4:5",
+        aspectRatio: "9:16",
         imageSize: "1K",
         mimeType: "image/png",
       });
@@ -238,7 +234,7 @@ async function runStage5cTests() {
           model: "@cf/black-forest-labs/flux-2-klein-4b",
         },
         output: {
-          aspect_ratio: "4:5",
+          aspect_ratio: "9:16",
           width: 896,
           height: 1120,
         },

@@ -44,7 +44,7 @@ async function runSimpleInputV35Tests() {
   const reqA: SimpleInputRequestV1 = {
     concept: "Poster 2 sản phẩm và logo",
     useCase: "Poster",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     images: [{ reference_id: "REF_01" }, { reference_id: "REF_02" }, { reference_id: "REF_03" }],
   };
 
@@ -78,7 +78,7 @@ async function runSimpleInputV35Tests() {
   const reqB: SimpleInputRequestV1 = {
     concept: "Poster sản phẩm 2 góc chụp và logo",
     useCase: "Poster",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     images: [{ reference_id: "REF_01" }, { reference_id: "REF_02" }, { reference_id: "REF_03" }],
   };
 
@@ -112,7 +112,7 @@ async function runSimpleInputV35Tests() {
   const reqC: SimpleInputRequestV1 = {
     concept: "Poster sản phẩm và hình tham khảo phong cách",
     useCase: "Poster",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     images: [{ reference_id: "REF_01" }, { reference_id: "REF_02" }],
   };
 
@@ -141,7 +141,7 @@ async function runSimpleInputV35Tests() {
   const reqD: SimpleInputRequestV1 = {
     concept: "Poster sản phẩm và hình mờ",
     useCase: "Poster",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     images: [{ reference_id: "REF_01" }, { reference_id: "REF_02" }],
   };
 
@@ -169,7 +169,7 @@ async function runSimpleInputV35Tests() {
   const reqE: SimpleInputRequestV1 = {
     concept: "Poster sản phẩm, logo brand và hình tham khảo campaign",
     useCase: "Poster",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     images: [{ reference_id: "REF_01" }, { reference_id: "REF_02" }, { reference_id: "REF_03" }],
   };
 

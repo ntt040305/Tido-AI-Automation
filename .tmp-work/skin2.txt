@@ -1,0 +1,26 @@
+HTTP 200 success=true 42732ms
+strategy_source: MARKETING_BRAIN
+
+name    : Skin1004 — One capsule holds everything
+big idea: One capsule holds everything — the image says that concentrated purity is the most sophisticated form of care.
+message : Skin1004 Tone Brightening Capsule Ampoule is positioned as a precision ritual object — concentrated efficacy distilled into a single, purposeful dose.
+insight : Women 25-40 buying brightening ampoules are not chasing a fantasy complexion; they are reclaiming a version of themselves that stress, sun, and time have quietly dimmed — they want visible proof that effort compounds, and they want to trust the formula before they trust the brand.
+feel    : Quiet confidence, luminous calm
+
+VISUAL DNA
+  mood                 : Still, cool, and unhurried — the emotional temperature of a well-ordered morning ritual, where nothing is rushed and eve
+  colour_logic         : A restrained palette of cool whites, soft ivory, and the natural amber or golden tone of the serum itself — the warmth o
+  lighting_logic       : Soft directional light that arrives from one side and grazes the bottle's surface, allowing the liquid inside to glow wi
+  composition_logic    : Centred and sovereign — the ampoule occupies the visual axis with generous negative space surrounding it, communicating 
+  typography_logic     : No text is rendered into pixels in this pass. Every asset reserves the same clear, tonally even area for typography to b
+  product_presentation : The ampoule bottle stands alone as the sole subject — no hand, no face, no prop cluster — because isolating it elevates 
+
+VISUAL TRANSLATION (marketing reasoning)
+  subject_representation : The ampoule bottle stands alone as the sole subject — no hand, no face, no prop cluster — because isolating it elevates 
+  atmosphere             : Still, cool, and unhurried — the emotional temperature of a well-ordered morning ritual, where nothing is rushed and eve
+  lighting_character     : Soft directional light that arrives from one side and grazes the bottle's surface, allowing the liquid inside to glow wi
+  material_treatment     : Glass should read as weightless yet precise — transparent enough to show the serum's colour depth, with surfaces that ca
+  composition_principle  : Centred and sovereign — the ampoule occupies the visual axis with generous negative space surrounding it, communicating 
+  colour_direction       : A restrained palette of cool whites, soft ivory, and the natural amber or golden tone of the serum itself — the warmth o
+
+warnings: ["No reference images supplied: product identity comes from the brief text alone, so renders will not be identity-locked to a real product."]

@@ -129,7 +129,7 @@ export async function runStage4BTests() {
     brandInfo: "Premium coffee brand with heritage positioning.",
     hardRequirements: ["Do not alter bottle shape", "Keep logo clear"],
     useCase: "Social Post",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     routingResult: mockRoutingResult,
     knowledgePackage: mockKnowledgePackage,
   };

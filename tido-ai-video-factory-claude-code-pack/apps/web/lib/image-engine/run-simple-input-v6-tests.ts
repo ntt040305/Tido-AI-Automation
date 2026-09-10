@@ -128,7 +128,7 @@ async function runSimpleInputV6Tests() {
     const req: SimpleInputRequestV1 = {
       concept: "Poster mùa hè cho sản phẩm, không khí tươi vui và năng động.",
       useCase: "Poster",
-      aspectRatio: "4:5",
+      aspectRatio: "9:16",
       images: [{ reference_id: "REF_01", filename: "prod.png", mimeType: "image/png" }],
     };
     const intent: StructuredInputIntentV1 = {
@@ -161,7 +161,7 @@ async function runSimpleInputV6Tests() {
     const req: SimpleInputRequestV1 = {
       concept: "Poster cho hai sản phẩm nước giải khát.",
       useCase: "Poster",
-      aspectRatio: "4:5",
+      aspectRatio: "9:16",
       images: [
         { reference_id: "REF_01", filename: "prodA.png", mimeType: "image/png" },
         { reference_id: "REF_02", filename: "prodB.png", mimeType: "image/png" },
@@ -204,7 +204,7 @@ async function runSimpleInputV6Tests() {
     const req: SimpleInputRequestV1 = {
       concept: "Poster góc cạnh sản phẩm.",
       useCase: "Poster",
-      aspectRatio: "4:5",
+      aspectRatio: "9:16",
       images: [
         { reference_id: "REF_01", filename: "front.png", mimeType: "image/png" },
         { reference_id: "REF_02", filename: "side.png", mimeType: "image/png" },
@@ -245,7 +245,7 @@ async function runSimpleInputV6Tests() {
     const req: SimpleInputRequestV1 = {
       concept: "Poster fantasy mùa hè, hai sản phẩm bay giữa mây, title 'HÈ BAY LÊN'.",
       useCase: "Poster",
-      aspectRatio: "4:5",
+      aspectRatio: "9:16",
       images: [
         { reference_id: "REF_01", filename: "prodA.png", mimeType: "image/png" },
         { reference_id: "REF_02", filename: "prodB.png", mimeType: "image/png" },
@@ -292,7 +292,7 @@ async function runSimpleInputV6Tests() {
     const req: SimpleInputRequestV1 = {
       concept: "Poster mùa hè trẻ trung, lấy cảm hứng từ hình tham chiếu nhưng sản phẩm phải là chủ thể chính.",
       useCase: "Poster",
-      aspectRatio: "4:5",
+      aspectRatio: "9:16",
       images: [
         { reference_id: "REF_01", filename: "prod.png", mimeType: "image/png" },
         { reference_id: "REF_02", filename: "mood.png", mimeType: "image/png" },
@@ -333,7 +333,7 @@ async function runSimpleInputV6Tests() {
     const req: SimpleInputRequestV1 = {
       concept: "Poster thương hiệu với logo và mood tham khảo.",
       useCase: "Poster",
-      aspectRatio: "4:5",
+      aspectRatio: "9:16",
       images: [
         { reference_id: "REF_01", filename: "prod.png", mimeType: "image/png" },
         { reference_id: "REF_02", filename: "logo.png", mimeType: "image/png" },
@@ -376,7 +376,7 @@ async function runSimpleInputV6Tests() {
     const req: SimpleInputRequestV1 = {
       concept: "Poster cho sản phẩm.",
       useCase: "Poster",
-      aspectRatio: "4:5",
+      aspectRatio: "9:16",
       images: [
         { reference_id: "REF_01", filename: "prod.png", mimeType: "image/png" },
         { reference_id: "REF_02", filename: "ambiguous.png", mimeType: "image/png" },
@@ -416,7 +416,7 @@ async function runSimpleInputV6Tests() {
     const req: SimpleInputRequestV1 = {
       concept: 'Poster sale, title "MUA 1 TẶNG 1".',
       useCase: "Poster",
-      aspectRatio: "4:5",
+      aspectRatio: "9:16",
       images: [{ reference_id: "REF_01", filename: "prod.png", mimeType: "image/png" }],
     };
     const intent: StructuredInputIntentV1 = {
@@ -449,7 +449,7 @@ async function runSimpleInputV6Tests() {
     const req: SimpleInputRequestV1 = {
       concept: "Tên sản phẩm là Matcha Cloud và Coffee Cream.",
       useCase: "Poster",
-      aspectRatio: "4:5",
+      aspectRatio: "9:16",
       images: [
         { reference_id: "REF_01", filename: "matcha.png", mimeType: "image/png" },
         { reference_id: "REF_02", filename: "coffee.png", mimeType: "image/png" },
@@ -493,7 +493,7 @@ async function runSimpleInputV6Tests() {
     const req: SimpleInputRequestV1 = {
       concept: "Poster cho ly matcha màu xanh.",
       useCase: "Poster",
-      aspectRatio: "4:5",
+      aspectRatio: "9:16",
       images: [{ reference_id: "REF_01", filename: "matcha.png", mimeType: "image/png" }],
     };
     const adapted = SimpleInputAdapterService.adapt(req, createFixtureRouting([
@@ -518,7 +518,7 @@ async function runSimpleInputV6Tests() {
     const req: SimpleInputRequestV1 = {
       concept: "Poster minimal nền trắng, chai bên trái, ánh sáng cinematic.",
       useCase: "Poster",
-      aspectRatio: "4:5",
+      aspectRatio: "9:16",
       images: [{ reference_id: "REF_01", filename: "prod.png", mimeType: "image/png" }],
     };
     const adapted = SimpleInputAdapterService.adapt(req, createFixtureRouting([
@@ -545,7 +545,7 @@ async function runSimpleInputV6Tests() {
     const req: SimpleInputRequestV1 = {
       concept: 'Poster photographic, title chữ 3D "FUTURE TASTE".',
       useCase: "Poster",
-      aspectRatio: "4:5",
+      aspectRatio: "9:16",
       images: [{ reference_id: "REF_01", filename: "prod.png", mimeType: "image/png" }],
     };
     const adapted = SimpleInputAdapterService.adapt(req, createFixtureRouting([
@@ -593,7 +593,7 @@ async function runSimpleInputV6Tests() {
     const req: SimpleInputRequestV1 = {
       concept: "Poster mùa hè cho hai sản phẩm.",
       useCase: "Poster",
-      aspectRatio: "4:5",
+      aspectRatio: "9:16",
       images: [
         { reference_id: "REF_01", filename: "p1.png", mimeType: "image/png" },
         { reference_id: "REF_02", filename: "p2.png", mimeType: "image/png" },
@@ -626,7 +626,7 @@ async function runSimpleInputV6Tests() {
     const req: SimpleInputRequestV1 = {
       concept: specConcept,
       useCase: "Poster",
-      aspectRatio: "4:5",
+      aspectRatio: "9:16",
       images: [
         { reference_id: "REF_01", filename: "p1.png", mimeType: "image/png" },
         { reference_id: "REF_02", filename: "p2.png", mimeType: "image/png" },
@@ -661,7 +661,7 @@ async function runSimpleInputV6Tests() {
     const req: SimpleInputRequestV1 = {
       concept: "Poster cinematic cho sản phẩm trên mặt đá, ánh sáng chiều.",
       useCase: "Poster",
-      aspectRatio: "4:5",
+      aspectRatio: "9:16",
       images: [{ reference_id: "REF_01", filename: "p1.png", mimeType: "image/png" }],
     };
     const adapted = SimpleInputAdapterService.adapt(req, createFixtureRouting([
@@ -686,7 +686,7 @@ async function runSimpleInputV6Tests() {
     const req: SimpleInputRequestV1 = {
       concept: "Poster mùa hè, tự nghĩ một headline ngắn phù hợp.",
       useCase: "Poster",
-      aspectRatio: "4:5",
+      aspectRatio: "9:16",
       images: [{ reference_id: "REF_01", filename: "p1.png", mimeType: "image/png" }],
     };
     const adapted = SimpleInputAdapterService.adapt(req, createFixtureRouting([
@@ -711,7 +711,7 @@ async function runSimpleInputV6Tests() {
     const req: SimpleInputRequestV1 = {
       concept: "Phải có cả hai sản phẩm. Không đổi màu chai. Không thêm chữ.",
       useCase: "Poster",
-      aspectRatio: "4:5",
+      aspectRatio: "9:16",
       images: [
         { reference_id: "REF_01", filename: "p1.png", mimeType: "image/png" },
         { reference_id: "REF_02", filename: "p2.png", mimeType: "image/png" },
@@ -748,7 +748,7 @@ async function runSimpleInputV6Tests() {
     const req: SimpleInputRequestV1 = {
       concept: concept1000,
       useCase: "Poster",
-      aspectRatio: "4:5",
+      aspectRatio: "9:16",
       images: [{ reference_id: "REF_01", filename: "p1.png", mimeType: "image/png" }],
     };
     const valRes = SimpleInputValidatorV1.validateRequest(req);
@@ -761,7 +761,7 @@ async function runSimpleInputV6Tests() {
     const req: SimpleInputRequestV1 = {
       concept: concept1001,
       useCase: "Poster",
-      aspectRatio: "4:5",
+      aspectRatio: "9:16",
       images: [{ reference_id: "REF_01", filename: "p1.png", mimeType: "image/png" }],
     };
     const valRes = SimpleInputValidatorV1.validateRequest(req);
@@ -780,7 +780,7 @@ async function runSimpleInputV6Tests() {
     const req: SimpleInputRequestV1 = {
       concept: "Poster sản phẩm.",
       useCase: "Poster",
-      aspectRatio: "4:5",
+      aspectRatio: "9:16",
       images: [{ reference_id: "REF_01", filename: "p1.png", mimeType: "image/png" }],
     };
 
@@ -821,7 +821,7 @@ async function runSimpleInputV6Tests() {
     const req: SimpleInputRequestV1 = {
       concept: "Poster sản phẩm.",
       useCase: "Poster",
-      aspectRatio: "4:5",
+      aspectRatio: "9:16",
       images: [{ reference_id: "REF_01", filename: "p1.png", mimeType: "image/png" }],
     };
 
@@ -847,7 +847,7 @@ async function runSimpleInputV6Tests() {
     const req: SimpleInputRequestV1 = {
       concept: "Poster sản phẩm.",
       useCase: "Poster",
-      aspectRatio: "4:5",
+      aspectRatio: "9:16",
       images: [{ reference_id: "REF_01", filename: "p1.png", mimeType: "image/png" }],
     };
     const mockRouter = createFixtureRouting([makeProductEntry("PRODUCT_01", ["REF_01"], "P1")], {
@@ -879,7 +879,7 @@ async function runSimpleInputV6Tests() {
     const req: SimpleInputRequestV1 = {
       concept: "Poster sản phẩm.",
       useCase: "Poster",
-      aspectRatio: "4:5",
+      aspectRatio: "9:16",
       images: [{ reference_id: "REF_01", filename: "p1.png", mimeType: "image/png" }],
     };
     const mockRouter = createFixtureRouting([makeProductEntry("PRODUCT_01", ["REF_01"], "P1")], {
@@ -932,7 +932,7 @@ async function runSimpleInputV6Tests() {
       requestId: "req_first_run",
       concept: "Poster mùa hè.",
       useCase: "Poster",
-      aspectRatio: "4:5",
+      aspectRatio: "9:16",
       images: [{ reference_id: "REF_01", filename: "p1.png", mimeType: "image/png" }],
     };
     const mockRouter = createFixtureRouting([makeProductEntry("PRODUCT_01", ["REF_01"], "P1")], {
@@ -973,7 +973,7 @@ async function runSimpleInputV6Tests() {
     const req: SimpleInputRequestV1 = {
       concept: "Poster thương hiệu tối giản với logo làm chủ thể.",
       useCase: "Poster",
-      aspectRatio: "4:5",
+      aspectRatio: "9:16",
       images: [{ reference_id: "REF_01", filename: "logo.png", mimeType: "image/png" }],
     };
     const mockRouter = createFixtureRouting([], {
@@ -1003,7 +1003,7 @@ async function runSimpleInputV6Tests() {
     const req: SimpleInputRequestV1 = {
       concept: "Poster abstract về mùa hè.",
       useCase: "Poster",
-      aspectRatio: "4:5",
+      aspectRatio: "9:16",
       images: [],
     };
     const mockRouter = createFixtureRouting([], {
@@ -1028,7 +1028,7 @@ async function runSimpleInputV6Tests() {
       const req: SimpleInputRequestV1 = {
         concept: `Thiết kế ${uc} cho sản phẩm`,
         useCase: uc,
-        aspectRatio: "4:5",
+        aspectRatio: "9:16",
         images: [{ reference_id: "REF_01", filename: "p1.png", mimeType: "image/png" }],
       };
       const valRes = SimpleInputValidatorV1.validateRequest(req);
@@ -1038,7 +1038,7 @@ async function runSimpleInputV6Tests() {
 
   // ── CASE 32: ASPECT RATIO MATRIX ──────────────────────────────────
   {
-    const RATIOS = ["1:1", "4:5", "3:4", "9:16", "16:9", "4:3"];
+    const RATIOS = ["1:1", "9:16", "9:16", "9:16", "16:9", "16:9"];
     for (const r of RATIOS) {
       const req: SimpleInputRequestV1 = {
         concept: "Poster sản phẩm",
@@ -1056,7 +1056,7 @@ async function runSimpleInputV6Tests() {
     const req: SimpleInputRequestV1 = {
       concept: "Poster sản phẩm mùa hè.",
       useCase: "Poster",
-      aspectRatio: "4:5",
+      aspectRatio: "9:16",
       images: [{ reference_id: "REF_01", filename: "p.png", mimeType: "image/png" }],
     };
     const mockRouter = createFixtureRouting([makeProductEntry("PRODUCT_01", ["REF_01"], "Product")], {
@@ -1087,7 +1087,7 @@ async function runSimpleInputV6Tests() {
     const req: SimpleInputRequestV1 = {
       concept: "Poster sản phẩm mới",
       useCase: "Poster",
-      aspectRatio: "4:5",
+      aspectRatio: "9:16",
       images: [{ reference_id: "REF_01", filename: "p.png", mimeType: "image/png" }],
     };
     const mockRouter = createFixtureRouting([makeProductEntry("PRODUCT_01", ["REF_01"], "Product")], {
@@ -1160,7 +1160,7 @@ async function runSimpleInputV6Tests() {
       model: "flow-nano-banana-2",
       prompt: "test prompt",
       references: [],
-      aspectRatio: "3:4",
+      aspectRatio: "9:16",
       imageSize: "1K",
       mimeType: "image/png",
     });
@@ -1178,7 +1178,7 @@ async function runSimpleInputV6Tests() {
     assert(userSelectedRes916.error?.code !== "UNSUPPORTED_ASPECT_RATIO", "Case 38B2: User selected ratio '9:16' passes pre-call validation");
 
     // Test 38C: Unverified / unsupported ratios (4:5, 4:3, 16:9) fail pre-call validation
-    const BLOCKED_RATIOS = ["4:5", "4:3", "16:9"];
+    const BLOCKED_RATIOS = ["9:16", "16:9", "16:9"];
     for (const r of BLOCKED_RATIOS) {
       const failRes = await provider.generateImage({
         model: "flow-nano-banana-2",

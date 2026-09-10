@@ -90,7 +90,7 @@ async function runSimpleInputV4Tests() {
   const req34: SimpleInputRequestV1 = {
     concept: "Poster fantasy mùa hè, hai sản phẩm bay giữa mây, title 'HÈ BAY LÊN'",
     useCase: "Poster",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     images: [{ reference_id: "REF_01" }, { reference_id: "REF_02" }, { reference_id: "REF_03" }],
   };
 
@@ -132,7 +132,7 @@ async function runSimpleInputV4Tests() {
   const req35: SimpleInputRequestV1 = {
     concept: "Poster lon soda mát lạnh theo mood tham khảo",
     useCase: "Poster",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     images: [{ reference_id: "REF_01" }, { reference_id: "REF_02" }],
   };
 
@@ -170,7 +170,7 @@ async function runSimpleInputV4Tests() {
   const req36: SimpleInputRequestV1 = {
     concept: "Poster chai nước và hình mờ",
     useCase: "Poster",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     images: [{ reference_id: "REF_01" }, { reference_id: "REF_02" }],
   };
 
@@ -207,7 +207,7 @@ async function runSimpleInputV4Tests() {
   const req37: SimpleInputRequestV1 = {
     concept: "Poster chai nước hoa 2 góc chụp và logo",
     useCase: "Poster",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     images: [{ reference_id: "REF_01" }, { reference_id: "REF_02" }, { reference_id: "REF_03" }],
   };
 
@@ -245,7 +245,7 @@ async function runSimpleInputV4Tests() {
   const req38: SimpleInputRequestV1 = {
     concept: "A".repeat(1050),
     useCase: "Poster",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     images: [{ reference_id: "REF_01" }],
   };
 
@@ -264,7 +264,7 @@ async function runSimpleInputV4Tests() {
   const req39: SimpleInputRequestV1 = {
     concept: "Valid short concept",
     useCase: "Poster",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     images: [{ reference_id: "REF_01" }],
   };
 
@@ -312,7 +312,7 @@ async function runSimpleInputV4Tests() {
   const req40: SimpleInputRequestV1 = {
     concept: "Valid concept",
     useCase: "Poster",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     images: [{ reference_id: "REF_01" }],
   };
 
@@ -333,7 +333,7 @@ async function runSimpleInputV4Tests() {
   const req41: SimpleInputRequestV1 = {
     concept: "Valid concept for failure test",
     useCase: "Poster",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     images: [{ reference_id: "REF_01" }],
   };
 
@@ -388,7 +388,7 @@ async function runSimpleInputV4Tests() {
   const req43: SimpleInputRequestV1 = {
     concept: "Poster fantasy mùa hè cho hai ly bay giữa mây",
     useCase: "Poster",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     images: [{ reference_id: "REF_01" }],
   };
 

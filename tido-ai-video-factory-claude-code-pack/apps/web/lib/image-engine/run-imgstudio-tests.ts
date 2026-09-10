@@ -49,7 +49,7 @@ async function runImgStudioUnitTests() {
         model: "flow-nano-banana-2",
         prompt: "test",
         references: [],
-        aspectRatio: "4:5",
+        aspectRatio: "9:16",
         imageSize: "1K",
         mimeType: "image/png",
       });
@@ -127,7 +127,7 @@ async function runImgStudioUnitTests() {
           { reference_id: "REF_01", product_id: "PRODUCT_01", mimeType: "image/png", buffer: sampleBuf1, filename: "ref1.png" },
           { reference_id: "REF_02", product_id: "PRODUCT_02", mimeType: "image/png", buffer: sampleBuf2, filename: "ref2.png" },
         ],
-        aspectRatio: "4:5",
+        aspectRatio: "9:16",
         imageSize: "1K",
         mimeType: "image/png",
         generationId: "imggen_test_123",

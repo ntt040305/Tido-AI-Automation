@@ -1,0 +1,3 @@
+GET /campaign-test -> 200  bytes=23458
+vietnamese strings present: 17/17
+untranslated leftovers in initial HTML: none

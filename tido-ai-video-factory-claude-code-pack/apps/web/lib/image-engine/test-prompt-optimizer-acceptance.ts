@@ -80,7 +80,7 @@ async function runPromptOptimizerAcceptanceTest() {
   const compileResult = await compiler.compile({
     useCase: "Poster",
     brief: "Create an ultra-luxurious commercial poster for TIDO Cold Brew placed on dark marble counter with golden ambient lighting and soft volumetric rim highlights.",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     routingResult,
     knowledgePackage: heavyKnowledgePackage,
   });

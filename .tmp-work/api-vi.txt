@@ -1,0 +1,7 @@
+POST /api/campaign/generate -> 200 success=true
+strategy_source=MARKETING_BRAIN
+assets=5  ratios=4:5/16:9/9:16/1:1
+decision keys unchanged: dimension,value,source,confidence,specificity,score,client_locked
+source values unchanged: USER,STRATEGY,KNOWLEDGE
+
+big idea: This single ampoule is the most deliberate thing in your skincare ritual.

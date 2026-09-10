@@ -1,0 +1,5 @@
+poster -> locked: ["camera","atmosphere"]
+banner -> locked: ["camera","atmosphere"]
+social -> locked: ["camera","atmosphere"]
+hero -> locked: ["camera","atmosphere"]
+thumbnail -> locked: ["camera","atmosphere"]

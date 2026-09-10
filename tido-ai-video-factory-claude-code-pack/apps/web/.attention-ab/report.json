@@ -1,0 +1,75 @@
+{
+  "dataset_id": "cios_creative_concept_benchmark",
+  "before": {
+    "arm": "score ranking only",
+    "surfaced": 92,
+    "agreed": 4,
+    "agreement_rate": 0.043,
+    "memorable_discovered": 0,
+    "breakthrough_discovered": 0,
+    "false_positives": 88,
+    "false_positive_rate": 0.957
+  },
+  "after": {
+    "arm": "score + taste intelligence",
+    "surfaced": 97,
+    "agreed": 4,
+    "agreement_rate": 0.041,
+    "memorable_discovered": 1,
+    "breakthrough_discovered": 0,
+    "false_positives": 93,
+    "false_positive_rate": 0.959
+  },
+  "attention": {
+    "cases": 100,
+    "flagged_cases": 53,
+    "flags": 79,
+    "by_kind": {
+      "UNDERRATED_MECHANISM": 61,
+      "UNUSUAL_COMBINATION": 13,
+      "HISTORICALLY_LOVED": 5
+    },
+    "mean_flagged_rank": 3.15
+  },
+  "graph": {
+    "paths": 458,
+    "nodes": 370,
+    "edges": 396,
+    "kept": 45,
+    "mechanism_survival": [
+      {
+        "mechanism": "transgression",
+        "kept": 7,
+        "total": 23,
+        "rate": 0.304
+      },
+      {
+        "mechanism": "relief",
+        "kept": 8,
+        "total": 44,
+        "rate": 0.182
+      },
+      {
+        "mechanism": "concretion",
+        "kept": 12,
+        "total": 89,
+        "rate": 0.135
+      },
+      {
+        "mechanism": "reversal",
+        "kept": 10,
+        "total": 74,
+        "rate": 0.135
+      },
+      {
+        "mechanism": "recognition",
+        "kept": 3,
+        "total": 108,
+        "rate": 0.028
+      }
+    ],
+    "pairings": 20,
+    "singleton_pairings": 4
+  },
+  "memorability_cut": 41.75
+}

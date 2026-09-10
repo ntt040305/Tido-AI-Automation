@@ -79,6 +79,9 @@ export async function createPictureAsset(
       visual_style: brief.creative_direction?.visual_style,
       emotional_tone: brief.creative_direction?.emotional_tone,
       composition_layout: brief.creative_direction?.composition_layout,
+      // Phase 4.1.5. Only sent when the user actually chose something; an
+      // untouched panel adds no field to the request.
+      visual_controls: brief.creative_direction?.visual_controls,
     });
     const salesContext = compact(brief.sales_context as any);
 

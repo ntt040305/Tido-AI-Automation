@@ -1,11 +1,11 @@
 ▲ Next.js 16.3.0 (Turbopack)
 - Environments: .env.local
-✓ Running next.config.ts took 129ms
+✓ Running next.config.ts took 34ms
 
   Creating an optimized production build ...
-✓ Compiled successfully in 11.3s
+✓ Compiled successfully in 1577ms
   Running TypeScript ...
-  Finished TypeScript in 3.6s ...
+  Finished TypeScript in 3.3s ...
   Collecting page data using 15 workers ...
 [LLM_PROVIDER] {
   provider: 'claude-sonnet-4-6',
@@ -17,17 +17,46 @@
   baseUrl: 'http://127.0.0.1:8317/v1',
   status: 'CONNECTED'
 }
-  Generating static pages using 15 workers (0/20) ...
 [LLM_PROVIDER] {
   provider: 'claude-sonnet-4-6',
   baseUrl: 'http://127.0.0.1:8317/v1',
   status: 'CONNECTED'
 }
-  Generating static pages using 15 workers (5/20) 
-  Generating static pages using 15 workers (10/20) 
-  Generating static pages using 15 workers (15/20) 
-✓ Generating static pages using 15 workers (20/20) in 470ms
-Turbopack build encountered 7 warnings:
+  Generating static pages using 15 workers (0/23) ...
+[LLM_PROVIDER] {
+  provider: 'claude-sonnet-4-6',
+  baseUrl: 'http://127.0.0.1:8317/v1',
+  status: 'CONNECTED'
+}
+  Generating static pages using 15 workers (5/23) 
+  Generating static pages using 15 workers (11/23) 
+  Generating static pages using 15 workers (17/23) 
+✓ Generating static pages using 15 workers (23/23) in 647ms
+Turbopack build encountered 10 warnings:
+./apps/web/lib/image-engine/delivery/DeliveryPackageService.ts:143:28
+Warning: The file pattern (<dynamic> '/' <dynamic> '/poster/' <dynamic> | <dynamic> '/poster/' <dynamic> | <dynamic> '/' <dynamic> 'poster/' <dynamic> | <dynamic> 'poster/' <dynamic> | <dynamic> '/' <dynamic> '/banner/' <dynamic> | <dynamic> '/banner/' <dynamic> | <dynamic> '/' <dynamic> 'banner/' <dynamic> | <dynamic> 'banner/' <dynamic> | <dynamic> '/' <dynamic> '/social/' <dynamic> | <dynamic> '/social/' <dynamic> | <dynamic> '/' <dynamic> 'social/' <dynamic> | <dynamic> 'social/' <dynamic> | <dynamic> '/' <dynamic> '/hero/' <dynamic> | <dynamic> '/hero/' <dynamic> | <dynamic> '/' <dynamic> 'hero/' <dynamic> | <dynamic> 'hero/' <dynamic> | <dynamic> '/' <dynamic> '/thumbnail/' <dynamic> | <dynamic> '/thumbnail/' <dynamic> | <dynamic> '/' <dynamic> 'thumbnail/' <dynamic> | <dynamic> 'thumbnail/' <dynamic> | <dynamic> '/' <dynamic> '/' <dynamic> '/' <dynamic> | <dynamic> '/' <dynamic> '/' <dynamic> | <dynamic> '/' <dynamic> '/' <dynamic> | <dynamic> '/' <dynamic> | <dynamic> '/' <dynamic> '/poster' <dynamic> | <dynamic> '/poster' <dynamic> | <dynamic> '/' <dynamic> 'poster' <dynamic> | <dynamic> 'poster' <dynamic> | <dynamic> '/' <dynamic> '/banner' <dynamic> | <dynamic> '/banner' <dynamic> | <dynamic> '/' <dynamic> 'banner' <dynamic> | <dynamic> 'banner' <dynamic> | <dynamic> '/' <dynamic> '/social' <dynamic> | <dynamic> '/social' <dynamic> | <dynamic> '/' <dynamic> 'social' <dynamic> | <dynamic> 'social' <dynamic> | <dynamic> '/' <dynamic> '/hero' <dynamic> | <dynamic> '/hero' <dynamic> | <dynamic> '/' <dynamic> 'hero' <dynamic> | <dynamic> 'hero' <dynamic> | <dynamic> '/' <dynamic> '/thumbnail' <dynamic> | <dynamic> '/thumbnail' <dynamic> | <dynamic> '/' <dynamic> 'thumbnail' <dynamic> | <dynamic> 'thumbnail' <dynamic> | <dynamic> '/' <dynamic> '/' <dynamic> | <dynamic> '/' <dynamic> | <dynamic> '/' <dynamic> | <dynamic>) matches 16253 files in [project]/apps/web
+  [90m141 |[0m         [36mconst[0m isNativeRatio = preset.render_ratio === asset.aspect_ratio && preset.deriva...
+  [90m142 |[0m         [36mif[0m (rendered && isNativeRatio) {
+[33m[1m>[0m [90m143 |[0m           fs.writeFileSync(path.join(folder, fileName), rendered.buffer);
+  [90m    |[0m                            [33m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m144 |[0m         }
+  [90m145 |[0m
+  [90m146 |[0m         files.push({
+
+Overly broad patterns can lead to build performance issues and over bundling.
+
+Import traces:
+  #1 [App Route]:
+    ./apps/web/lib/image-engine/delivery/DeliveryPackageService.ts
+    ./apps/web/lib/image-engine/repository/LocalKnowledgeRepository.ts
+    ./apps/web/app/api/image/knowledge/index/status/route.ts
+
+  #2 [App Route]:
+    ./apps/web/lib/image-engine/delivery/DeliveryPackageService.ts
+    ./apps/web/lib/image-engine/campaign/CampaignOrchestratorService.ts
+    ./apps/web/app/api/campaign/generate/route.ts
+
+
 ./apps/web/lib/image-engine/config.ts:7:7
 Warning: Dynamic filesystem access causes tracing of the whole project
   [90m 5 |[0m   [36mconst[0m cwd = process.cwd();
@@ -50,8 +79,7 @@ To resolve this, you can
 Import traces:
   #1 [App Route]:
     ./apps/web/lib/image-engine/config.ts
-    ./apps/web/lib/image-engine/storage/LocalGeneratedImageStorage.ts
-    ./apps/web/app/api/image/generated/[id]/route.ts
+    ./apps/web/app/api/campaign/render-asset/route.ts
 
   #2 [App Route]:
     ./apps/web/lib/image-engine/config.ts
@@ -97,8 +125,7 @@ To resolve this, you can
 Import traces:
   #1 [App Route]:
     ./apps/web/lib/image-engine/config.ts
-    ./apps/web/lib/image-engine/storage/LocalGeneratedImageStorage.ts
-    ./apps/web/app/api/image/generated/[id]/route.ts
+    ./apps/web/app/api/campaign/render-asset/route.ts
 
   #2 [App Route]:
     ./apps/web/lib/image-engine/config.ts
@@ -122,6 +149,68 @@ Import traces:
     ./apps/web/app/render-image/page.tsx [Server Component]
 
 
+./apps/web/lib/image-engine/delivery/DeliveryPackageService.ts:93:22
+Warning: Dynamic filesystem access causes tracing of the whole project
+  [90m91 |[0m
+  [90m92 |[0m     [36mfor[0m ([36mconst[0m asset [36mof[0m assets) {
+[33m[1m>[0m [90m93 |[0m       [36mconst[0m folder = path.join(packageRoot, [33mASSET_FOLDER[0m[asset.asset_type]);
+  [90m   |[0m                      [33m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m94 |[0m       fs.mkdirSync(folder, { recursive: [36mtrue[0m });
+  [90m95 |[0m
+  [90m96 |[0m       [90m// The compiled prompt ships with the asset. An agency reviewing a render[0m
+
+Static analysis determined that this filesystem access causes the whole project to be traced and included in the output.
+This is usually unintentional and leads to all source files (including the public folder) to be deployed as part of the server code.
+This can slow down deployments or lead to failures when size limits are exceeded.
+To resolve this, you can
+- make sure the path is statically scoped to some subfolder, for example path.join(process.cwd(), 'data', bar), or
+- only use them in development, or
+- opt out by adding an ignore comment to the highlighted call: path.join(/*turbopackIgnore: true*/ ...), or
+- remove them.
+
+Import traces:
+  #1 [App Route]:
+    ./apps/web/lib/image-engine/delivery/DeliveryPackageService.ts
+    ./apps/web/lib/image-engine/repository/LocalKnowledgeRepository.ts
+    ./apps/web/app/api/image/knowledge/index/status/route.ts
+
+  #2 [App Route]:
+    ./apps/web/lib/image-engine/delivery/DeliveryPackageService.ts
+    ./apps/web/lib/image-engine/campaign/CampaignOrchestratorService.ts
+    ./apps/web/app/api/campaign/generate/route.ts
+
+
+./apps/web/lib/image-engine/delivery/DeliveryPackageService.ts:143:28
+Warning: Dynamic filesystem access causes tracing of the whole project
+  [90m141 |[0m         [36mconst[0m isNativeRatio = preset.render_ratio === asset.aspect_ratio && preset.deriva...
+  [90m142 |[0m         [36mif[0m (rendered && isNativeRatio) {
+[33m[1m>[0m [90m143 |[0m           fs.writeFileSync(path.join(folder, fileName), rendered.buffer);
+  [90m    |[0m                            [33m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m144 |[0m         }
+  [90m145 |[0m
+  [90m146 |[0m         files.push({
+
+Static analysis determined that this filesystem access causes the whole project to be traced and included in the output.
+This is usually unintentional and leads to all source files (including the public folder) to be deployed as part of the server code.
+This can slow down deployments or lead to failures when size limits are exceeded.
+To resolve this, you can
+- make sure the path is statically scoped to some subfolder, for example path.join(process.cwd(), 'data', bar), or
+- only use them in development, or
+- opt out by adding an ignore comment to the highlighted call: path.join(/*turbopackIgnore: true*/ ...), or
+- remove them.
+
+Import traces:
+  #1 [App Route]:
+    ./apps/web/lib/image-engine/delivery/DeliveryPackageService.ts
+    ./apps/web/lib/image-engine/repository/LocalKnowledgeRepository.ts
+    ./apps/web/app/api/image/knowledge/index/status/route.ts
+
+  #2 [App Route]:
+    ./apps/web/lib/image-engine/delivery/DeliveryPackageService.ts
+    ./apps/web/lib/image-engine/campaign/CampaignOrchestratorService.ts
+    ./apps/web/app/api/campaign/generate/route.ts
+
+
 ./apps/web/lib/image-engine/repository/LocalKnowledgeRepository.ts:115:13
 Warning: Dynamic filesystem access causes tracing of the whole project
   [90m113 |[0m
@@ -141,15 +230,10 @@ To resolve this, you can
 - opt out by adding an ignore comment to the highlighted call: fs.existsSync(/*turbopackIgnore: true*/ ...), or
 - remove them.
 
-Import traces:
-  #1 [App Route]:
+Import trace:
+  App Route:
     ./apps/web/lib/image-engine/repository/LocalKnowledgeRepository.ts
     ./apps/web/app/api/image/knowledge/index/status/route.ts
-
-  #2 [App Route]:
-    ./apps/web/lib/image-engine/repository/LocalKnowledgeRepository.ts
-    ./apps/web/lib/image-engine/storage/LocalGeneratedImageStorage.ts
-    ./apps/web/app/api/image/generated/[id]/route.ts
 
 
 ./apps/web/lib/image-engine/repository/LocalKnowledgeRepository.ts:116:21
@@ -171,15 +255,10 @@ To resolve this, you can
 - opt out by adding an ignore comment to the highlighted call: fs.readFileSync(/*turbopackIgnore: true*/ ...), or
 - remove them.
 
-Import traces:
-  #1 [App Route]:
+Import trace:
+  App Route:
     ./apps/web/lib/image-engine/repository/LocalKnowledgeRepository.ts
     ./apps/web/app/api/image/knowledge/index/status/route.ts
-
-  #2 [App Route]:
-    ./apps/web/lib/image-engine/repository/LocalKnowledgeRepository.ts
-    ./apps/web/lib/image-engine/storage/LocalGeneratedImageStorage.ts
-    ./apps/web/app/api/image/generated/[id]/route.ts
 
 
 ./apps/web/lib/image-engine/repository/LocalKnowledgeRepository.ts:112:29
@@ -201,15 +280,10 @@ To resolve this, you can
 - opt out by adding an ignore comment to the highlighted call: path.join(/*turbopackIgnore: true*/ ...), or
 - remove them.
 
-Import traces:
-  #1 [App Route]:
+Import trace:
+  App Route:
     ./apps/web/lib/image-engine/repository/LocalKnowledgeRepository.ts
     ./apps/web/app/api/image/knowledge/index/status/route.ts
-
-  #2 [App Route]:
-    ./apps/web/lib/image-engine/repository/LocalKnowledgeRepository.ts
-    ./apps/web/lib/image-engine/storage/LocalGeneratedImageStorage.ts
-    ./apps/web/app/api/image/generated/[id]/route.ts
 
 
 ./apps/web/lib/image-engine/storage/LocalGeneratedImageStorage.ts:74:11
@@ -231,10 +305,15 @@ To resolve this, you can
 - opt out by adding an ignore comment to the highlighted call: fs.existsSync(/*turbopackIgnore: true*/ ...), or
 - remove them.
 
-Import trace:
-  App Route:
+Import traces:
+  #1 [App Route]:
     ./apps/web/lib/image-engine/storage/LocalGeneratedImageStorage.ts
-    ./apps/web/app/api/image/generated/[id]/route.ts
+    ./apps/web/app/api/campaign/render-asset/route.ts
+
+  #2 [App Route]:
+    ./apps/web/lib/image-engine/storage/LocalGeneratedImageStorage.ts
+    ./apps/web/lib/image-engine/repository/LocalKnowledgeRepository.ts
+    ./apps/web/app/api/image/knowledge/index/status/route.ts
 
 
 ./apps/web/lib/image-engine/storage/LocalGeneratedImageStorage.ts:73:17
@@ -256,10 +335,15 @@ To resolve this, you can
 - opt out by adding an ignore comment to the highlighted call: path.join(/*turbopackIgnore: true*/ ...), or
 - remove them.
 
-Import trace:
-  App Route:
+Import traces:
+  #1 [App Route]:
     ./apps/web/lib/image-engine/storage/LocalGeneratedImageStorage.ts
-    ./apps/web/app/api/image/generated/[id]/route.ts
+    ./apps/web/app/api/campaign/render-asset/route.ts
+
+  #2 [App Route]:
+    ./apps/web/lib/image-engine/storage/LocalGeneratedImageStorage.ts
+    ./apps/web/lib/image-engine/repository/LocalKnowledgeRepository.ts
+    ./apps/web/app/api/image/knowledge/index/status/route.ts
 
 
   Finalizing page optimization ...
@@ -267,6 +351,8 @@ Import trace:
 Route (app)
 ┌ ○ /
 ├ ○ /_not-found
+├ ƒ /api/campaign/generate
+├ ƒ /api/campaign/render-asset
 ├ ƒ /api/generate-script
 ├ ƒ /api/image/concept-professionalize
 ├ ƒ /api/image/edit
@@ -282,6 +368,7 @@ Route (app)
 ├ ƒ /api/image/router/analyze
 ├ ƒ /api/render-voice
 ├ ƒ /api/voices
+├ ○ /campaign-site
 ├ ○ /cost
 ├ ƒ /projects/[id]
 ├ ƒ /projects/[id]/creative

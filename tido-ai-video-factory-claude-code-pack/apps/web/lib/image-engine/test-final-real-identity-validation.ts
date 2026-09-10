@@ -107,7 +107,7 @@ async function runFinalRealIdentityValidation() {
   const compiledOutput = await compiler.compile({
     useCase: "Poster",
     brief: "Create an ultra-luxurious commercial poster for TIDO Cold Brew placed on dark marble counter with golden ambient lighting",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     routingResult,
     knowledgePackage: {
       package_version: "1.0",
@@ -145,7 +145,7 @@ async function runFinalRealIdentityValidation() {
   const providerInput: ProviderImageGenerationInput = {
     model: "flow-nano-banana-2",
     prompt: compiledMasterPrompt,
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     imageSize: "1K",
     mimeType: "image/png",
     generationId: `gen_final_${Date.now()}`,

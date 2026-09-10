@@ -1,0 +1,100 @@
+{
+  "success": true,
+  "generation_id": "gen_skin1004-ampoule_poster_1788612766545",
+  "asset_type": "poster",
+  "aspect_ratio": "9:16",
+  "image_url": "/api/image/generated/gen_skin1004-ampoule_poster_1788612766545",
+  "download_filename": "Skin1004_Poster_One-capsule-holds-everything.png",
+  "export_metadata": {
+    "schema_version": "1.0",
+    "generated_at": "2026-09-05T12:53:16.168Z",
+    "asset": {
+      "name": "Skin1004_Poster_One-capsule-holds-everything",
+      "asset_type": "poster",
+      "use_case": "poster",
+      "goal": "Brand storytelling and emotional impact"
+    },
+    "campaign": {
+      "campaign_id": "skin1004-ampoule",
+      "campaign_name": "One capsule holds everything",
+      "brand": "Skin1004"
+    },
+    "dimensions": {
+      "width": 1152,
+      "height": 2048,
+      "aspect_ratio": "9:16",
+      "measured": "DERIVED_FROM_RATIO"
+    },
+    "generation": {
+      "generation_id": "gen_skin1004-ampoule_poster_1788612766545",
+      "provider": "imgstudio",
+      "model": "flow-nano-banana-2",
+      "image_size": "1K",
+      "mime_type": "image/webp",
+      "prompt": "Skin1004 Tone Brightening Capsule Ampoule standing alone on a clean pale surface, soft directional light grazing the glass, calm premium Korean skincare mood, generous negative space.",
+      "prompt_chars": 183,
+      "reference_count": 0,
+      "rendered_at": "2026-09-05T12:53:16.168Z",
+      "duration_ms": 29625
+    },
+    "layers": [
+      {
+        "id": "layer_01",
+        "role": "PRODUCT",
+        "name": "product",
+        "bounds": {
+          "x": 0.1,
+          "y": 0.15,
+          "width": 0.8,
+          "height": 0.55
+        },
+        "editable": false,
+        "source": "LAYOUT_PLAN"
+      },
+      {
+        "id": "layer_02",
+        "role": "HEADLINE",
+        "name": "headline",
+        "bounds": {
+          "x": 0.1,
+          "y": 0.74,
+          "width": 0.8,
+          "height": 0.1
+        },
+        "editable": false,
+        "source": "LAYOUT_PLAN"
+      },
+      {
+        "id": "layer_03",
+        "role": "CTA",
+        "name": "cta",
+        "bounds": {
+          "x": 0.1,
+          "y": 0.86,
+          "width": 0.5,
+          "height": 0.06
+        },
+        "editable": false,
+        "source": "LAYOUT_PLAN"
+      }
+    ],
+    "editable_export": {
+      "status": "FLATTENED",
+      "planned_targets": [
+        "PSD",
+        "CANVA",
+        "FIGMA"
+      ],
+      "notes": "The rendered file is flat pixels. Layer bounds below come from the campaign layout plan and describe where each element sits, which is what a future PSD or Canva export would need. No layer separation has been performed."
+    }
+  },
+  "provider": {
+    "remote_image_id": "35265995-5965-4239-a2cb-472bf5204983",
+    "cost_vnd": 100,
+    "balance_vnd": 15400,
+    "provider_name": "Flow · Nano Banana 2",
+    "model": "flow-nano-banana-2",
+    "url": "/api/v1/images/35265995-5965-4239-a2cb-472bf5204983/file"
+  },
+  "duration_ms": 29628
+}

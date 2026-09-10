@@ -72,6 +72,14 @@ export class PromptBudgetManagerService {
     // 1 — what the client actually asked for.
     { match: /^CREATIVE INTENT$/i, priority: 1 },
 
+    // 2 — the campaign concept and its visual DNA.
+    //
+    // This sat at the bottom of the ranking when it held only campaign framing.
+    // It now carries the campaign DNA — the rules that make five separate renders
+    // read as one campaign — so dropping it first turned a coordinated asset set
+    // into five unrelated pictures, silently, on every asset.
+    { match: /^CAMPAIGN STRATEGY$/i, priority: 2 },
+
     // 2 — hard user constraints, including authorized copy.
     { match: /^USER HARD REQUIREMENTS$/i, priority: 2 },
     { match: /^TYPOGRAPHY & READABLE COPY$/i, priority: 2 },
@@ -93,8 +101,7 @@ export class PromptBudgetManagerService {
     { match: /^CREATIVE EXECUTION$/i, priority: 6 },
     { match: /^CREATIVE & RENDER CONSTRAINTS$/i, priority: 6 },
 
-    // 7 — campaign framing. Valuable, but the image still reads without it.
-    { match: /^CAMPAIGN STRATEGY$/i, priority: 7 },
+    // 7 — brand background. Valuable, but the image still reads without it.
     { match: /^BRAND KNOWLEDGE$/i, priority: 7 },
   ];
 

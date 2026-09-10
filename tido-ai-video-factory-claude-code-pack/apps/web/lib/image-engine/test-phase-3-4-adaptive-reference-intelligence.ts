@@ -80,7 +80,7 @@ async function runPhase34Tests() {
     productCount: 1,
     copyItems: ["SKIN1004 Centella Serum"],
     useCase: "Poster",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     routingResult: weakRoutingResult,
     knowledgePackage: weakRetrieval.package,
   };
@@ -168,7 +168,7 @@ async function runPhase34Tests() {
     productCount: 1,
     copyItems: ["TIDO Tea"],
     useCase: "Poster",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     routingResult: strongRoutingResult,
     knowledgePackage: strongRetrieval.package,
   };

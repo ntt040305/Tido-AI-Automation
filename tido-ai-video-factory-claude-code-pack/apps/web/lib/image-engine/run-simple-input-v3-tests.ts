@@ -47,7 +47,7 @@ async function runSimpleInputV3Tests() {
   const reqA: SimpleInputRequestV1 = {
     concept: "Poster fantasy mùa hè, 2 sản phẩm bay giữa mây",
     useCase: "Poster",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     images: [{ reference_id: "REF_01" }, { reference_id: "REF_02" }, { reference_id: "REF_03" }],
   };
 
@@ -98,7 +98,7 @@ async function runSimpleInputV3Tests() {
   const reqB: SimpleInputRequestV1 = {
     concept: "Poster cho 1 sản phẩm 2 góc chụp và logo brand",
     useCase: "Poster",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     images: [{ reference_id: "REF_01" }, { reference_id: "REF_02" }, { reference_id: "REF_03" }],
   };
 
@@ -139,7 +139,7 @@ async function runSimpleInputV3Tests() {
   const reqC: SimpleInputRequestV1 = {
     concept: "Poster sản phẩm theo phong cách tham khảo hình 2",
     useCase: "Poster",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     images: [{ reference_id: "REF_01" }, { reference_id: "REF_02" }],
   };
 
@@ -166,7 +166,7 @@ async function runSimpleInputV3Tests() {
   const reqD: SimpleInputRequestV1 = {
     concept: "Poster cho sản phẩm",
     useCase: "Poster",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     images: [{ reference_id: "REF_01" }, { reference_id: "REF_02" }],
   };
 
@@ -193,7 +193,7 @@ async function runSimpleInputV3Tests() {
   const reqE: SimpleInputRequestV1 = {
     concept: "Poster với title 'HÈ BAY LÊN'",
     useCase: "Poster",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     images: [{ reference_id: "REF_01" }],
   };
 
@@ -233,7 +233,7 @@ async function runSimpleInputV3Tests() {
     ],
   };
 
-  const resF = SimpleInputAdapterService.adapt({ concept: "Poster hai sản phẩm", useCase: "Poster", aspectRatio: "4:5", images: [{ reference_id: "REF_01" }, { reference_id: "REF_02" }] }, createFixtureRouting([], intentF));
+  const resF = SimpleInputAdapterService.adapt({ concept: "Poster hai sản phẩm", useCase: "Poster", aspectRatio: "9:16", images: [{ reference_id: "REF_01" }, { reference_id: "REF_02" }] }, createFixtureRouting([], intentF));
   assert(resF.copyItems.filter((c) => c.type === "product_name").length === 2, "Case F: Product names preserved as product_name copy items without unsafe binding");
 
   // ── TEST CASE G: Hard Requirements ────────────────────────────────
@@ -249,7 +249,7 @@ async function runSimpleInputV3Tests() {
     asset_roles: [{ reference_id: "REF_01", role: "PRODUCT", confidence: 0.95 }],
   };
 
-  const resG = SimpleInputAdapterService.adapt({ concept: "Poster giữ nguyên màu chai", useCase: "Poster", aspectRatio: "4:5", images: [{ reference_id: "REF_01" }] }, createFixtureRouting([], intentG));
+  const resG = SimpleInputAdapterService.adapt({ concept: "Poster giữ nguyên màu chai", useCase: "Poster", aspectRatio: "9:16", images: [{ reference_id: "REF_01" }] }, createFixtureRouting([], intentG));
   assert(resG.hardRequirements.includes("Không đổi màu chai"), "Case G: Hard requirements mapped to hardRequirements array");
 
   // ── TEST CASE H: No Brand Evidence ────────────────────────────────
@@ -265,19 +265,19 @@ async function runSimpleInputV3Tests() {
     asset_roles: [{ reference_id: "REF_01", role: "PRODUCT", confidence: 0.95 }],
   };
 
-  const resH = SimpleInputAdapterService.adapt({ concept: "Poster sản phẩm", useCase: "Poster", aspectRatio: "4:5", images: [{ reference_id: "REF_01" }] }, createFixtureRouting([], intentH));
+  const resH = SimpleInputAdapterService.adapt({ concept: "Poster sản phẩm", useCase: "Poster", aspectRatio: "9:16", images: [{ reference_id: "REF_01" }] }, createFixtureRouting([], intentH));
   assert(resH.brandName === undefined, "Case H: brandName is undefined when no evidence");
   assert(resH.brandInfo === undefined, "Case H: brandInfo is undefined without hallucination");
 
   // ── TEST CASE I: 1000-char Valid Concept ─────────────────────────
   const valid1000Concept = "A".repeat(1000);
-  const resI = SimpleInputAdapterService.adapt({ concept: valid1000Concept, useCase: "Poster", aspectRatio: "4:5", images: [{ reference_id: "REF_01" }] }, createFixtureRouting([], intentH));
+  const resI = SimpleInputAdapterService.adapt({ concept: valid1000Concept, useCase: "Poster", aspectRatio: "9:16", images: [{ reference_id: "REF_01" }] }, createFixtureRouting([], intentH));
   assert(resI.success === true, "Case I: 1000-character concept passes adaptation cleanly");
   assert(resI.diagnostics.rawConceptChars === 1000, "Case I: rawConceptChars === 1000 recorded in diagnostics");
 
   // ── TEST CASE J: >1000-char Invalid Concept ──────────────────────
   const invalid1050Concept = "B".repeat(1050);
-  const resJ = SimpleInputAdapterService.adapt({ concept: invalid1050Concept, useCase: "Poster", aspectRatio: "4:5", images: [{ reference_id: "REF_01" }] }, createFixtureRouting([], intentH));
+  const resJ = SimpleInputAdapterService.adapt({ concept: invalid1050Concept, useCase: "Poster", aspectRatio: "9:16", images: [{ reference_id: "REF_01" }] }, createFixtureRouting([], intentH));
   assert(resJ.success === false, "Case J: >1000-character concept fails adaptation");
   assert(resJ.status === "INVALID_REQUEST", "Case J: Returns status 'INVALID_REQUEST'");
 
@@ -286,7 +286,7 @@ async function runSimpleInputV3Tests() {
   assert(resA.compilerInput?.productCount === 2, "Synthetic Compiler Input: productCount === 2");
   assert(resA.compilerInput?.brief === resA.compilerBrief, "Synthetic Compiler Input: brief populated from GenerationIntentBrief");
   assert(resA.compilerInput?.useCase === "Poster", "Synthetic Compiler Input: useCase === 'Poster'");
-  assert(resA.compilerInput?.aspectRatio === "4:5", "Synthetic Compiler Input: aspectRatio === '4:5'");
+  assert(resA.compilerInput?.aspectRatio === "9:16", "Synthetic Compiler Input: aspectRatio === '9:16'");
 
   console.log("\n=========================================================");
   console.log(`🎉 ALL ${passedTests}/${totalTests} PHASE 3 TESTS PASSED SUCCESSFULLY!`);

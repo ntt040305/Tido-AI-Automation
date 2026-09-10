@@ -1,0 +1,5 @@
+poster        missing: BRAND KNOWLEDGE
+banner        missing: BRAND KNOWLEDGE
+social_ad     missing: BRAND KNOWLEDGE
+product_hero  missing: BRAND KNOWLEDGE
+thumbnail     missing: (none)

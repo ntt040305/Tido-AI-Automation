@@ -1,0 +1,4181 @@
+[LLM_PROVIDER] {
+  provider: 'claude-sonnet-4-6',
+  baseUrl: 'http://127.0.0.1:8317/v1',
+  status: 'CONNECTED'
+}
+
+╔══════════════════════════════════════════════════════════════════════════╗
+║  TIDO PICTURE ENGINE — CAMPAIGN BENCHMARK (10 BRIEFS, 5 INDUSTRIES)      ║
+╚══════════════════════════════════════════════════════════════════════════╝
+
+══════════════════════════════════════════════════════════════════════════════
+B01 · SKINCARE · Centella — Hydrating serum
+══════════════════════════════════════════════════════════════════════════════
+[INSPIRATION_TRANSPORT][ADAPTER] { explicit_roles: [], resolved_roles: [] }
+[LLM_PROVIDER] {
+  provider: 'claude-sonnet-4-6',
+  baseUrl: 'http://127.0.0.1:8317/v1',
+  status: 'CONNECTED'
+}
+[LLM_REQUEST] {
+  model: 'claude-sonnet-4-6',
+  inputLength: 2133,
+  imageParts: 0,
+  purpose: 'creative_interpretation'
+}
+[LLMProviderService] Chat completion request failed (fetch failed)
+[CreativeInterpretationService] Structured LLM interpretation unavailable (Marketing brain unavailable: fetch failed). Falling back.
+[CREATIVE_INTERPRETATION] {
+  source: 'ROUTER_STRUCTURED_INTENT',
+  subject: 'Hydrating serum bottle photographed from above on still clear water',
+  camera_requirements: [ 'slightly tilted top-down view' ],
+  lighting_requirements: [ 'soft reflective light with clean reflections' ]
+}
+[LLM_REQUEST] {
+  model: 'claude-sonnet-4-6',
+  inputLength: 3252,
+  imageParts: 0,
+  purpose: 'marketing_brain'
+}
+[LLMProviderService] Chat completion request failed (fetch failed)
+[MarketingBrainService] LLM call failed (Marketing brain unavailable: fetch failed). Using fallback strategy.
+[CAMPAIGN_BUILDER] {
+  campaign_name: 'Centella — Hydrating serum',
+  big_idea: 'Chai serum đặt giữa mặt nước trong, góc top view hơi nghiêng, ánh sáng phản chiếu sạch',
+  asset_plan: [ 'poster', 'banner', 'social_ad', 'product_hero', 'thumbnail' ],
+  strategy_source: 'DETERMINISTIC_FALLBACK',
+  deterministically_filled: [ 'colour_logic', 'composition_logic', 'big_idea', 'core_message' ]
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=7 rejected=1 tokens=0 duration=34ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    camera: 'USER',
+    lighting: 'USER',
+    environment: 'USER',
+    atmosphere: 'USER',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE'
+  },
+  decisions: [
+    'camera<-USER (conf 0.95, HIGH, score 0.975)',
+    'lighting<-USER (conf 0.95, HIGH, score 0.975)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'atmosphere<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [ 'camera', 'lighting' ],
+  suppressed_count: 7
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'universal.typography_graphic_integration',
+    'property.transparent',
+    'specialist.poster_foundation'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 4
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 21403,
+  after_chars: 21030,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 21030,
+  after: 21030,
+  duplicate_lines_removed: 0,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=8 rejected=0 tokens=462 duration=30ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    camera: 'USER',
+    lighting: 'USER',
+    environment: 'USER',
+    atmosphere: 'USER',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE'
+  },
+  decisions: [
+    'camera<-USER (conf 0.95, HIGH, score 0.975)',
+    'lighting<-USER (conf 0.95, HIGH, score 0.975)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'atmosphere<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [ 'camera', 'lighting' ],
+  suppressed_count: 7
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'universal.typography_graphic_integration',
+    'property.transparent',
+    'specialist.website_banner_foundation',
+    'material.glass'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 4
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 21154,
+  after_chars: 20781,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 20781,
+  after: 20781,
+  duplicate_lines_removed: 0,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=8 rejected=0 tokens=462 duration=27ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    camera: 'USER',
+    lighting: 'USER',
+    environment: 'USER',
+    atmosphere: 'USER',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE'
+  },
+  decisions: [
+    'camera<-USER (conf 0.95, HIGH, score 0.975)',
+    'lighting<-USER (conf 0.95, HIGH, score 0.975)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'atmosphere<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [ 'camera', 'lighting' ],
+  suppressed_count: 7
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'universal.typography_graphic_integration',
+    'property.transparent',
+    'specialist.social_ad_foundation',
+    'material.glass'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 4
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 21270,
+  after_chars: 20897,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 20897,
+  after: 20897,
+  duplicate_lines_removed: 0,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=8 rejected=0 tokens=462 duration=28ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    camera: 'USER',
+    lighting: 'USER',
+    environment: 'USER',
+    atmosphere: 'USER',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE'
+  },
+  decisions: [
+    'camera<-USER (conf 0.95, HIGH, score 0.975)',
+    'lighting<-USER (conf 0.95, HIGH, score 0.975)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'atmosphere<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [ 'camera', 'lighting' ],
+  suppressed_count: 7
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'universal.typography_graphic_integration',
+    'property.transparent',
+    'specialist.product_hero_foundation',
+    'material.glass'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 4
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 21013,
+  after_chars: 20641,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 20641,
+  after: 20641,
+  duplicate_lines_removed: 0,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=8 rejected=0 tokens=462 duration=32ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    camera: 'USER',
+    lighting: 'USER',
+    environment: 'USER',
+    atmosphere: 'USER',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE'
+  },
+  decisions: [
+    'camera<-USER (conf 0.95, HIGH, score 0.975)',
+    'lighting<-USER (conf 0.95, HIGH, score 0.975)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'atmosphere<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [ 'camera', 'lighting' ],
+  suppressed_count: 7
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'universal.typography_graphic_integration',
+    'property.transparent',
+    'specialist.ugc_thumbnail_foundation',
+    'material.glass'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 4
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 20677,
+  after_chars: 20304,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 20304,
+  after: 20304,
+  duplicate_lines_removed: 0,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[DELIVERY_PACKAGE] {
+  root: 'D:\\Tido\\tido-ai-video-factory-claude-code-pack\\apps\\web\\data\\deliveries\\centella-hydrating-serum',
+  assets: 5,
+  files: 11,
+  rendered: 0
+}
+[CAMPAIGN_RUN] {
+  campaign: 'Centella — Hydrating serum',
+  assets: [
+    'poster:21030ch',
+    'banner:20781ch',
+    'social_ad:20897ch',
+    'product_hero:20641ch',
+    'thumbnail:20304ch'
+  ],
+  gemini_calls: 0,
+  llm_calls: 2,
+  provider_calls: 0,
+  duration_ms: 272
+}
+
+  1. CLIENT BRIEF
+     Chai serum đặt giữa mặt nước trong, góc top view hơi nghiêng, ánh sáng phản chiếu sạch.
+     audience: Women 25–40 who read ingredient lists | objective: conversion | channel: social_media
+
+  2. CAMPAIGN CONCEPT
+     name        : Centella — Hydrating serum
+     big idea    : Chai serum đặt giữa mặt nước trong, góc top view hơi nghiêng, ánh sáng phản chiếu sạch
+     core message: Chai serum đặt giữa mặt nước trong, góc top view hơi nghiêng, ánh sáng phản chiếu sạch
+     strategy    : DETERMINISTIC_FALLBACK (filled: colour_logic, composition_logic, big_idea, core_message)
+
+  3. VISUAL DNA
+     mood                 : clinical, calm
+     colour_logic         : Restrained palette led by the product's own colours; no colour introduced that the product does 
+     lighting_logic       : soft reflective light with clean reflections
+     composition_logic    : One clear subject, deliberate emptiness around it, nothing competing for the same attention.
+     typography_logic     : Only client-authorised strings appear, set in one consistent hierarchy across every asset: messa
+     product_presentation : Hydrating serum bottle photographed from above on still clear water
+
+  4. ASSET ADAPTATION BY FORMAT
+     poster        9:16   21030ch  center_out_product_first       product=85,headline=65,cta=35
+                   art direction: camera:USER lighting:USER environment:USER atmosphere:USER composition:KNOWLEDGE colour:KNOWLEDGE
+     banner        16:9   20781ch  left_to_right_message_first    headline=85,cta=70,product=60
+                   art direction: camera:USER lighting:USER environment:USER atmosphere:USER composition:KNOWLEDGE colour:KNOWLEDGE
+     social_ad     9:16   20897ch  top_to_bottom_product_first    product=90,headline=60,cta=30
+                   art direction: camera:USER lighting:USER environment:USER atmosphere:USER composition:KNOWLEDGE colour:KNOWLEDGE
+     product_hero  1:1    20641ch  center_lock_product_only       product=100
+                   art direction: camera:USER lighting:USER environment:USER atmosphere:USER composition:KNOWLEDGE colour:KNOWLEDGE
+     thumbnail     16:9   20304ch  center_out_product_first       product=85,headline=45
+                   art direction: camera:USER lighting:USER environment:USER atmosphere:USER composition:KNOWLEDGE colour:KNOWLEDGE
+
+  5. FINAL PROMPT (poster, section map)
+     ROLE → CREATIVE INTENT → CAMPAIGN STRATEGY → USER HARD REQUIREMENTS → TYPOGRAPHY & READABLE COPY → BRAND KNOWLEDGE → REFERENCE SEMANTICS → PRODUCT INSTANCE REQUIREMENTS → ART DIRECTION → COMMERCIAL LAYOUT → PROFESSIONAL KNOWLEDGE → OUTPUT CONTEXT → CREATIVE EXECUTION → CONFLICT PRIORITY → FINAL OUTPUT
+
+  6. DIAGNOSTICS
+     calls   : gemini 0, llm 2, provider 0
+     duration: 272ms
+     delivery: 11 files at D:\Tido\tido-ai-video-factory-claude-code-pack\apps\web\data\deliveries\centella-hydrating-serum
+     warnings: No reference images supplied: product identity comes from the brief text alone, so renders will not be identity-locked to a real product., Marketing reasoning was unavailable, so the campaign concept was derived deterministically from the brief: there is no consumer insight, emotional response or visual translation behind these assets.
+
+══════════════════════════════════════════════════════════════════════════════
+B02 · SKINCARE · Lumière — Anti-ageing night cream
+══════════════════════════════════════════════════════════════════════════════
+[INSPIRATION_TRANSPORT][ADAPTER] { explicit_roles: [], resolved_roles: [] }
+[LLM_PROVIDER] {
+  provider: 'claude-sonnet-4-6',
+  baseUrl: 'http://127.0.0.1:8317/v1',
+  status: 'CONNECTED'
+}
+[LLM_REQUEST] {
+  model: 'claude-sonnet-4-6',
+  inputLength: 2139,
+  imageParts: 0,
+  purpose: 'creative_interpretation'
+}
+[LLMProviderService] Chat completion request failed (fetch failed)
+[CreativeInterpretationService] Structured LLM interpretation unavailable (Marketing brain unavailable: fetch failed). Falling back.
+[CREATIVE_INTERPRETATION] {
+  source: 'ROUTER_STRUCTURED_INTENT',
+  subject: 'Anti-ageing night cream jar in warm low light',
+  camera_requirements: [],
+  lighting_requirements: [ 'soft directional light from one side only' ]
+}
+[LLM_REQUEST] {
+  model: 'claude-sonnet-4-6',
+  inputLength: 3208,
+  imageParts: 0,
+  purpose: 'marketing_brain'
+}
+[LLMProviderService] Chat completion request failed (fetch failed)
+[MarketingBrainService] LLM call failed (Marketing brain unavailable: fetch failed). Using fallback strategy.
+[CAMPAIGN_BUILDER] {
+  campaign_name: 'Lumière — Anti-ageing night cream',
+  big_idea: 'Kem dưỡng ban đêm, ánh sáng dịu từ một phía, nền tối ấm, cảm giác trân trọng tuổi tác',
+  asset_plan: [ 'poster', 'banner', 'social_ad', 'product_hero', 'thumbnail' ],
+  strategy_source: 'DETERMINISTIC_FALLBACK',
+  deterministically_filled: [ 'colour_logic', 'composition_logic', 'big_idea', 'core_message' ]
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=7 rejected=1 tokens=0 duration=25ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    lighting: 'USER',
+    environment: 'USER',
+    atmosphere: 'USER',
+    camera: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE'
+  },
+  decisions: [
+    'lighting<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'atmosphere<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 6
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'universal.typography_graphic_integration',
+    'property.transparent',
+    'specialist.poster_foundation'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 4
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 20927,
+  after_chars: 20555,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 20555,
+  after: 20501,
+  duplicate_lines_removed: 1,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=8 rejected=0 tokens=462 duration=22ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    lighting: 'USER',
+    environment: 'USER',
+    atmosphere: 'USER',
+    camera: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE'
+  },
+  decisions: [
+    'lighting<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'atmosphere<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 6
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'universal.typography_graphic_integration',
+    'property.transparent',
+    'specialist.website_banner_foundation',
+    'material.glass'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 4
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 20678,
+  after_chars: 20306,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 20306,
+  after: 20252,
+  duplicate_lines_removed: 1,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=8 rejected=0 tokens=462 duration=22ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    lighting: 'USER',
+    environment: 'USER',
+    atmosphere: 'USER',
+    camera: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE'
+  },
+  decisions: [
+    'lighting<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'atmosphere<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 6
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'universal.typography_graphic_integration',
+    'property.transparent',
+    'specialist.social_ad_foundation',
+    'material.glass'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 4
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 20795,
+  after_chars: 20423,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 20423,
+  after: 20369,
+  duplicate_lines_removed: 1,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=8 rejected=0 tokens=462 duration=24ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    lighting: 'USER',
+    environment: 'USER',
+    atmosphere: 'USER',
+    camera: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE'
+  },
+  decisions: [
+    'lighting<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'atmosphere<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 6
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'universal.typography_graphic_integration',
+    'property.transparent',
+    'specialist.product_hero_foundation',
+    'material.glass'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 4
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 20707,
+  after_chars: 20335,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 20335,
+  after: 20281,
+  duplicate_lines_removed: 1,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=8 rejected=0 tokens=462 duration=43ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    lighting: 'USER',
+    environment: 'USER',
+    atmosphere: 'USER',
+    camera: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE'
+  },
+  decisions: [
+    'lighting<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'atmosphere<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 6
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'property.transparent',
+    'specialist.ugc_thumbnail_foundation',
+    'material.glass'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 5
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 21611,
+  after_chars: 21238,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 21238,
+  after: 21184,
+  duplicate_lines_removed: 1,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[DELIVERY_PACKAGE] {
+  root: 'D:\\Tido\\tido-ai-video-factory-claude-code-pack\\apps\\web\\data\\deliveries\\lumiere-anti-ageing-night-cream',
+  assets: 5,
+  files: 11,
+  rendered: 0
+}
+[CAMPAIGN_RUN] {
+  campaign: 'Lumière — Anti-ageing night cream',
+  assets: [
+    'poster:20501ch',
+    'banner:20252ch',
+    'social_ad:20369ch',
+    'product_hero:20281ch',
+    'thumbnail:21184ch'
+  ],
+  gemini_calls: 0,
+  llm_calls: 2,
+  provider_calls: 0,
+  duration_ms: 206
+}
+
+  1. CLIENT BRIEF
+     Kem dưỡng ban đêm, ánh sáng dịu từ một phía, nền tối ấm, cảm giác trân trọng tuổi tác.
+     audience: Women 45+ who dislike being sold youth | objective: branding | channel: print
+
+  2. CAMPAIGN CONCEPT
+     name        : Lumière — Anti-ageing night cream
+     big idea    : Kem dưỡng ban đêm, ánh sáng dịu từ một phía, nền tối ấm, cảm giác trân trọng tuổi tác
+     core message: Kem dưỡng ban đêm, ánh sáng dịu từ một phía, nền tối ấm, cảm giác trân trọng tuổi tác
+     strategy    : DETERMINISTIC_FALLBACK (filled: colour_logic, composition_logic, big_idea, core_message)
+
+  3. VISUAL DNA
+     mood                 : dignified, quiet
+     colour_logic         : Restrained palette led by the product's own colours; no colour introduced that the product does 
+     lighting_logic       : soft directional light from one side only
+     composition_logic    : One clear subject, deliberate emptiness around it, nothing competing for the same attention.
+     typography_logic     : No text is rendered into pixels in this pass. Every asset reserves the same clear, tonally even 
+     product_presentation : Anti-ageing night cream jar in warm low light
+
+  4. ASSET ADAPTATION BY FORMAT
+     poster        9:16   20501ch  center_out_product_first       product=95,headline=26,cta=14
+                   art direction: lighting:USER environment:USER atmosphere:USER camera:KNOWLEDGE composition:KNOWLEDGE colour:KNOWLEDGE
+     banner        16:9   20252ch  left_to_right_message_first    headline=34,cta=28,product=70
+                   art direction: lighting:USER environment:USER atmosphere:USER camera:KNOWLEDGE composition:KNOWLEDGE colour:KNOWLEDGE
+     social_ad     9:16   20369ch  top_to_bottom_product_first    product=100,headline=24,cta=12
+                   art direction: lighting:USER environment:USER atmosphere:USER camera:KNOWLEDGE composition:KNOWLEDGE colour:KNOWLEDGE
+     product_hero  1:1    20281ch  center_lock_product_only       product=100
+                   art direction: lighting:USER environment:USER atmosphere:USER camera:KNOWLEDGE composition:KNOWLEDGE colour:KNOWLEDGE
+     thumbnail     16:9   21184ch  center_out_product_first       product=95,headline=18
+                   art direction: lighting:USER environment:USER atmosphere:USER camera:KNOWLEDGE composition:KNOWLEDGE colour:KNOWLEDGE
+
+  5. FINAL PROMPT (poster, section map)
+     ROLE → CREATIVE INTENT → CAMPAIGN STRATEGY → USER HARD REQUIREMENTS → TYPOGRAPHY & READABLE COPY → BRAND KNOWLEDGE → REFERENCE SEMANTICS → PRODUCT INSTANCE REQUIREMENTS → ART DIRECTION → COMMERCIAL LAYOUT → PROFESSIONAL KNOWLEDGE → OUTPUT CONTEXT → CREATIVE EXECUTION → CONFLICT PRIORITY → FINAL OUTPUT
+
+  6. DIAGNOSTICS
+     calls   : gemini 0, llm 2, provider 0
+     duration: 206ms
+     delivery: 11 files at D:\Tido\tido-ai-video-factory-claude-code-pack\apps\web\data\deliveries\lumiere-anti-ageing-night-cream
+     warnings: No reference images supplied: product identity comes from the brief text alone, so renders will not be identity-locked to a real product., Marketing reasoning was unavailable, so the campaign concept was derived deterministically from the brief: there is no consumer insight, emotional response or visual translation behind these assets.
+
+══════════════════════════════════════════════════════════════════════════════
+B03 · FASHION · NOMAD — Denim jacket
+══════════════════════════════════════════════════════════════════════════════
+[INSPIRATION_TRANSPORT][ADAPTER] { explicit_roles: [], resolved_roles: [] }
+[LLM_PROVIDER] {
+  provider: 'claude-sonnet-4-6',
+  baseUrl: 'http://127.0.0.1:8317/v1',
+  status: 'CONNECTED'
+}
+[LLM_REQUEST] {
+  model: 'claude-sonnet-4-6',
+  inputLength: 2116,
+  imageParts: 0,
+  purpose: 'creative_interpretation'
+}
+[LLMProviderService] Chat completion request failed (fetch failed)
+[CreativeInterpretationService] Structured LLM interpretation unavailable (Marketing brain unavailable: fetch failed). Falling back.
+[CREATIVE_INTERPRETATION] {
+  source: 'ROUTER_STRUCTURED_INTENT',
+  subject: 'Denim jacket on a city street at sunset',
+  camera_requirements: [],
+  lighting_requirements: [ 'warm backlight from the setting sun behind the subject' ]
+}
+[LLM_REQUEST] {
+  model: 'claude-sonnet-4-6',
+  inputLength: 3211,
+  imageParts: 0,
+  purpose: 'marketing_brain'
+}
+[LLMProviderService] Chat completion request failed (fetch failed)
+[MarketingBrainService] LLM call failed (Marketing brain unavailable: fetch failed). Using fallback strategy.
+[CAMPAIGN_BUILDER] {
+  campaign_name: 'NOMAD — Denim jacket',
+  big_idea: 'Chụp ngoài phố lúc hoàng hôn, ánh sáng ngược ấm từ phía sau, năng lượng trẻ',
+  asset_plan: [ 'poster', 'banner', 'social_ad', 'product_hero', 'thumbnail' ],
+  strategy_source: 'DETERMINISTIC_FALLBACK',
+  deterministically_filled: [ 'colour_logic', 'composition_logic', 'big_idea', 'core_message' ]
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=7 rejected=1 tokens=0 duration=24ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    lighting: 'USER',
+    environment: 'USER',
+    atmosphere: 'USER',
+    camera: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE'
+  },
+  decisions: [
+    'lighting<-USER (conf 0.95, HIGH, score 0.975)',
+    'environment<-USER (conf 0.95, HIGH, score 0.975)',
+    'atmosphere<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [ 'lighting', 'environment' ],
+  suppressed_count: 6
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'universal.typography_graphic_integration',
+    'property.transparent',
+    'specialist.poster_foundation'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 4
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 21227,
+  after_chars: 20854,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 20854,
+  after: 20854,
+  duplicate_lines_removed: 0,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=8 rejected=0 tokens=462 duration=24ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    lighting: 'USER',
+    environment: 'USER',
+    atmosphere: 'USER',
+    camera: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE'
+  },
+  decisions: [
+    'lighting<-USER (conf 0.95, HIGH, score 0.975)',
+    'environment<-USER (conf 0.95, HIGH, score 0.975)',
+    'atmosphere<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [ 'lighting', 'environment' ],
+  suppressed_count: 6
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'universal.typography_graphic_integration',
+    'property.transparent',
+    'specialist.website_banner_foundation',
+    'material.glass'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 4
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 20978,
+  after_chars: 20605,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 20605,
+  after: 20605,
+  duplicate_lines_removed: 0,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=8 rejected=0 tokens=462 duration=20ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    lighting: 'USER',
+    environment: 'USER',
+    atmosphere: 'USER',
+    camera: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE'
+  },
+  decisions: [
+    'lighting<-USER (conf 0.95, HIGH, score 0.975)',
+    'environment<-USER (conf 0.95, HIGH, score 0.975)',
+    'atmosphere<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [ 'lighting', 'environment' ],
+  suppressed_count: 6
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'universal.typography_graphic_integration',
+    'property.transparent',
+    'specialist.social_ad_foundation',
+    'material.glass'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 4
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 21094,
+  after_chars: 20721,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 20721,
+  after: 20721,
+  duplicate_lines_removed: 0,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=8 rejected=0 tokens=462 duration=23ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    lighting: 'USER',
+    environment: 'USER',
+    atmosphere: 'USER',
+    camera: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE'
+  },
+  decisions: [
+    'lighting<-USER (conf 0.95, HIGH, score 0.975)',
+    'environment<-USER (conf 0.95, HIGH, score 0.975)',
+    'atmosphere<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [ 'lighting', 'environment' ],
+  suppressed_count: 6
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'universal.typography_graphic_integration',
+    'property.transparent',
+    'specialist.product_hero_foundation',
+    'material.glass'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 4
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 20846,
+  after_chars: 20474,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 20474,
+  after: 20474,
+  duplicate_lines_removed: 0,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=8 rejected=0 tokens=462 duration=27ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    lighting: 'USER',
+    environment: 'USER',
+    atmosphere: 'USER',
+    camera: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE'
+  },
+  decisions: [
+    'lighting<-USER (conf 0.95, HIGH, score 0.975)',
+    'environment<-USER (conf 0.95, HIGH, score 0.975)',
+    'atmosphere<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [ 'lighting', 'environment' ],
+  suppressed_count: 6
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'property.transparent',
+    'specialist.ugc_thumbnail_foundation',
+    'material.glass'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 5
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 21968,
+  after_chars: 21594,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 21594,
+  after: 21594,
+  duplicate_lines_removed: 0,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[DELIVERY_PACKAGE] {
+  root: 'D:\\Tido\\tido-ai-video-factory-claude-code-pack\\apps\\web\\data\\deliveries\\nomad-denim-jacket',
+  assets: 5,
+  files: 11,
+  rendered: 0
+}
+[CAMPAIGN_RUN] {
+  campaign: 'NOMAD — Denim jacket',
+  assets: [
+    'poster:20854ch',
+    'banner:20605ch',
+    'social_ad:20721ch',
+    'product_hero:20474ch',
+    'thumbnail:21594ch'
+  ],
+  gemini_calls: 0,
+  llm_calls: 2,
+  provider_calls: 0,
+  duration_ms: 175
+}
+
+  1. CLIENT BRIEF
+     Chụp ngoài phố lúc hoàng hôn, ánh sáng ngược ấm từ phía sau, năng lượng trẻ.
+     audience: Gen Z streetwear buyers | objective: awareness | channel: tiktok
+
+  2. CAMPAIGN CONCEPT
+     name        : NOMAD — Denim jacket
+     big idea    : Chụp ngoài phố lúc hoàng hôn, ánh sáng ngược ấm từ phía sau, năng lượng trẻ
+     core message: Chụp ngoài phố lúc hoàng hôn, ánh sáng ngược ấm từ phía sau, năng lượng trẻ
+     strategy    : DETERMINISTIC_FALLBACK (filled: colour_logic, composition_logic, big_idea, core_message)
+
+  3. VISUAL DNA
+     mood                 : energetic, youthful
+     colour_logic         : Restrained palette led by the product's own colours; no colour introduced that the product does 
+     lighting_logic       : warm backlight from the setting sun behind the subject
+     composition_logic    : One clear subject, deliberate emptiness around it, nothing competing for the same attention.
+     typography_logic     : Only client-authorised strings appear, set in one consistent hierarchy across every asset: messa
+     product_presentation : Denim jacket on a city street at sunset
+
+  4. ASSET ADAPTATION BY FORMAT
+     poster        9:16   20854ch  center_out_product_first       product=85,headline=65,cta=35
+                   art direction: lighting:USER environment:USER atmosphere:USER camera:KNOWLEDGE composition:KNOWLEDGE colour:KNOWLEDGE
+     banner        16:9   20605ch  left_to_right_message_first    headline=85,cta=70,product=60
+                   art direction: lighting:USER environment:USER atmosphere:USER camera:KNOWLEDGE composition:KNOWLEDGE colour:KNOWLEDGE
+     social_ad     9:16   20721ch  top_to_bottom_product_first    product=90,headline=60,cta=30
+                   art direction: lighting:USER environment:USER atmosphere:USER camera:KNOWLEDGE composition:KNOWLEDGE colour:KNOWLEDGE
+     product_hero  1:1    20474ch  center_lock_product_only       product=100
+                   art direction: lighting:USER environment:USER atmosphere:USER camera:KNOWLEDGE composition:KNOWLEDGE colour:KNOWLEDGE
+     thumbnail     16:9   21594ch  center_out_product_first       product=85,headline=45
+                   art direction: lighting:USER environment:USER atmosphere:USER camera:KNOWLEDGE composition:KNOWLEDGE colour:KNOWLEDGE
+
+  5. FINAL PROMPT (poster, section map)
+     ROLE → CREATIVE INTENT → CAMPAIGN STRATEGY → USER HARD REQUIREMENTS → TYPOGRAPHY & READABLE COPY → BRAND KNOWLEDGE → REFERENCE SEMANTICS → PRODUCT INSTANCE REQUIREMENTS → ART DIRECTION → COMMERCIAL LAYOUT → PROFESSIONAL KNOWLEDGE → OUTPUT CONTEXT → CREATIVE EXECUTION → CONFLICT PRIORITY → FINAL OUTPUT
+
+  6. DIAGNOSTICS
+     calls   : gemini 0, llm 2, provider 0
+     duration: 175ms
+     delivery: 11 files at D:\Tido\tido-ai-video-factory-claude-code-pack\apps\web\data\deliveries\nomad-denim-jacket
+     warnings: No reference images supplied: product identity comes from the brief text alone, so renders will not be identity-locked to a real product., Marketing reasoning was unavailable, so the campaign concept was derived deterministically from the brief: there is no consumer insight, emotional response or visual translation behind these assets.
+
+══════════════════════════════════════════════════════════════════════════════
+B04 · FASHION · ATELIER SIX — Silk scarf collection
+══════════════════════════════════════════════════════════════════════════════
+[INSPIRATION_TRANSPORT][ADAPTER] { explicit_roles: [], resolved_roles: [] }
+[LLM_PROVIDER] {
+  provider: 'claude-sonnet-4-6',
+  baseUrl: 'http://127.0.0.1:8317/v1',
+  status: 'CONNECTED'
+}
+[LLM_REQUEST] {
+  model: 'claude-sonnet-4-6',
+  inputLength: 2113,
+  imageParts: 0,
+  purpose: 'creative_interpretation'
+}
+[LLMProviderService] Chat completion request failed (fetch failed)
+[CreativeInterpretationService] Structured LLM interpretation unavailable (Marketing brain unavailable: fetch failed). Falling back.
+[CREATIVE_INTERPRETATION] {
+  source: 'ROUTER_STRUCTURED_INTENT',
+  subject: 'Silk scarves laid across a stone surface',
+  camera_requirements: [],
+  lighting_requirements: [ 'raking light across the weave to reveal texture' ]
+}
+[LLM_REQUEST] {
+  model: 'claude-sonnet-4-6',
+  inputLength: 3163,
+  imageParts: 0,
+  purpose: 'marketing_brain'
+}
+[LLMProviderService] Chat completion request failed (fetch failed)
+[MarketingBrainService] LLM call failed (Marketing brain unavailable: fetch failed). Using fallback strategy.
+[CAMPAIGN_BUILDER] {
+  campaign_name: 'ATELIER SIX — Silk scarf collection',
+  big_idea: 'Khăn lụa trải trên nền đá, ánh sáng chếch để thấy vân lụa',
+  asset_plan: [ 'poster', 'banner', 'social_ad', 'product_hero', 'thumbnail' ],
+  strategy_source: 'DETERMINISTIC_FALLBACK',
+  deterministically_filled: [ 'colour_logic', 'composition_logic', 'big_idea', 'core_message' ]
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=7 rejected=1 tokens=0 duration=25ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    lighting: 'USER',
+    materials: 'USER',
+    environment: 'USER',
+    camera: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE',
+    atmosphere: 'KNOWLEDGE'
+  },
+  decisions: [
+    'lighting<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'materials<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'atmosphere<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 5
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'universal.typography_graphic_integration',
+    'property.transparent',
+    'specialist.poster_foundation'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 4
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 20988,
+  after_chars: 20616,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 20616,
+  after: 20556,
+  duplicate_lines_removed: 1,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=8 rejected=0 tokens=462 duration=26ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    lighting: 'USER',
+    materials: 'USER',
+    environment: 'USER',
+    camera: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE',
+    atmosphere: 'KNOWLEDGE'
+  },
+  decisions: [
+    'lighting<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'materials<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'atmosphere<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 5
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'universal.typography_graphic_integration',
+    'property.transparent',
+    'specialist.website_banner_foundation',
+    'material.glass'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 4
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 20739,
+  after_chars: 20367,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 20367,
+  after: 20307,
+  duplicate_lines_removed: 1,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=8 rejected=0 tokens=462 duration=25ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    lighting: 'USER',
+    materials: 'USER',
+    environment: 'USER',
+    camera: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE',
+    atmosphere: 'KNOWLEDGE'
+  },
+  decisions: [
+    'lighting<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'materials<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'atmosphere<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 5
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'universal.typography_graphic_integration',
+    'property.transparent',
+    'specialist.social_ad_foundation',
+    'material.glass'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 4
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 20856,
+  after_chars: 20484,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 20484,
+  after: 20424,
+  duplicate_lines_removed: 1,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=8 rejected=0 tokens=462 duration=23ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    lighting: 'USER',
+    materials: 'USER',
+    environment: 'USER',
+    camera: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE',
+    atmosphere: 'KNOWLEDGE'
+  },
+  decisions: [
+    'lighting<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'materials<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'atmosphere<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 5
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'universal.typography_graphic_integration',
+    'property.transparent',
+    'specialist.product_hero_foundation',
+    'material.glass'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 4
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 20768,
+  after_chars: 20396,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 20396,
+  after: 20336,
+  duplicate_lines_removed: 1,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=8 rejected=0 tokens=462 duration=29ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    lighting: 'USER',
+    materials: 'USER',
+    environment: 'USER',
+    camera: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE',
+    atmosphere: 'KNOWLEDGE'
+  },
+  decisions: [
+    'lighting<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'materials<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'atmosphere<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 5
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'property.transparent',
+    'specialist.ugc_thumbnail_foundation',
+    'material.glass'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 5
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 21672,
+  after_chars: 21299,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 21299,
+  after: 21239,
+  duplicate_lines_removed: 1,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[DELIVERY_PACKAGE] {
+  root: 'D:\\Tido\\tido-ai-video-factory-claude-code-pack\\apps\\web\\data\\deliveries\\atelier-six-silk-scarf-collection',
+  assets: 5,
+  files: 11,
+  rendered: 0
+}
+[CAMPAIGN_RUN] {
+  campaign: 'ATELIER SIX — Silk scarf collection',
+  assets: [
+    'poster:20556ch',
+    'banner:20307ch',
+    'social_ad:20424ch',
+    'product_hero:20336ch',
+    'thumbnail:21239ch'
+  ],
+  gemini_calls: 0,
+  llm_calls: 2,
+  provider_calls: 0,
+  duration_ms: 191
+}
+
+  1. CLIENT BRIEF
+     Khăn lụa trải trên nền đá, ánh sáng chếch để thấy vân lụa.
+     audience: Luxury gift buyers | objective: promotion | channel: website
+
+  2. CAMPAIGN CONCEPT
+     name        : ATELIER SIX — Silk scarf collection
+     big idea    : Khăn lụa trải trên nền đá, ánh sáng chếch để thấy vân lụa
+     core message: Khăn lụa trải trên nền đá, ánh sáng chếch để thấy vân lụa
+     strategy    : DETERMINISTIC_FALLBACK (filled: colour_logic, composition_logic, big_idea, core_message)
+
+  3. VISUAL DNA
+     mood                 : refined
+     colour_logic         : Restrained palette led by the product's own colours; no colour introduced that the product does 
+     lighting_logic       : raking light across the weave to reveal texture
+     composition_logic    : One clear subject, deliberate emptiness around it, nothing competing for the same attention.
+     typography_logic     : No text is rendered into pixels in this pass. Every asset reserves the same clear, tonally even 
+     product_presentation : Silk scarves laid across a stone surface
+
+  4. ASSET ADAPTATION BY FORMAT
+     poster        9:16   20556ch  center_out_product_first       product=95,headline=26,cta=14
+                   art direction: lighting:USER materials:USER environment:USER camera:KNOWLEDGE composition:KNOWLEDGE colour:KNOWLEDGE atmosphere:KNOWLEDGE
+     banner        16:9   20307ch  left_to_right_message_first    headline=34,cta=28,product=70
+                   art direction: lighting:USER materials:USER environment:USER camera:KNOWLEDGE composition:KNOWLEDGE colour:KNOWLEDGE atmosphere:KNOWLEDGE
+     social_ad     9:16   20424ch  top_to_bottom_product_first    product=100,headline=24,cta=12
+                   art direction: lighting:USER materials:USER environment:USER camera:KNOWLEDGE composition:KNOWLEDGE colour:KNOWLEDGE atmosphere:KNOWLEDGE
+     product_hero  1:1    20336ch  center_lock_product_only       product=100
+                   art direction: lighting:USER materials:USER environment:USER camera:KNOWLEDGE composition:KNOWLEDGE colour:KNOWLEDGE atmosphere:KNOWLEDGE
+     thumbnail     16:9   21239ch  center_out_product_first       product=95,headline=18
+                   art direction: lighting:USER materials:USER environment:USER camera:KNOWLEDGE composition:KNOWLEDGE colour:KNOWLEDGE atmosphere:KNOWLEDGE
+
+  5. FINAL PROMPT (poster, section map)
+     ROLE → CREATIVE INTENT → CAMPAIGN STRATEGY → USER HARD REQUIREMENTS → TYPOGRAPHY & READABLE COPY → BRAND KNOWLEDGE → REFERENCE SEMANTICS → PRODUCT INSTANCE REQUIREMENTS → ART DIRECTION → COMMERCIAL LAYOUT → PROFESSIONAL KNOWLEDGE → OUTPUT CONTEXT → CREATIVE EXECUTION → CONFLICT PRIORITY → FINAL OUTPUT
+
+  6. DIAGNOSTICS
+     calls   : gemini 0, llm 2, provider 0
+     duration: 191ms
+     delivery: 11 files at D:\Tido\tido-ai-video-factory-claude-code-pack\apps\web\data\deliveries\atelier-six-silk-scarf-collection
+     warnings: No reference images supplied: product identity comes from the brief text alone, so renders will not be identity-locked to a real product., Marketing reasoning was unavailable, so the campaign concept was derived deterministically from the brief: there is no consumer insight, emotional response or visual translation behind these assets.
+
+══════════════════════════════════════════════════════════════════════════════
+B05 · FOOD · Phở Hà — Beef pho
+══════════════════════════════════════════════════════════════════════════════
+[INSPIRATION_TRANSPORT][ADAPTER] { explicit_roles: [], resolved_roles: [] }
+[LLM_PROVIDER] {
+  provider: 'claude-sonnet-4-6',
+  baseUrl: 'http://127.0.0.1:8317/v1',
+  status: 'CONNECTED'
+}
+[LLM_REQUEST] {
+  model: 'claude-sonnet-4-6',
+  inputLength: 2089,
+  imageParts: 0,
+  purpose: 'creative_interpretation'
+}
+[LLMProviderService] Chat completion request failed (fetch failed)
+[CreativeInterpretationService] Structured LLM interpretation unavailable (Marketing brain unavailable: fetch failed). Falling back.
+[CREATIVE_INTERPRETATION] {
+  source: 'ROUTER_STRUCTURED_INTENT',
+  subject: 'Steaming bowl of beef pho in morning window light',
+  camera_requirements: [],
+  lighting_requirements: [ 'side window light raking across the steam' ]
+}
+[LLM_REQUEST] {
+  model: 'claude-sonnet-4-6',
+  inputLength: 3189,
+  imageParts: 0,
+  purpose: 'marketing_brain'
+}
+[LLMProviderService] Chat completion request failed (fetch failed)
+[MarketingBrainService] LLM call failed (Marketing brain unavailable: fetch failed). Using fallback strategy.
+[CAMPAIGN_BUILDER] {
+  campaign_name: 'Phở Hà — Beef pho',
+  big_idea: 'Tô phở nóng, hơi bốc lên, ánh sáng cửa sổ buổi sáng',
+  asset_plan: [ 'poster', 'banner', 'social_ad', 'product_hero', 'thumbnail' ],
+  strategy_source: 'DETERMINISTIC_FALLBACK',
+  deterministically_filled: [ 'colour_logic', 'composition_logic', 'big_idea', 'core_message' ]
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=7 rejected=1 tokens=0 duration=18ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    lighting: 'USER',
+    environment: 'USER',
+    atmosphere: 'USER',
+    camera: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE'
+  },
+  decisions: [
+    'lighting<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'atmosphere<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 6
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'universal.typography_graphic_integration',
+    'property.transparent',
+    'specialist.poster_foundation'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 4
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 21051,
+  after_chars: 20678,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 20678,
+  after: 20624,
+  duplicate_lines_removed: 1,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=8 rejected=0 tokens=462 duration=19ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    lighting: 'USER',
+    environment: 'USER',
+    atmosphere: 'USER',
+    camera: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE'
+  },
+  decisions: [
+    'lighting<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'atmosphere<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 6
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'universal.typography_graphic_integration',
+    'property.transparent',
+    'specialist.website_banner_foundation',
+    'material.glass'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 4
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 20802,
+  after_chars: 20429,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 20429,
+  after: 20375,
+  duplicate_lines_removed: 1,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=8 rejected=0 tokens=462 duration=20ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    lighting: 'USER',
+    environment: 'USER',
+    atmosphere: 'USER',
+    camera: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE'
+  },
+  decisions: [
+    'lighting<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'atmosphere<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 6
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'universal.typography_graphic_integration',
+    'property.transparent',
+    'specialist.social_ad_foundation',
+    'material.glass'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 4
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 20918,
+  after_chars: 20545,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 20545,
+  after: 20491,
+  duplicate_lines_removed: 1,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=8 rejected=0 tokens=462 duration=23ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    lighting: 'USER',
+    environment: 'USER',
+    atmosphere: 'USER',
+    camera: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE'
+  },
+  decisions: [
+    'lighting<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'atmosphere<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 6
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'universal.typography_graphic_integration',
+    'property.transparent',
+    'specialist.product_hero_foundation',
+    'material.glass'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 4
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 20659,
+  after_chars: 20287,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 20287,
+  after: 20233,
+  duplicate_lines_removed: 1,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=8 rejected=0 tokens=462 duration=27ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    lighting: 'USER',
+    environment: 'USER',
+    atmosphere: 'USER',
+    camera: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE'
+  },
+  decisions: [
+    'lighting<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'atmosphere<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 6
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'property.transparent',
+    'specialist.ugc_thumbnail_foundation',
+    'material.glass'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 5
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 21782,
+  after_chars: 21408,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 21408,
+  after: 21354,
+  duplicate_lines_removed: 1,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[DELIVERY_PACKAGE] {
+  root: 'D:\\Tido\\tido-ai-video-factory-claude-code-pack\\apps\\web\\data\\deliveries\\pho-ha-beef-pho',
+  assets: 5,
+  files: 11,
+  rendered: 0
+}
+[CAMPAIGN_RUN] {
+  campaign: 'Phở Hà — Beef pho',
+  assets: [
+    'poster:20624ch',
+    'banner:20375ch',
+    'social_ad:20491ch',
+    'product_hero:20233ch',
+    'thumbnail:21354ch'
+  ],
+  gemini_calls: 0,
+  llm_calls: 2,
+  provider_calls: 0,
+  duration_ms: 166
+}
+
+  1. CLIENT BRIEF
+     Tô phở nóng, hơi bốc lên, ánh sáng cửa sổ buổi sáng.
+     audience: Morning commuters | objective: promotion | channel: website
+
+  2. CAMPAIGN CONCEPT
+     name        : Phở Hà — Beef pho
+     big idea    : Tô phở nóng, hơi bốc lên, ánh sáng cửa sổ buổi sáng
+     core message: Tô phở nóng, hơi bốc lên, ánh sáng cửa sổ buổi sáng
+     strategy    : DETERMINISTIC_FALLBACK (filled: colour_logic, composition_logic, big_idea, core_message)
+
+  3. VISUAL DNA
+     mood                 : warm, appetising
+     colour_logic         : Restrained palette led by the product's own colours; no colour introduced that the product does 
+     lighting_logic       : side window light raking across the steam
+     composition_logic    : One clear subject, deliberate emptiness around it, nothing competing for the same attention.
+     typography_logic     : Only client-authorised strings appear, set in one consistent hierarchy across every asset: messa
+     product_presentation : Steaming bowl of beef pho in morning window light
+
+  4. ASSET ADAPTATION BY FORMAT
+     poster        9:16   20624ch  center_out_product_first       product=85,headline=65,cta=35
+                   art direction: lighting:USER environment:USER atmosphere:USER camera:KNOWLEDGE composition:KNOWLEDGE colour:KNOWLEDGE
+     banner        16:9   20375ch  left_to_right_message_first    headline=85,cta=70,product=60
+                   art direction: lighting:USER environment:USER atmosphere:USER camera:KNOWLEDGE composition:KNOWLEDGE colour:KNOWLEDGE
+     social_ad     9:16   20491ch  top_to_bottom_product_first    product=90,headline=60,cta=30
+                   art direction: lighting:USER environment:USER atmosphere:USER camera:KNOWLEDGE composition:KNOWLEDGE colour:KNOWLEDGE
+     product_hero  1:1    20233ch  center_lock_product_only       product=100
+                   art direction: lighting:USER environment:USER atmosphere:USER camera:KNOWLEDGE composition:KNOWLEDGE colour:KNOWLEDGE
+     thumbnail     16:9   21354ch  center_out_product_first       product=85,headline=45
+                   art direction: lighting:USER environment:USER atmosphere:USER camera:KNOWLEDGE composition:KNOWLEDGE colour:KNOWLEDGE
+
+  5. FINAL PROMPT (poster, section map)
+     ROLE → CREATIVE INTENT → CAMPAIGN STRATEGY → USER HARD REQUIREMENTS → TYPOGRAPHY & READABLE COPY → BRAND KNOWLEDGE → REFERENCE SEMANTICS → PRODUCT INSTANCE REQUIREMENTS → ART DIRECTION → COMMERCIAL LAYOUT → PROFESSIONAL KNOWLEDGE → OUTPUT CONTEXT → CREATIVE EXECUTION → CONFLICT PRIORITY → FINAL OUTPUT
+
+  6. DIAGNOSTICS
+     calls   : gemini 0, llm 2, provider 0
+     duration: 166ms
+     delivery: 11 files at D:\Tido\tido-ai-video-factory-claude-code-pack\apps\web\data\deliveries\pho-ha-beef-pho
+     warnings: No reference images supplied: product identity comes from the brief text alone, so renders will not be identity-locked to a real product., Marketing reasoning was unavailable, so the campaign concept was derived deterministically from the brief: there is no consumer insight, emotional response or visual translation behind these assets.
+
+══════════════════════════════════════════════════════════════════════════════
+B06 · FOOD · Cold Harvest — Cold brew coffee bottle
+══════════════════════════════════════════════════════════════════════════════
+[INSPIRATION_TRANSPORT][ADAPTER] { explicit_roles: [], resolved_roles: [] }
+[LLM_PROVIDER] {
+  provider: 'claude-sonnet-4-6',
+  baseUrl: 'http://127.0.0.1:8317/v1',
+  status: 'CONNECTED'
+}
+[LLM_REQUEST] {
+  model: 'claude-sonnet-4-6',
+  inputLength: 2127,
+  imageParts: 0,
+  purpose: 'creative_interpretation'
+}
+[LLMProviderService] Chat completion request failed (fetch failed)
+[CreativeInterpretationService] Structured LLM interpretation unavailable (Marketing brain unavailable: fetch failed). Falling back.
+[CREATIVE_INTERPRETATION] {
+  source: 'ROUTER_STRUCTURED_INTENT',
+  subject: 'Cold brew bottle with condensation against a dark ground',
+  camera_requirements: [],
+  lighting_requirements: [ 'cool rim light along both edges of the bottle' ]
+}
+[LLM_REQUEST] {
+  model: 'claude-sonnet-4-6',
+  inputLength: 3198,
+  imageParts: 0,
+  purpose: 'marketing_brain'
+}
+[LLMProviderService] Chat completion request failed (fetch failed)
+[MarketingBrainService] LLM call failed (Marketing brain unavailable: fetch failed). Using fallback strategy.
+[CAMPAIGN_BUILDER] {
+  campaign_name: 'Cold Harvest — Cold brew coffee bottle',
+  big_idea: 'Chai cold brew với đá và giọt nước đọng, nền tối, ánh sáng viền lạnh',
+  asset_plan: [ 'poster', 'banner', 'social_ad', 'product_hero', 'thumbnail' ],
+  strategy_source: 'DETERMINISTIC_FALLBACK',
+  deterministically_filled: [ 'colour_logic', 'composition_logic', 'big_idea', 'core_message' ]
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=7 rejected=1 tokens=0 duration=19ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    lighting: 'USER',
+    materials: 'USER',
+    environment: 'USER',
+    camera: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE',
+    atmosphere: 'KNOWLEDGE'
+  },
+  decisions: [
+    'lighting<-USER (conf 0.95, HIGH, score 0.975)',
+    'materials<-USER (conf 0.95, HIGH, score 0.975)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'atmosphere<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [ 'lighting', 'materials' ],
+  suppressed_count: 5
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'universal.typography_graphic_integration',
+    'property.transparent',
+    'specialist.poster_foundation'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 4
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 21353,
+  after_chars: 20981,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 20981,
+  after: 20981,
+  duplicate_lines_removed: 0,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=8 rejected=0 tokens=462 duration=20ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    lighting: 'USER',
+    materials: 'USER',
+    environment: 'USER',
+    camera: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE',
+    atmosphere: 'KNOWLEDGE'
+  },
+  decisions: [
+    'lighting<-USER (conf 0.95, HIGH, score 0.975)',
+    'materials<-USER (conf 0.95, HIGH, score 0.975)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'atmosphere<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [ 'lighting', 'materials' ],
+  suppressed_count: 5
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'universal.typography_graphic_integration',
+    'property.transparent',
+    'specialist.website_banner_foundation',
+    'material.glass'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 4
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 21104,
+  after_chars: 20732,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 20732,
+  after: 20732,
+  duplicate_lines_removed: 0,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=8 rejected=0 tokens=462 duration=19ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    lighting: 'USER',
+    materials: 'USER',
+    environment: 'USER',
+    camera: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE',
+    atmosphere: 'KNOWLEDGE'
+  },
+  decisions: [
+    'lighting<-USER (conf 0.95, HIGH, score 0.975)',
+    'materials<-USER (conf 0.95, HIGH, score 0.975)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'atmosphere<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [ 'lighting', 'materials' ],
+  suppressed_count: 5
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'universal.typography_graphic_integration',
+    'property.transparent',
+    'specialist.social_ad_foundation',
+    'material.glass'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 4
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 21221,
+  after_chars: 20849,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 20849,
+  after: 20849,
+  duplicate_lines_removed: 0,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=8 rejected=0 tokens=462 duration=35ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    lighting: 'USER',
+    materials: 'USER',
+    environment: 'USER',
+    camera: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE',
+    atmosphere: 'KNOWLEDGE'
+  },
+  decisions: [
+    'lighting<-USER (conf 0.95, HIGH, score 0.975)',
+    'materials<-USER (conf 0.95, HIGH, score 0.975)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'atmosphere<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [ 'lighting', 'materials' ],
+  suppressed_count: 5
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'universal.typography_graphic_integration',
+    'property.transparent',
+    'specialist.product_hero_foundation',
+    'material.glass'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 4
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 21133,
+  after_chars: 20761,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 20761,
+  after: 20761,
+  duplicate_lines_removed: 0,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=8 rejected=0 tokens=462 duration=25ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    lighting: 'USER',
+    materials: 'USER',
+    environment: 'USER',
+    camera: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE',
+    atmosphere: 'KNOWLEDGE'
+  },
+  decisions: [
+    'lighting<-USER (conf 0.95, HIGH, score 0.975)',
+    'materials<-USER (conf 0.95, HIGH, score 0.975)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'atmosphere<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [ 'lighting', 'materials' ],
+  suppressed_count: 5
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'universal.typography_graphic_integration',
+    'property.transparent',
+    'specialist.ugc_thumbnail_foundation',
+    'material.glass'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 4
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 20570,
+  after_chars: 20198,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 20198,
+  after: 20198,
+  duplicate_lines_removed: 0,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[DELIVERY_PACKAGE] {
+  root: 'D:\\Tido\\tido-ai-video-factory-claude-code-pack\\apps\\web\\data\\deliveries\\cold-harvest-cold-brew-coffee-bottle',
+  assets: 5,
+  files: 11,
+  rendered: 0
+}
+[CAMPAIGN_RUN] {
+  campaign: 'Cold Harvest — Cold brew coffee bottle',
+  assets: [
+    'poster:20981ch',
+    'banner:20732ch',
+    'social_ad:20849ch',
+    'product_hero:20761ch',
+    'thumbnail:20198ch'
+  ],
+  gemini_calls: 0,
+  llm_calls: 2,
+  provider_calls: 0,
+  duration_ms: 174
+}
+
+  1. CLIENT BRIEF
+     Chai cold brew với đá và giọt nước đọng, nền tối, ánh sáng viền lạnh.
+     audience: Office workers buying afternoon energy | objective: conversion | channel: instagram
+
+  2. CAMPAIGN CONCEPT
+     name        : Cold Harvest — Cold brew coffee bottle
+     big idea    : Chai cold brew với đá và giọt nước đọng, nền tối, ánh sáng viền lạnh
+     core message: Chai cold brew với đá và giọt nước đọng, nền tối, ánh sáng viền lạnh
+     strategy    : DETERMINISTIC_FALLBACK (filled: colour_logic, composition_logic, big_idea, core_message)
+
+  3. VISUAL DNA
+     mood                 : crisp
+     colour_logic         : Restrained palette led by the product's own colours; no colour introduced that the product does 
+     lighting_logic       : cool rim light along both edges of the bottle
+     composition_logic    : One clear subject, deliberate emptiness around it, nothing competing for the same attention.
+     typography_logic     : No text is rendered into pixels in this pass. Every asset reserves the same clear, tonally even 
+     product_presentation : Cold brew bottle with condensation against a dark ground
+
+  4. ASSET ADAPTATION BY FORMAT
+     poster        9:16   20981ch  center_out_product_first       product=95,headline=26,cta=14
+                   art direction: lighting:USER materials:USER environment:USER camera:KNOWLEDGE composition:KNOWLEDGE colour:KNOWLEDGE atmosphere:KNOWLEDGE
+     banner        16:9   20732ch  left_to_right_message_first    headline=34,cta=28,product=70
+                   art direction: lighting:USER materials:USER environment:USER camera:KNOWLEDGE composition:KNOWLEDGE colour:KNOWLEDGE atmosphere:KNOWLEDGE
+     social_ad     9:16   20849ch  top_to_bottom_product_first    product=100,headline=24,cta=12
+                   art direction: lighting:USER materials:USER environment:USER camera:KNOWLEDGE composition:KNOWLEDGE colour:KNOWLEDGE atmosphere:KNOWLEDGE
+     product_hero  1:1    20761ch  center_lock_product_only       product=100
+                   art direction: lighting:USER materials:USER environment:USER camera:KNOWLEDGE composition:KNOWLEDGE colour:KNOWLEDGE atmosphere:KNOWLEDGE
+     thumbnail     16:9   20198ch  center_out_product_first       product=95,headline=18
+                   art direction: lighting:USER materials:USER environment:USER camera:KNOWLEDGE composition:KNOWLEDGE colour:KNOWLEDGE atmosphere:KNOWLEDGE
+
+  5. FINAL PROMPT (poster, section map)
+     ROLE → CREATIVE INTENT → CAMPAIGN STRATEGY → USER HARD REQUIREMENTS → TYPOGRAPHY & READABLE COPY → BRAND KNOWLEDGE → REFERENCE SEMANTICS → PRODUCT INSTANCE REQUIREMENTS → ART DIRECTION → COMMERCIAL LAYOUT → PROFESSIONAL KNOWLEDGE → OUTPUT CONTEXT → CREATIVE EXECUTION → CONFLICT PRIORITY → FINAL OUTPUT
+
+  6. DIAGNOSTICS
+     calls   : gemini 0, llm 2, provider 0
+     duration: 174ms
+     delivery: 11 files at D:\Tido\tido-ai-video-factory-claude-code-pack\apps\web\data\deliveries\cold-harvest-cold-brew-coffee-bottle
+     warnings: No reference images supplied: product identity comes from the brief text alone, so renders will not be identity-locked to a real product., Marketing reasoning was unavailable, so the campaign concept was derived deterministically from the brief: there is no consumer insight, emotional response or visual translation behind these assets.
+
+══════════════════════════════════════════════════════════════════════════════
+B07 · TECHNOLOGY · AURA — Wireless headphones
+══════════════════════════════════════════════════════════════════════════════
+[INSPIRATION_TRANSPORT][ADAPTER] { explicit_roles: [], resolved_roles: [] }
+[LLM_PROVIDER] {
+  provider: 'claude-sonnet-4-6',
+  baseUrl: 'http://127.0.0.1:8317/v1',
+  status: 'CONNECTED'
+}
+[LLM_REQUEST] {
+  model: 'claude-sonnet-4-6',
+  inputLength: 2107,
+  imageParts: 0,
+  purpose: 'creative_interpretation'
+}
+[LLMProviderService] Chat completion request failed (fetch failed)
+[CreativeInterpretationService] Structured LLM interpretation unavailable (Marketing brain unavailable: fetch failed). Falling back.
+[CREATIVE_INTERPRETATION] {
+  source: 'ROUTER_STRUCTURED_INTENT',
+  subject: 'Premium wireless headphones on a dark seamless ground',
+  camera_requirements: [],
+  lighting_requirements: []
+}
+[LLM_REQUEST] {
+  model: 'claude-sonnet-4-6',
+  inputLength: 3184,
+  imageParts: 0,
+  purpose: 'marketing_brain'
+}
+[LLMProviderService] Chat completion request failed (fetch failed)
+[MarketingBrainService] LLM call failed (Marketing brain unavailable: fetch failed). Using fallback strategy.
+[CAMPAIGN_BUILDER] {
+  campaign_name: 'AURA — Wireless headphones',
+  big_idea: 'Ảnh sản phẩm cao cấp, nền tối, tôn chất liệu nhôm phay và da',
+  asset_plan: [ 'poster', 'banner', 'social_ad', 'product_hero', 'thumbnail' ],
+  strategy_source: 'DETERMINISTIC_FALLBACK',
+  deterministically_filled: [
+    'colour_logic',
+    'lighting_logic',
+    'composition_logic',
+    'big_idea',
+    'core_message'
+  ]
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=7 rejected=1 tokens=0 duration=31ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    materials: 'USER',
+    environment: 'USER',
+    atmosphere: 'USER',
+    camera: 'KNOWLEDGE',
+    lighting: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE'
+  },
+  decisions: [
+    'materials<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'atmosphere<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'lighting<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 5
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'universal.typography_graphic_integration',
+    'property.transparent',
+    'specialist.poster_foundation'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 4
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 20987,
+  after_chars: 20615,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 20615,
+  after: 20615,
+  duplicate_lines_removed: 0,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=8 rejected=0 tokens=462 duration=29ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    materials: 'USER',
+    environment: 'USER',
+    atmosphere: 'USER',
+    camera: 'KNOWLEDGE',
+    lighting: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE'
+  },
+  decisions: [
+    'materials<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'atmosphere<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'lighting<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 5
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'universal.typography_graphic_integration',
+    'property.transparent',
+    'specialist.website_banner_foundation',
+    'material.glass'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 4
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 20738,
+  after_chars: 20366,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 20366,
+  after: 20366,
+  duplicate_lines_removed: 0,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=8 rejected=0 tokens=462 duration=29ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    materials: 'USER',
+    environment: 'USER',
+    atmosphere: 'USER',
+    camera: 'KNOWLEDGE',
+    lighting: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE'
+  },
+  decisions: [
+    'materials<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'atmosphere<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'lighting<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 5
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'universal.typography_graphic_integration',
+    'property.transparent',
+    'specialist.social_ad_foundation',
+    'material.glass'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 4
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 20855,
+  after_chars: 20483,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 20483,
+  after: 20483,
+  duplicate_lines_removed: 0,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=8 rejected=0 tokens=462 duration=29ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    materials: 'USER',
+    environment: 'USER',
+    atmosphere: 'USER',
+    camera: 'KNOWLEDGE',
+    lighting: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE'
+  },
+  decisions: [
+    'materials<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'atmosphere<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'lighting<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 5
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'universal.typography_graphic_integration',
+    'property.transparent',
+    'specialist.product_hero_foundation',
+    'material.glass'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 4
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 20766,
+  after_chars: 20394,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 20394,
+  after: 20394,
+  duplicate_lines_removed: 0,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=8 rejected=0 tokens=462 duration=20ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    materials: 'USER',
+    environment: 'USER',
+    atmosphere: 'USER',
+    camera: 'KNOWLEDGE',
+    lighting: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE'
+  },
+  decisions: [
+    'materials<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'atmosphere<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'lighting<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 5
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'property.transparent',
+    'specialist.ugc_thumbnail_foundation',
+    'material.glass'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 5
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 21671,
+  after_chars: 21298,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 21298,
+  after: 21298,
+  duplicate_lines_removed: 0,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[DELIVERY_PACKAGE] {
+  root: 'D:\\Tido\\tido-ai-video-factory-claude-code-pack\\apps\\web\\data\\deliveries\\aura-wireless-headphones',
+  assets: 5,
+  files: 11,
+  rendered: 0
+}
+[CAMPAIGN_RUN] {
+  campaign: 'AURA — Wireless headphones',
+  assets: [
+    'poster:20615ch',
+    'banner:20366ch',
+    'social_ad:20483ch',
+    'product_hero:20394ch',
+    'thumbnail:21298ch'
+  ],
+  gemini_calls: 0,
+  llm_calls: 2,
+  provider_calls: 0,
+  duration_ms: 197
+}
+
+  1. CLIENT BRIEF
+     Ảnh sản phẩm cao cấp, nền tối, tôn chất liệu nhôm phay và da.
+     audience: Considered buyers who research before purchase | objective: branding | channel: website
+
+  2. CAMPAIGN CONCEPT
+     name        : AURA — Wireless headphones
+     big idea    : Ảnh sản phẩm cao cấp, nền tối, tôn chất liệu nhôm phay và da
+     core message: Ảnh sản phẩm cao cấp, nền tối, tôn chất liệu nhôm phay và da
+     strategy    : DETERMINISTIC_FALLBACK (filled: colour_logic, lighting_logic, composition_logic, big_idea, core_message)
+
+  3. VISUAL DNA
+     mood                 : precise, restrained
+     colour_logic         : Restrained palette led by the product's own colours; no colour introduced that the product does 
+     lighting_logic       : Light that describes form and material honestly, without hiding surface detail in glare or shado
+     composition_logic    : One clear subject, deliberate emptiness around it, nothing competing for the same attention.
+     typography_logic     : No text is rendered into pixels in this pass. Every asset reserves the same clear, tonally even 
+     product_presentation : Premium wireless headphones on a dark seamless ground
+
+  4. ASSET ADAPTATION BY FORMAT
+     poster        9:16   20615ch  center_out_product_first       product=95,headline=26,cta=14
+                   art direction: materials:USER environment:USER atmosphere:USER camera:KNOWLEDGE lighting:KNOWLEDGE composition:KNOWLEDGE colour:KNOWLEDGE
+     banner        16:9   20366ch  left_to_right_message_first    headline=34,cta=28,product=70
+                   art direction: materials:USER environment:USER atmosphere:USER camera:KNOWLEDGE lighting:KNOWLEDGE composition:KNOWLEDGE colour:KNOWLEDGE
+     social_ad     9:16   20483ch  top_to_bottom_product_first    product=100,headline=24,cta=12
+                   art direction: materials:USER environment:USER atmosphere:USER camera:KNOWLEDGE lighting:KNOWLEDGE composition:KNOWLEDGE colour:KNOWLEDGE
+     product_hero  1:1    20394ch  center_lock_product_only       product=100
+                   art direction: materials:USER environment:USER atmosphere:USER camera:KNOWLEDGE lighting:KNOWLEDGE composition:KNOWLEDGE colour:KNOWLEDGE
+     thumbnail     16:9   21298ch  center_out_product_first       product=95,headline=18
+                   art direction: materials:USER environment:USER atmosphere:USER camera:KNOWLEDGE lighting:KNOWLEDGE composition:KNOWLEDGE colour:KNOWLEDGE
+
+  5. FINAL PROMPT (poster, section map)
+     ROLE → CREATIVE INTENT → CAMPAIGN STRATEGY → USER HARD REQUIREMENTS → TYPOGRAPHY & READABLE COPY → BRAND KNOWLEDGE → REFERENCE SEMANTICS → PRODUCT INSTANCE REQUIREMENTS → ART DIRECTION → COMMERCIAL LAYOUT → PROFESSIONAL KNOWLEDGE → OUTPUT CONTEXT → CREATIVE EXECUTION → CONFLICT PRIORITY → FINAL OUTPUT
+
+  6. DIAGNOSTICS
+     calls   : gemini 0, llm 2, provider 0
+     duration: 197ms
+     delivery: 11 files at D:\Tido\tido-ai-video-factory-claude-code-pack\apps\web\data\deliveries\aura-wireless-headphones
+     warnings: No reference images supplied: product identity comes from the brief text alone, so renders will not be identity-locked to a real product., Marketing reasoning was unavailable, so the campaign concept was derived deterministically from the brief: there is no consumer insight, emotional response or visual translation behind these assets.
+
+══════════════════════════════════════════════════════════════════════════════
+B08 · TECHNOLOGY · Halo — Smart home hub
+══════════════════════════════════════════════════════════════════════════════
+[INSPIRATION_TRANSPORT][ADAPTER] { explicit_roles: [], resolved_roles: [] }
+[LLM_PROVIDER] {
+  provider: 'claude-sonnet-4-6',
+  baseUrl: 'http://127.0.0.1:8317/v1',
+  status: 'CONNECTED'
+}
+[LLM_REQUEST] {
+  model: 'claude-sonnet-4-6',
+  inputLength: 2118,
+  imageParts: 0,
+  purpose: 'creative_interpretation'
+}
+[LLMProviderService] Chat completion request failed (fetch failed)
+[CreativeInterpretationService] Structured LLM interpretation unavailable (Marketing brain unavailable: fetch failed). Falling back.
+[CREATIVE_INTERPRETATION] {
+  source: 'ROUTER_STRUCTURED_INTENT',
+  subject: 'Smart home hub in a real lived-in living room',
+  camera_requirements: [],
+  lighting_requirements: [ 'daylight only, no artificial fill' ]
+}
+[LLM_REQUEST] {
+  model: 'claude-sonnet-4-6',
+  inputLength: 3198,
+  imageParts: 0,
+  purpose: 'marketing_brain'
+}
+[LLMProviderService] Chat completion request failed (fetch failed)
+[MarketingBrainService] LLM call failed (Marketing brain unavailable: fetch failed). Using fallback strategy.
+[CAMPAIGN_BUILDER] {
+  campaign_name: 'Halo — Smart home hub',
+  big_idea: 'Thiết bị đặt trong phòng khách thật, ánh sáng ban ngày, không giống showroom',
+  asset_plan: [ 'poster', 'banner', 'social_ad', 'product_hero', 'thumbnail' ],
+  strategy_source: 'DETERMINISTIC_FALLBACK',
+  deterministically_filled: [ 'colour_logic', 'composition_logic', 'big_idea', 'core_message' ]
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=7 rejected=1 tokens=0 duration=23ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    lighting: 'USER',
+    environment: 'USER',
+    atmosphere: 'USER',
+    camera: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE'
+  },
+  decisions: [
+    'lighting<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'atmosphere<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 6
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'universal.typography_graphic_integration',
+    'property.transparent',
+    'specialist.poster_foundation'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 4
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 20968,
+  after_chars: 20596,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 20596,
+  after: 20550,
+  duplicate_lines_removed: 1,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=8 rejected=0 tokens=462 duration=21ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    lighting: 'USER',
+    environment: 'USER',
+    atmosphere: 'USER',
+    camera: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE'
+  },
+  decisions: [
+    'lighting<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'atmosphere<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 6
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'universal.typography_graphic_integration',
+    'property.transparent',
+    'specialist.website_banner_foundation',
+    'material.glass'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 4
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 20719,
+  after_chars: 20347,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 20347,
+  after: 20301,
+  duplicate_lines_removed: 1,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=8 rejected=0 tokens=462 duration=24ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    lighting: 'USER',
+    environment: 'USER',
+    atmosphere: 'USER',
+    camera: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE'
+  },
+  decisions: [
+    'lighting<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'atmosphere<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 6
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'universal.typography_graphic_integration',
+    'property.transparent',
+    'specialist.social_ad_foundation',
+    'material.glass'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 4
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 20836,
+  after_chars: 20464,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 20464,
+  after: 20418,
+  duplicate_lines_removed: 1,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=8 rejected=0 tokens=462 duration=19ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    lighting: 'USER',
+    environment: 'USER',
+    atmosphere: 'USER',
+    camera: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE'
+  },
+  decisions: [
+    'lighting<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'atmosphere<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 6
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'universal.typography_graphic_integration',
+    'property.transparent',
+    'specialist.product_hero_foundation',
+    'material.glass'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 4
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 20748,
+  after_chars: 20376,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 20376,
+  after: 20330,
+  duplicate_lines_removed: 1,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=8 rejected=0 tokens=462 duration=20ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    lighting: 'USER',
+    environment: 'USER',
+    atmosphere: 'USER',
+    camera: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE'
+  },
+  decisions: [
+    'lighting<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'atmosphere<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 6
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'property.transparent',
+    'specialist.ugc_thumbnail_foundation',
+    'material.glass'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 5
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 21652,
+  after_chars: 21279,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 21279,
+  after: 21233,
+  duplicate_lines_removed: 1,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[DELIVERY_PACKAGE] {
+  root: 'D:\\Tido\\tido-ai-video-factory-claude-code-pack\\apps\\web\\data\\deliveries\\halo-smart-home-hub',
+  assets: 5,
+  files: 11,
+  rendered: 0
+}
+[CAMPAIGN_RUN] {
+  campaign: 'Halo — Smart home hub',
+  assets: [
+    'poster:20550ch',
+    'banner:20301ch',
+    'social_ad:20418ch',
+    'product_hero:20330ch',
+    'thumbnail:21233ch'
+  ],
+  gemini_calls: 0,
+  llm_calls: 2,
+  provider_calls: 0,
+  duration_ms: 158
+}
+
+  1. CLIENT BRIEF
+     Thiết bị đặt trong phòng khách thật, ánh sáng ban ngày, không giống showroom.
+     audience: First-time smart home buyers who fear complexity | objective: awareness | channel: facebook
+
+  2. CAMPAIGN CONCEPT
+     name        : Halo — Smart home hub
+     big idea    : Thiết bị đặt trong phòng khách thật, ánh sáng ban ngày, không giống showroom
+     core message: Thiết bị đặt trong phòng khách thật, ánh sáng ban ngày, không giống showroom
+     strategy    : DETERMINISTIC_FALLBACK (filled: colour_logic, composition_logic, big_idea, core_message)
+
+  3. VISUAL DNA
+     mood                 : reassuring, ordinary
+     colour_logic         : Restrained palette led by the product's own colours; no colour introduced that the product does 
+     lighting_logic       : daylight only, no artificial fill
+     composition_logic    : One clear subject, deliberate emptiness around it, nothing competing for the same attention.
+     typography_logic     : No text is rendered into pixels in this pass. Every asset reserves the same clear, tonally even 
+     product_presentation : Smart home hub in a real lived-in living room
+
+  4. ASSET ADAPTATION BY FORMAT
+     poster        9:16   20550ch  center_out_product_first       product=95,headline=26,cta=14
+                   art direction: lighting:USER environment:USER atmosphere:USER camera:KNOWLEDGE composition:KNOWLEDGE colour:KNOWLEDGE
+     banner        16:9   20301ch  left_to_right_message_first    headline=34,cta=28,product=70
+                   art direction: lighting:USER environment:USER atmosphere:USER camera:KNOWLEDGE composition:KNOWLEDGE colour:KNOWLEDGE
+     social_ad     9:16   20418ch  top_to_bottom_product_first    product=100,headline=24,cta=12
+                   art direction: lighting:USER environment:USER atmosphere:USER camera:KNOWLEDGE composition:KNOWLEDGE colour:KNOWLEDGE
+     product_hero  1:1    20330ch  center_lock_product_only       product=100
+                   art direction: lighting:USER environment:USER atmosphere:USER camera:KNOWLEDGE composition:KNOWLEDGE colour:KNOWLEDGE
+     thumbnail     16:9   21233ch  center_out_product_first       product=95,headline=18
+                   art direction: lighting:USER environment:USER atmosphere:USER camera:KNOWLEDGE composition:KNOWLEDGE colour:KNOWLEDGE
+
+  5. FINAL PROMPT (poster, section map)
+     ROLE → CREATIVE INTENT → CAMPAIGN STRATEGY → USER HARD REQUIREMENTS → TYPOGRAPHY & READABLE COPY → BRAND KNOWLEDGE → REFERENCE SEMANTICS → PRODUCT INSTANCE REQUIREMENTS → ART DIRECTION → COMMERCIAL LAYOUT → PROFESSIONAL KNOWLEDGE → OUTPUT CONTEXT → CREATIVE EXECUTION → CONFLICT PRIORITY → FINAL OUTPUT
+
+  6. DIAGNOSTICS
+     calls   : gemini 0, llm 2, provider 0
+     duration: 158ms
+     delivery: 11 files at D:\Tido\tido-ai-video-factory-claude-code-pack\apps\web\data\deliveries\halo-smart-home-hub
+     warnings: No reference images supplied: product identity comes from the brief text alone, so renders will not be identity-locked to a real product., Marketing reasoning was unavailable, so the campaign concept was derived deterministically from the brief: there is no consumer insight, emotional response or visual translation behind these assets.
+
+══════════════════════════════════════════════════════════════════════════════
+B09 · REAL ESTATE · Riverside — Riverside apartment
+══════════════════════════════════════════════════════════════════════════════
+[INSPIRATION_TRANSPORT][ADAPTER] { explicit_roles: [], resolved_roles: [] }
+[LLM_PROVIDER] {
+  provider: 'claude-sonnet-4-6',
+  baseUrl: 'http://127.0.0.1:8317/v1',
+  status: 'CONNECTED'
+}
+[LLM_REQUEST] {
+  model: 'claude-sonnet-4-6',
+  inputLength: 2112,
+  imageParts: 0,
+  purpose: 'creative_interpretation'
+}
+[LLMProviderService] Chat completion request failed (fetch failed)
+[CreativeInterpretationService] Structured LLM interpretation unavailable (Marketing brain unavailable: fetch failed). Falling back.
+[CREATIVE_INTERPRETATION] {
+  source: 'ROUTER_STRUCTURED_INTENT',
+  subject: 'Riverside apartment interior looking out to the river',
+  camera_requirements: [],
+  lighting_requirements: [ 'late afternoon daylight through the window, interior lights off' ]
+}
+[LLM_REQUEST] {
+  model: 'claude-sonnet-4-6',
+  inputLength: 3235,
+  imageParts: 0,
+  purpose: 'marketing_brain'
+}
+[LLMProviderService] Chat completion request failed (fetch failed)
+[MarketingBrainService] LLM call failed (Marketing brain unavailable: fetch failed). Using fallback strategy.
+[CAMPAIGN_BUILDER] {
+  campaign_name: 'Riverside — Riverside apartment',
+  big_idea: 'Nội thất căn hộ nhìn ra sông, ánh sáng chiều muộn qua cửa sổ',
+  asset_plan: [ 'poster', 'banner', 'social_ad', 'product_hero', 'thumbnail' ],
+  strategy_source: 'DETERMINISTIC_FALLBACK',
+  deterministically_filled: [ 'colour_logic', 'composition_logic', 'big_idea', 'core_message' ]
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=7 rejected=1 tokens=0 duration=19ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    lighting: 'USER',
+    environment: 'USER',
+    atmosphere: 'USER',
+    camera: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE'
+  },
+  decisions: [
+    'lighting<-USER (conf 0.95, HIGH, score 0.975)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'atmosphere<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [ 'lighting' ],
+  suppressed_count: 6
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'universal.typography_graphic_integration',
+    'property.transparent',
+    'specialist.poster_foundation'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 4
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 21329,
+  after_chars: 20956,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 20956,
+  after: 20956,
+  duplicate_lines_removed: 0,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=8 rejected=0 tokens=462 duration=20ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    lighting: 'USER',
+    environment: 'USER',
+    atmosphere: 'USER',
+    camera: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE'
+  },
+  decisions: [
+    'lighting<-USER (conf 0.95, HIGH, score 0.975)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'atmosphere<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [ 'lighting' ],
+  suppressed_count: 6
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'universal.typography_graphic_integration',
+    'property.transparent',
+    'specialist.website_banner_foundation',
+    'material.glass'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 4
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 21080,
+  after_chars: 20707,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 20707,
+  after: 20707,
+  duplicate_lines_removed: 0,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=8 rejected=0 tokens=462 duration=22ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    lighting: 'USER',
+    environment: 'USER',
+    atmosphere: 'USER',
+    camera: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE'
+  },
+  decisions: [
+    'lighting<-USER (conf 0.95, HIGH, score 0.975)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'atmosphere<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [ 'lighting' ],
+  suppressed_count: 6
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'universal.typography_graphic_integration',
+    'property.transparent',
+    'specialist.social_ad_foundation',
+    'material.glass'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 4
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 21196,
+  after_chars: 20823,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 20823,
+  after: 20823,
+  duplicate_lines_removed: 0,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=8 rejected=0 tokens=462 duration=22ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    lighting: 'USER',
+    environment: 'USER',
+    atmosphere: 'USER',
+    camera: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE'
+  },
+  decisions: [
+    'lighting<-USER (conf 0.95, HIGH, score 0.975)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'atmosphere<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [ 'lighting' ],
+  suppressed_count: 6
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'universal.typography_graphic_integration',
+    'property.transparent',
+    'specialist.product_hero_foundation',
+    'material.glass'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 4
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 20945,
+  after_chars: 20573,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 20573,
+  after: 20573,
+  duplicate_lines_removed: 0,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=8 rejected=0 tokens=462 duration=22ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    lighting: 'USER',
+    environment: 'USER',
+    atmosphere: 'USER',
+    camera: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE'
+  },
+  decisions: [
+    'lighting<-USER (conf 0.95, HIGH, score 0.975)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'atmosphere<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [ 'lighting' ],
+  suppressed_count: 6
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'universal.typography_graphic_integration',
+    'property.transparent',
+    'specialist.ugc_thumbnail_foundation',
+    'material.glass'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 4
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 20603,
+  after_chars: 20230,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 20230,
+  after: 20230,
+  duplicate_lines_removed: 0,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[DELIVERY_PACKAGE] {
+  root: 'D:\\Tido\\tido-ai-video-factory-claude-code-pack\\apps\\web\\data\\deliveries\\riverside-riverside-apartment',
+  assets: 5,
+  files: 11,
+  rendered: 0
+}
+[CAMPAIGN_RUN] {
+  campaign: 'Riverside — Riverside apartment',
+  assets: [
+    'poster:20956ch',
+    'banner:20707ch',
+    'social_ad:20823ch',
+    'product_hero:20573ch',
+    'thumbnail:20230ch'
+  ],
+  gemini_calls: 0,
+  llm_calls: 2,
+  provider_calls: 0,
+  duration_ms: 155
+}
+
+  1. CLIENT BRIEF
+     Nội thất căn hộ nhìn ra sông, ánh sáng chiều muộn qua cửa sổ.
+     audience: Young families upgrading from a first apartment | objective: conversion | channel: facebook
+
+  2. CAMPAIGN CONCEPT
+     name        : Riverside — Riverside apartment
+     big idea    : Nội thất căn hộ nhìn ra sông, ánh sáng chiều muộn qua cửa sổ
+     core message: Nội thất căn hộ nhìn ra sông, ánh sáng chiều muộn qua cửa sổ
+     strategy    : DETERMINISTIC_FALLBACK (filled: colour_logic, composition_logic, big_idea, core_message)
+
+  3. VISUAL DNA
+     mood                 : calm, settled
+     colour_logic         : Restrained palette led by the product's own colours; no colour introduced that the product does 
+     lighting_logic       : late afternoon daylight through the window, interior lights off
+     composition_logic    : One clear subject, deliberate emptiness around it, nothing competing for the same attention.
+     typography_logic     : Only client-authorised strings appear, set in one consistent hierarchy across every asset: messa
+     product_presentation : Riverside apartment interior looking out to the river
+
+  4. ASSET ADAPTATION BY FORMAT
+     poster        9:16   20956ch  center_out_product_first       product=85,headline=65,cta=35
+                   art direction: lighting:USER environment:USER atmosphere:USER camera:KNOWLEDGE composition:KNOWLEDGE colour:KNOWLEDGE
+     banner        16:9   20707ch  left_to_right_message_first    headline=85,cta=70,product=60
+                   art direction: lighting:USER environment:USER atmosphere:USER camera:KNOWLEDGE composition:KNOWLEDGE colour:KNOWLEDGE
+     social_ad     9:16   20823ch  top_to_bottom_product_first    product=90,headline=60,cta=30
+                   art direction: lighting:USER environment:USER atmosphere:USER camera:KNOWLEDGE composition:KNOWLEDGE colour:KNOWLEDGE
+     product_hero  1:1    20573ch  center_lock_product_only       product=100
+                   art direction: lighting:USER environment:USER atmosphere:USER camera:KNOWLEDGE composition:KNOWLEDGE colour:KNOWLEDGE
+     thumbnail     16:9   20230ch  center_out_product_first       product=85,headline=45
+                   art direction: lighting:USER environment:USER atmosphere:USER camera:KNOWLEDGE composition:KNOWLEDGE colour:KNOWLEDGE
+
+  5. FINAL PROMPT (poster, section map)
+     ROLE → CREATIVE INTENT → CAMPAIGN STRATEGY → USER HARD REQUIREMENTS → TYPOGRAPHY & READABLE COPY → BRAND KNOWLEDGE → REFERENCE SEMANTICS → PRODUCT INSTANCE REQUIREMENTS → ART DIRECTION → COMMERCIAL LAYOUT → PROFESSIONAL KNOWLEDGE → OUTPUT CONTEXT → CREATIVE EXECUTION → CONFLICT PRIORITY → FINAL OUTPUT
+
+  6. DIAGNOSTICS
+     calls   : gemini 0, llm 2, provider 0
+     duration: 155ms
+     delivery: 11 files at D:\Tido\tido-ai-video-factory-claude-code-pack\apps\web\data\deliveries\riverside-riverside-apartment
+     warnings: No reference images supplied: product identity comes from the brief text alone, so renders will not be identity-locked to a real product., Marketing reasoning was unavailable, so the campaign concept was derived deterministically from the brief: there is no consumer insight, emotional response or visual translation behind these assets.
+
+══════════════════════════════════════════════════════════════════════════════
+B10 · REAL ESTATE · Bến Xanh — Townhouse development
+══════════════════════════════════════════════════════════════════════════════
+[INSPIRATION_TRANSPORT][ADAPTER] { explicit_roles: [], resolved_roles: [] }
+[LLM_PROVIDER] {
+  provider: 'claude-sonnet-4-6',
+  baseUrl: 'http://127.0.0.1:8317/v1',
+  status: 'CONNECTED'
+}
+[LLM_REQUEST] {
+  model: 'claude-sonnet-4-6',
+  inputLength: 2118,
+  imageParts: 0,
+  purpose: 'creative_interpretation'
+}
+[LLMProviderService] Chat completion request failed (fetch failed)
+[CreativeInterpretationService] Structured LLM interpretation unavailable (Marketing brain unavailable: fetch failed). Falling back.
+[CREATIVE_INTERPRETATION] {
+  source: 'ROUTER_STRUCTURED_INTENT',
+  subject: 'Row of townhouses at dusk with interior lights on',
+  camera_requirements: [ 'low angle looking up along the row' ],
+  lighting_requirements: [ 'dusk sky against warm interior window light' ]
+}
+[LLM_REQUEST] {
+  model: 'claude-sonnet-4-6',
+  inputLength: 3182,
+  imageParts: 0,
+  purpose: 'marketing_brain'
+}
+[LLMProviderService] Chat completion request failed (fetch failed)
+[MarketingBrainService] LLM call failed (Marketing brain unavailable: fetch failed). Using fallback strategy.
+[CAMPAIGN_BUILDER] {
+  campaign_name: 'Bến Xanh — Townhouse development',
+  big_idea: 'Dãy nhà phố nhìn từ góc thấp lúc chạng vạng, đèn trong nhà đã bật',
+  asset_plan: [ 'poster', 'banner', 'social_ad', 'product_hero', 'thumbnail' ],
+  strategy_source: 'DETERMINISTIC_FALLBACK',
+  deterministically_filled: [ 'colour_logic', 'composition_logic', 'big_idea', 'core_message' ]
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=7 rejected=1 tokens=0 duration=20ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    camera: 'USER',
+    lighting: 'USER',
+    environment: 'USER',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE',
+    atmosphere: 'KNOWLEDGE'
+  },
+  decisions: [
+    'camera<-USER (conf 0.95, HIGH, score 0.975)',
+    'lighting<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'atmosphere<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [ 'camera' ],
+  suppressed_count: 6
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'universal.typography_graphic_integration',
+    'property.transparent',
+    'specialist.poster_foundation'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 4
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 21028,
+  after_chars: 20656,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 20656,
+  after: 20600,
+  duplicate_lines_removed: 1,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=8 rejected=0 tokens=462 duration=20ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    camera: 'USER',
+    lighting: 'USER',
+    environment: 'USER',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE',
+    atmosphere: 'KNOWLEDGE'
+  },
+  decisions: [
+    'camera<-USER (conf 0.95, HIGH, score 0.975)',
+    'lighting<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'atmosphere<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [ 'camera' ],
+  suppressed_count: 6
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'universal.typography_graphic_integration',
+    'property.transparent',
+    'specialist.website_banner_foundation',
+    'material.glass'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 4
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 20779,
+  after_chars: 20407,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 20407,
+  after: 20351,
+  duplicate_lines_removed: 1,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=8 rejected=0 tokens=462 duration=21ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    camera: 'USER',
+    lighting: 'USER',
+    environment: 'USER',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE',
+    atmosphere: 'KNOWLEDGE'
+  },
+  decisions: [
+    'camera<-USER (conf 0.95, HIGH, score 0.975)',
+    'lighting<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'atmosphere<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [ 'camera' ],
+  suppressed_count: 6
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'universal.typography_graphic_integration',
+    'property.transparent',
+    'specialist.social_ad_foundation',
+    'material.glass'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 4
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 20896,
+  after_chars: 20524,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 20524,
+  after: 20468,
+  duplicate_lines_removed: 1,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=8 rejected=0 tokens=462 duration=21ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    camera: 'USER',
+    lighting: 'USER',
+    environment: 'USER',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE',
+    atmosphere: 'KNOWLEDGE'
+  },
+  decisions: [
+    'camera<-USER (conf 0.95, HIGH, score 0.975)',
+    'lighting<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'atmosphere<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [ 'camera' ],
+  suppressed_count: 6
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'universal.typography_graphic_integration',
+    'property.transparent',
+    'specialist.product_hero_foundation',
+    'material.glass'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 4
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 20808,
+  after_chars: 20436,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 20436,
+  after: 20380,
+  duplicate_lines_removed: 1,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[STAGE 3 RETRIEVER] mode=METADATA_ONLY selected=8 rejected=0 tokens=462 duration=19ms
+[CREATIVE_KNOWLEDGE] {
+  source_count: 3,
+  selected_rules: [
+    'COMMERCIAL_STUDIO_LIGHTING',
+    'BALANCED_HERO_COMPOSITION',
+    'RESERVED_TYPOGRAPHY_SPACE',
+    'STRICT_PRODUCT_IDENTITY'
+  ],
+  output_chars: 876
+}
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    camera: 'USER',
+    lighting: 'USER',
+    environment: 'USER',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE',
+    atmosphere: 'KNOWLEDGE'
+  },
+  decisions: [
+    'camera<-USER (conf 0.95, HIGH, score 0.975)',
+    'lighting<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'environment<-USER (conf 0.70, MEDIUM, score 0.595)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'atmosphere<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [ 'camera' ],
+  suppressed_count: 6
+}
+[MASTER_PROMPT_COMPILER][KNOWLEDGE_TRIMMED] {
+  message: 'Prompt budget required dropping the lowest-ranked knowledge blocks.',
+  dropped: [
+    'property.transparent',
+    'specialist.ugc_thumbnail_foundation',
+    'material.glass'
+  ],
+  kept_specialist_blocks: 0,
+  kept_universal_blocks: 5
+}
+[PROMPT_OPTIMIZER] {
+  before_chars: 21712,
+  after_chars: 21339,
+  removed_sections: [
+    'RETRIEVED_KNOWLEDGE_NOTICE',
+    'USER_BRAND_CONTEXT_NOTE',
+    'AGGRESSIVE_FORMATTING_COMPRESSION'
+  ],
+  compression_applied: true
+}
+[PROMPT_BUDGET_MANAGER] {
+  before: 21339,
+  after: 21283,
+  duplicate_lines_removed: 1,
+  sections_removed: [],
+  truncated: false,
+  identity_chars: 255,
+  knowledge_chars: 79,
+  product_count: 1,
+  compression_mode: 'HIGH'
+}
+[DELIVERY_PACKAGE] {
+  root: 'D:\\Tido\\tido-ai-video-factory-claude-code-pack\\apps\\web\\data\\deliveries\\ben-xanh-townhouse-development',
+  assets: 5,
+  files: 11,
+  rendered: 0
+}
+[CAMPAIGN_RUN] {
+  campaign: 'Bến Xanh — Townhouse development',
+  assets: [
+    'poster:20600ch',
+    'banner:20351ch',
+    'social_ad:20468ch',
+    'product_hero:20380ch',
+    'thumbnail:21283ch'
+  ],
+  gemini_calls: 0,
+  llm_calls: 2,
+  provider_calls: 0,
+  duration_ms: 147
+}
+
+  1. CLIENT BRIEF
+     Dãy nhà phố nhìn từ góc thấp lúc chạng vạng, đèn trong nhà đã bật.
+     audience: Investors comparing developments | objective: promotion | channel: billboard
+
+  2. CAMPAIGN CONCEPT
+     name        : Bến Xanh — Townhouse development
+     big idea    : Dãy nhà phố nhìn từ góc thấp lúc chạng vạng, đèn trong nhà đã bật
+     core message: Dãy nhà phố nhìn từ góc thấp lúc chạng vạng, đèn trong nhà đã bật
+     strategy    : DETERMINISTIC_FALLBACK (filled: colour_logic, composition_logic, big_idea, core_message)
+
+  3. VISUAL DNA
+     mood                 : confident
+     colour_logic         : Restrained palette led by the product's own colours; no colour introduced that the product does 
+     lighting_logic       : dusk sky against warm interior window light
+     composition_logic    : One clear subject, deliberate emptiness around it, nothing competing for the same attention.
+     typography_logic     : No text is rendered into pixels in this pass. Every asset reserves the same clear, tonally even 
+     product_presentation : Row of townhouses at dusk with interior lights on
+
+  4. ASSET ADAPTATION BY FORMAT
+     poster        9:16   20600ch  center_out_product_first       product=95,headline=26,cta=14
+                   art direction: camera:USER lighting:USER environment:USER composition:KNOWLEDGE colour:KNOWLEDGE atmosphere:KNOWLEDGE
+     banner        16:9   20351ch  left_to_right_message_first    headline=34,cta=28,product=70
+                   art direction: camera:USER lighting:USER environment:USER composition:KNOWLEDGE colour:KNOWLEDGE atmosphere:KNOWLEDGE
+     social_ad     9:16   20468ch  top_to_bottom_product_first    product=100,headline=24,cta=12
+                   art direction: camera:USER lighting:USER environment:USER composition:KNOWLEDGE colour:KNOWLEDGE atmosphere:KNOWLEDGE
+     product_hero  1:1    20380ch  center_lock_product_only       product=100
+                   art direction: camera:USER lighting:USER environment:USER composition:KNOWLEDGE colour:KNOWLEDGE atmosphere:KNOWLEDGE
+     thumbnail     16:9   21283ch  center_out_product_first       product=95,headline=18
+                   art direction: camera:USER lighting:USER environment:USER composition:KNOWLEDGE colour:KNOWLEDGE atmosphere:KNOWLEDGE
+
+  5. FINAL PROMPT (poster, section map)
+     ROLE → CREATIVE INTENT → CAMPAIGN STRATEGY → USER HARD REQUIREMENTS → TYPOGRAPHY & READABLE COPY → BRAND KNOWLEDGE → REFERENCE SEMANTICS → PRODUCT INSTANCE REQUIREMENTS → ART DIRECTION → COMMERCIAL LAYOUT → PROFESSIONAL KNOWLEDGE → OUTPUT CONTEXT → CREATIVE EXECUTION → CONFLICT PRIORITY → FINAL OUTPUT
+
+  6. DIAGNOSTICS
+     calls   : gemini 0, llm 2, provider 0
+     duration: 147ms
+     delivery: 11 files at D:\Tido\tido-ai-video-factory-claude-code-pack\apps\web\data\deliveries\ben-xanh-townhouse-development
+     warnings: No reference images supplied: product identity comes from the brief text alone, so renders will not be identity-locked to a real product., Marketing reasoning was unavailable, so the campaign concept was derived deterministically from the brief: there is no consumer insight, emotional response or visual translation behind these assets.
+
+══════════════════════════════════════════════════════════════════════════════
+BENCHMARK SUMMARY
+══════════════════════════════════════════════════════════════════════════════
+┌─────────┬───────┬───────────────┬──────────────────────────────────┬────────┬─────────────────┬───────────┬───────┬──────────┐
+│ (index) │ id    │ industry      │ campaign                         │ assets │ ratios          │ avg_chars │ files │ warnings │
+├─────────┼───────┼───────────────┼──────────────────────────────────┼────────┼─────────────────┼───────────┼───────┼──────────┤
+│ 0       │ 'B01' │ 'skincare'    │ 'Centella — Hydrating serum'     │ 5      │ '9:16/16:9/1:1' │ 20731     │ 11    │ 2        │
+│ 1       │ 'B02' │ 'skincare'    │ 'Lumière — Anti-ageing night cr' │ 5      │ '9:16/16:9/1:1' │ 20517     │ 11    │ 2        │
+│ 2       │ 'B03' │ 'fashion'     │ 'NOMAD — Denim jacket'           │ 5      │ '9:16/16:9/1:1' │ 20850     │ 11    │ 2        │
+│ 3       │ 'B04' │ 'fashion'     │ 'ATELIER SIX — Silk scarf colle' │ 5      │ '9:16/16:9/1:1' │ 20572     │ 11    │ 2        │
+│ 4       │ 'B05' │ 'food'        │ 'Phở Hà — Beef pho'              │ 5      │ '9:16/16:9/1:1' │ 20615     │ 11    │ 2        │
+│ 5       │ 'B06' │ 'food'        │ 'Cold Harvest — Cold brew coffe' │ 5      │ '9:16/16:9/1:1' │ 20704     │ 11    │ 2        │
+│ 6       │ 'B07' │ 'technology'  │ 'AURA — Wireless headphones'     │ 5      │ '9:16/16:9/1:1' │ 20631     │ 11    │ 2        │
+│ 7       │ 'B08' │ 'technology'  │ 'Halo — Smart home hub'          │ 5      │ '9:16/16:9/1:1' │ 20566     │ 11    │ 2        │
+│ 8       │ 'B09' │ 'real estate' │ 'Riverside — Riverside apartmen' │ 5      │ '9:16/16:9/1:1' │ 20658     │ 11    │ 2        │
+│ 9       │ 'B10' │ 'real estate' │ 'Bến Xanh — Townhouse developme' │ 5      │ '9:16/16:9/1:1' │ 20616     │ 11    │ 2        │
+└─────────┴───────┴───────────────┴──────────────────────────────────┴────────┴─────────────────┴───────────┴───────┴──────────┘
+
+184 passed, 0 failed
+
+Cleaned 10 benchmark delivery folders (KEEP_PACKAGES=1 to retain).
+

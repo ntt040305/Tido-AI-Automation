@@ -124,7 +124,7 @@ const productionInput = {
   knowledgePackage: mockHeavyKnowledge,
   outputContext: {
     intendedUseCase: "Social Media Campaign & Billboard",
-    targetAspectRatio: "4:5",
+    targetAspectRatio: "9:16",
   },
 };
 

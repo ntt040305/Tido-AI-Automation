@@ -1,0 +1,19 @@
+GET /campaign-test -> 200  bytes=23364
+  ok   header AI Creative Director
+  ok   workflow rail
+  ok   left panel Creative brief
+  ok   field Brand
+  ok   field Product
+  ok   field Industry
+  ok   field Audience
+  ok   field Objective
+  ok   field Channel
+  ok   field Tone
+  ok   field Creative direction
+  ok   Reference upload
+  ok   Asset toggles
+  ok   CTA
+  ok   Skin1004 prefill
+  ok   sample product
+
+sidebar link present on other page: true

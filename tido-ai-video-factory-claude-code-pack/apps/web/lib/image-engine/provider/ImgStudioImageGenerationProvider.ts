@@ -1,6 +1,14 @@
 import sharp from "sharp";
 import { IMAGE_ENGINE_CONFIG } from "../config";
 import {
+  ImageNormalizationService,
+  NormalizedImage,
+  PROVIDER_LIMIT_BYTES,
+  UploadGuardReport,
+  formatBytes,
+} from "../service/ImageNormalizationService";
+import { ProviderErrorClassifier, ProviderErrorVerdict } from "./ProviderErrorClassifier";
+import {
   ImageGenerationProvider,
   ProviderImageGenerationInput,
   ProviderImageGenerationOutput,
@@ -63,7 +71,7 @@ export class ImgStudioImageGenerationProvider implements ImageGenerationProvider
 
     // 2. Pre-call Aspect Ratio Validation (Non-retryable)
     const supportedRatios = IMAGE_ENGINE_CONFIG.IMGSTUDIO_SUPPORTED_ASPECT_RATIOS || [
-      "1:1", "4:5", "3:4", "9:16", "16:9",
+      "1:1", "9:16", "16:9",
     ];
 
     if (!input.aspectRatio || !supportedRatios.includes(input.aspectRatio)) {
@@ -102,6 +110,47 @@ export class ImgStudioImageGenerationProvider implements ImageGenerationProvider
     });
     const hasRealReferences = realReferences.length > 0;
     const endpoint = this.selectEndpoint(baseUrl, hasRealReferences);
+
+    // ── Upload guard ───────────────────────────────────────────────────
+    // Nothing leaves this method over the provider's ceiling. The old path had
+    // no total-payload accounting at all: each image was checked against a 10MB
+    // per-image rule while the provider rejects the whole multipart body at
+    // 9.5MB, so three 3.5MB references passed every check and 413'd on the wire.
+    let normalized: NormalizedImage[] = [];
+    let guard: UploadGuardReport | null = null;
+    if (hasRealReferences) {
+      const result = await ImageNormalizationService.normalizePayload(
+        realReferences.map((ref, idx) => ({
+          reference_id: ref.reference_id || `REF_${idx + 1}`,
+          buffer: ref.buffer as never,
+          mimeType: ref.mimeType,
+          filename: ref.filename,
+        }))
+      );
+      normalized = result.images;
+      guard = result.guard;
+
+      if (guard.status === "BLOCKED") {
+        // Sending it anyway would spend a provider call to be told what is
+        // already known here.
+        console.error("[ImgStudioProvider][UPLOAD_BLOCKED]", guard);
+        return {
+          success: false,
+          error: {
+            code: "IMAGE_PAYLOAD_TOO_LARGE",
+            message:
+              `Reference images total ${formatBytes(guard.final_total)} after normalization, ` +
+              `over the ${formatBytes(guard.limit)} upload budget.`,
+            details: {
+              error_code: "IMAGE_PAYLOAD_TOO_LARGE",
+              stage: "IMAGE_PREPROCESSOR",
+              suggestion: "Images were compressed automatically but are still too large; use fewer or smaller references",
+              guard,
+            },
+          },
+        };
+      }
+    }
 
     // Detailed Request Summary
     const imagesSummary = await Promise.all(
@@ -157,6 +206,11 @@ export class ImgStudioImageGenerationProvider implements ImageGenerationProvider
     const deadlineAt = providerStartedAt + Math.max(routeBudgetMs - 10000, MIN_ATTEMPT_BUDGET_MS);
     let lastErrorType = "UNKNOWN_ERROR";
     let lastErrorMessage = "";
+    // The 413 repair is worth exactly one use. A second 413 after the payload has
+    // already been shrunk means the ceiling is not where we think it is, and
+    // another round of compression would be guesswork at the user's expense.
+    let payloadRepairSpent = false;
+    let lastVerdict: ProviderErrorVerdict | null = null;
 
     for (let attempt = 1; attempt <= maxRetries + 1; attempt++) {
       const attemptStartTime = Date.now();
@@ -194,18 +248,20 @@ export class ImgStudioImageGenerationProvider implements ImageGenerationProvider
 
         for (let i = 0; i < realReferences.length; i++) {
           const ref = realReferences[i];
-          const rawBuf = Buffer.isBuffer(ref.buffer)
-            ? ref.buffer
-            : (ref.buffer as any)?.data
-            ? Buffer.from((ref.buffer as any).data)
-            : Buffer.from(ref.buffer || []);
-          
-          const filename = ref.filename || `${ref.reference_id || `ref_${i + 1}`}.png`;
-          const mimeType = ref.mimeType || "image/png";
+          // The normalized buffer, always. Reading `ref.buffer` here again is
+          // exactly what would quietly undo the upload guard above.
+          const norm = normalized[i];
+          const rawBuf = norm ? norm.buffer : Buffer.from([]);
+          const filename = norm?.filename || ref.filename || `${ref.reference_id || `ref_${i + 1}`}.png`;
+          const mimeType = norm?.mimeType || ref.mimeType || "image/png";
 
+          // A Buffer from sharp is typed over ArrayBufferLike, which BlobPart does
+          // not accept; this view is what makes it a valid multipart part without
+          // widening the type anywhere else.
+          const bytes = new Uint8Array(rawBuf);
           const fileObj = typeof File !== "undefined"
-            ? new File([rawBuf], filename, { type: mimeType })
-            : new Blob([rawBuf], { type: mimeType });
+            ? new File([bytes], filename, { type: mimeType })
+            : new Blob([bytes], { type: mimeType });
 
           formData.append("images", fileObj, filename);
           multipartKeys.push(`images[${i}:${ref.reference_id || `ref_${i + 1}`}]`);
@@ -245,28 +301,13 @@ export class ImgStudioImageGenerationProvider implements ImageGenerationProvider
 
           console.error(`[ImgStudioProvider][API_ERROR] Attempt ${attempt} HTTP ${res.status}:`, errBody);
 
-          // Non-retryable HTTP client errors (400, 401, 403)
-          if (res.status === 400 || res.status === 401 || res.status === 403) {
-            lastErrorType = `HTTP_${res.status}`;
-            console.log("[IMG_PROVIDER_NETWORK]", {
-              attempt,
-              timeout_ms: timeoutMs,
-              duration_ms,
-              error_type: lastErrorType,
-            });
-
-            return {
-              success: false,
-              error: {
-                code: res.status === 401 || res.status === 403 ? "PROVIDER_NOT_CONFIGURED" : "PROVIDER_RESPONSE_INVALID",
-                message: `ImgStudio API error (HTTP ${res.status}): ${errBody || res.statusText}`,
-                details: { status: res.status, responseBody: errBody },
-              },
-            };
-          }
-
-          // Retryable server errors (429, 500, 502, 503, 504)
-          lastErrorType = res.status === 429 ? "PROVIDER_RATE_LIMIT" : `HTTP_${res.status}`;
+          // ── What kind of failure is this? ──────────────────────────
+          // Replaces a two-bucket rule — 400/401/403 stop, everything else
+          // retries — under which a 413 was retried three times with byte-
+          // identical payloads and could not once have succeeded.
+          const verdict = ProviderErrorClassifier.classify(res.status);
+          lastVerdict = verdict;
+          lastErrorType = verdict.classification;
           lastErrorMessage = `HTTP ${res.status}: ${errBody || res.statusText}`;
 
           console.log("[IMG_PROVIDER_NETWORK]", {
@@ -274,14 +315,97 @@ export class ImgStudioImageGenerationProvider implements ImageGenerationProvider
             timeout_ms: timeoutMs,
             duration_ms,
             error_type: lastErrorType,
+            classification: verdict.classification,
+            action: verdict.action,
+            retryable: verdict.retryable,
           });
 
           // The server answered, so this attempt is settled (and refunded). Any retry
           // must use a new key or ImgStudio replies 409 and the retry is wasted.
           rotateKeyBeforeNextAttempt = true;
 
-          if (attempt <= maxRetries) {
-            const backoffMs = attempt === 1 ? 1000 : 2000;
+          if (verdict.action === "STOP") {
+            return {
+              success: false,
+              error: {
+                code: verdict.error_code,
+                message: `ImgStudio API error (HTTP ${res.status}): ${errBody || res.statusText}`,
+                details: {
+                  error_code: verdict.error_code,
+                  stage: verdict.stage,
+                  suggestion: verdict.suggestion,
+                  status: res.status,
+                  responseBody: errBody,
+                },
+              },
+            };
+          }
+
+          // ── 413: change the request, then retry exactly once ───────
+          if (verdict.action === "NORMALIZE_AND_RETRY_ONCE") {
+            if (payloadRepairSpent || !hasRealReferences) {
+              return {
+                success: false,
+                error: {
+                  code: verdict.error_code,
+                  message: payloadRepairSpent
+                    ? `ImgStudio rejected the upload as too large even after normalization (HTTP 413).`
+                    : `ImgStudio rejected the request as too large (HTTP 413), and it carries no reference images to compress.`,
+                  details: {
+                    error_code: verdict.error_code,
+                    stage: verdict.stage,
+                    suggestion: verdict.suggestion,
+                    status: res.status,
+                    responseBody: errBody,
+                    guard,
+                  },
+                },
+              };
+            }
+
+            // The provider's real ceiling is evidently below our budget, so aim
+            // well under it rather than shaving a little off and being refused
+            // again.
+            const tighter = Math.floor(PROVIDER_LIMIT_BYTES * 0.6);
+            console.warn("[ImgStudioProvider][PAYLOAD_REPAIR]", {
+              attempt,
+              rejected_total: formatBytes(normalized.reduce((t, n) => t + n.after_size, 0)),
+              new_budget: formatBytes(tighter),
+            });
+            const repaired = await ImageNormalizationService.normalizePayload(
+              realReferences.map((ref, idx) => ({
+                reference_id: ref.reference_id || `REF_${idx + 1}`,
+                buffer: ref.buffer as never,
+                mimeType: ref.mimeType,
+                filename: ref.filename,
+              })),
+              { maxTotalBytes: tighter, maxImageBytes: Math.floor(tighter / Math.max(1, realReferences.length)) }
+            );
+            normalized = repaired.images;
+            guard = repaired.guard;
+            payloadRepairSpent = true;
+
+            if (guard.status === "BLOCKED") {
+              return {
+                success: false,
+                error: {
+                  code: verdict.error_code,
+                  message: `Reference images remain ${formatBytes(guard.final_total)} after a second normalization pass.`,
+                  details: {
+                    error_code: verdict.error_code,
+                    stage: verdict.stage,
+                    suggestion: verdict.suggestion,
+                    guard,
+                  },
+                },
+              };
+            }
+            continue;
+          }
+
+          // ── 429 / 5xx: the request was fine, the server was not ────
+          if (ProviderErrorClassifier.mayRetry(verdict, attempt)) {
+            const backoffMs = verdict.classification === "RATE_LIMIT" ? attempt * 2000 : attempt === 1 ? 1000 : 2000;
             const remainingBudgetMs = deadlineAt - Date.now() - backoffMs;
             if (remainingBudgetMs <= MIN_ATTEMPT_BUDGET_MS) {
               console.warn("[ImgStudioProvider][RETRY_ABORTED]", {
@@ -290,7 +414,9 @@ export class ImgStudioImageGenerationProvider implements ImageGenerationProvider
                 reason: "not enough time left in the request budget for another attempt",
               });
             } else {
-              console.warn(`[ImgStudioProvider][RETRY] Network/server failure on attempt ${attempt}. Waiting ${backoffMs}ms before retry...`);
+              console.warn(
+                `[ImgStudioProvider][RETRY] ${verdict.classification} on attempt ${attempt}. Waiting ${backoffMs}ms before retry...`
+              );
               await this.delay(backoffMs);
               continue;
             }
@@ -299,9 +425,15 @@ export class ImgStudioImageGenerationProvider implements ImageGenerationProvider
           return {
             success: false,
             error: {
-              code: "PROVIDER_NETWORK_ERROR",
-              message: `ImgStudio network/server error after 3 attempts (${timeoutMs}ms timeout): ${lastErrorMessage}`,
-              details: { status: res.status, responseBody: errBody },
+              code: verdict.error_code,
+              message: `ImgStudio ${verdict.classification} after ${attempt} attempt(s): ${lastErrorMessage}`,
+              details: {
+                error_code: verdict.error_code,
+                stage: verdict.stage,
+                suggestion: verdict.suggestion,
+                status: res.status,
+                responseBody: errBody,
+              },
             },
           };
         }

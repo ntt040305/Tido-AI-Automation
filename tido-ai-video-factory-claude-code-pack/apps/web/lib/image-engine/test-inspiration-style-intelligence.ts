@@ -101,7 +101,7 @@ async function runInspirationStyleIntelligenceTests() {
   const compilerInput: MasterPromptCompilerInput = {
     brief: "Poster nước giải khát cam tươi mát lạnh",
     useCase: "Poster",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     brandName: "TIDO Splash",
     routingResult: dummyRoutingResult,
     knowledgePackage: dummyKnowledgePackage as any,

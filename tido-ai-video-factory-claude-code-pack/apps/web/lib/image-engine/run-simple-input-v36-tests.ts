@@ -44,7 +44,7 @@ async function runSimpleInputV36Tests() {
   const reqA: SimpleInputRequestV1 = {
     concept: "Poster 2 sản phẩm Matcha & Coffee kèm logo brand",
     useCase: "Poster",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     images: [{ reference_id: "REF_01" }, { reference_id: "REF_02" }, { reference_id: "REF_03" }],
   };
 
@@ -78,7 +78,7 @@ async function runSimpleInputV36Tests() {
   const reqB: SimpleInputRequestV1 = {
     concept: "Poster lon soda mát lạnh theo phong cách mùa hè hình 2",
     useCase: "Poster",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     images: [{ reference_id: "REF_01" }, { reference_id: "REF_02" }],
   };
 
@@ -106,7 +106,7 @@ async function runSimpleInputV36Tests() {
   const reqC: SimpleInputRequestV1 = {
     concept: "Poster chai nước hoa mặt trước & mặt sau và logo",
     useCase: "Poster",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     images: [{ reference_id: "REF_01" }, { reference_id: "REF_02" }, { reference_id: "REF_03" }],
   };
 
@@ -139,7 +139,7 @@ async function runSimpleInputV36Tests() {
   const reqD: SimpleInputRequestV1 = {
     concept: "Poster 2 chai serum kèm logo và hình style mùa hè",
     useCase: "Poster",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     images: [{ reference_id: "REF_01" }, { reference_id: "REF_02" }, { reference_id: "REF_03" }, { reference_id: "REF_04" }],
   };
 

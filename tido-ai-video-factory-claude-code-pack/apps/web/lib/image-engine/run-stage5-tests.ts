@@ -141,7 +141,7 @@ async function runStage5Tests() {
     copyItems: ["Headline: Refreshing Taste"],
     hardRequirements: ["Product bottle label must remain legible"],
     useCase: "Social Post",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     productReferences: [
       { reference_id: "REF_01", product_id: "PRODUCT_01", input_index: 0 },
     ],
@@ -217,7 +217,7 @@ async function runStage5Tests() {
     model: "gemini-3.1-flash-image",
     prompt: "test",
     references: tooManyRefs,
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     imageSize: "2K",
     mimeType: "image/png",
   });

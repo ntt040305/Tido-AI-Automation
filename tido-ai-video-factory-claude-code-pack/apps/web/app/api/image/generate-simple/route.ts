@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
         images: body.images || body.references || [],
         concept: body.concept || "",
         useCase: body.useCase || "Poster",
-        aspectRatio: body.aspectRatio || "4:5",
+        aspectRatio: body.aspectRatio || "1:1",
         brandName: body.brandName,
         brandInfo: body.brandInfo,
         copyItems: body.copyItems,

@@ -129,7 +129,7 @@ async function runRoleBindingTests() {
     model: "gemini-3.1-flash-image",
     prompt: "Sample prompt",
     references: testRefs2,
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     imageSize: "1K",
     mimeType: "image/png",
   });
@@ -164,7 +164,7 @@ async function runRoleBindingTests() {
   const compileRes4 = await compiler.compile({
     brief: "Create poster with inspiration reference",
     useCase: "Poster",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     routingResult: dummyRouting,
     knowledgePackage: dummyKnowledge as any,
     hasInspirationReference: true,

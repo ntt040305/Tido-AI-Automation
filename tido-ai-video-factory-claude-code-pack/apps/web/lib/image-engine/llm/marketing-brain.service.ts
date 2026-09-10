@@ -98,7 +98,16 @@ Generate the complete structured JSON commercial strategy now.`;
     ];
 
     try {
-      const responseText = await this.llmProvider.generateChatCompletion(messages, "marketing_brain");
+      // The strategy schema is a full creative bridge — insight, emotional
+      // response, message and a six-field visual translation. That is a long
+      // structured JSON answer, and the provider's 15s default was aborting it on
+      // every call, silently dropping the campaign back to the offline fallback.
+      // Budget the call for the answer it actually asks for.
+      const responseText = await this.llmProvider.generateChatCompletion(messages, "marketing_brain", {
+        temperature: 0.6,
+        max_tokens: 1800,
+        timeoutMs: 60000,
+      });
       
       let parsed: MarketingBrainStrategy;
       try {

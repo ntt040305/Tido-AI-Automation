@@ -1,0 +1,14 @@
+success=true  strategy_source=MARKETING_BRAIN
+big idea: This single capsule holds everything your skin already knows it needs.
+
+poster       4:5    21717ch  dropped=true  hasStrategy=true  hasInsight=true  hasDNA=true
+banner       16:9   21428ch  dropped=true  hasStrategy=true  hasInsight=true  hasDNA=true
+social_ad    9:16   21545ch  dropped=true  hasStrategy=true  hasInsight=true  hasDNA=true
+product_hero 1:1    21457ch  dropped=true  hasStrategy=true  hasInsight=true  hasDNA=true
+thumbnail    16:9   21674ch  dropped=false  hasStrategy=true  hasInsight=true  hasDNA=true
+
+insight in ALL prompts : true
+big idea in ALL prompts: true
+unique prompts         : 5/5
+knowledge in all       : true
+warnings: ["No reference images supplied: product identity comes from the brief text alone, so renders will not be identity-locked to a real product."]

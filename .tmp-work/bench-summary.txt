@@ -1,0 +1,15 @@
+failures_printed=0
+184 passed, 0 failed
+│ 3       │ 'B04' │ 'fashion'     │ 'ATELIER SIX — Silk scarf colle' │ 5      │ '4:5/16:9/9:16/1:1' │ 20749     │ 12    │ 1        │
+│ 4       │ 'B05' │ 'food'        │ 'Phở Hà — Beef pho'              │ 5      │ '4:5/16:9/9:16/1:1' │ 20797     │ 12    │ 1        │
+│ 5       │ 'B06' │ 'food'        │ 'Cold Harvest — Cold brew coffe' │ 5      │ '4:5/16:9/9:16/1:1' │ 21224     │ 12    │ 1        │
+│ 6       │ 'B07' │ 'technology'  │ 'AURA — Wireless headphones'     │ 5      │ '4:5/16:9/9:16/1:1' │ 20767     │ 12    │ 1        │
+│ 7       │ 'B08' │ 'technology'  │ 'Halo — Smart home hub'          │ 5      │ '4:5/16:9/9:16/1:1' │ 20787     │ 12    │ 1        │
+│ 8       │ 'B09' │ 'real estate' │ 'Riverside — Riverside apartmen' │ 5      │ '4:5/16:9/9:16/1:1' │ 21175     │ 12    │ 1        │
+│ 9       │ 'B10' │ 'real estate' │ 'Bến Xanh — Townhouse developme' │ 5      │ '4:5/16:9/9:16/1:1' │ 21199     │ 12    │ 1        │
+└─────────┴───────┴───────────────┴──────────────────────────────────┴────────┴─────────────────────┴───────────┴───────┴──────────┘
+
+184 passed, 0 failed
+
+Delivery packages retained under D:\Tido\tido-ai-video-factory-claude-code-pack\apps\web\data\deliveries
+

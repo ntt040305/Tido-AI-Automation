@@ -106,7 +106,7 @@ export async function generateStage4BSamples() {
       "Sản phẩm xuất hiện chính xác 1 chai hero",
     ],
     useCase: "Social Post",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     routingResult: mockRoutingResult,
     knowledgePackage: mockKnowledgePackage,
   };

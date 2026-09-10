@@ -18,6 +18,7 @@ import { ExactCopyIntegrityValidator } from "./ExactCopyIntegrityValidator";
 import { InputFingerprint } from "./InputFingerprint";
 import { MasterPromptTemplateValidator } from "./MasterPromptTemplateValidator";
 import { PromptBudgetValidator } from "./PromptBudgetValidator";
+import { KnowledgeBlockCompressor } from "./KnowledgeBlockCompressor";
 import { ProviderPromptOptimizer } from "./ProviderPromptOptimizer";
 import { ProductIdentityResolver } from "./ProductIdentityResolver";
 import { PromptCompressionService } from "./PromptCompressionService";
@@ -492,7 +493,13 @@ export class MasterPromptCompilerService {
     if (strategy?.creative_message) strategyLines.push(`CREATIVE MESSAGE: ${strategy.creative_message}`);
     else if (strategy?.creative_angle) strategyLines.push(`CREATIVE ANGLE: ${strategy.creative_angle}`);
 
-    const vt = strategy?.visual_translation;
+    // The campaign DNA is built FROM the visual translation, so on a campaign run
+    // the two say the same six things in the same words — mood/atmosphere,
+    // colour_logic/colour_direction, lighting_logic/lighting_character and so on.
+    // Printing both wasted roughly 900 characters per asset restating the DNA,
+    // which is what pushed these prompts over the ceiling and got the whole
+    // campaign concept dropped by the reducer.
+    const vt = input.campaignDna ? undefined : strategy?.visual_translation;
     if (vt) {
       const vtLines = [
         vt.subject_representation ? `- Subject treatment: ${vt.subject_representation}` : "",
@@ -509,6 +516,13 @@ export class MasterPromptCompilerService {
       strategyLines.push(`VISUAL DIRECTION: ${strategy.prompt_guidance}`);
     }
 
+    // Campaign DNA leads the section when this render is one asset of a set: the
+    // rules that hold across the whole campaign come before the reasoning behind
+    // this particular execution.
+    if (input.campaignDna && input.campaignDna.trim()) {
+      strategyLines.unshift(input.campaignDna.trim(), "");
+    }
+
     const campaignStrategyText = strategyLines.length > 0
       ? `${strategyLines.join("\n")}\n\nThis is the persuasive job the image has to do, and the reasoning behind it. Serve the message, not the product category — a literal depiction of the category is a failure even when it is well lit. The exact camera, lighting and layout that deliver this are resolved in the ART DIRECTION and COMMERCIAL LAYOUT sections; where those conflict with this section, they win, and an explicit client directive beats both.`
       : "No campaign strategy supplied. Serve the creative intent directly.";
@@ -517,6 +531,7 @@ export class MasterPromptCompilerService {
       angle: strategy?.creative_angle,
       has_insight: Boolean(strategy?.consumer_insight),
       has_visual_translation: Boolean(vt),
+      has_campaign_dna: Boolean(input.campaignDna),
     };
 
     // G. RELEVANT_KNOWLEDGE
@@ -546,9 +561,10 @@ export class MasterPromptCompilerService {
       specialistLimit: number,
       universalLimit: number = universalContentBlocks.length
     ): { text: string; droppedIds: string[] } => {
-      const lines: string[] = [
-        "NOTICE: Retrieved professional knowledge provides supportive physical principles. Non-exhaustive; does not restrict valid creative solutions.\n",
-      ];
+      // MASTER_PROMPT_OPTIMIZATION_V2 Task 1: the retrieval notice is gone. It told
+      // the image model that the knowledge below was retrieved and non-exhaustive,
+      // which is a fact about our pipeline, not an instruction about the picture.
+      const lines: string[] = [];
       universalTokens = 0;
       specialistTokens = 0;
       const droppedIds: string[] = [];
@@ -561,7 +577,7 @@ export class MasterPromptCompilerService {
       if (keptUniversal.length > 0) {
         lines.push("### UNIVERSAL PROFESSIONAL KNOWLEDGE");
         keptUniversal.forEach(({ entry, content }) => {
-          const cleaned = compactBlockContent(content);
+          const cleaned = KnowledgeBlockCompressor.compress(compactBlockContent(content)).text;
           lines.push(`\n#### [${entry.id}] ${entry.title}\n${cleaned}`);
           universalTokens += KnowledgeBudgetManager.estimateTokens(cleaned);
         });
@@ -576,7 +592,7 @@ export class MasterPromptCompilerService {
       if (kept.length > 0) {
         lines.push("\n### SPECIALIST PROFESSIONAL KNOWLEDGE");
         kept.forEach(({ entry, content }) => {
-          const cleaned = compactBlockContent(content);
+          const cleaned = KnowledgeBlockCompressor.compress(compactBlockContent(content)).text;
           lines.push(`\n#### [${entry.id}] ${entry.title}\n${cleaned}`);
           specialistTokens += KnowledgeBudgetManager.estimateTokens(cleaned);
         });
@@ -619,7 +635,9 @@ export class MasterPromptCompilerService {
       },
       inspirationStyleManifest: input.inspirationStyleManifest,
       marketingStrategy: input.marketingStrategy,
-      knowledgeDirection: creativeRes.creativeDirection,
+      // The override is a Phase 3.1.6.5 validation seam. Absent — which it is on
+      // every production path — this is byte-identical to the previous line.
+      knowledgeDirection: (input.knowledgeDirectionOverride as typeof creativeRes.creativeDirection) || creativeRes.creativeDirection,
       assetDefaults: input.creativeInterpretation?.execution_directives,
       assetType: input.useCase,
       aspectRatio: input.aspectRatio,
@@ -629,6 +647,10 @@ export class MasterPromptCompilerService {
       // Scoring detail, so a surprising decision can be explained rather than guessed at.
       decisions: Object.entries(artDirection.fields).map(([dim, f]) => ({
         dimension: dim,
+        // The resolved text itself, not just where it came from. Without it a
+        // reviewer can see that the camera was decided by KNOWLEDGE but not what
+        // it was decided to be, which is the part that explains a bad render.
+        value: f!.value,
         source: f!.source,
         confidence: f!.confidence,
         specificity: f!.specificity,
@@ -656,14 +678,21 @@ export class MasterPromptCompilerService {
       renders_copy: layoutPlan.rendersCopy,
     };
 
-    // Identity, logo and typography guidance from the knowledge layer are kept.
-    // Its composition and cinematic-style lines are dropped unconditionally — the
-    // resolver already consumed them as tier-4 candidates and printed whatever won.
+    // Identity and logo guidance from the knowledge layer are kept. Composition,
+    // cinematic style and — from Phase 3.1.6.6 — typography are dropped
+    // unconditionally: the resolver consumed each of them as a tier-4 candidate
+    // and printed whatever won. Leaving a line here after its dimension became
+    // resolver-owned is how the same instruction ends up in the prompt twice,
+    // once arbitrated and once not.
     const creativeGuidanceText = creativeRes.compactGuidanceText
       .split("\n")
       .filter((line) => {
         const t = line.trim();
-        return !t.startsWith("3. COMMERCIAL COMPOSITION:") && !t.startsWith("5. CINEMATIC STYLE:");
+        return (
+          !t.startsWith("3. COMMERCIAL COMPOSITION:") &&
+          !t.startsWith("4. TYPOGRAPHY AREA:") &&
+          !t.startsWith("5. CINEMATIC STYLE:")
+        );
       })
       .join("\n");
 

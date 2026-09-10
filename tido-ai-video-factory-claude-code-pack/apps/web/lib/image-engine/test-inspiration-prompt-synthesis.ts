@@ -42,7 +42,7 @@ async function runPromptSynthesisTests() {
   const compileRes1 = await compiler.compile({
     brief: "High-end commercial poster for snack bag",
     useCase: "Poster",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     routingResult: snackRouting,
     knowledgePackage: dummyKnowledge as any,
     hasInspirationReference: false,
@@ -80,7 +80,7 @@ async function runPromptSynthesisTests() {
   const compileRes2 = await compiler.compile({
     brief: "High-end commercial poster for snack bag",
     useCase: "Poster",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     routingResult: snackWithInspirationRouting,
     knowledgePackage: dummyKnowledge as any,
     hasInspirationReference: true,
@@ -142,7 +142,7 @@ async function runPromptSynthesisTests() {
   const compileRes4 = await compiler.compile({
     brief: "Luxury serum advertisement",
     useCase: "Poster",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     routingResult: cosmeticRouting,
     knowledgePackage: dummyKnowledge as any,
     hasInspirationReference: true,
@@ -186,7 +186,7 @@ async function runPromptSynthesisTests() {
   const compileRes5 = await compiler.compile({
     brief: "Refreshing green tea poster",
     useCase: "Poster",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     routingResult: beverageRouting,
     knowledgePackage: dummyKnowledge as any,
     hasInspirationReference: true,

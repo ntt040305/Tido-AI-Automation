@@ -66,7 +66,7 @@ async function runAudit() {
   const request: SimpleInputRequestV1 = {
     concept: "Tạo poster quảng cáo sản phẩm theo phong cách ảnh ý tưởng",
     useCase: "Poster",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     brandName: "Tido Citrus",
     images: [
       { reference_id: "REF_01", buffer: Buffer.from("product_bytes"), mimeType: "image/png" },

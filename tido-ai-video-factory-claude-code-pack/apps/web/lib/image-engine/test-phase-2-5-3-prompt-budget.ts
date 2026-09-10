@@ -18,7 +18,12 @@ function runPhase253PromptBudgetTest() {
 
   // 1. Verify limit constants
   assert(PromptBudgetValidator.DEFAULT_PROVIDER_HARD_LIMIT === 20000, "PromptBudgetValidator hard limit restored to 20000");
+  // MASTER_PROMPT_OPTIMIZATION_V2 moved this ceiling: warn 16,000 / hard 18,000,
+  // target 12,000-15,000. The downstream PromptBudgetValidator and
+  // PromptCompressionService limits below are unchanged at 20,000 and remain
+  // looser, so the optimizer is now the binding constraint on the final prompt.
   assert(ProviderPromptOptimizer.HARD_LIMIT === 20000, "ProviderPromptOptimizer hard limit restored to 20000");
+  assert(ProviderPromptOptimizer.SOFT_THRESHOLD === 17000, "ProviderPromptOptimizer soft threshold is 17000");
   assert(PromptCompressionService.MAX_PROMPT_LENGTH === 20000, "PromptCompressionService MAX_PROMPT_LENGTH is 20000");
   assert(PromptCompressionService.COMPRESSION_THRESHOLD === 18000, "PromptCompressionService COMPRESSION_THRESHOLD is 18000");
 

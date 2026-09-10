@@ -7,6 +7,16 @@ export interface CreativeDirection {
   composition_strategy: string;
   typography_strategy: string;
   color_strategy: string;
+  /**
+   * Surface and finish instruction (Phase 3.1.6).
+   *
+   * Optional, unlike its siblings, because the Layer 1 service does not produce
+   * one and making it required would break every existing construction site to
+   * add a field only the reasoning path can fill. `materials` was already an
+   * ArtDirectionDimension with no field to land in, so material decisions were
+   * recorded as unmapped on every run — 10 of them across the V1 benchmark.
+   */
+  material_direction?: string;
   quality_checks: string[];
 }
 

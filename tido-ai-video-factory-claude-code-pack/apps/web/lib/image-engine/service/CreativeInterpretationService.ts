@@ -227,6 +227,35 @@ export class CreativeInterpretationService {
   }
 
   /**
+   * Re-plans an existing interpretation for a different asset type, WITHOUT
+   * re-reading the brief.
+   *
+   * A campaign generates five assets from one brief. Re-running the LLM per asset
+   * costs five calls and, worse, is unstable: the model paraphrases the same
+   * client instruction differently each time, and a paraphrase can land on either
+   * side of the specificity threshold in the art-direction resolver. That is how
+   * "soft reflective light producing clean reflections" became a locked client
+   * directive on a poster and an overridable suggestion on the banner from the
+   * same brief.
+   *
+   * The client's intent is a property of the brief, not of the format. It is read
+   * once. Only the asset-profile execution directives — which are deterministic —
+   * are recomputed here.
+   */
+  public static reinterpretForAssetType(
+    base: CreativeInterpretation,
+    input: CreativeInterpretationInput
+  ): CreativeInterpretation {
+    return this.assemble(
+      base.original_concept,
+      input.assetType || base.asset_type,
+      base.locked_intent,
+      input,
+      base.interpretation_source || "DETERMINISTIC_FALLBACK"
+    );
+  }
+
+  /**
    * Shared tail: enhancement synthesis and execution planning are identical no
    * matter which producer built the locked intent, so downstream consumers see
    * exactly the same contract they always did.

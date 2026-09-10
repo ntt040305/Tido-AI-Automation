@@ -126,7 +126,7 @@ async function runLiveImgStudioRender() {
     brief: "Bộ đôi dưỡng da thiên nhiên Serum Matcha & Cream Hydra trên nền đá cẩm thạch trắng sang trọng",
     brandName: "TIDO BEAUTY",
     productCount: 2,
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     productReferences,
     routingResult: routerResult.routing,
     knowledgePackage: retrievalResult.package,

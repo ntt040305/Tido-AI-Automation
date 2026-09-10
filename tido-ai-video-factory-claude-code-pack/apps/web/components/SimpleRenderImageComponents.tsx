@@ -322,7 +322,7 @@ export function SimpleAspectRatioSelector({
   selected: string;
   onChange: (ratio: string) => void;
 }) {
-  const RATIOS = ["1:1", "3:4", "9:16"];
+  const RATIOS = ["1:1", "9:16", "16:9"];
 
   return (
     <div className="form-group">
@@ -368,18 +368,12 @@ export function SimpleRenderPreview({
     switch (r) {
       case "1:1":
         return "aspect-square max-w-[440px]";
-      case "4:5":
-        return "aspect-[4/5] max-w-[390px]";
-      case "3:4":
-        return "aspect-[3/4] max-w-[390px]";
       case "9:16":
         return "aspect-[9/16] max-w-[310px]";
       case "16:9":
         return "aspect-[16/9] max-w-[500px]";
-      case "4:3":
-        return "aspect-[4/3] max-w-[460px]";
       default:
-        return "aspect-[4/5] max-w-[390px]";
+        return "aspect-square max-w-[440px]";
     }
   };
 

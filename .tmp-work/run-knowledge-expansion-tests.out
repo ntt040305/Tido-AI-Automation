@@ -1,0 +1,130 @@
+[LLM_PROVIDER] {
+  provider: 'claude-sonnet-4-6',
+  baseUrl: 'http://127.0.0.1:8317/v1',
+  status: 'CONNECTED'
+}
+========================================================================
+CIOS PHASE 2.1 — CREATIVE KNOWLEDGE BRAIN EXPANSION
+========================================================================
+
+🔹 1. Corpus scale and integrity
+      204 objects across 16 domains
+  ✓ Corpus meets the 100-object minimum
+  ✓ No parse errors, no duplicate ids, no broken relations
+  ✓ Every object is structurally valid against the unchanged V2 schema
+  ✓ Schema was extended, not replaced — core V2 fields still required
+
+🔹 2. Domain architecture expansion
+      audience=7 camera=8 channel=6 color=7 composition=7 concept=6 critic=6 differentiation=7 industry=4 layout=108 lighting=7 material=6 photography=5 strategy=10 typography=5 visual_direction=5
+  ✓ All 14 requested intelligence areas are represented
+  ✓ New domains split what was previously conflated
+      fashion=23 food_beverage=21 hospitality=21 beauty=18 technology=9
+  ✓ Priority industries are covered
+
+🔹 3. Quality gate at scale
+      204/204 admitted · average 8.67/10
+  ✓ Entire corpus passes the gate
+  ✓ Average quality is well clear of the admission floor
+  ✓ Hedging in a decision still fails, hedging in reasoning does not
+  ✓ A hedge inside a test condition is not counted against the decision
+  ✓ Universal scope is allowed for craft and meta, refused for strategy
+  ✓ Hard failures still reject generic, subjective and non-actionable content
+
+🔹 4. Layout and visual intelligence foundations
+  ✓ Layout profiles carry the required framework fields
+  ✓ Photography profiles carry lens, framing or angle psychology
+  ✓ Lighting profiles carry emotional perception and commercial usage
+  ✓ Color profiles carry brand perception and emotional association
+  ✓ Vietnamese market knowledge is present in colour and typography
+
+🔹 5. Optional LLM evaluation layer
+[LLM_PROVIDER] {
+  provider: 'claude-sonnet-4-6',
+  baseUrl: 'http://127.0.0.1:8317/v1',
+  status: 'CONNECTED'
+}
+  ✓ Four criteria are defined and the layer is constructible
+  ✓ The layer is optional — the rule gate decides admission alone
+
+🔹 6. Knowledge evolution schema (structure only)
+  ✓ Evolution schema is defined but not implemented anywhere
+
+🔹 7. Expanded brain drives Phase 1.5 and Phase 1 unchanged
+[ART_DIRECTION_RESOLVED] {
+  provenance: { composition: 'KNOWLEDGE' },
+  decisions: [ 'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)' ],
+  client_locks: [],
+  suppressed_count: 0
+}
+
+      ══ Skin1004 — premium ampoule launch ══
+      retrieved : 12 objects
+      concept   : The campaign around continuity of identity rather than correction, reversal or repair of a
+      insight   : Confidence that she still recognises herself
+      evaluation: 10/10 ACCEPTED
+      decision  : composition  Place the product on the exact centre axis at 40 to 55 p
+      art dir   : composition=KNOWLEDGE
+[ART_DIRECTION_RESOLVED] {
+  provenance: {
+    camera: 'KNOWLEDGE',
+    composition: 'KNOWLEDGE',
+    colour: 'KNOWLEDGE'
+  },
+  decisions: [
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 0
+}
+
+      ══ Cà phê Bến Nghé — khai trương ══
+      retrieved : 12 objects
+      concept   : The launch in one named daily ritual and one recognisable local moment rather than in the 
+      insight   : A moment of control inside a crowded day
+      evaluation: 9.25/10 ACCEPTED
+      decision  : composition  Compose natively in three bands with the hook in the upp
+      decision  : camera       Capture the moment of interruption — a poured stream mid
+      decision  : colour       Hold at least a four-to-one luminance ratio between subj
+      art dir   : camera=KNOWLEDGE composition=KNOWLEDGE colour=KNOWLEDGE
+[ART_DIRECTION_RESOLVED] {
+  provenance: { composition: 'KNOWLEDGE', colour: 'KNOWLEDGE' },
+  decisions: [
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 0
+}
+
+      ══ Atelier Six — social ══
+      retrieved : 12 objects
+      concept   : Lead the campaign with a character carrying a specific attitude, and treat the garment as 
+      insight   : To feel like the version of themselves they intend to be
+      evaluation: 9/10 ACCEPTED
+      decision  : composition  Hold the subject within the upper 65 percent and reserve
+      decision  : colour       Hold at least a four-to-one luminance ratio between subj
+      art dir   : composition=KNOWLEDGE colour=KNOWLEDGE
+  ✓ Expanded corpus retrieves substantially more knowledge per campaign
+  ✓ All three concepts are accepted and distinct
+  ✓ Industry-locked knowledge does not cross campaigns
+  ✓ Art direction still resolves at the KNOWLEDGE tier
+  ✓ Layer separation holds at 105 objects
+
+🔹 8. Layout intelligence corpus (Phase 2.1B)
+      108 layout objects across 24 layout families
+  ✓ Layout corpus meets the 100-object target
+      hero_product=8 problem_solution=6 comparison=6 testimonial=6 offer=7 announcement=6 thumb_stop=7 mobile_first=8 tiktok_hook=6 carousel=6 facebook_ad=6 luxury_minimal=6 magazine_cover=6 swiss_grid=6 fashion_editorial=5 hospitality_editorial=5
+  ✓ All sixteen requested layout families exist
+  ✓ Every layout object carries a complete layout profile
+  ✓ Every layout object carries use_when, avoid_when and a structured trade-off
+      108/108 admitted · average 8.64/10
+  ✓ The whole layout corpus passes the quality gate
+  ✓ Layout knowledge is retrievable by channel and asset type
+      mean layout specificity 7.89/10
+  ✓ Layout decisions score well on the gate's own specificity measure
+
+========================================================================
+33 passed, 0 failed
+========================================================================

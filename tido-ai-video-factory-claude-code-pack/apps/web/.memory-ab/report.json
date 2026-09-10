@@ -1,0 +1,39 @@
+{
+  "dataset_id": "cios_creative_concept_benchmark",
+  "without": {
+    "arm": "without memory",
+    "recommended": 45,
+    "brand_ownership_rate": 0.089,
+    "mean_ownership": 0.308,
+    "originality": 41.9,
+    "breakthrough": 7,
+    "memorability": 35.98,
+    "approval_rate": 0.089,
+    "pursue": 0,
+    "modify": 4,
+    "reject": 41,
+    "distinct_structures": 3,
+    "structureless": 12,
+    "guidance_applied": 0,
+    "guidance_eligible": 10,
+    "guidance_reordered": 0
+  },
+  "with": {
+    "arm": "with memory",
+    "recommended": 45,
+    "brand_ownership_rate": 0.089,
+    "mean_ownership": 0.308,
+    "originality": 41.9,
+    "breakthrough": 7,
+    "memorability": 35.98,
+    "approval_rate": 0.089,
+    "pursue": 0,
+    "modify": 4,
+    "reject": 41,
+    "distinct_structures": 3,
+    "structureless": 12,
+    "guidance_applied": 63,
+    "guidance_eligible": 10,
+    "guidance_reordered": 39
+  }
+}

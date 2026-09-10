@@ -1,0 +1,62 @@
+{
+  "dataset_id": "cios_creative_concept_benchmark",
+  "before": {
+    "arm": "before — six modes, one territory",
+    "briefs": 100,
+    "ideas": 458,
+    "ideas_per_brief": 4.58,
+    "territories_per_brief": 0.92,
+    "approved": 4,
+    "approval_rate": 4,
+    "survivable": 45,
+    "pursue": 0,
+    "modify": 4,
+    "reject": 41,
+    "pursue_rate": 0,
+    "mean_mechanism_confidence": 0.223,
+    "mechanismless": 120,
+    "mechanismless_rate": 26.2,
+    "breakthrough_briefs": 11,
+    "bands": {
+      "TRANSFORMED": 11,
+      "OBLIQUE": 17,
+      "DISCONNECTED": 17
+    },
+    "distinct_ideas": 355,
+    "duplicate_rate": 0.225
+  },
+  "after": {
+    "arm": "after — planned search, several territories",
+    "briefs": 100,
+    "ideas": 1274,
+    "ideas_per_brief": 12.74,
+    "territories_per_brief": 3.52,
+    "approved": 8,
+    "approval_rate": 8,
+    "survivable": 85,
+    "pursue": 0,
+    "modify": 8,
+    "reject": 77,
+    "pursue_rate": 0,
+    "mean_mechanism_confidence": 0.445,
+    "mechanismless": 70,
+    "mechanismless_rate": 5.5,
+    "breakthrough_briefs": 34,
+    "bands": {
+      "OBLIQUE": 11,
+      "DISCONNECTED": 60,
+      "TRANSFORMED": 11,
+      "ECHO": 3
+    },
+    "distinct_ideas": 1218,
+    "duplicate_rate": 0.044
+  },
+  "healthy_pools": 61,
+  "containment": {
+    "checked": 1837,
+    "contained": 1274,
+    "retried": 370,
+    "recovered": 66,
+    "dropped": 304
+  }
+}

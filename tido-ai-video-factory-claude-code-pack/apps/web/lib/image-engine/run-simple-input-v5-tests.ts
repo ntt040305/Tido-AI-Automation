@@ -24,7 +24,7 @@ async function runSimpleInputV5Tests() {
   const validReq: SimpleInputRequestV1 = {
     concept: "Poster fantasy mùa hè cho hai ly nước bay giữa mây, title 'HÈ BAY LÊN'",
     useCase: "Poster",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     images: [
       { reference_id: "REF_01", filename: "product1.png", mimeType: "image/png" },
       { reference_id: "REF_02", filename: "logo.png", mimeType: "image/png" },

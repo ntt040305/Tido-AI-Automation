@@ -27,11 +27,86 @@ export class LLMProviderService {
     this.apiKey = config?.apiKey || process.env.LLM_API_KEY || "marketing-test-key-2026";
     this.model = config?.model || process.env.LLM_MODEL || "claude-sonnet-4-6";
 
+    // "CONFIGURED", not "CONNECTED".
+    //
+    // This line used to print status: "CONNECTED" unconditionally, at
+    // construction, before any socket was opened. It said CONNECTED for every
+    // phase in which the gateway was in fact unreachable, and a Phase 4.0.7
+    // check very nearly recorded the LLM path as live on the strength of it.
+    // A constructor cannot know whether a host is up; only `probe()` can.
     console.log("[LLM_PROVIDER]", {
       provider: this.model,
       baseUrl: this.baseUrl,
-      status: "CONNECTED",
+      status: "CONFIGURED",
+      note: "configuration only — call probe() for reachability",
     });
+  }
+
+  /**
+   * Whether the gateway is actually there.
+   *
+   * `isConfigured()` answers a different and much weaker question: whether a URL
+   * and a model name are non-empty strings, which they always are because both
+   * have defaults. Anything that needs to know if the model can be *reached* has
+   * to make a request, so this makes the smallest one it can and reports what
+   * happened rather than what was hoped.
+   *
+   * Never throws. An unreachable gateway is an expected state in this codebase,
+   * not an error.
+   */
+  public async probe(timeoutMs = 8000): Promise<{
+    reachable: boolean;
+    status: "LLM_ACTIVE" | "LLM_FALLBACK_MODE";
+    baseUrl: string;
+    model: string;
+    detail: string;
+  }> {
+    const base = {
+      baseUrl: this.baseUrl,
+      model: this.model,
+    };
+    try {
+      const response = await fetch(`${this.baseUrl}/chat/completions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify({
+          model: this.model,
+          messages: [{ role: "user", content: "ping" }],
+          max_tokens: 1,
+          temperature: 0,
+        }),
+        signal: AbortSignal.timeout(timeoutMs),
+      });
+      if (!response.ok) {
+        const text = await response.text().catch(() => "");
+        return {
+          ...base,
+          reachable: false,
+          status: "LLM_FALLBACK_MODE",
+          detail: `gateway answered HTTP ${response.status}${text ? `: ${text.slice(0, 160)}` : ""}`,
+        };
+      }
+      const data = (await response.json().catch(() => null)) as { choices?: unknown[] } | null;
+      if (!data || !Array.isArray(data.choices)) {
+        return {
+          ...base,
+          reachable: false,
+          status: "LLM_FALLBACK_MODE",
+          detail: "gateway answered but the body was not a chat completion",
+        };
+      }
+      return { ...base, reachable: true, status: "LLM_ACTIVE", detail: "gateway answered a chat completion" };
+    } catch (err: any) {
+      return {
+        ...base,
+        reachable: false,
+        status: "LLM_FALLBACK_MODE",
+        detail: `no answer from the gateway (${err?.message || String(err)})`,
+      };
+    }
   }
 
   public getModelName(): string {

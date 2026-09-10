@@ -182,7 +182,7 @@ const cases: Case[] = [
     userInput:
       "Làm visual cho sản phẩm skincare này với góc top view hơi nghiêng, chai đặt giữa mặt nước trong, ánh sáng phản chiếu đẹp. Nhìn phải thật premium.",
     useCase: "poster",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     brandName: "Centella",
     copyItems: [{ text: "DƯỠNG ẨM CHUYÊN SÂU", type: "headline" }],
     marketingContext: { industry: "beauty_skincare", objective: "conversion", target_channel: "social_media" },

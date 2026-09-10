@@ -36,7 +36,7 @@ const inspirationBuffer = Buffer.alloc(4096, 2);
 const request: SimpleInputRequestV1 = {
   concept: "Coca Cola can, premium cold beverage advertisement",
   useCase: "Poster",
-  aspectRatio: "4:5",
+  aspectRatio: "9:16",
   brandName: "Coca Cola",
   images: [
     {
@@ -276,7 +276,7 @@ check(
   const res = await compiler.compile({
     brief: "Coca Cola can premium cold beverage poster",
     useCase: "Poster",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     brandName: "Coca Cola",
     routingResult: adapted.resolvedRoutingResult,
     knowledgePackage: {
@@ -333,7 +333,7 @@ check(
   const withheldRes = await compiler.compile({
     brief: "SKIN1004 Centella ampoule poster",
     useCase: "Poster",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     brandName: "SKIN1004",
     routingResult: adapted.resolvedRoutingResult,
     knowledgePackage: {
@@ -377,7 +377,7 @@ check(
   const fallbackRes = await compiler.compile({
     brief: "SKIN1004 Centella ampoule poster",
     useCase: "Poster",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     routingResult: adapted.resolvedRoutingResult,
     knowledgePackage: {
       package_version: "1.0",

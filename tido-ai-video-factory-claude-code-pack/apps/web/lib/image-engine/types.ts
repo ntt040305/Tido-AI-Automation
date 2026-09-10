@@ -699,6 +699,28 @@ export interface MasterPromptCompilerInput {
   routingResult: RoutingResultSchema;
   knowledgePackage: KnowledgePackageV1;
   creativeInterpretation?: CreativeInterpretation;
+  /**
+   * Replaces the Layer 1 creative direction at the resolver's KNOWLEDGE tier.
+   *
+   * Phase 3.1.6.5 — a validation seam, not a switch. Absent, the compiler behaves
+   * exactly as before: it builds the direction from CreativeKnowledgeService and
+   * nothing changes. Supplied, the resolver receives that direction instead, which
+   * is what lets a test prove a reasoning decision reaches the compiled prompt
+   * rather than assert that it ought to.
+   *
+   * Typed loosely to avoid a compiler → reasoning-layer import. The resolver's own
+   * KnowledgeCreativeDirection is the contract.
+   */
+  knowledgeDirectionOverride?: {
+    visual_style?: string;
+    camera_direction?: string;
+    lighting_direction?: string;
+    composition_strategy?: string;
+    typography_strategy?: string;
+    color_strategy?: string;
+    material_direction?: string;
+    quality_checks?: string[];
+  };
   hasInspirationReference?: boolean;
   /**
    * True when the inspiration image was analyzed into words and will NOT be attached to
@@ -717,6 +739,15 @@ export interface MasterPromptCompilerInput {
    * art direction resolver at tier 3.
    */
   marketingStrategy?: import("./llm/prompt-strategy.schema").MarketingBrainStrategy;
+  /**
+   * Campaign-level visual rules, pre-rendered by CampaignBuilderService.
+   *
+   * Present only for multi-asset campaign runs. It is what makes a poster, a
+   * banner and a social ad from one brief read as one campaign: the same mood,
+   * colour logic, lighting logic and product presentation reach all five prompts,
+   * while each format still adapts its own layout and hierarchy.
+   */
+  campaignDna?: string;
   /** Explicit marketing context, used for audience and objective framing. */
   marketingContext?: {
     industry?: string;
@@ -827,7 +858,15 @@ export type GenerationErrorCode =
   | "PROVIDER_NETWORK_ERROR"
   | "ASSET_STORAGE_FAILED"
   | "GENERATION_FAILED"
-  | "PROVIDER_UPSTREAM_ERROR";
+  | "PROVIDER_UPSTREAM_ERROR"
+  // Phase 4.0.7.1 — image transport. These name the failure the caller actually
+  // had, in place of "PROVIDER_NETWORK_ERROR" standing in for an oversized
+  // upload, a rejected key and a dead socket alike.
+  | "IMAGE_PAYLOAD_TOO_LARGE"
+  | "PROVIDER_UPSTREAM_FAILURE"
+  | "PROVIDER_INVALID_REQUEST"
+  | "PROVIDER_AUTH_ERROR"
+  | "PROVIDER_UNKNOWN_ERROR";
 
 export interface GenerationError {
   code: GenerationErrorCode;
@@ -1099,6 +1138,12 @@ export interface SimpleInputRequestV1 {
     visual_style?: string;
     emotional_tone?: string;
     composition_layout?: string;
+    /**
+     * Phase 4.1.5. What the user chose in the visual direction panel, as
+     * `{ camera: "low_angle", ... }`. Absent keys and the value "auto" both mean
+     * the control was left on Tự chọn.
+     */
+    visual_controls?: Record<string, string>;
   };
   salesContext?: {
     product_name?: string;

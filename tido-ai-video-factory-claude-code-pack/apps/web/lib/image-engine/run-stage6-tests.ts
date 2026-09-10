@@ -109,7 +109,7 @@ async function runStage6Tests() {
     routing: { version: "1.0", mode: "HIGH_CONFIDENCE" },
     knowledge: { universal_block_ids: [], specialist_block_ids: [], knowledge_versions: {} },
     references: [{ reference_id: "REF_01", product_id: "PRODUCT_01", input_index: 0 }],
-    output_config: { aspect_ratio: "4:5", use_case: "Social Ad" },
+    output_config: { aspect_ratio: "9:16", use_case: "Social Ad" },
     compiled_prompt: "Render coffee cup naturally.",
     compiler_warnings: [],
     stats: {

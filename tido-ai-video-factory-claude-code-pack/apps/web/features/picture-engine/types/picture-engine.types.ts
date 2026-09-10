@@ -58,6 +58,11 @@ export interface SalesContext {
 import { ProductCompositionMode, ProductIdentityStrength } from "@tido/contracts";
 
 export interface CreativeDirection {
+  /**
+   * Phase 4.1.5. Visual direction controls, keyed by control. An absent key or
+   * the value "auto" means the user left it on Tự chọn and the engine decides.
+   */
+  visual_controls?: Record<string, string>;
   visual_style: string;
   emotional_tone: string;
   aspect_ratio: AspectRatioType;

@@ -132,7 +132,7 @@ async function runPhase35Tests() {
     productCount: 1,
     copyItems: ["Glow Serum"],
     useCase: "Poster",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     routingResult: flatRoutingResult,
     knowledgePackage: flatRetrieval.package!,
   };
@@ -259,7 +259,7 @@ async function runPhase35Tests() {
     productCount: 1,
     copyItems: ["Brand Product"],
     useCase: "Poster",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     routingResult: lowQualityRoutingResult,
     knowledgePackage: lowRetrieval.package!,
   };
@@ -281,7 +281,7 @@ async function runPhase35Tests() {
     productCount: 1,
     copyItems: ["Swiss Luxury Watch"],
     useCase: "Poster",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     routingResult: studioRoutingResult,
     knowledgePackage: studioRetrieval.package!,
   };

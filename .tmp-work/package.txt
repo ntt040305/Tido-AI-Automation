@@ -1,0 +1,38 @@
+PACKAGE TREE
+  banner/
+    asset_plan.json
+    prompt.md
+  campaign_summary.json
+  campaign_summary.txt
+  delivery_manifest.json
+  hero/
+    asset_plan.json
+    prompt.md
+  poster/
+    asset_plan.json
+    prompt.md
+  social/
+    asset_plan.json
+    prompt.md
+  thumbnail/
+    asset_plan.json
+    prompt.md
+
+ASSET DIFFERENTIATION — same campaign, five jobs
+  poster       4:5   center_out_product_first      product=85,headline=65,cta=35
+  banner       16:9  left_to_right_message_first   headline=85,cta=70,product=60
+  social_ad    9:16  top_to_bottom_product_first   product=90,headline=60,cta=30
+  product_hero 1:1   center_lock_product_only      product=100
+  thumbnail    16:9  center_out_product_first      product=85,headline=45
+
+SHARED DNA CHECK (line present in all 5 prompts)
+  colour_logic identical in all five prompts: true
+
+MANIFEST
+  files=12 assets=5
+  poster/CENTELLA_CENTELLA-HYDRATING-SERUM_POSTER_1080x1350_v1.png  [direct 1080x1350]
+  poster/CENTELLA_CENTELLA-HYDRATING-SERUM_POSTER_1080x1080_v1.png  [direct 1080x1080]
+  banner/CENTELLA_CENTELLA-HYDRATING-SERUM_BANNER_1920x1080_v1.png  [direct 1920x1080]
+  banner/CENTELLA_CENTELLA-HYDRATING-SERUM_BANNER_728x90_v1.png  [crop 728x90]
+  banner/CENTELLA_CENTELLA-HYDRATING-SERUM_BANNER_300x250_v1.png  [crop 300x250]
+  banner/CENTELLA_CENTELLA-HYDRATING-SERUM_BANNER_970x250_v1.png  [crop 970x250]

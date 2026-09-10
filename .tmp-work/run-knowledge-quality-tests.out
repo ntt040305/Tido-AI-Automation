@@ -1,0 +1,290 @@
+======================================================================
+CIOS PHASE 2 — KNOWLEDGE QUALITY GATE & CORE CREATIVE BRAIN
+======================================================================
+
+🔹 1. Core Creative Brain corpus
+  ✓ Corpus loads from disk with no parse errors
+      audience=7 camera=8 channel=6 color=7 composition=7 concept=6 critic=6 differentiation=7 industry=4 layout=108 lighting=7 material=6 photography=5 strategy=10 typography=5 visual_direction=5
+  ✓ Six foundation domains are seeded
+  ✓ All 11 required domain directories exist
+  ✓ No duplicate ids and no broken relations
+  ✓ Every seeded object is structurally valid against the V2 schema
+
+🔹 2. Quality gate — diagnostics on the real corpus
+      ADMITTED    9.8/10  specificity=10 decision val=10 context comp=9 anti pattern=10 trade off cl=10  audience.gen_z.authenticity_signals.001
+      ADMITTED    9.8/10  specificity=10 decision val=10 context comp=9 anti pattern=10 trade off cl=10  layout.negative_space.premium_hero.001
+      ADMITTED    9.8/10  specificity=10 decision val=10 context comp=9 anti pattern=10 trade off cl=10  strategy.ritual_framing.local_hospitality.001
+      ADMITTED    9.8/10  specificity=10 decision val=10 context comp=9 anti pattern=10 trade off cl=10  strategy.scientific_luxury.beauty_efficacy.001
+      ADMITTED    9.6/10  specificity=9 decision val=10 context comp=9 anti pattern=10 trade off cl=10  layout.facebook_ad.multi_product_collection.001
+      ADMITTED    9.6/10  specificity=9 decision val=10 context comp=9 anti pattern=10 trade off cl=10  layout.facebook_ad.retargeting_recall.001
+      ADMITTED    9.6/10  specificity=9 decision val=10 context comp=9 anti pattern=10 trade off cl=10  layout.thumb_stop.negative_space_isolation.001
+      ADMITTED    9.4/10  specificity=10 decision val=10 context comp=7 anti pattern=10 trade off cl=10  concept.construction.visual_metaphor.001
+      ADMITTED    9.4/10  specificity=10 decision val=10 context comp=7 anti pattern=10 trade off cl=10  concept.discipline.single_organising_idea.001
+      ADMITTED    9.4/10  specificity=10 decision val=10 context comp=7 anti pattern=10 trade off cl=10  critic.evaluation.production_feasibility.001
+      ADMITTED    9.4/10  specificity=10 decision val=10 context comp=7 anti pattern=10 trade off cl=10  critic.evaluation.strategic_fit.001
+      ADMITTED    9.2/10  specificity=7 decision val=10 context comp=9 anti pattern=10 trade off cl=10  audience.women_35_50.identity_drivers.001
+      ADMITTED    9.2/10  specificity=9 decision val=10 context comp=7 anti pattern=10 trade off cl=10  camera.depth.selective_focus_attention.001
+      ADMITTED    9.2/10  specificity=9 decision val=10 context comp=7 anti pattern=10 trade off cl=10  color.accent.single_point_direction.001
+      ADMITTED    9.2/10  specificity=9 decision val=10 context comp=7 anti pattern=10 trade off cl=10  color.monochrome.focus_discipline.001
+      ADMITTED    9.2/10  specificity=9 decision val=10 context comp=7 anti pattern=10 trade off cl=10  composition.balance.asymmetric_tension.001
+      ADMITTED    9.2/10  specificity=9 decision val=10 context comp=7 anti pattern=10 trade off cl=10  concept.construction.three_territories.001
+      ADMITTED    9.2/10  specificity=9 decision val=10 context comp=7 anti pattern=10 trade off cl=10  concept.discipline.one_message_per_asset.001
+      ADMITTED    9.2/10  specificity=7 decision val=10 context comp=9 anti pattern=10 trade off cl=10  differentiation.fashion.category_cliches.001
+      ADMITTED    9.2/10  specificity=9 decision val=10 context comp=7 anti pattern=10 trade off cl=10  lighting.ratio.contrast_as_tone.001
+      ADMITTED    9.2/10  specificity=9 decision val=10 context comp=7 anti pattern=10 trade off cl=10  lighting.rim.separation_without_clutter.001
+      ADMITTED    9.2/10  specificity=9 decision val=10 context comp=7 anti pattern=10 trade off cl=10  photography.product.scale_reference.001
+      ADMITTED    9.2/10  specificity=6 decision val=10 context comp=10 anti pattern=10 trade off cl=10  strategy.identity_preservation.mature_skincare.001
+      ADMITTED    9.2/10  specificity=7 decision val=10 context comp=9 anti pattern=10 trade off cl=10  strategy.self_expression.fashion_social.001
+      ADMITTED    9.2/10  specificity=9 decision val=10 context comp=7 anti pattern=10 trade off cl=10  typography.hierarchy.three_level_limit.001
+      ADMITTED      9/10  specificity=10 decision val=10 context comp=5 anti pattern=10 trade off cl=10  audience.premium_consumers.value_justification.001
+      ADMITTED      9/10  specificity=10 decision val=10 context comp=5 anti pattern=10 trade off cl=10  channel.instagram.feed_versus_story.001
+      ADMITTED      9/10  specificity=10 decision val=10 context comp=5 anti pattern=10 trade off cl=10  color.contrast.thumbnail_survival.001
+      ADMITTED      9/10  specificity=10 decision val=10 context comp=5 anti pattern=10 trade off cl=10  color.restraint.premium_palette.001
+      ADMITTED      9/10  specificity=10 decision val=10 context comp=5 anti pattern=10 trade off cl=10  composition.layering.depth_credibility.001
+      ADMITTED      9/10  specificity=10 decision val=10 context comp=5 anti pattern=10 trade off cl=10  differentiation.beauty.category_cliches.001
+      ADMITTED      9/10  specificity=10 decision val=10 context comp=5 anti pattern=10 trade off cl=10  differentiation.food_beverage.category_cliches.001
+      ADMITTED      9/10  specificity=10 decision val=10 context comp=5 anti pattern=10 trade off cl=10  industry.beauty.communication_model.001
+      ADMITTED      9/10  specificity=10 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.asymmetric_split.editorial_tension.001
+      ADMITTED      9/10  specificity=6 decision val=10 context comp=9 anti pattern=10 trade off cl=10  layout.facebook_ad.social_proof_badge.001
+      ADMITTED      9/10  specificity=6 decision val=10 context comp=9 anti pattern=10 trade off cl=10  layout.hero_product.centred_authority.001
+      ADMITTED      9/10  specificity=10 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.magazine_cover.single_subject_gaze.001
+      ADMITTED      9/10  specificity=6 decision val=10 context comp=9 anti pattern=10 trade off cl=10  layout.mobile_first.thumb_zone_action.001
+      ADMITTED      9/10  specificity=10 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.offer.saving_emphasis.001
+      ADMITTED      9/10  specificity=10 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.problem_solution.magnified_detail.001
+      ADMITTED      9/10  specificity=10 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.swiss_grid.hierarchy_by_scale.001
+      ADMITTED      9/10  specificity=10 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.thumb_stop.colour_block_interrupt.001
+      ADMITTED      9/10  specificity=6 decision val=10 context comp=9 anti pattern=10 trade off cl=10  layout.tiktok_hook.creator_frame_mimicry.001
+      ADMITTED      9/10  specificity=10 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.mobile_first.social_hierarchy.001
+      ADMITTED      9/10  specificity=10 decision val=10 context comp=5 anti pattern=10 trade off cl=10  lighting.backlight.appetite_translucency.001
+      ADMITTED      9/10  specificity=10 decision val=10 context comp=5 anti pattern=10 trade off cl=10  material.fabric.weight_through_fall.001
+      ADMITTED      9/10  specificity=10 decision val=10 context comp=5 anti pattern=10 trade off cl=10  strategy.repeat_visit.hospitality_ritual.001
+      ADMITTED      9/10  specificity=6 decision val=10 context comp=9 anti pattern=10 trade off cl=10  visual_direction.premium.quiet_authority.001
+      ADMITTED      9/10  specificity=6 decision val=10 context comp=9 anti pattern=10 trade off cl=10  visual_direction.clinical_precision.efficacy_beauty.001
+      ADMITTED      9/10  specificity=10 decision val=10 context comp=5 anti pattern=10 trade off cl=10  visual_direction.editorial_attitude.fashion_social.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  audience.families.decision_dynamics.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  channel.ooh.distance_legibility.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  composition.diagonal.movement_energy.001
+      ADMITTED    8.8/10  specificity=7 decision val=10 context comp=7 anti pattern=10 trade off cl=10  concept.discipline.earn_the_product_shot.001
+      ADMITTED    8.8/10  specificity=7 decision val=10 context comp=7 anti pattern=10 trade off cl=10  critic.evaluation.audience_relevance.001
+      ADMITTED    8.8/10  specificity=7 decision val=10 context comp=7 anti pattern=10 trade off cl=10  critic.evaluation.commercial_strength.001
+      ADMITTED    8.8/10  specificity=7 decision val=10 context comp=7 anti pattern=10 trade off cl=10  critic.evaluation.generic_ai_feeling.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  industry.food_beverage.communication_model.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.announcement.date_anchor.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.announcement.list_of_news.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.announcement.partnership_lockup.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.announcement.reveal_frame.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.announcement.single_statement.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.carousel.continuous_panorama.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.carousel.hook_and_payoff.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.carousel.range_showcase.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.carousel.step_sequence.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.comparison.overlay_transition.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.comparison.scale_of_difference.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.comparison.side_by_side_parity.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.comparison.us_versus_category.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.fashion_editorial.detail_crop_series.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.fashion_editorial.full_figure_negative.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.fashion_editorial.group_relationship.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.fashion_editorial.movement_capture.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.hero_product.duo_pairing.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.hero_product.floating_isolation.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.hero_product.in_use_context.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.hero_product.scale_context.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.hero_product.texture_macro.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.hero_product.three_quarter_volume.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.hospitality_editorial.arrival_sequence.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.hospitality_editorial.detail_and_wide_pair.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.hospitality_editorial.staff_presence.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.luxury_minimal.asymmetric_calm.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.luxury_minimal.material_edge.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.luxury_minimal.monochrome_restraint.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.luxury_minimal.single_subject_void.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.luxury_minimal.type_as_object.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.magazine_cover.cover_line_hierarchy.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.magazine_cover.digital_thumbnail_safe.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.mobile_first.contrast_floor.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.mobile_first.single_column_flow.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.mobile_first.vertical_video_bands.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.offer.bundle_value.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.offer.gift_with_purchase.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.offer.tiered_incentive.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.problem_solution.absence_presence.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.problem_solution.negative_positive_pair.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.problem_solution.sequential_steps.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.problem_solution.tension_release.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.stacked_vertical.story_format.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.swiss_grid.asymmetric_grid_tension.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.testimonial.multiple_voices.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.thumb_stop.face_direct_gaze.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.thumb_stop.motion_implied.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.thumb_stop.pattern_break.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.thumb_stop.single_focal_mass.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.thumb_stop.text_as_image.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.tiktok_hook.pattern_interrupt_open.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.tiktok_hook.text_overlay_rhythm.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  lighting.soft.single_source_calm.001
+      ADMITTED    8.8/10  specificity=7 decision val=10 context comp=7 anti pattern=10 trade off cl=10  material.metal.reflection_control.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  strategy.first_visit_conversion.hospitality.001
+      ADMITTED    8.8/10  specificity=9 decision val=10 context comp=5 anti pattern=10 trade off cl=10  strategy.occasion_ownership.food_beverage.001
+      ADMITTED    8.8/10  specificity=7 decision val=10 context comp=7 anti pattern=10 trade off cl=10  typography.vietnamese.diacritic_clearance.001
+      ADMITTED    8.6/10  specificity=6 decision val=10 context comp=7 anti pattern=10 trade off cl=10  camera.framing.close_crop_intimacy.001
+      ADMITTED    8.6/10  specificity=6 decision val=10 context comp=7 anti pattern=10 trade off cl=10  color.cultural.vietnam_market_reading.001
+      ADMITTED    8.6/10  specificity=6 decision val=10 context comp=7 anti pattern=10 trade off cl=10  color.saturation.category_signal.001
+      ADMITTED    8.6/10  specificity=6 decision val=10 context comp=7 anti pattern=10 trade off cl=10  composition.repetition.rhythm_and_break.001
+      ADMITTED    8.6/10  specificity=6 decision val=10 context comp=7 anti pattern=10 trade off cl=10  critic.evaluation.brand_consistency.001
+      ADMITTED    8.6/10  specificity=6 decision val=10 context comp=7 anti pattern=10 trade off cl=10  differentiation.universal.sameness_test.001
+      ADMITTED    8.6/10  specificity=6 decision val=10 context comp=7 anti pattern=10 trade off cl=10  differentiation.universal.whitespace_discovery.001
+      ADMITTED    8.4/10  specificity=7 decision val=10 context comp=5 anti pattern=10 trade off cl=10  audience.mass_market.trust_signals.001
+      ADMITTED    8.4/10  specificity=7 decision val=10 context comp=5 anti pattern=10 trade off cl=10  audience.women_25_35.aspiration_drivers.001
+      ADMITTED    8.4/10  specificity=7 decision val=10 context comp=5 anti pattern=10 trade off cl=10  camera.angle.overhead_control.001
+      ADMITTED    8.4/10  specificity=7 decision val=10 context comp=5 anti pattern=10 trade off cl=10  camera.lens.long_lens_respect.001
+      ADMITTED    8.4/10  specificity=7 decision val=10 context comp=5 anti pattern=10 trade off cl=10  channel.ecommerce.listing_clarity.001
+      ADMITTED    8.4/10  specificity=7 decision val=10 context comp=5 anti pattern=10 trade off cl=10  channel.print.ink_and_scale.001
+      ADMITTED    8.4/10  specificity=7 decision val=10 context comp=5 anti pattern=10 trade off cl=10  concept.construction.tension_first.001
+      ADMITTED    8.4/10  specificity=7 decision val=10 context comp=5 anti pattern=10 trade off cl=10  differentiation.hospitality.category_cliches.001
+      ADMITTED    8.4/10  specificity=7 decision val=10 context comp=5 anti pattern=10 trade off cl=10  differentiation.technology.category_cliches.001
+      ADMITTED    8.4/10  specificity=7 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.announcement.milestone_number.001
+      ADMITTED    8.4/10  specificity=7 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.offer.conditional_clarity.001
+      ADMITTED    8.4/10  specificity=7 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.testimonial.before_context.001
+      ADMITTED    8.4/10  specificity=7 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.testimonial.face_quote_pairing.001
+      ADMITTED    8.4/10  specificity=7 decision val=10 context comp=5 anti pattern=10 trade off cl=10  material.glass.edge_reading.001
+      ADMITTED    8.4/10  specificity=7 decision val=10 context comp=5 anti pattern=10 trade off cl=10  photography.beauty.texture_proximity.001
+      ADMITTED    8.4/10  specificity=7 decision val=10 context comp=5 anti pattern=10 trade off cl=10  photography.food.moment_before_eating.001
+      ADMITTED    8.4/10  specificity=7 decision val=10 context comp=5 anti pattern=10 trade off cl=10  strategy.seasonal.tet_cultural_alignment.001
+      ADMITTED    8.4/10  specificity=7 decision val=10 context comp=5 anti pattern=10 trade off cl=10  typography.sans.contemporary_neutrality.001
+      ADMITTED    8.4/10  specificity=7 decision val=10 context comp=5 anti pattern=10 trade off cl=10  typography.scale.headline_minimum_social.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  audience.gen_z.social_proof_mechanics.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  camera.angle.eye_level_equality.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  camera.angle.low_angle_monument.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  camera.lens.wide_lens_immersion.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  camera.stability.handheld_presence.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  channel.tiktok.first_frame_hook.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  channel.website.hero_scan_behaviour.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  color.warmth.hospitality_welcome.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  composition.centre.stillness_authority.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  composition.framing.frame_within_frame.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  composition.negative_space.value_signal.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  industry.fashion.communication_model.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  industry.hospitality.communication_model.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.carousel.myth_and_fact.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.carousel.progress_indicator.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.comparison.feature_matrix.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.comparison.stacked_tiers.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.editorial_split.headline_parity.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.facebook_ad.feed_square_safe.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.facebook_ad.headline_image_split.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.facebook_ad.text_ratio_discipline.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.fashion_editorial.environmental_context.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.full_bleed.immersion.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.grid_catalogue.multi_product.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.hero_product.range_hero.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.hero_supporting.launch_hierarchy.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.hospitality_editorial.occupied_wide.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.hospitality_editorial.table_level_intimacy.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.luxury_minimal.baseline_alignment.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.magazine_cover.full_bleed_subject.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.magazine_cover.masthead_dominance.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.magazine_cover.typographic_cover.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.mobile_first.progressive_disclosure.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.mobile_first.safe_margin_reserve.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.mobile_first.tap_target_sizing.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.offer.price_dominant.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.offer.urgency_band.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.problem_solution.split_before_after.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.rule_of_thirds.product_placement.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.swiss_grid.flush_left_ragged_right.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.swiss_grid.modular_column_system.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.swiss_grid.objective_photography.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.swiss_grid.white_space_as_structure.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.testimonial.expert_authority.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.testimonial.rating_summary.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.testimonial.result_first.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.tiktok_hook.caption_safe_composition.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.tiktok_hook.demonstration_open.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  layout.tiktok_hook.first_frame_complete.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  lighting.ambient.available_light_honesty.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  lighting.hard.direct_energy.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  lighting.practical.in_frame_sources.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  material.liquid.viscosity_evidence.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  material.paper.tactility_signal.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  material.skin.texture_honesty.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  photography.fashion.movement_over_pose.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  photography.hospitality.characteristic_hour.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  strategy.price_visibility.mass_market.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  strategy.trial_barrier.beauty_switching.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  typography.serif.heritage_authority.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  visual_direction.scientific_precision.technology.001
+      ADMITTED    8.2/10  specificity=6 decision val=10 context comp=5 anti pattern=10 trade off cl=10  visual_direction.warm_belonging.local_hospitality.001
+      ── 204/204 admitted · average 8.67/10
+  ✓ Every seeded object is admitted
+  ✓ Corpus average clears the admission threshold with margin
+  ✓ Every object reports all five quality dimensions
+
+🔹 3. REJECT — generic advice
+      rejected: GENERIC_ADVICE: generic filler: high quality, eye-catching, Best practice, premium quality
+  ✓ Generic filler is a hard failure
+  ✓ Hedged, non-committal knowledge fails on specificity
+
+🔹 4. REJECT — subjective statements
+      rejected: unsupported judgement: beautiful, looks good, I think, stunning
+  ✓ Unsupported aesthetic judgement is a hard failure
+
+🔹 5. REJECT — non-actionable information
+  ✓ A description that recommends nothing is a hard failure
+  ✓ Knowledge with no context is rejected
+  ✓ Missing trade-off and anti-patterns drag overall below threshold
+  ✓ An anti-pattern whose replacement only negates is scored down
+
+🔹 6. ACCEPT — decision rules, context-aware reasoning, expert trade-offs
+  ✓ A complete decision rule is admitted
+  ✓ Structured trade-off with conditions scores full marks
+  ✓ Over-specified context is flagged as untransferable
+  ✓ Rejections always explain themselves
+
+🔹 7. Quality gate controls availability for retrieval
+  ✓ Strict admission removes failing knowledge from retrieval
+  ✓ Warn mode reports but does not filter
+  ✓ Default admission is off — Phase 0/1/1.5 behaviour is unchanged
+
+🔹 8. Seeded brain drives Phase 1.5 concepts and Phase 1 decisions
+[ART_DIRECTION_RESOLVED] {
+  provenance: { composition: 'KNOWLEDGE' },
+  decisions: [ 'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)' ],
+  client_locks: [],
+  suppressed_count: 0
+}
+
+      ══ Skin1004 — premium ampoule launch ══
+      knowledge : differentiation.beauty.category_cliches.001, layout.hero_product.centred_authority.001, layout.luxury_minimal.single_subject_void.001, lighting.soft.single_source_calm.001, material.skin.texture_honesty.001, strategy.identity_preservation.mature_skincare.001, industry.beauty.communication_model.001, concept.construction.tension_first.001, layout.mobile_first.contrast_floor.001, composition.negative_space.value_signal.001, layout.mobile_first.safe_margin_reserve.001, layout.negative_space.premium_hero.001
+      concept   : The campaign around continuity of identity rather than correction, reversal or repair of ageing
+      insight   : Confidence that she still recognises herself
+      evaluation: overall 10/10 ACCEPTED
+      decision  : composition Place the product on the exact centre axis at 40 to 55 per
+      art dir   : composition=KNOWLEDGE
+[ART_DIRECTION_RESOLVED] {
+  provenance: { composition: 'KNOWLEDGE', colour: 'KNOWLEDGE' },
+  decisions: [
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 0
+}
+
+      ══ Atelier Six — social ══
+      knowledge : layout.tiktok_hook.caption_safe_composition.001, channel.tiktok.first_frame_hook.001, layout.mobile_first.vertical_video_bands.001, layout.thumb_stop.single_focal_mass.001, layout.tiktok_hook.first_frame_complete.001, layout.thumb_stop.face_direct_gaze.001, differentiation.fashion.category_cliches.001, industry.fashion.communication_model.001, strategy.self_expression.fashion_social.001, concept.construction.tension_first.001, color.contrast.thumbnail_survival.001, layout.mobile_first.contrast_floor.001
+      concept   : Lead the campaign with a character carrying a specific attitude, and treat the garment as evidence of that attitude rather than as the subject
+      insight   : To feel like the version of themselves they intend to be
+      evaluation: overall 9/10 ACCEPTED
+      decision  : composition Hold the subject within the upper 65 percent and reserve t
+      decision  : colour      Hold at least a four-to-one luminance ratio between subjec
+      art dir   : composition=KNOWLEDGE colour=KNOWLEDGE
+  ✓ Real corpus produces a grounded, accepted skincare concept
+  ✓ Differentiation knowledge supplies real category clichés to avoid
+  ✓ Seeded knowledge reaches art direction at the KNOWLEDGE tier
+  ✓ Different industries produce different concepts, with no industry-locked leakage
+  ✓ Layer separation still holds with the real corpus
+
+======================================================================
+27 passed, 0 failed
+======================================================================

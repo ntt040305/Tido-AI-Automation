@@ -1,0 +1,20 @@
+ASSET DIFFERENTIATION
+  poster       4:5    18442ch  center_out_product_first    product=95,headline=26,cta=14
+  banner       16:9   18153ch  left_to_right_message_first headline=34,cta=28,product=70
+  social_ad    9:16   18270ch  top_to_bottom_product_first product=100,headline=24,cta=12
+  product_hero 1:1    18182ch  center_lock_product_only    product=100
+  thumbnail    16:9   17619ch  center_out_product_first    product=95,headline=18
+
+ART DIRECTION CONSISTENCY (same client brief -> same locks everywhere?)
+  poster       locked=["atmosphere"] sources={"lighting":"USER","materials":"STRATEGY","environment":"STRATEGY","atmosphere":"USER","composition":"STRATEGY","colour":"STRATEGY","camera":"KNOWLEDGE"}
+  banner       locked=["atmosphere"] sources={"lighting":"USER","materials":"STRATEGY","environment":"STRATEGY","atmosphere":"USER","composition":"STRATEGY","colour":"STRATEGY","camera":"KNOWLEDGE"}
+  social_ad    locked=["atmosphere"] sources={"lighting":"USER","materials":"STRATEGY","environment":"STRATEGY","atmosphere":"USER","composition":"STRATEGY","colour":"STRATEGY","camera":"KNOWLEDGE"}
+  product_hero locked=["atmosphere"] sources={"lighting":"USER","materials":"STRATEGY","environment":"STRATEGY","atmosphere":"USER","composition":"STRATEGY","colour":"STRATEGY","camera":"KNOWLEDGE"}
+  thumbnail    locked=["atmosphere"] sources={"lighting":"USER","materials":"STRATEGY","environment":"STRATEGY","atmosphere":"USER","composition":"STRATEGY","colour":"STRATEGY","camera":"KNOWLEDGE"}
+
+SHARED DNA in all prompts: true
+INSIGHT in all prompts   : false
+unique prompts           : 5/5
+adaptation block per type: true
+knowledge in all prompts : true
+sections dropped         : 1,1,1,1,1

@@ -1,0 +1,17 @@
+multipart POST -> 200 success=true 39.4s
+strategy_source=MARKETING_BRAIN
+
+SECTION 1 Campaign Concept
+  name    : Skin1004 — This single ampoule holds the concentrated
+  big idea: This single ampoule holds the concentrated distillation of what your skin already knows it can be.
+  message : Skin1004 positions the Tone Brightening Capsule Ampoule not as a corrective treatment but as a daily
+  insight : Women in their late twenties to early forties who seek brightening products are not trying to erase themselves — they ar
+
+SECTION 3 Asset tabs — decisions rendered per tab
+  poster       4:5    decisions=7 locked=["atmosphere"] priority=product:95,headline:26,cta:14
+  banner       16:9   decisions=7 locked=["atmosphere"] priority=headline:34,cta:28,product:70
+  social_ad    9:16   decisions=7 locked=["atmosphere"] priority=product:100,headline:24,cta:12
+  product_hero 1:1    decisions=7 locked=["atmosphere"] priority=product:100
+  thumbnail    16:9   decisions=7 locked=["atmosphere"] priority=product:95,headline:18
+
+sample decision fields: dimension, value, source, confidence, specificity, score, client_locked

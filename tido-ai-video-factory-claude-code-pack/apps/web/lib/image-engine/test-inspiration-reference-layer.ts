@@ -60,7 +60,7 @@ async function runInspirationReferenceTests() {
   const test1Input: MasterPromptCompilerInput = {
     brief: "Poster quảng cáo snack Lay's sang trọng đẳng cấp",
     useCase: "Poster",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     brandName: "Lay's",
     routingResult: dummyRoutingResult,
     knowledgePackage: dummyKnowledgePackage as any,
@@ -110,7 +110,7 @@ async function runInspirationReferenceTests() {
   const test2Input: MasterPromptCompilerInput = {
     brief: "Poster mỹ phẩm dưỡng da cao cấp",
     useCase: "Poster",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     brandName: "GlowSkincare",
     routingResult: skincareRoutingResult,
     knowledgePackage: dummyKnowledgePackage as any,
@@ -174,7 +174,7 @@ async function runInspirationReferenceTests() {
   const switchedInput: MasterPromptCompilerInput = {
     brief: "Serum dưỡng da ban đêm",
     useCase: "Poster",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     brandName: "AuraSerum",
     routingResult: skincareRoutingResult,
     knowledgePackage: dummyKnowledgePackage as any,
@@ -200,7 +200,7 @@ async function runInspirationReferenceTests() {
   const test5Input: MasterPromptCompilerInput = {
     brief: "Quảng cáo trà Ô Long Việt Nam",
     useCase: "Poster",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     brandName: "TIDO Tea",
     routingResult: dummyRoutingResult,
     knowledgePackage: dummyKnowledgePackage as any,

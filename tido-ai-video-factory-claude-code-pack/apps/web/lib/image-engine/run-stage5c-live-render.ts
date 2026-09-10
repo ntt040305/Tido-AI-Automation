@@ -92,7 +92,7 @@ async function runLiveCloudflareRender() {
     brief: "Sản phẩm cà phê đóng chai thủy tinh cao cấp trên bàn gỗ sồi sương mù buổi sáng",
     brandName: "TIDO COFFEE",
     productCount: 1,
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
     productReferences,
     routingResult: routerResult.routing,
     knowledgePackage: retrievalResult.package,

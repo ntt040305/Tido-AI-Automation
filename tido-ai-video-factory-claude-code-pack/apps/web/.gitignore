@@ -44,3 +44,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .verify-build/
+.benchmark-out/
+.human-benchmark/

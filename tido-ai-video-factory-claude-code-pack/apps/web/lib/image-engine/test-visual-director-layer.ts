@@ -156,7 +156,7 @@ async function runVisualDirectorLayerTests() {
   );
 
   const resPoster = await SimpleImageGenerationOrchestratorService.generateSimpleImage(
-    { concept: sharedConcept, useCase: "poster", aspectRatio: "4:5", images: [mockImage] },
+    { concept: sharedConcept, useCase: "poster", aspectRatio: "9:16", images: [mockImage] },
     { generationProvider: mockProvider, mockRoutingResult: mockRouting }
   );
 

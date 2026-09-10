@@ -40,8 +40,8 @@
   suppressed_count: 0
 }
 [PROMPT_OPTIMIZER] {
-  before_chars: 19347,
-  after_chars: 18978,
+  before_chars: 19349,
+  after_chars: 18980,
   removed_sections: [
     'RETRIEVED_KNOWLEDGE_NOTICE',
     'USER_BRAND_CONTEXT_NOTE',
@@ -50,8 +50,8 @@
   compression_applied: true
 }
 [PROMPT_BUDGET_MANAGER] {
-  before: 18978,
-  after: 18978,
+  before: 18980,
+  after: 18980,
   duplicate_lines_removed: 0,
   sections_removed: [],
   truncated: false,
@@ -89,8 +89,8 @@
   suppressed_count: 0
 }
 [PROMPT_OPTIMIZER] {
-  before_chars: 19347,
-  after_chars: 18978,
+  before_chars: 19349,
+  after_chars: 18980,
   removed_sections: [
     'RETRIEVED_KNOWLEDGE_NOTICE',
     'USER_BRAND_CONTEXT_NOTE',
@@ -99,8 +99,8 @@
   compression_applied: true
 }
 [PROMPT_BUDGET_MANAGER] {
-  before: 18978,
-  after: 18978,
+  before: 18980,
+  after: 18980,
   duplicate_lines_removed: 0,
   sections_removed: [],
   truncated: false,
@@ -162,8 +162,8 @@
   suppressed_count: 0
 }
 [PROMPT_OPTIMIZER] {
-  before_chars: 20096,
-  after_chars: 19727,
+  before_chars: 20098,
+  after_chars: 19729,
   removed_sections: [
     'RETRIEVED_KNOWLEDGE_NOTICE',
     'USER_BRAND_CONTEXT_NOTE',
@@ -172,8 +172,8 @@
   compression_applied: true
 }
 [PROMPT_BUDGET_MANAGER] {
-  before: 19727,
-  after: 19727,
+  before: 19729,
+  after: 19729,
   duplicate_lines_removed: 0,
   sections_removed: [],
   truncated: false,
@@ -232,7 +232,7 @@
   ✓ PASSED: Conflict priority resolves viewpoint tension in favour of identity evidence
 
 🔹 13. Stage 5.8 Semantic-Preserving Prompt Compression Invariants
-  ✓ PASSED: Compiled prompt length (18978 chars) is below the hard maximum (24000 chars)
+  ✓ PASSED: Compiled prompt length (18980 chars) is below the hard maximum (24000 chars)
   ✓ PASSED: Preserves Product Identity protection
   ✓ PASSED: Preserves Identity vs Source Photo distinction
   ✓ PASSED: Preserves Scene-Native Integration rules
@@ -276,8 +276,8 @@
   suppressed_count: 0
 }
 [PROMPT_OPTIMIZER] {
-  before_chars: 19458,
-  after_chars: 19089,
+  before_chars: 19460,
+  after_chars: 19091,
   removed_sections: [
     'RETRIEVED_KNOWLEDGE_NOTICE',
     'USER_BRAND_CONTEXT_NOTE',
@@ -286,8 +286,8 @@
   compression_applied: true
 }
 [PROMPT_BUDGET_MANAGER] {
-  before: 19089,
-  after: 19089,
+  before: 19091,
+  after: 19091,
   duplicate_lines_removed: 0,
   sections_removed: [],
   truncated: false,
@@ -329,8 +329,8 @@
   suppressed_count: 0
 }
 [PROMPT_OPTIMIZER] {
-  before_chars: 19355,
-  after_chars: 18986,
+  before_chars: 19357,
+  after_chars: 18988,
   removed_sections: [
     'RETRIEVED_KNOWLEDGE_NOTICE',
     'USER_BRAND_CONTEXT_NOTE',
@@ -339,8 +339,8 @@
   compression_applied: true
 }
 [PROMPT_BUDGET_MANAGER] {
-  before: 18986,
-  after: 18986,
+  before: 18988,
+  after: 18988,
   duplicate_lines_removed: 0,
   sections_removed: [],
   truncated: false,
@@ -381,8 +381,8 @@
   suppressed_count: 0
 }
 [PROMPT_OPTIMIZER] {
-  before_chars: 20043,
-  after_chars: 19674,
+  before_chars: 20045,
+  after_chars: 19676,
   removed_sections: [
     'RETRIEVED_KNOWLEDGE_NOTICE',
     'USER_BRAND_CONTEXT_NOTE',
@@ -391,8 +391,8 @@
   compression_applied: true
 }
 [PROMPT_BUDGET_MANAGER] {
-  before: 19674,
-  after: 19674,
+  before: 19676,
+  after: 19676,
   duplicate_lines_removed: 0,
   sections_removed: [],
   truncated: false,
@@ -437,8 +437,8 @@
   suppressed_count: 0
 }
 [PROMPT_OPTIMIZER] {
-  before_chars: 20185,
-  after_chars: 19816,
+  before_chars: 20187,
+  after_chars: 19818,
   removed_sections: [
     'RETRIEVED_KNOWLEDGE_NOTICE',
     'USER_BRAND_CONTEXT_NOTE',
@@ -447,8 +447,8 @@
   compression_applied: true
 }
 [PROMPT_BUDGET_MANAGER] {
-  before: 19816,
-  after: 19816,
+  before: 19818,
+  after: 19818,
   duplicate_lines_removed: 0,
   sections_removed: [],
   truncated: false,
@@ -489,8 +489,8 @@
   suppressed_count: 0
 }
 [PROMPT_OPTIMIZER] {
-  before_chars: 20057,
-  after_chars: 19688,
+  before_chars: 20059,
+  after_chars: 19690,
   removed_sections: [
     'RETRIEVED_KNOWLEDGE_NOTICE',
     'USER_BRAND_CONTEXT_NOTE',
@@ -499,8 +499,8 @@
   compression_applied: true
 }
 [PROMPT_BUDGET_MANAGER] {
-  before: 19688,
-  after: 19688,
+  before: 19690,
+  after: 19690,
   duplicate_lines_removed: 0,
   sections_removed: [],
   truncated: false,
@@ -543,8 +543,8 @@
   suppressed_count: 0
 }
 [PROMPT_OPTIMIZER] {
-  before_chars: 19312,
-  after_chars: 18943,
+  before_chars: 19314,
+  after_chars: 18945,
   removed_sections: [
     'RETRIEVED_KNOWLEDGE_NOTICE',
     'USER_BRAND_CONTEXT_NOTE',
@@ -553,8 +553,8 @@
   compression_applied: true
 }
 [PROMPT_BUDGET_MANAGER] {
-  before: 18943,
-  after: 18943,
+  before: 18945,
+  after: 18945,
   duplicate_lines_removed: 0,
   sections_removed: [],
   truncated: false,
@@ -598,8 +598,8 @@
   suppressed_count: 0
 }
 [PROMPT_OPTIMIZER] {
-  before_chars: 19316,
-  after_chars: 18947,
+  before_chars: 19318,
+  after_chars: 18949,
   removed_sections: [
     'RETRIEVED_KNOWLEDGE_NOTICE',
     'USER_BRAND_CONTEXT_NOTE',
@@ -608,8 +608,8 @@
   compression_applied: true
 }
 [PROMPT_BUDGET_MANAGER] {
-  before: 18947,
-  after: 18947,
+  before: 18949,
+  after: 18949,
   duplicate_lines_removed: 0,
   sections_removed: [],
   truncated: false,
@@ -653,8 +653,8 @@
   suppressed_count: 0
 }
 [PROMPT_OPTIMIZER] {
-  before_chars: 19309,
-  after_chars: 18940,
+  before_chars: 19311,
+  after_chars: 18942,
   removed_sections: [
     'RETRIEVED_KNOWLEDGE_NOTICE',
     'USER_BRAND_CONTEXT_NOTE',
@@ -663,8 +663,8 @@
   compression_applied: true
 }
 [PROMPT_BUDGET_MANAGER] {
-  before: 18940,
-  after: 18940,
+  before: 18942,
+  after: 18942,
   duplicate_lines_removed: 0,
   sections_removed: [],
   truncated: false,
@@ -706,8 +706,8 @@
   suppressed_count: 0
 }
 [PROMPT_OPTIMIZER] {
-  before_chars: 19320,
-  after_chars: 18951,
+  before_chars: 19322,
+  after_chars: 18953,
   removed_sections: [
     'RETRIEVED_KNOWLEDGE_NOTICE',
     'USER_BRAND_CONTEXT_NOTE',
@@ -716,8 +716,8 @@
   compression_applied: true
 }
 [PROMPT_BUDGET_MANAGER] {
-  before: 18951,
-  after: 18951,
+  before: 18953,
+  after: 18953,
   duplicate_lines_removed: 0,
   sections_removed: [],
   truncated: false,
@@ -757,8 +757,8 @@
   suppressed_count: 0
 }
 [PROMPT_OPTIMIZER] {
-  before_chars: 19373,
-  after_chars: 19004,
+  before_chars: 19375,
+  after_chars: 19006,
   removed_sections: [
     'RETRIEVED_KNOWLEDGE_NOTICE',
     'USER_BRAND_CONTEXT_NOTE',
@@ -767,8 +767,8 @@
   compression_applied: true
 }
 [PROMPT_BUDGET_MANAGER] {
-  before: 19004,
-  after: 19004,
+  before: 19006,
+  after: 19006,
   duplicate_lines_removed: 0,
   sections_removed: [],
   truncated: false,
@@ -824,8 +824,8 @@
   suppressed_count: 0
 }
 [PROMPT_OPTIMIZER] {
-  before_chars: 19347,
-  after_chars: 18978,
+  before_chars: 19349,
+  after_chars: 18980,
   removed_sections: [
     'RETRIEVED_KNOWLEDGE_NOTICE',
     'USER_BRAND_CONTEXT_NOTE',
@@ -834,8 +834,8 @@
   compression_applied: true
 }
 [PROMPT_BUDGET_MANAGER] {
-  before: 18978,
-  after: 18978,
+  before: 18980,
+  after: 18980,
   duplicate_lines_removed: 0,
   sections_removed: [],
   truncated: false,

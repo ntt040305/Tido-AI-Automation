@@ -118,7 +118,7 @@ async function runCreativeQualityRegressionTest() {
   const compileRes = await compiler.compile({
     useCase: "Poster",
     brief: "Commercial coffee product poster for ceramic espresso cup",
-    aspectRatio: "3:4",
+    aspectRatio: "9:16",
     productCount: 1,
     routingResult: routing,
     knowledgePackage: mockKnowledgePackage,

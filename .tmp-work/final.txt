@@ -1,0 +1,8 @@
+run-stage4b-tests          passed= 131 failed=0
+run-tests                  passed=  21 failed=0
+run-stage6-tests           passed=  10 failed=0
+run-repair-verification    passed= 142 failed=0
+run-campaign-benchmark     184 passed, 0 failed
+
+next build compiled = true
+/campaign-test route  = true

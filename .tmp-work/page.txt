@@ -1,0 +1,5 @@
+GET /campaign-test -> 200 in 652ms
+html_bytes=21524
+has_heading=true
+has_generate_button=true
+has_sample_brand=true

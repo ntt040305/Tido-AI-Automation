@@ -141,7 +141,7 @@ async function runCreativePromptDifferentiationTest() {
   // 3. Generate for POSTER
   console.log("\n[TEST 3] GENERATING FOR ASSET = poster:");
   const resPoster = await SimpleImageGenerationOrchestratorService.generateSimpleImage(
-    { concept: sharedConcept, useCase: "poster", aspectRatio: "4:5", images: [mockImage] },
+    { concept: sharedConcept, useCase: "poster", aspectRatio: "9:16", images: [mockImage] },
     { generationProvider: mockProvider, mockRoutingResult: mockRouting }
   );
 

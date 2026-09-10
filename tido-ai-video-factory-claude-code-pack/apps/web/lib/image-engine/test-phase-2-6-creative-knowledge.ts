@@ -118,7 +118,7 @@ async function runPhase26CreativeKnowledgeTest() {
   const compileRes = await compiler.compile({
     useCase: "Food Poster",
     brief: "Commercial food poster for delicious golden roast chicken",
-    aspectRatio: "3:4",
+    aspectRatio: "9:16",
     productCount: 1,
     routingResult: routing,
     knowledgePackage: mockKnowledgePackage,

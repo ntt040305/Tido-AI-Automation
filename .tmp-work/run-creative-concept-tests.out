@@ -1,0 +1,115 @@
+================================================================
+CIOS PHASE 1.5 — CREATIVE CONCEPT ENGINE
+================================================================
+
+🔹 1. End-to-end: Beauty skincare campaign
+[ART_DIRECTION_RESOLVED] {
+  provenance: { lighting: 'KNOWLEDGE', atmosphere: 'KNOWLEDGE' },
+  decisions: [
+    'lighting<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'atmosphere<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 0
+}
+
+  ══ Skin1004 — premium ampoule launch ══
+  BRIEF      {"industry":"beauty","category":"skincare","audience":"women_35_50","objective":"product_launch","channel":"instagram","asset_type":"poster","brand_position":"premium"}
+  RETRIEVED  strategy.identity_preservation.mature_skincare.001, photography.soft_directional.premium_skincare.001, visual_direction.quiet_authority.premium_beauty.001
+  CONCEPT    "Skin1004 — Campaign Around Identity Preservation"
+    big idea    The campaign around identity preservation rather than correction or reversal
+    insight     Confidence that she still recognises herself
+    tension     Category messaging defaults to fear of ageing, which mature buyers quietly resent.
+    hook        Show what the category never shows: identity-based storytelling from a lived moment.
+    world       A still, unhurried world where restraint carries the authority
+    differentn  Rejects the category default — generic beauty model holding serum against white background — in favour of identity-based storytelling from a lived moment.
+    avoid       Generic beauty model holding serum against white background | fixture exclusion
+  EVALUATION genericness=0 differentiation=10 emotional_depth=10 brand_fit=10 → overall 10/10 ACCEPTED
+  DECISION   atmosphere   ×1.25 Build a still, unhurried world where restraint carries the aut
+  DECISION   lighting     ×1 Light the product with a single soft directional key at roughl
+  ART DIR    lighting=KNOWLEDGE atmosphere=KNOWLEDGE
+  ✓ Concept carries all 15 required fields
+  ✓ Insight and tension come from human_insight and problem
+  ✓ Concept is accepted with strong differentiation and depth
+
+🔹 2. End-to-end: Coffee shop launch campaign
+[ART_DIRECTION_RESOLVED] {
+  provenance: { atmosphere: 'KNOWLEDGE' },
+  decisions: [ 'atmosphere<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)' ],
+  client_locks: [],
+  suppressed_count: 0
+}
+
+  ══ Cà phê Bến Nghé — khai trương ══
+  BRIEF      {"industry":"food_beverage","category":"coffee","audience":"women_25_35","objective":"product_launch","channel":"instagram","asset_type":"social_ad"}
+  RETRIEVED  strategy.ritual_framing.local_coffee.001, visual_direction.warm_belonging.local_hospitality.001
+  CONCEPT    "Bến Nghé — Launch One Specific Daily"
+    big idea    The launch in one specific daily ritual rather than the drink itself
+    insight     A moment of control in a crowded day
+    tension     Coffee launches default to product beauty shots that give nobody a reason to care.
+    hook        Show what the category never shows: one person inside one specific ritual.
+    world       A lived-in neighbourhood world that feels like somewhere regulars already belong
+    differentn  Rejects the category default — coffee beans, steam, wooden table and morning sunlight — in favour of one person inside one specific ritual.
+    avoid       Coffee beans, steam, wooden table and morning sunlight | fixture exclusion
+  EVALUATION genericness=0 differentiation=10 emotional_depth=10 brand_fit=7 → overall 9.25/10 ACCEPTED
+  DECISION   atmosphere   ×1.25 Build a lived-in neighbourhood world that feels like somewhere
+  ART DIR    atmosphere=KNOWLEDGE
+  ✓ Vietnamese brief produces a grounded ritual concept
+  ✓ Category cliché is captured as avoid territory
+
+🔹 3. End-to-end: Fashion social campaign
+[ART_DIRECTION_RESOLVED] {
+  provenance: { composition: 'KNOWLEDGE', atmosphere: 'KNOWLEDGE' },
+  decisions: [
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'atmosphere<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 0
+}
+
+  ══ ATELIER SIX — social ══
+  BRIEF      {"industry":"fashion","category":"apparel","audience":"gen_z","objective":"awareness","channel":"tiktok","asset_type":"social_ad"}
+  RETRIEVED  strategy.self_expression.fashion_genz.001, layout.mobile_first.social_ad_hierarchy.001, visual_direction.editorial_attitude.fashion_social.001
+  CONCEPT    "Atelier Six — Character Attitude Garment Laid"
+    big idea    A character and an attitude rather than the garment laid flat
+    insight     Pride in being read correctly
+    tension     Fashion social advertising reads as catalogue and is scrolled past without registering.
+    hook        Show what the category never shows: character-led editorial carrying real attitude.
+    world       The subject in the upper two thirds and keep the lower third clear for platform chrome
+    differentn  Rejects the category default — flat-lay catalogue product on a plain ground — in favour of character-led editorial carrying real attitude.
+    avoid       Flat-lay catalogue product on a plain ground | fixture exclusion
+  EVALUATION genericness=0 differentiation=10 emotional_depth=10 brand_fit=7 → overall 9.25/10 ACCEPTED
+  DECISION   composition  ×1.25 Place the subject in the upper two thirds and keep the lower t
+  DECISION   atmosphere   ×1.25 Set a confident editorial world with decisive tonal contrast a
+  ART DIR    composition=KNOWLEDGE atmosphere=KNOWLEDGE
+  ✓ Fashion concept leads with character, not garment
+
+🔹 4. Different briefs produce different concepts
+  ✓ All three concepts are distinct across every narrative field
+  ✓ Concept names are campaign-specific
+
+🔹 5. Generic concept detection
+  ✓ Knowledge with no insight and no anti-patterns yields a rejected concept
+  ✓ Empty corpus produces a rejected concept, not a silent success
+  ✓ Rejection states reasons and improvements
+
+🔹 6. Concept influences visual decisions
+  ✓ Concept alignment is recorded on every art direction decision
+  ✓ Decisions reinforcing the concept are boosted above neutral
+  ✓ A decision inside the concept's avoid territory is vetoed
+  ✓ Concept changes the final art direction, not just the score
+
+🔹 7. Layer separation unchanged
+  ✓ Concept contains no technical instruction
+  ✓ Reasoning-only knowledge fields still never reach art direction
+  ✓ Concept text itself never reaches the image prompt surface
+  ✓ Resolver still receives Layer 2 at the KNOWLEDGE tier
+
+🔹 8. Diagnostics chain
+  ✓ Trace spans brief → retrieved → concept → decisions → art direction
+  ✓ Every concept field names the knowledge it came from
+
+================================================================
+21 passed, 0 failed
+================================================================

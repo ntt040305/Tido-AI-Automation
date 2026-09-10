@@ -32,7 +32,7 @@ async function runSimpleInputV1Tests() {
     referenceIds: ["REF_01", "REF_02", "REF_03"],
     concept: "Poster fantasy mùa hè cho hai ly nước bay giữa mây.",
     useCase: "Poster",
-    aspectRatio: "4:5",
+    aspectRatio: "9:16",
   };
   const validRes = SimpleInputValidatorV1.validateRequest(validRequest);
   assert(validRes.isValid, "Valid 4-input SimpleInputRequestV1 passed validation");

@@ -1,0 +1,57 @@
+==========================================================
+CIOS PHASE 0 — REASONING KNOWLEDGE SUBSTRATE
+==========================================================
+
+🔹 1. Layer separation (Governance §1)
+  ✓ Layer 1 and Layer 2 directories are distinct
+  ✓ Layer 1 corpus is untouched (20 blocks still present)
+  ✓ Layer 2 has its own schema, separate from v1
+  ✓ Layer 2 fields would be REJECTED by the Layer 1 schema
+  ✓ Reasoning budget is separate from the image prompt budget
+
+🔹 2. Repository
+  ✓ Corpus loads cleanly from disk
+  ✓ _schema directory is not treated as knowledge
+  ✓ Repository reads YAML and JSON from a temp corpus
+  ✓ Unparseable file is recorded, not fatal
+
+🔹 3. Structural validation (Governance §2-§7, §11)
+  ✓ Compliant object passes with zero errors
+  ✓ Malformed knowledge_id is rejected
+  ✓ Missing context axis is rejected (all 7 mandatory)
+  ✓ Invalid knowledge_type and creative_stage are rejected
+  ✓ Out-of-range scores are rejected
+  ✓ Missing avoid_when is rejected (Limitation Test)
+
+🔹 4. Quality gate (Governance §14)
+  ✓ Compliant object raises no quality warnings
+  ✓ Hedged decision is caught — Layer 2 must decide, not survey
+  ✓ Wildcard-everywhere context is caught
+  ✓ Missing trade_off and anti_patterns are caught
+  ✓ Missing human_insight caught for strategy domain (Governance §8)
+  ✓ Uncontrolled vocabulary is warned, not blocked (Governance §13)
+
+🔹 5. Context extraction (Governance §12)
+  ✓ Skin1004 brief resolves the commercial axes
+  ✓ Vietnamese brief resolves the same axes
+  ✓ Unresolvable axes stay undefined rather than guessed
+
+🔹 6. Retrieval (Governance §11, §12)
+  ✓ Mismatched context is EXCLUDED, not merely down-ranked
+  ✓ Specific match outranks wildcard-everywhere knowledge
+  ✓ creative_stage filters the pool
+  ✓ domains filter restricts retrieval
+  ✓ Every result carries per-axis match provenance
+  ✓ Empty corpus warns instead of failing silently
+
+🔹 7. LLM context block
+  ✓ Block preserves decision structure, not flattened prose
+  ✓ Block respects its own budget and reports truncation
+
+🔹 8. Image pipeline non-interference (Governance §1)
+  ✓ No preserved component imports the reasoning layer
+  ✓ Layer 1 retrieval path has no reasoning-layer dependency
+
+==========================================================
+34 passed, 0 failed
+==========================================================

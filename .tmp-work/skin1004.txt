@@ -1,0 +1,32 @@
+HTTP 200  success=true  25996ms
+
+CAMPAIGN CONCEPT
+  name    : Skin1004 — Tone Brightening Capsule Ampoule
+  big idea: Ampoule bottle as the hero on a clean surface, soft directional light, calm premium Korean skincare feeling
+  message : Ampoule bottle as the hero on a clean surface, soft directional light, calm premium Korean skincare feeling
+  insight : (none)
+  feel    : (none)
+  source  : DETERMINISTIC_FALLBACK
+
+VISUAL DNA
+  mood                 : calm, premium, clean
+  colour_logic         : Restrained palette led by the product's own colours; no colour introduced that the product does not already co
+  lighting_logic       : soft directional light
+  composition_logic    : ampoule bottle as hero
+  typography_logic     : No text is rendered into pixels in this pass. Every asset reserves the same clear, tonally even area for typog
+  product_presentation : ampoule bottle
+
+ASSETS
+  poster       4:5    20961ch  center_out_product_first    product=95,headline=26,cta=14
+    locked: ["atmosphere"]  sources: {"lighting":"USER","composition":"USER","materials":"USER","environment":"ASSET_DEFAULT","atmosphere":"USER","camera":"KNOWLEDGE","colour":"KNOWLEDGE"}
+  banner       16:9   20633ch  left_to_right_message_first headline=34,cta=28,product=70
+    locked: ["atmosphere"]  sources: {"lighting":"USER","composition":"USER","materials":"USER","environment":"ASSET_DEFAULT","atmosphere":"USER","camera":"KNOWLEDGE","colour":"KNOWLEDGE"}
+  social_ad    9:16   20789ch  top_to_bottom_product_first product=100,headline=24,cta=12
+    locked: ["atmosphere"]  sources: {"lighting":"USER","composition":"USER","materials":"USER","environment":"ASSET_DEFAULT","atmosphere":"USER","camera":"KNOWLEDGE","colour":"KNOWLEDGE"}
+  product_hero 1:1    20700ch  center_lock_product_only    product=100
+    locked: ["atmosphere"]  sources: {"lighting":"USER","composition":"USER","materials":"USER","environment":"ASSET_DEFAULT","atmosphere":"USER","camera":"KNOWLEDGE","colour":"KNOWLEDGE"}
+  thumbnail    16:9   21616ch  center_out_product_first    product=95,headline=18
+    locked: ["atmosphere"]  sources: {"lighting":"USER","composition":"USER","materials":"USER","environment":"ASSET_DEFAULT","atmosphere":"USER","camera":"KNOWLEDGE","colour":"KNOWLEDGE"}
+
+DIAGNOSTICS  {"router_source":"concept-text-router","strategy_source":"DETERMINISTIC_FALLBACK","interpretation_sources":["LLM_STRUCTURED"],"gemini_calls":1,"llm_calls":2,"provider_calls":0,"duration_ms":24779,"warnings":["No reference images supplied: product identity comes from the brief text alone, so renders will not be identity-locked to a real product."]}
+DELIVERY     {"package_root":"D:\\Tido\\tido-ai-video-factory-claude-code-pack\\apps\\web\\data\\deliveries\\skin1004-tone-brightening-capsule-ampoule","manifest_path":"D:\\Tido\\tido-ai-video-factory-claude-code-pack\\apps\\web\\data\\deliveries\\skin1004-tone-brightening-capsule-ampoule\\delivery_manifest.json","summary_json_path":"D:\\Tido\\tido-ai-video-factory-claude-code-pack\\apps\\web\\data\\deliveries\\skin1004-tone-brightening-capsule-ampoule\\campaign_summary.json","summary_txt_path":"D:\\Tido\\tido-ai-video-factory-claude-code-pack\\apps\\web\\data\\deliveries\\skin1004-tone-brightening-capsule-ampoule\\campaign_summary.txt","file_count":12}

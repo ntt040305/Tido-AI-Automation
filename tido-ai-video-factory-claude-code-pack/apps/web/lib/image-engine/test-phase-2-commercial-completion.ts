@@ -68,7 +68,7 @@ async function runCommercialCompletionTests() {
     const request: SimpleInputRequestV1 = {
       concept: "Cold organic green tea drink with ice cubes and mint leaves",
       useCase: item.type,
-      aspectRatio: item.type === "website_banner" ? "16:9" : "4:5",
+      aspectRatio: item.type === "website_banner" ? "16:9" : "9:16",
       brandName: "TIDO MATCHA",
       copyItems: ["TIDO MATCHA TEA", "Cold Refreshment", "Buy 1 Get 1"],
       marketingContext: {

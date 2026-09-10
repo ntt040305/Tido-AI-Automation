@@ -1,0 +1,878 @@
+{
+  "success": true,
+  "dry_run": true,
+  "campaign": {
+    "campaign_id": "camp_1788599070530_pyss3",
+    "campaign_name": "Skin1004 — This single capsule holds everything your",
+    "big_idea": "This single capsule holds everything your skin already knows it needs.",
+    "core_message": "Skin1004 positions the Tone Brightening Capsule Ampoule not as a corrective treatment but as a daily ritual of quiet confidence — science distilled into something beautifully simple.",
+    "consumer_insight": "Women 25-40 buying brightening ampoules are not chasing a filtered, unrecognisable version of themselves — they are trying to reclaim the skin that feels most like them when they are rested, healthy, and at ease. The product is a shortcut back to their own baseline glow, not a transformation.",
+    "emotional_response": "Calm clarity, quiet trust",
+    "visual_dna": {
+      "mood": "Still, cool, and unhurried — the emotional temperature of a well-lit apothecary shelf or a quiet morning before the day begins. Premium without performance.",
+      "colour_logic": "A restrained palette anchored in cool off-whites and pale celadon or translucent sage tones — referencing Korean skincare's clean, clinical-meets-botanical aesthetic. A single warm undertone in the ampoule liquid creates contrast and draws the eye inward, signalling efficacy within purity.",
+      "lighting_logic": "Soft directional light that wraps the bottle from one side, allowing the liquid inside to glow faintly with transmitted warmth while the exterior surface holds clean, controlled highlights that reveal the glass quality without flaring.",
+      "composition_logic": "The bottle occupies the visual and emotional centre of the frame with generous negative space on all sides — space is the luxury signal. The 1:1 format is used to enforce stillness and symmetry, making the product feel considered and inevitable rather than placed.",
+      "typography_logic": "No text is rendered into pixels in this pass. Every asset reserves the same clear, tonally even area for typography to be composited afterwards, in the same relative position across the set.",
+      "product_presentation": "The ampoule bottle stands alone as the sole subject — no hands, no face, no lifestyle prop — because the product itself must carry the full weight of desirability. Its form, transparency, and capsule detail communicate precision and purity without distraction. The bottle is treated as a precious object, not a commodity."
+    },
+    "asset_plan": [
+      "poster",
+      "banner",
+      "social_ad",
+      "product_hero",
+      "thumbnail"
+    ],
+    "provenance": {
+      "strategy_source": "MARKETING_BRAIN",
+      "interpretation_source": "LLM_STRUCTURED",
+      "derived_fields": []
+    }
+  },
+  "strategy": {
+    "creative_angle": "Skin1004 positions the Tone Brightening Capsule Ampoule not as a corrective treatment but as a daily ritual of quiet confidence — science distilled into something beautifully simple.",
+    "consumer_insight": "Women 25-40 buying brightening ampoules are not chasing a filtered, unrecognisable version of themselves — they are trying to reclaim the skin that feels most like them when they are rested, healthy, and at ease. The product is a shortcut back to their own baseline glow, not a transformation.",
+    "emotional_response": "Calm clarity, quiet trust",
+    "creative_message": "This single capsule holds everything your skin already knows it needs.",
+    "visual_translation": {
+      "subject_representation": "The ampoule bottle stands alone as the sole subject — no hands, no face, no lifestyle prop — because the product itself must carry the full weight of desirability. Its form, transparency, and capsule detail communicate precision and purity without distraction. The bottle is treated as a precious object, not a commodity.",
+      "atmosphere": "Still, cool, and unhurried — the emotional temperature of a well-lit apothecary shelf or a quiet morning before the day begins. Premium without performance.",
+      "lighting_character": "Soft directional light that wraps the bottle from one side, allowing the liquid inside to glow faintly with transmitted warmth while the exterior surface holds clean, controlled highlights that reveal the glass quality without flaring.",
+      "material_treatment": "Glass reads as genuinely weighty and refined — not plasticky. The liquid inside should appear luminous and slightly viscous, suggesting concentration and potency. The surface the bottle rests on should be matte and tactile, grounding the hero without competing with it.",
+      "composition_principle": "The bottle occupies the visual and emotional centre of the frame with generous negative space on all sides — space is the luxury signal. The 1:1 format is used to enforce stillness and symmetry, making the product feel considered and inevitable rather than placed.",
+      "colour_direction": "A restrained palette anchored in cool off-whites and pale celadon or translucent sage tones — referencing Korean skincare's clean, clinical-meets-botanical aesthetic. A single warm undertone in the ampoule liquid creates contrast and draws the eye inward, signalling efficacy within purity."
+    },
+    "commercial_goal": "Drive awareness and first purchase intent for a premium launch SKU by establishing immediate perceived value through visual sophistication — the image should make the product feel worth the price before a single word of copy is read.",
+    "target_customer_psychology": "This buyer is informed and slightly skeptical of over-promised skincare. She researches ingredients, reads reviews in multiple languages, and responds to restraint over hype. She equates visual calm with brand credibility. She is not buying hope — she is buying evidence presented beautifully. Value triggers: ingredient transparency, minimalist Korean beauty codes, the sense that the brand respects her intelligence.",
+    "composition_strategy": "The ampoule is placed at the optical centre with the label facing forward and legible, surrounded by intentional negative space that forces the eye to rest on the product and read it slowly.",
+    "prompt_guidance": "A single Skin1004 ampoule bottle centred on a matte pale surface, cool off-white and soft celadon tones throughout, soft one-sided directional light that makes the glass glow without harsh reflections, the liquid inside luminous and warm against the cool exterior, generous empty space framing the bottle on all sides, refined and still.",
+    "compression_notes": "This is a single-hero still-life requiring no talent, no location, and no complex set build — a controlled tabletop shoot with a skilled product photographer and a minimal prop budget delivers full campaign-quality output. CGI rendering is a viable alternative that allows infinite colour and light iteration at post-production stage.",
+    "visual_strategy": "Still, cool, and unhurried — the emotional temperature of a well-lit apothecary shelf or a quiet morning before the day begins. Premium without performance. Soft directional light that wraps the bottle from one side, allowing the liquid inside to glow faintly with transmitted warmth while the exterior surface holds clean, controlled highlights that reveal the glass quality without flaring. Glass reads as genuinely weighty and refined — not plasticky. The liquid inside should appear luminous and slightly viscous, suggesting concentration and potency. The surface the bottle rests on should be matte and tactile, grounding the hero without competing with it.",
+    "target_audience": "This buyer is informed and slightly skeptical of over-promised skincare. She researches ingredients, reads reviews in multiple languages, and responds to restraint over hype. She equates visual calm with brand credibility. She is not buying hope — she is buying evidence presented beautifully. Value triggers: ingredient transparency, minimalist Korean beauty codes, the sense that the brand respects her intelligence.",
+    "visual_direction": "Still, cool, and unhurried — the emotional temperature of a well-lit apothecary shelf or a quiet morning before the day begins. Premium without performance. Soft directional light that wraps the bottle from one side, allowing the liquid inside to glow faintly with transmitted warmth while the exterior surface holds clean, controlled highlights that reveal the glass quality without flaring. Glass reads as genuinely weighty and refined — not plasticky. The liquid inside should appear luminous and slightly viscous, suggesting concentration and potency. The surface the bottle rests on should be matte and tactile, grounding the hero without competing with it.",
+    "composition": "The ampoule is placed at the optical centre with the label facing forward and legible, surrounded by intentional negative space that forces the eye to rest on the product and read it slowly.",
+    "master_prompt": "A single Skin1004 ampoule bottle centred on a matte pale surface, cool off-white and soft celadon tones throughout, soft one-sided directional light that makes the glass glow without harsh reflections, the liquid inside luminous and warm against the cool exterior, generous empty space framing the bottle on all sides, refined and still.",
+    "negative_prompt": "distorted anatomy, blurry, low resolution, bad quality, clutter, fake text"
+  },
+  "assets": [
+    {
+      "asset_type": "poster",
+      "use_case": "poster",
+      "aspect_ratio": "4:5",
+      "asset_goal": "Carry the campaign idea on its own. This is the asset the concept is judged by: it has room to be beautiful and is expected to hold branding and a headline without looking like an ad unit.",
+      "layout_logic": {
+        "eye_flow": "center_out_product_first",
+        "negative_space_strategy": "Reserve a calm, tonally even band above the product for the headline, and keep the area immediately around the product silhouette free of props or highlights so its edge stays crisp.",
+        "safe_margin_percent": 6,
+        "zones": [
+          {
+            "role": "HEADLINE",
+            "x": 6,
+            "y": 7,
+            "width": 88,
+            "height": 18
+          },
+          {
+            "role": "PRODUCT_FOCAL",
+            "x": 12,
+            "y": 27,
+            "width": 76,
+            "height": 52
+          },
+          {
+            "role": "CTA",
+            "x": 6,
+            "y": 81,
+            "width": 88,
+            "height": 9
+          }
+        ]
+      },
+      "visual_priority": [
+        {
+          "element": "product",
+          "importance": 95,
+          "role": "Hero. Carries desire through material quality and light."
+        },
+        {
+          "element": "headline",
+          "importance": 26,
+          "role": "Names the idea the product is illustrating. (reserved space only — no text is rendered in this pass)"
+        },
+        {
+          "element": "cta",
+          "importance": 14,
+          "role": "Closes the read. Present but subordinate. (reserved space only — no text is rendered in this pass)"
+        }
+      ],
+      "prompt_plan": {
+        "campaign_dna_applied": [
+          "mood",
+          "colour_logic",
+          "lighting_logic",
+          "composition_logic",
+          "typography_logic",
+          "product_presentation"
+        ],
+        "asset_adaptations": [
+          "Give the campaign idea its fullest expression — this is the asset the others are derived from.",
+          "Hold the product at a scale that rewards being looked at rather than scanned.",
+          "Keep the headline area genuinely calm; a poster headline sits on the image, not beside it."
+        ],
+        "art_direction_sources": {
+          "lighting": "USER",
+          "materials": "STRATEGY",
+          "environment": "STRATEGY",
+          "atmosphere": "USER",
+          "composition": "STRATEGY",
+          "colour": "STRATEGY",
+          "camera": "KNOWLEDGE"
+        },
+        "art_direction_decisions": [
+          {
+            "dimension": "lighting",
+            "value": "soft directional light",
+            "source": "USER",
+            "confidence": 0.7,
+            "specificity": "MEDIUM",
+            "score": 0.595,
+            "client_locked": false
+          },
+          {
+            "dimension": "materials",
+            "value": "Glass reads as genuinely weighty and refined — not plasticky. The liquid inside should appear luminous and slightly viscous, suggesting concentration and potency. The surface the bottle rests on should be matte and tactile, grounding the hero without competing with it.",
+            "source": "STRATEGY",
+            "confidence": 0.75,
+            "specificity": "HIGH",
+            "score": 0.5687,
+            "client_locked": false,
+            "qualifiers": [
+              "clean surface"
+            ]
+          },
+          {
+            "dimension": "environment",
+            "value": "The ampoule bottle stands alone as the sole subject — no hands, no face, no lifestyle prop — because the product itself must carry the full weight of desirability. Its form, transparency, and capsule detail communicate precision and purity without distraction. The bottle is treated as a precious object, not a commodity.",
+            "source": "STRATEGY",
+            "confidence": 0.75,
+            "specificity": "HIGH",
+            "score": 0.5687,
+            "client_locked": false,
+            "qualifiers": [
+              "clean surface"
+            ]
+          },
+          {
+            "dimension": "atmosphere",
+            "value": "calm, premium, clean — The viewer should feel serene trust in the product's quality, evoking the refined simplicity associated with premium Korean skincare.",
+            "source": "USER",
+            "confidence": 0.95,
+            "specificity": "HIGH",
+            "score": 0.975,
+            "client_locked": true
+          },
+          {
+            "dimension": "composition",
+            "value": "The bottle occupies the visual and emotional centre of the frame with generous negative space on all sides — space is the luxury signal. The 1:1 format is used to enforce stillness and symmetry, making the product feel considered and inevitable rather than placed.",
+            "source": "STRATEGY",
+            "confidence": 0.75,
+            "specificity": "HIGH",
+            "score": 0.5687,
+            "client_locked": false
+          },
+          {
+            "dimension": "colour",
+            "value": "A restrained palette anchored in cool off-whites and pale celadon or translucent sage tones — referencing Korean skincare's clean, clinical-meets-botanical aesthetic. A single warm undertone in the ampoule liquid creates contrast and draws the eye inward, signalling efficacy within purity.",
+            "source": "STRATEGY",
+            "confidence": 0.75,
+            "specificity": "HIGH",
+            "score": 0.5687,
+            "client_locked": false
+          },
+          {
+            "dimension": "camera",
+            "value": "Eye-level commercial hero angle (50mm lens), crisp corner-to-corner focus on product packaging.",
+            "source": "KNOWLEDGE",
+            "confidence": 0.65,
+            "specificity": "HIGH",
+            "score": 0.4125,
+            "client_locked": false
+          }
+        ],
+        "knowledge_blocks": [
+          "universal.camera_perspective_coherence",
+          "universal.commercial_visual_hierarchy",
+          "universal.lighting_material_readability",
+          "universal.physical_scene_coherence",
+          "universal.typography_graphic_integration",
+          "property.transparent",
+          "specialist.poster_foundation"
+        ],
+        "client_locked_dimensions": [
+          "atmosphere"
+        ]
+      },
+      "final_prompt": "<!-- ID: master_prompt_v2 | VERSION: 3.0.0 -->\n# MASTER PROMPT V3 — TIDO IMAGE COMPILATION ARCHITECTURE\n## ROLE\nDownstream commercial image generation model. Produce one production-ready commercial visual with clear hierarchy, credible material optics, coherent scene physics and no generation artifacts, using the references, intent, constraints, copy, brand context and knowledge supplied below.\nSections appear in priority order. Earlier sections carry more authority than later ones, except where a section states otherwise.\n## CREATIVE INTENT\nCREATIVE CONCEPT: Ampoule bottle as the hero on a clean surface, soft directional light, calm premium Korean skincare feeling.\nVISUAL STYLE: commercial\nATTACHED REFERENCE ROLES (ORDER MATCHES MULTIPART IMAGES):\n- Image 1 (CONCEPT_REF_01): PRODUCT_01 identity reference\n[ASSET ADAPTATION — POSTER]\nWHAT THIS ASSET IS FOR: Carry the campaign idea on its own. This is the asset the concept is judged by: it has room to be beautiful and is expected to hold branding and a headline without looking like an ad unit.\nHOW THE CAMPAIGN IS ADAPTED FOR THIS FORMAT — the campaign DNA above does not change; these are instructions about applying it here:\n- Give the campaign idea its fullest expression — this is the asset the others are derived from.\n- Hold the product at a scale that rewards being looked at rather than scanned.\n- Keep the headline area genuinely calm; a poster headline sits on the image, not beside it.\nLOCKED CLIENT INTENT — PRESERVE STRICTLY:\n- Subject: ampoule bottle\n- Environment: clean surface\n- Mood: calm, premium, clean\n- Visual style: Korean skincare commercial photography\n- Emotional goal: The viewer should feel serene trust in the product's quality, evoking the refined simplicity associated with premium Korean skincare.\n- Non-negotiable: Reference Identity Lock: Uploaded product reference identity takes strict priority over concept conflicts.\n- Non-negotiable: Preserve core subject: \"ampoule bottle\"\n- Non-negotiable: Preserve scene environment: \"clean surface\"\n- Non-negotiable: Respect brand identity: \"Skin1004\"\n- Non-negotiable: Ampoule bottle must be the hero of the image\n- Non-negotiable: Surface must appear clean\n- Non-negotiable: Overall feeling must be calm and premium Korean skincare\nCOMMERCIAL FRAMING:\n- Objective: Preserve the subject 'ampoule bottle' within 'clean surface' and raise its commercial impact for poster (editorial story) incorporating domain expertise: [Poster Communication & Spatial Foundation].\n- Visual hierarchy: Primary anchor: subject (55%). Secondary anchor: 'clean surface' (45%). Remainder ambient.\n- Why this works: The viewer should feel serene trust in the product's quality, evoking the refined simplicity associated with premium Korean skincare. The subject stays the hero and the requested environment is preserved; framing and light are tuned for 'poster' (editorial story) delivery.\nEXPLICIT CLIENT DIRECTIVES — these are requirements, not suggestions. Execute them exactly; never substitute a house default:\n- lighting: soft directional light\n- material: clean surface\n## CAMPAIGN STRATEGY\nCAMPAIGN: Skin1004 — This single capsule holds everything your\nBIG IDEA: This single capsule holds everything your skin already knows it needs.\nCORE MESSAGE: Skin1004 positions the Tone Brightening Capsule Ampoule not as a corrective treatment but as a daily ritual of quiet confidence — science distilled into something beautifully simple.\nCAMPAIGN VISUAL DNA — every asset in this campaign shares these rules. They are what make a poster, a banner and a social ad read as one piece of work rather than three unrelated pictures. Adapt the format, never the DNA:\n- Mood: Still, cool, and unhurried — the emotional temperature of a well-lit apothecary shelf or a quiet morning before the day begins. Premium without performance.\n- Colour logic: A restrained palette anchored in cool off-whites and pale celadon or translucent sage tones — referencing Korean skincare's clean, clinical-meets-botanical aesthetic. A single warm undertone in the ampoule liquid creates contrast and draws the eye inward, signalling efficacy within purity.\n- Lighting logic: Soft directional light that wraps the bottle from one side, allowing the liquid inside to glow faintly with transmitted warmth while the exterior surface holds clean, controlled highlights that reveal the glass quality without flaring.\n- Composition logic: The bottle occupies the visual and emotional centre of the frame with generous negative space on all sides — space is the luxury signal. The 1:1 format is used to enforce stillness and symmetry, making the product feel considered and inevitable rather than placed.\n- Typography logic: No text is rendered into pixels in this pass. Every asset reserves the same clear, tonally even area for typography to be composited afterwards, in the same relative position across the set.\n- Product presentation: The ampoule bottle stands alone as the sole subject — no hands, no face, no lifestyle prop — because the product itself must carry the full weight of desirability. Its form, transparency, and capsule detail communicate precision and purity without distraction. The bottle is treated as a precious object, not a commodity.\nBUSINESS GOAL: Premium skincare launch in beauty_skincare for instagram\nCONSUMER INSIGHT: Women 25-40 buying brightening ampoules are not chasing a filtered, unrecognisable version of themselves — they are trying to reclaim the skin that feels most like them when they are rested, healthy, and at ease. The product is a shortcut back to their own baseline glow, not a transformation.\nWHO THIS IS FOR: This buyer is informed and slightly skeptical of over-promised skincare. She researches ingredients, reads reviews in multiple languages, and responds to restraint over hype. She equates visual calm with brand credibility. She is not buying hope — she is buying evidence presented beautifully. Value triggers: ingredient transparency, minimalist Korean beauty codes, the sense that the brand respects her intelligence.\nEMOTIONAL RESPONSE TO CREATE: Calm clarity, quiet trust\nCREATIVE MESSAGE: This single capsule holds everything your skin already knows it needs.\nVISUAL DIRECTION: A single Skin1004 ampoule bottle centred on a matte pale surface, cool off-white and soft celadon tones throughout, soft one-sided directional light that makes the glass glow without harsh reflections, the liquid inside luminous and warm against the cool exterior, generous empty space framing the bottle on all sides, refined and still.\nThis is the persuasive job the image has to do, and the reasoning behind it. Serve the message, not the product category — a literal depiction of the category is a failure even when it is well lit. The exact camera, lighting and layout that deliver this are resolved in the ART DIRECTION and COMMERCIAL LAYOUT sections; where those conflict with this section, they win, and an explicit client directive beats both.\n## USER HARD REQUIREMENTS\n1. FORBID extreme macro close-up crop that cuts out the surrounding scene environment\n2. FORBID isolated studio pedestal background when rich scene environment is requested\n3. FORBID flat sterile studio backdrop without atmospheric depth\n4. FORBID flat non-cinematic prompt rendering\n5. FORBID muddy low-contrast lighting\n6. FORBID extreme macro close-up crop cutting out surrounding scene environment\n7. FORBID flat sterile studio pedestal backdrop when rich scene environment is requested\n8. FORBID overriding user explicit camera or lighting directives\n## TYPOGRAPHY & READABLE COPY\nNo readable typography authorized. Reserve clean typography area only. Do NOT render words, letters, fake brand names, prices, or decorative text into image pixels.\n## REFERENCE SEMANTICS\nReference images are evidence of PRODUCT IDENTITY, not source canvases.\nInterpret them as information about a physical product. Do not treat source-image pixels, crop boundaries, background, studio illumination, camera angle, shot distance, perspective, cast shadows, reflections, exposure, white balance, sharpness or depth of field as protected product identity. Do not composite or preserve the source photograph as a visual layer; re-render the product inside the new scene while staying faithful to reference-supported identity.\n**Protected (what the product is):** geometry, structural proportions, container form, logo, label text, authentic colours, materials, liquid identity, toppings and garnish.\n**Re-synthesized (how it is photographed):** camera angle, viewpoint height, framing, crop, perspective, hero scale, light direction, environmental reflections, contact and cast shadows, ambient colour response, focus.\n**Multi-product isolation:** each resolved PRODUCT_xx is an independent identity bound to its own reference evidence. Preserve each one's distinct differences. Do not average identities into a hybrid, do not clone one identity to satisfy another's instance count, and do not transfer features, materials, colours, labels, logos or liquids across identities. Correct quantity with wrong identities is an incorrect output.\n**Scene-native integration:** re-synthesize highlights, reflections, refraction, contact shadows, ambient colour, depth, focus and edge sharpness so every element shares one set of photographic conditions. Avoid any pasted cutout, sticker, collage or separately-lit appearance.\n**Single reference policy:** with one reference image, unseen surfaces are reconstructed conservatively without inventing unverified logos, text or structural features.\n## PRODUCT INSTANCE REQUIREMENTS\n- The final image MUST contain exactly 1 hero product instance (PRODUCT_01).\n- PRODUCT IDENTITY SOURCE: Reference image(s) [CONCEPT_REF_01].\n[REFERENCE IDENTITY LOCK]\nThe uploaded reference assets are commercial identity assets.\nPreserve:\n- exact product appearance\n- exact shape\n- exact packaging\n- exact logo\nAllowed:\n- new environment\n- new lighting\n- cinematic camera\n- premium composition\nForbidden:\n- redesign\n- replacement\n- invented packaging\n- fake logo\n- REFERENCE MANIFEST RELATIONSHIP TYPE: [SINGLE_PRODUCT]\n- REFERENCE MANIFEST METRICS: 1 Reference Image(s), 1 Product(s), 0 Logo(s).\n- [REF CONTROL] Prio: CONCEPT_REF_01(PRODUCT:0.9) | Lock: Product Silhouette & Geometry, Packaging Contours & Label Layout | Allow: Background Environment, Studio Illumination & Lighting, Camera Angle & Depth of Field | Forbid: Altering Product Shape, Inventing Unverified Text\n- PRODUCT PLANNING MANIFEST [HIGH] (Target Count: 1, Detected: 1):\n  * LOCK [PRODUCT_01] (Ampoule bottle as the hero on a clean surface, soft directional light, calm premium Korean skincare feeling. for brand Commercial Brand) [Refs: CONCEPT_REF_01]:\n  - Shape: 3D Product Geometry\n  - Material: Glass / Plastic Container\n  - Packaging: Product Container\n  - Color: Transparent / Glossy\n  - Label: Commercial Brand Branding\n  - Rules: Preserve exact silhouette, packaging appearance, colors & logo/label. No redesign, no replacement.\n[REFERENCE ADAPTATION RULES]\nReference image provides exact product identity ONLY. Do NOT copy flat background or flat lighting.\n- Synthesize realistic 3D depth, soft ground contact shadows, studio key lighting, and authentic surface reflections.\n- SINGLE-REFERENCE POLICY: Product(s) [PRODUCT_01] have only 1 reference image. Unseen surfaces must be reconstructed conservatively without inventing unverified logos, text, or structural controls.\n[CREATIVE DIRECTION]\n1. PRODUCT IDENTITY: Preserve exact product shape, packaging, texture, and silhouette. Preserve exact product packaging silhouette and materials\n2. LOGO PRESERVATION: Maintain exact brand mark placement, vector sharpness, and clearance space (do NOT generate fake logos).\n4. TYPOGRAPHY AREA: reserve clean typography area only for post-production text placement.\n## ART DIRECTION\n[RESOLVED ART DIRECTION]\nThis block is the ONLY authority on camera, lighting, composition, colour, environment, material and atmosphere. No other instruction in this prompt overrides it. Where any other section implies a different angle, lens, lighting rig or layout, this block wins.\n- CAMERA: Eye-level commercial hero angle (50mm lens), crisp corner-to-corner focus on product packaging.\n- LIGHTING: soft directional light\n- COMPOSITION: The bottle occupies the visual and emotional centre of the frame with generous negative space on all sides — space is the luxury signal. The 1:1 format is used to enforce stillness and symmetry, making the product feel considered and inevitable rather than placed.\n- COLOUR: A restrained palette anchored in cool off-whites and pale celadon or translucent sage tones — referencing Korean skincare's clean, clinical-meets-botanical aesthetic. A single warm undertone in the ampoule liquid creates contrast and draws the eye inward, signalling efficacy within purity.\n- ENVIRONMENT & SET: The ampoule bottle stands alone as the sole subject — no hands, no face, no lifestyle prop — because the product itself must carry the full weight of desirability. Its form, transparency, and capsule detail communicate precision and purity without distraction. The bottle is treated as a precious object, not a commodity. (client tone note: clean surface)\n- MATERIALS & SURFACES: Glass reads as genuinely weighty and refined — not plasticky. The liquid inside should appear luminous and slightly viscous, suggesting concentration and potency. The surface the bottle rests on should be matte and tactile, grounding the hero without competing with it. (client tone note: clean surface)\n- ATMOSPHERE [CLIENT DIRECTIVE — EXECUTE EXACTLY, DO NOT SUBSTITUTE]: calm, premium, clean — The viewer should feel serene trust in the product's quality, evoking the refined simplicity associated with premium Korean skincare.\nEXCLUSIONS:\n- FORBID extreme macro close-up crop that cuts out the surrounding scene environment\n- FORBID isolated studio pedestal background when rich scene environment is requested\n- FORBID flat sterile studio backdrop without atmospheric depth\n- FORBID flat non-cinematic prompt rendering\n- FORBID muddy low-contrast lighting\n- FORBID flat sterile studio pedestal backdrop when rich scene environment is requested\n- FORBID overriding user explicit camera or lighting directives\n## COMMERCIAL LAYOUT\n[COMMERCIAL LAYOUT PLAN]\nFORMAT: poster at 4:5. Editorial commercial poster: a strong hero image carrying a headline above it and an offer beneath it.\nHOW THIS IS VIEWED: Approached, then read. The image earns the pause and the headline pays it off.\nSAFE MARGIN: keep all meaningful content, product edges and any text at least 6% in from every edge.\nATTENTION BUDGET (0–100). This is the order a viewer must read the frame in. Give the strongest element the optical emphasis — contrast, focus, scale and placement — and make sure nothing below it competes for that emphasis:\n- PRODUCT — 95/100. Hero. Carries desire through material quality and light.\n- HEADLINE — 26/100. Names the idea the product is illustrating. (reserved space only — no text is rendered in this pass)\n- CTA — 14/100. Closes the read. Present but subordinate. (reserved space only — no text is rendered in this pass)\nEYE FLOW: center out product first. Build the composition so the eye enters, travels and settles in that order; leading lines, focus falloff and tonal contrast should all reinforce it rather than fight it.\nNEGATIVE SPACE STRATEGY: Reserve a calm, tonally even band above the product for the headline, and keep the area immediately around the product silhouette free of props or highlights so its edge stays crisp.\nRESERVED ZONES (percentages of the canvas, origin top-left). These areas must stay visually calm — even tone, low detail, no competing highlight, no part of the product crossing into them:\n- HEADLINE: x 6%, y 7%, w 88%, h 18%, center-aligned. Primary message. Highest contrast area of the composition.\n- PRODUCT_FOCAL: x 12%, y 27%, w 76%, h 52%, center-aligned. Hero product sits here, fully inside the frame, not cropped by any zone edge.\n- CTA: x 6%, y 81%, w 88%, h 9%, center-aligned. Offer or action line. Must not overlap product silhouette.\nREADABILITY: Keep the headline zone tonally even so display type holds contrast without an outline or scrim.\nTYPOGRAPHY: render NO text. The zones above are kept clear for typography that will be composited afterwards. Do not invent headlines, prices, badges, slogans, watermarks or placeholder lettering.\n## PROFESSIONAL KNOWLEDGE\n### UNIVERSAL PROFESSIONAL KNOWLEDGE\n#### [universal.camera_perspective_coherence] Universal Camera & Perspective Spatial Coherence\n**PERSPECTIVE CONSISTENCY\n- Objects and spatial elements that belong to the same physical scene should follow a coherent perspective framework appropriate to the chosen viewpoint.\n- Projection, vanishing behavior, surface orientation, and spatial depth should remain internally consistent so the environment feels intentionally constructed rather than accidentally distorted.\n- Perspective relationships should remain believable even when the creative treatment is unconventional.\n**FORESHORTENING & FORM READABILITY\n- Foreshortening should remain coherent with object geometry and viewing direction, preserving recognizable form and structural relationships.\n- Perspective distortion should support the intended representation rather than unintentionally altering important proportions, contours, or functional geometry.\n- Important visible form cues should remain understandable according to the product reference and communication needs.\n**SCALE & SPATIAL RELATIONSHIPS\n- Objects sharing the same implied physical space should maintain internally coherent scale relationships across depth.\n- Relative size, distance, overlap, and spatial placement should work together consistently with the chosen perspective.\n- Deliberate exaggeration or scale transformation may be used creatively when it reads as intentional rather than as an accidental geometric error.\n#### [universal.commercial_visual_hierarchy] Universal Commercial Visual Hierarchy Principles\n**HERO SUBJECT PRIORITY\n- The intended hero subject should remain perceptually clear within the overall visual hierarchy so viewers can recognize the primary commercial focus quickly.\n- Visual emphasis may emerge through relationships among scale, contrast, detail, placement, depth, color, spacing, and surrounding elements according to the needs of the image.\n- Supporting elements should reinforce context, message, or atmosphere without unintentionally competing with the primary subject.\n**FIGURE-GROUND LEGIBILITY\n- Important subjects should remain visually distinguishable from their surroundings through appropriate figure-ground relationships.\n- Separation may be established through tonal, color, spatial, edge, textural, depth, or other perceptual differences appropriate to the scene.\n- Product contours and important visual features should remain sufficiently readable without requiring a fixed separation technique.\n**VISUAL BALANCE & SPACE\n- Visual weight should feel intentional across the composition, with relationships among subjects, text, supporting elements, and empty areas contributing to a coherent whole.\n- Available space may support emphasis, communication, rhythm, or clarity when appropriate to the design.\n- Density and openness should respond to the intended message and composition rather than follow a fixed layout convention.\nRetrieved knowledge supplies supportive physical boundaries. It is non-exhaustive and does not rule out valid alternative creative solutions. For unfamiliar products, reason from the references, physical properties and the brief; an unknown product is not an unsupported one, so do not force it into an incorrect category.\n## OUTPUT CONTEXT\nINTENDED USE CASE: poster\nTARGET ASPECT RATIO: 4:5\nAll styling decisions for this output are stated once, in the ART DIRECTION and COMMERCIAL LAYOUT sections. Apply no additional house defaults.\n## CREATIVE EXECUTION\nWithin the art direction and layout above you hold full authority over every remaining creative decision — prop choice, surface detail, secondary staging, micro-composition, finishing. Avoid generic aesthetic cliché; commit to one deliberate direction rather than averaging several.\n## CONFLICT PRIORITY\nWhen instructions conflict, resolve strictly in this order:\n1. **Real product identity supported by reference evidence** — geometry, proportions, authentic colours, materials, contents, labels, logos. Excludes the reference photo's background, lighting, camera angle, framing, baked shadows, exposure and depth of field.\n2. **Verified factual and official brand information.**\n3. **Exact supplied copy text** — user-supplied visible copy is immutable.\n4. **User hard requirements.**\n5. **Client directives inside ART DIRECTION** — anything marked CLIENT DIRECTIVE outranks every other styling instruction, including this prompt's own defaults.\n6. **Campaign intent and creative brief.**\n7. **Art direction and commercial layout.**\n8. **Professional knowledge physical principles.**\n9. **Your own artistic execution** (lowest when in conflict with any of the above).\n## FINAL OUTPUT\nRender ONE finished production-grade commercial visual. Before rendering, verify: the product is faithful to the reference evidence; it looks photographed inside the scene rather than pasted; no source camera angle or framing has been inherited; every hard constraint is met; every rendered string is exact authorized copy with no metadata, slot labels or reference identifiers such as REF_01 or IMAGE 1 anywhere in the picture.\nOutput no moodboards, no alternative concepts, no before/after comparisons and no explanatory text.",
+      "prompt_chars": 21717,
+      "warnings": [
+        "NO_EXACT_COPY",
+        "KNOWLEDGE_TRIMMED_FOR_BUDGET",
+        "PROMPT_SECTIONS_REMOVED",
+        "PROMPT_TOKEN_BUDGET_HIGH"
+      ],
+      "prompt_available_at": "D:\\Tido\\tido-ai-video-factory-claude-code-pack\\apps\\web\\data\\deliveries\\skin1004-this-single-capsule-holds-everything-your"
+    },
+    {
+      "asset_type": "banner",
+      "use_case": "banner",
+      "aspect_ratio": "16:9",
+      "asset_goal": "Convert inside a placement nobody came to look at. Readability and a clear action beat beauty here; the picture supports the message rather than the other way round.",
+      "layout_logic": {
+        "eye_flow": "left_to_right_message_first",
+        "negative_space_strategy": "The copy column is the negative space. Keep it a flat, uninterrupted field — no gradient banding, no product edge, no highlight — so type sits on it without a scrim.",
+        "safe_margin_percent": 5,
+        "zones": [
+          {
+            "role": "HEADLINE",
+            "x": 5,
+            "y": 18,
+            "width": 40,
+            "height": 24
+          },
+          {
+            "role": "CTA",
+            "x": 5,
+            "y": 58,
+            "width": 26,
+            "height": 14
+          },
+          {
+            "role": "PRODUCT_FOCAL",
+            "x": 52,
+            "y": 10,
+            "width": 43,
+            "height": 80
+          }
+        ]
+      },
+      "visual_priority": [
+        {
+          "element": "headline",
+          "importance": 34,
+          "role": "The offer or reason. A banner that is only a picture converts nothing. (reserved space only — no text is rendered in this pass)"
+        },
+        {
+          "element": "cta",
+          "importance": 28,
+          "role": "The click target. Must read as pressable at a glance. (reserved space only — no text is rendered in this pass)"
+        },
+        {
+          "element": "product",
+          "importance": 70,
+          "role": "Proof and recognition, not the hero here."
+        }
+      ],
+      "prompt_plan": {
+        "campaign_dna_applied": [
+          "mood",
+          "colour_logic",
+          "lighting_logic",
+          "composition_logic",
+          "typography_logic",
+          "product_presentation"
+        ],
+        "asset_adaptations": [
+          "Compress the same idea into a horizontal read. Product and message occupy separate halves so neither is lost when the placement crops from the edges.",
+          "Raise contrast in the copy column relative to the poster; this is read in peripheral vision.",
+          "Simplify the background further than the poster — detail that survives at poster size becomes noise here."
+        ],
+        "art_direction_sources": {
+          "lighting": "USER",
+          "materials": "STRATEGY",
+          "environment": "STRATEGY",
+          "atmosphere": "USER",
+          "composition": "STRATEGY",
+          "colour": "STRATEGY",
+          "camera": "KNOWLEDGE"
+        },
+        "art_direction_decisions": [
+          {
+            "dimension": "lighting",
+            "value": "soft directional light",
+            "source": "USER",
+            "confidence": 0.7,
+            "specificity": "MEDIUM",
+            "score": 0.595,
+            "client_locked": false
+          },
+          {
+            "dimension": "materials",
+            "value": "Glass reads as genuinely weighty and refined — not plasticky. The liquid inside should appear luminous and slightly viscous, suggesting concentration and potency. The surface the bottle rests on should be matte and tactile, grounding the hero without competing with it.",
+            "source": "STRATEGY",
+            "confidence": 0.75,
+            "specificity": "HIGH",
+            "score": 0.5687,
+            "client_locked": false,
+            "qualifiers": [
+              "clean surface"
+            ]
+          },
+          {
+            "dimension": "environment",
+            "value": "The ampoule bottle stands alone as the sole subject — no hands, no face, no lifestyle prop — because the product itself must carry the full weight of desirability. Its form, transparency, and capsule detail communicate precision and purity without distraction. The bottle is treated as a precious object, not a commodity.",
+            "source": "STRATEGY",
+            "confidence": 0.75,
+            "specificity": "HIGH",
+            "score": 0.5687,
+            "client_locked": false,
+            "qualifiers": [
+              "clean surface"
+            ]
+          },
+          {
+            "dimension": "atmosphere",
+            "value": "calm, premium, clean — The viewer should feel serene trust in the product's quality, evoking the refined simplicity associated with premium Korean skincare.",
+            "source": "USER",
+            "confidence": 0.95,
+            "specificity": "HIGH",
+            "score": 0.975,
+            "client_locked": true
+          },
+          {
+            "dimension": "composition",
+            "value": "The bottle occupies the visual and emotional centre of the frame with generous negative space on all sides — space is the luxury signal. The 1:1 format is used to enforce stillness and symmetry, making the product feel considered and inevitable rather than placed.",
+            "source": "STRATEGY",
+            "confidence": 0.75,
+            "specificity": "HIGH",
+            "score": 0.5687,
+            "client_locked": false
+          },
+          {
+            "dimension": "colour",
+            "value": "A restrained palette anchored in cool off-whites and pale celadon or translucent sage tones — referencing Korean skincare's clean, clinical-meets-botanical aesthetic. A single warm undertone in the ampoule liquid creates contrast and draws the eye inward, signalling efficacy within purity.",
+            "source": "STRATEGY",
+            "confidence": 0.75,
+            "specificity": "HIGH",
+            "score": 0.5687,
+            "client_locked": false
+          },
+          {
+            "dimension": "camera",
+            "value": "Eye-level commercial hero angle (50mm lens), crisp corner-to-corner focus on product packaging.",
+            "source": "KNOWLEDGE",
+            "confidence": 0.65,
+            "specificity": "HIGH",
+            "score": 0.4125,
+            "client_locked": false
+          }
+        ],
+        "knowledge_blocks": [
+          "universal.camera_perspective_coherence",
+          "universal.commercial_visual_hierarchy",
+          "universal.lighting_material_readability",
+          "universal.physical_scene_coherence",
+          "universal.typography_graphic_integration",
+          "property.transparent",
+          "specialist.website_banner_foundation"
+        ],
+        "client_locked_dimensions": [
+          "atmosphere"
+        ]
+      },
+      "final_prompt": "<!-- ID: master_prompt_v2 | VERSION: 3.0.0 -->\n# MASTER PROMPT V3 — TIDO IMAGE COMPILATION ARCHITECTURE\n## ROLE\nDownstream commercial image generation model. Produce one production-ready commercial visual with clear hierarchy, credible material optics, coherent scene physics and no generation artifacts, using the references, intent, constraints, copy, brand context and knowledge supplied below.\nSections appear in priority order. Earlier sections carry more authority than later ones, except where a section states otherwise.\n## CREATIVE INTENT\nCREATIVE CONCEPT: Ampoule bottle as the hero on a clean surface, soft directional light, calm premium Korean skincare feeling.\nVISUAL STYLE: commercial\nATTACHED REFERENCE ROLES (ORDER MATCHES MULTIPART IMAGES):\n- Image 1 (CONCEPT_REF_01): PRODUCT_01 identity reference\n[ASSET ADAPTATION — BANNER]\nWHAT THIS ASSET IS FOR: Convert inside a placement nobody came to look at. Readability and a clear action beat beauty here; the picture supports the message rather than the other way round.\nHOW THE CAMPAIGN IS ADAPTED FOR THIS FORMAT — the campaign DNA above does not change; these are instructions about applying it here:\n- Compress the same idea into a horizontal read. Product and message occupy separate halves so neither is lost when the placement crops from the edges.\n- Raise contrast in the copy column relative to the poster; this is read in peripheral vision.\n- Simplify the background further than the poster — detail that survives at poster size becomes noise here.\nLOCKED CLIENT INTENT — PRESERVE STRICTLY:\n- Subject: ampoule bottle\n- Environment: clean surface\n- Mood: calm, premium, clean\n- Visual style: Korean skincare commercial photography\n- Emotional goal: The viewer should feel serene trust in the product's quality, evoking the refined simplicity associated with premium Korean skincare.\n- Non-negotiable: Reference Identity Lock: Uploaded product reference identity takes strict priority over concept conflicts.\n- Non-negotiable: Preserve core subject: \"ampoule bottle\"\n- Non-negotiable: Preserve scene environment: \"clean surface\"\n- Non-negotiable: Respect brand identity: \"Skin1004\"\n- Non-negotiable: Ampoule bottle must be the hero of the image\n- Non-negotiable: Surface must appear clean\n- Non-negotiable: Overall feeling must be calm and premium Korean skincare\nCOMMERCIAL FRAMING:\n- Objective: Preserve the subject 'ampoule bottle' within 'clean surface' and raise its commercial impact for banner (panoramic narrative) incorporating domain expertise: [Panoramic Website Banner Commercial Strategy].\n- Visual hierarchy: Primary anchor: subject (50%). Secondary anchor: 'clean surface' (50%). Remainder ambient.\n- Why this works: The viewer should feel serene trust in the product's quality, evoking the refined simplicity associated with premium Korean skincare. The subject stays the hero and the requested environment is preserved; framing and light are tuned for 'banner' (panoramic narrative) delivery.\nEXPLICIT CLIENT DIRECTIVES — these are requirements, not suggestions. Execute them exactly; never substitute a house default:\n- lighting: soft directional light\n- material: clean surface\n## CAMPAIGN STRATEGY\nCAMPAIGN: Skin1004 — This single capsule holds everything your\nBIG IDEA: This single capsule holds everything your skin already knows it needs.\nCORE MESSAGE: Skin1004 positions the Tone Brightening Capsule Ampoule not as a corrective treatment but as a daily ritual of quiet confidence — science distilled into something beautifully simple.\nCAMPAIGN VISUAL DNA — every asset in this campaign shares these rules. They are what make a poster, a banner and a social ad read as one piece of work rather than three unrelated pictures. Adapt the format, never the DNA:\n- Mood: Still, cool, and unhurried — the emotional temperature of a well-lit apothecary shelf or a quiet morning before the day begins. Premium without performance.\n- Colour logic: A restrained palette anchored in cool off-whites and pale celadon or translucent sage tones — referencing Korean skincare's clean, clinical-meets-botanical aesthetic. A single warm undertone in the ampoule liquid creates contrast and draws the eye inward, signalling efficacy within purity.\n- Lighting logic: Soft directional light that wraps the bottle from one side, allowing the liquid inside to glow faintly with transmitted warmth while the exterior surface holds clean, controlled highlights that reveal the glass quality without flaring.\n- Composition logic: The bottle occupies the visual and emotional centre of the frame with generous negative space on all sides — space is the luxury signal. The 1:1 format is used to enforce stillness and symmetry, making the product feel considered and inevitable rather than placed.\n- Typography logic: No text is rendered into pixels in this pass. Every asset reserves the same clear, tonally even area for typography to be composited afterwards, in the same relative position across the set.\n- Product presentation: The ampoule bottle stands alone as the sole subject — no hands, no face, no lifestyle prop — because the product itself must carry the full weight of desirability. Its form, transparency, and capsule detail communicate precision and purity without distraction. The bottle is treated as a precious object, not a commodity.\nBUSINESS GOAL: Premium skincare launch in beauty_skincare for instagram\nCONSUMER INSIGHT: Women 25-40 buying brightening ampoules are not chasing a filtered, unrecognisable version of themselves — they are trying to reclaim the skin that feels most like them when they are rested, healthy, and at ease. The product is a shortcut back to their own baseline glow, not a transformation.\nWHO THIS IS FOR: This buyer is informed and slightly skeptical of over-promised skincare. She researches ingredients, reads reviews in multiple languages, and responds to restraint over hype. She equates visual calm with brand credibility. She is not buying hope — she is buying evidence presented beautifully. Value triggers: ingredient transparency, minimalist Korean beauty codes, the sense that the brand respects her intelligence.\nEMOTIONAL RESPONSE TO CREATE: Calm clarity, quiet trust\nCREATIVE MESSAGE: This single capsule holds everything your skin already knows it needs.\nVISUAL DIRECTION: A single Skin1004 ampoule bottle centred on a matte pale surface, cool off-white and soft celadon tones throughout, soft one-sided directional light that makes the glass glow without harsh reflections, the liquid inside luminous and warm against the cool exterior, generous empty space framing the bottle on all sides, refined and still.\nThis is the persuasive job the image has to do, and the reasoning behind it. Serve the message, not the product category — a literal depiction of the category is a failure even when it is well lit. The exact camera, lighting and layout that deliver this are resolved in the ART DIRECTION and COMMERCIAL LAYOUT sections; where those conflict with this section, they win, and an explicit client directive beats both.\n## USER HARD REQUIREMENTS\n1. FORBID centered vertical composition\n2. FORBID tight macro crop blocking banner text clearance\n3. FORBID flat non-cinematic prompt rendering\n4. FORBID muddy low-contrast lighting\n5. FORBID overriding user explicit camera or lighting directives\n## TYPOGRAPHY & READABLE COPY\nNo readable typography authorized. Reserve clean typography area only. Do NOT render words, letters, fake brand names, prices, or decorative text into image pixels.\n## REFERENCE SEMANTICS\nReference images are evidence of PRODUCT IDENTITY, not source canvases.\nInterpret them as information about a physical product. Do not treat source-image pixels, crop boundaries, background, studio illumination, camera angle, shot distance, perspective, cast shadows, reflections, exposure, white balance, sharpness or depth of field as protected product identity. Do not composite or preserve the source photograph as a visual layer; re-render the product inside the new scene while staying faithful to reference-supported identity.\n**Protected (what the product is):** geometry, structural proportions, container form, logo, label text, authentic colours, materials, liquid identity, toppings and garnish.\n**Re-synthesized (how it is photographed):** camera angle, viewpoint height, framing, crop, perspective, hero scale, light direction, environmental reflections, contact and cast shadows, ambient colour response, focus.\n**Multi-product isolation:** each resolved PRODUCT_xx is an independent identity bound to its own reference evidence. Preserve each one's distinct differences. Do not average identities into a hybrid, do not clone one identity to satisfy another's instance count, and do not transfer features, materials, colours, labels, logos or liquids across identities. Correct quantity with wrong identities is an incorrect output.\n**Scene-native integration:** re-synthesize highlights, reflections, refraction, contact shadows, ambient colour, depth, focus and edge sharpness so every element shares one set of photographic conditions. Avoid any pasted cutout, sticker, collage or separately-lit appearance.\n**Single reference policy:** with one reference image, unseen surfaces are reconstructed conservatively without inventing unverified logos, text or structural features.\n## PRODUCT INSTANCE REQUIREMENTS\n- The final image MUST contain exactly 1 hero product instance (PRODUCT_01).\n- PRODUCT IDENTITY SOURCE: Reference image(s) [CONCEPT_REF_01].\n[REFERENCE IDENTITY LOCK]\nThe uploaded reference assets are commercial identity assets.\nPreserve:\n- exact product appearance\n- exact shape\n- exact packaging\n- exact logo\nAllowed:\n- new environment\n- new lighting\n- cinematic camera\n- premium composition\nForbidden:\n- redesign\n- replacement\n- invented packaging\n- fake logo\n- REFERENCE MANIFEST RELATIONSHIP TYPE: [SINGLE_PRODUCT]\n- REFERENCE MANIFEST METRICS: 1 Reference Image(s), 1 Product(s), 0 Logo(s).\n- [REF CONTROL] Prio: CONCEPT_REF_01(PRODUCT:0.9) | Lock: Product Silhouette & Geometry, Packaging Contours & Label Layout | Allow: Background Environment, Studio Illumination & Lighting, Camera Angle & Depth of Field | Forbid: Altering Product Shape, Inventing Unverified Text\n- PRODUCT PLANNING MANIFEST [HIGH] (Target Count: 1, Detected: 1):\n  * LOCK [PRODUCT_01] (Ampoule bottle as the hero on a clean surface, soft directional light, calm premium Korean skincare feeling. for brand Commercial Brand) [Refs: CONCEPT_REF_01]:\n  - Shape: 3D Product Geometry\n  - Material: Glass / Plastic Container\n  - Packaging: Product Container\n  - Color: Transparent / Glossy\n  - Label: Commercial Brand Branding\n  - Rules: Preserve exact silhouette, packaging appearance, colors & logo/label. No redesign, no replacement.\n[REFERENCE ADAPTATION RULES]\nReference image provides exact product identity ONLY. Do NOT copy flat background or flat lighting.\n- Synthesize realistic 3D depth, soft ground contact shadows, studio key lighting, and authentic surface reflections.\n- SINGLE-REFERENCE POLICY: Product(s) [PRODUCT_01] have only 1 reference image. Unseen surfaces must be reconstructed conservatively without inventing unverified logos, text, or structural controls.\n[CREATIVE DIRECTION]\n1. PRODUCT IDENTITY: Preserve exact product shape, packaging, texture, and silhouette. Preserve exact product packaging silhouette and materials\n2. LOGO PRESERVATION: Maintain exact brand mark placement, vector sharpness, and clearance space (do NOT generate fake logos).\n4. TYPOGRAPHY AREA: reserve clean typography area only for post-production text placement.\n## ART DIRECTION\n[RESOLVED ART DIRECTION]\nThis block is the ONLY authority on camera, lighting, composition, colour, environment, material and atmosphere. No other instruction in this prompt overrides it. Where any other section implies a different angle, lens, lighting rig or layout, this block wins.\n- CAMERA: Eye-level commercial hero angle (50mm lens), crisp corner-to-corner focus on product packaging.\n- LIGHTING: soft directional light\n- COMPOSITION: The bottle occupies the visual and emotional centre of the frame with generous negative space on all sides — space is the luxury signal. The 1:1 format is used to enforce stillness and symmetry, making the product feel considered and inevitable rather than placed.\n- COLOUR: A restrained palette anchored in cool off-whites and pale celadon or translucent sage tones — referencing Korean skincare's clean, clinical-meets-botanical aesthetic. A single warm undertone in the ampoule liquid creates contrast and draws the eye inward, signalling efficacy within purity.\n- ENVIRONMENT & SET: The ampoule bottle stands alone as the sole subject — no hands, no face, no lifestyle prop — because the product itself must carry the full weight of desirability. Its form, transparency, and capsule detail communicate precision and purity without distraction. The bottle is treated as a precious object, not a commodity. (client tone note: clean surface)\n- MATERIALS & SURFACES: Glass reads as genuinely weighty and refined — not plasticky. The liquid inside should appear luminous and slightly viscous, suggesting concentration and potency. The surface the bottle rests on should be matte and tactile, grounding the hero without competing with it. (client tone note: clean surface)\n- ATMOSPHERE [CLIENT DIRECTIVE — EXECUTE EXACTLY, DO NOT SUBSTITUTE]: calm, premium, clean — The viewer should feel serene trust in the product's quality, evoking the refined simplicity associated with premium Korean skincare.\nEXCLUSIONS:\n- FORBID centered vertical composition\n- FORBID tight macro crop blocking banner text clearance\n- FORBID flat non-cinematic prompt rendering\n- FORBID muddy low-contrast lighting\n- FORBID overriding user explicit camera or lighting directives\n## COMMERCIAL LAYOUT\n[COMMERCIAL LAYOUT PLAN]\nFORMAT: banner at 16:9. Display advertising unit read in peripheral vision: message left, product right, one unmistakable action.\nHOW THIS IS VIEWED: Seen in peripheral vision beside content the viewer actually came for. It gets under a second and no second look.\nSAFE MARGIN: keep all meaningful content, product edges and any text at least 5% in from every edge.\nATTENTION BUDGET (0–100). This is the order a viewer must read the frame in. Give the strongest element the optical emphasis — contrast, focus, scale and placement — and make sure nothing below it competes for that emphasis:\n- HEADLINE — 34/100. The offer or reason. A banner that is only a picture converts nothing. (reserved space only — no text is rendered in this pass)\n- CTA — 28/100. The click target. Must read as pressable at a glance. (reserved space only — no text is rendered in this pass)\n- PRODUCT — 70/100. Proof and recognition, not the hero here.\nEYE FLOW: left to right message first. Build the composition so the eye enters, travels and settles in that order; leading lines, focus falloff and tonal contrast should all reinforce it rather than fight it.\nNEGATIVE SPACE STRATEGY: The copy column is the negative space. Keep it a flat, uninterrupted field — no gradient banding, no product edge, no highlight — so type sits on it without a scrim.\nRESERVED ZONES (percentages of the canvas, origin top-left). These areas must stay visually calm — even tone, low detail, no competing highlight, no part of the product crossing into them:\n- HEADLINE: x 5%, y 18%, w 40%, h 24%, left-aligned. Left copy column. Background here stays quiet and even.\n- CTA: x 5%, y 58%, w 26%, h 14%, left-aligned. Action element directly under the message, inside the same quiet column.\n- PRODUCT_FOCAL: x 52%, y 10%, w 43%, h 80%, center-aligned. Product occupies the right half and never crosses x=48%.\nREADABILITY: Copy column must hold at least a 4.5:1 tonal separation from whatever sits behind it. Keep the product out of the copy column entirely — banners are frequently cropped from the edges and overlapping content is the first thing lost.\nTYPOGRAPHY: render NO text. The zones above are kept clear for typography that will be composited afterwards. Do not invent headlines, prices, badges, slogans, watermarks or placeholder lettering.\n## PROFESSIONAL KNOWLEDGE\n### UNIVERSAL PROFESSIONAL KNOWLEDGE\n#### [universal.camera_perspective_coherence] Universal Camera & Perspective Spatial Coherence\n**PERSPECTIVE CONSISTENCY\n- Objects and spatial elements that belong to the same physical scene should follow a coherent perspective framework appropriate to the chosen viewpoint.\n- Projection, vanishing behavior, surface orientation, and spatial depth should remain internally consistent so the environment feels intentionally constructed rather than accidentally distorted.\n- Perspective relationships should remain believable even when the creative treatment is unconventional.\n**FORESHORTENING & FORM READABILITY\n- Foreshortening should remain coherent with object geometry and viewing direction, preserving recognizable form and structural relationships.\n- Perspective distortion should support the intended representation rather than unintentionally altering important proportions, contours, or functional geometry.\n- Important visible form cues should remain understandable according to the product reference and communication needs.\n**SCALE & SPATIAL RELATIONSHIPS\n- Objects sharing the same implied physical space should maintain internally coherent scale relationships across depth.\n- Relative size, distance, overlap, and spatial placement should work together consistently with the chosen perspective.\n- Deliberate exaggeration or scale transformation may be used creatively when it reads as intentional rather than as an accidental geometric error.\n#### [universal.commercial_visual_hierarchy] Universal Commercial Visual Hierarchy Principles\n**HERO SUBJECT PRIORITY\n- The intended hero subject should remain perceptually clear within the overall visual hierarchy so viewers can recognize the primary commercial focus quickly.\n- Visual emphasis may emerge through relationships among scale, contrast, detail, placement, depth, color, spacing, and surrounding elements according to the needs of the image.\n- Supporting elements should reinforce context, message, or atmosphere without unintentionally competing with the primary subject.\n**FIGURE-GROUND LEGIBILITY\n- Important subjects should remain visually distinguishable from their surroundings through appropriate figure-ground relationships.\n- Separation may be established through tonal, color, spatial, edge, textural, depth, or other perceptual differences appropriate to the scene.\n- Product contours and important visual features should remain sufficiently readable without requiring a fixed separation technique.\n**VISUAL BALANCE & SPACE\n- Visual weight should feel intentional across the composition, with relationships among subjects, text, supporting elements, and empty areas contributing to a coherent whole.\n- Available space may support emphasis, communication, rhythm, or clarity when appropriate to the design.\n- Density and openness should respond to the intended message and composition rather than follow a fixed layout convention.\nRetrieved knowledge supplies supportive physical boundaries. It is non-exhaustive and does not rule out valid alternative creative solutions. For unfamiliar products, reason from the references, physical properties and the brief; an unknown product is not an unsupported one, so do not force it into an incorrect category.\n## OUTPUT CONTEXT\nINTENDED USE CASE: banner\nTARGET ASPECT RATIO: 16:9\nAll styling decisions for this output are stated once, in the ART DIRECTION and COMMERCIAL LAYOUT sections. Apply no additional house defaults.\n## CREATIVE EXECUTION\nWithin the art direction and layout above you hold full authority over every remaining creative decision — prop choice, surface detail, secondary staging, micro-composition, finishing. Avoid generic aesthetic cliché; commit to one deliberate direction rather than averaging several.\n## CONFLICT PRIORITY\nWhen instructions conflict, resolve strictly in this order:\n1. **Real product identity supported by reference evidence** — geometry, proportions, authentic colours, materials, contents, labels, logos. Excludes the reference photo's background, lighting, camera angle, framing, baked shadows, exposure and depth of field.\n2. **Verified factual and official brand information.**\n3. **Exact supplied copy text** — user-supplied visible copy is immutable.\n4. **User hard requirements.**\n5. **Client directives inside ART DIRECTION** — anything marked CLIENT DIRECTIVE outranks every other styling instruction, including this prompt's own defaults.\n6. **Campaign intent and creative brief.**\n7. **Art direction and commercial layout.**\n8. **Professional knowledge physical principles.**\n9. **Your own artistic execution** (lowest when in conflict with any of the above).\n## FINAL OUTPUT\nRender ONE finished production-grade commercial visual. Before rendering, verify: the product is faithful to the reference evidence; it looks photographed inside the scene rather than pasted; no source camera angle or framing has been inherited; every hard constraint is met; every rendered string is exact authorized copy with no metadata, slot labels or reference identifiers such as REF_01 or IMAGE 1 anywhere in the picture.\nOutput no moodboards, no alternative concepts, no before/after comparisons and no explanatory text.",
+      "prompt_chars": 21428,
+      "warnings": [
+        "NO_EXACT_COPY",
+        "KNOWLEDGE_TRIMMED_FOR_BUDGET",
+        "PROMPT_SECTIONS_REMOVED",
+        "PROMPT_TOKEN_BUDGET_HIGH"
+      ],
+      "prompt_available_at": "D:\\Tido\\tido-ai-video-factory-claude-code-pack\\apps\\web\\data\\deliveries\\skin1004-this-single-capsule-holds-everything-your"
+    },
+    {
+      "asset_type": "social_ad",
+      "use_case": "social_ad",
+      "aspect_ratio": "9:16",
+      "asset_goal": "Stop a thumb. It competes with the rest of a feed and gets under a second to earn attention, so the product must register before any text is read.",
+      "layout_logic": {
+        "eye_flow": "top_to_bottom_product_first",
+        "negative_space_strategy": "Keep the platform chrome bands genuinely empty, and leave a quiet zone directly around the product so it separates from a busy feed rather than blending into it.",
+        "safe_margin_percent": 8,
+        "zones": [
+          {
+            "role": "HEADLINE",
+            "x": 8,
+            "y": 14,
+            "width": 84,
+            "height": 16
+          },
+          {
+            "role": "PRODUCT_FOCAL",
+            "x": 10,
+            "y": 32,
+            "width": 80,
+            "height": 42
+          },
+          {
+            "role": "CTA",
+            "x": 12,
+            "y": 76,
+            "width": 76,
+            "height": 8
+          }
+        ]
+      },
+      "visual_priority": [
+        {
+          "element": "product",
+          "importance": 100,
+          "role": "The scroll-stopper. Must be recognisable at thumbnail size before any text is read."
+        },
+        {
+          "element": "headline",
+          "importance": 24,
+          "role": "The hook, read only after the image has already stopped the thumb. (reserved space only — no text is rendered in this pass)"
+        },
+        {
+          "element": "cta",
+          "importance": 12,
+          "role": "Read last, by the minority who got that far. Present, not loud. (reserved space only — no text is rendered in this pass)"
+        }
+      ],
+      "prompt_plan": {
+        "campaign_dna_applied": [
+          "mood",
+          "colour_logic",
+          "lighting_logic",
+          "composition_logic",
+          "typography_logic",
+          "product_presentation"
+        ],
+        "asset_adaptations": [
+          "Push the product larger and higher than the poster does; the frame is vertical and the first third decides everything.",
+          "Keep the same colour and lighting logic but increase separation between product and background so it survives a busy feed.",
+          "Leave the platform chrome bands empty — nothing that must be seen may sit in them."
+        ],
+        "art_direction_sources": {
+          "lighting": "USER",
+          "materials": "STRATEGY",
+          "environment": "STRATEGY",
+          "atmosphere": "USER",
+          "composition": "STRATEGY",
+          "colour": "STRATEGY",
+          "camera": "KNOWLEDGE"
+        },
+        "art_direction_decisions": [
+          {
+            "dimension": "lighting",
+            "value": "soft directional light",
+            "source": "USER",
+            "confidence": 0.7,
+            "specificity": "MEDIUM",
+            "score": 0.595,
+            "client_locked": false
+          },
+          {
+            "dimension": "materials",
+            "value": "Glass reads as genuinely weighty and refined — not plasticky. The liquid inside should appear luminous and slightly viscous, suggesting concentration and potency. The surface the bottle rests on should be matte and tactile, grounding the hero without competing with it.",
+            "source": "STRATEGY",
+            "confidence": 0.75,
+            "specificity": "HIGH",
+            "score": 0.5687,
+            "client_locked": false,
+            "qualifiers": [
+              "clean surface"
+            ]
+          },
+          {
+            "dimension": "environment",
+            "value": "The ampoule bottle stands alone as the sole subject — no hands, no face, no lifestyle prop — because the product itself must carry the full weight of desirability. Its form, transparency, and capsule detail communicate precision and purity without distraction. The bottle is treated as a precious object, not a commodity.",
+            "source": "STRATEGY",
+            "confidence": 0.75,
+            "specificity": "HIGH",
+            "score": 0.5687,
+            "client_locked": false,
+            "qualifiers": [
+              "clean surface"
+            ]
+          },
+          {
+            "dimension": "atmosphere",
+            "value": "calm, premium, clean — The viewer should feel serene trust in the product's quality, evoking the refined simplicity associated with premium Korean skincare.",
+            "source": "USER",
+            "confidence": 0.95,
+            "specificity": "HIGH",
+            "score": 0.975,
+            "client_locked": true
+          },
+          {
+            "dimension": "composition",
+            "value": "The bottle occupies the visual and emotional centre of the frame with generous negative space on all sides — space is the luxury signal. The 1:1 format is used to enforce stillness and symmetry, making the product feel considered and inevitable rather than placed.",
+            "source": "STRATEGY",
+            "confidence": 0.75,
+            "specificity": "HIGH",
+            "score": 0.5687,
+            "client_locked": false
+          },
+          {
+            "dimension": "colour",
+            "value": "A restrained palette anchored in cool off-whites and pale celadon or translucent sage tones — referencing Korean skincare's clean, clinical-meets-botanical aesthetic. A single warm undertone in the ampoule liquid creates contrast and draws the eye inward, signalling efficacy within purity.",
+            "source": "STRATEGY",
+            "confidence": 0.75,
+            "specificity": "HIGH",
+            "score": 0.5687,
+            "client_locked": false
+          },
+          {
+            "dimension": "camera",
+            "value": "Eye-level commercial hero angle (50mm lens), crisp corner-to-corner focus on product packaging.",
+            "source": "KNOWLEDGE",
+            "confidence": 0.65,
+            "specificity": "HIGH",
+            "score": 0.4125,
+            "client_locked": false
+          }
+        ],
+        "knowledge_blocks": [
+          "universal.camera_perspective_coherence",
+          "universal.commercial_visual_hierarchy",
+          "universal.lighting_material_readability",
+          "universal.physical_scene_coherence",
+          "universal.typography_graphic_integration",
+          "property.transparent",
+          "specialist.social_ad_foundation"
+        ],
+        "client_locked_dimensions": [
+          "atmosphere"
+        ]
+      },
+      "final_prompt": "<!-- ID: master_prompt_v2 | VERSION: 3.0.0 -->\n# MASTER PROMPT V3 — TIDO IMAGE COMPILATION ARCHITECTURE\n## ROLE\nDownstream commercial image generation model. Produce one production-ready commercial visual with clear hierarchy, credible material optics, coherent scene physics and no generation artifacts, using the references, intent, constraints, copy, brand context and knowledge supplied below.\nSections appear in priority order. Earlier sections carry more authority than later ones, except where a section states otherwise.\n## CREATIVE INTENT\nCREATIVE CONCEPT: Ampoule bottle as the hero on a clean surface, soft directional light, calm premium Korean skincare feeling.\nVISUAL STYLE: commercial\nATTACHED REFERENCE ROLES (ORDER MATCHES MULTIPART IMAGES):\n- Image 1 (CONCEPT_REF_01): PRODUCT_01 identity reference\n[ASSET ADAPTATION — SOCIAL AD]\nWHAT THIS ASSET IS FOR: Stop a thumb. It competes with the rest of a feed and gets under a second to earn attention, so the product must register before any text is read.\nHOW THE CAMPAIGN IS ADAPTED FOR THIS FORMAT — the campaign DNA above does not change; these are instructions about applying it here:\n- Push the product larger and higher than the poster does; the frame is vertical and the first third decides everything.\n- Keep the same colour and lighting logic but increase separation between product and background so it survives a busy feed.\n- Leave the platform chrome bands empty — nothing that must be seen may sit in them.\nLOCKED CLIENT INTENT — PRESERVE STRICTLY:\n- Subject: ampoule bottle\n- Environment: clean surface\n- Mood: calm, premium, clean\n- Visual style: Korean skincare commercial photography\n- Emotional goal: The viewer should feel serene trust in the product's quality, evoking the refined simplicity associated with premium Korean skincare.\n- Non-negotiable: Reference Identity Lock: Uploaded product reference identity takes strict priority over concept conflicts.\n- Non-negotiable: Preserve core subject: \"ampoule bottle\"\n- Non-negotiable: Preserve scene environment: \"clean surface\"\n- Non-negotiable: Respect brand identity: \"Skin1004\"\n- Non-negotiable: Ampoule bottle must be the hero of the image\n- Non-negotiable: Surface must appear clean\n- Non-negotiable: Overall feeling must be calm and premium Korean skincare\nCOMMERCIAL FRAMING:\n- Objective: Preserve the subject 'ampoule bottle' within 'clean surface' and raise its commercial impact for social_ad (mobile conversion) incorporating domain expertise: [Mobile-First Social Ad Commercial Strategy].\n- Visual hierarchy: Primary anchor: subject (60%). Secondary anchor: 'clean surface' (40%). Remainder ambient.\n- Why this works: The viewer should feel serene trust in the product's quality, evoking the refined simplicity associated with premium Korean skincare. The subject stays the hero and the requested environment is preserved; framing and light are tuned for 'social_ad' (mobile conversion) delivery.\nEXPLICIT CLIENT DIRECTIVES — these are requirements, not suggestions. Execute them exactly; never substitute a house default:\n- lighting: soft directional light\n- material: clean surface\n## CAMPAIGN STRATEGY\nCAMPAIGN: Skin1004 — This single capsule holds everything your\nBIG IDEA: This single capsule holds everything your skin already knows it needs.\nCORE MESSAGE: Skin1004 positions the Tone Brightening Capsule Ampoule not as a corrective treatment but as a daily ritual of quiet confidence — science distilled into something beautifully simple.\nCAMPAIGN VISUAL DNA — every asset in this campaign shares these rules. They are what make a poster, a banner and a social ad read as one piece of work rather than three unrelated pictures. Adapt the format, never the DNA:\n- Mood: Still, cool, and unhurried — the emotional temperature of a well-lit apothecary shelf or a quiet morning before the day begins. Premium without performance.\n- Colour logic: A restrained palette anchored in cool off-whites and pale celadon or translucent sage tones — referencing Korean skincare's clean, clinical-meets-botanical aesthetic. A single warm undertone in the ampoule liquid creates contrast and draws the eye inward, signalling efficacy within purity.\n- Lighting logic: Soft directional light that wraps the bottle from one side, allowing the liquid inside to glow faintly with transmitted warmth while the exterior surface holds clean, controlled highlights that reveal the glass quality without flaring.\n- Composition logic: The bottle occupies the visual and emotional centre of the frame with generous negative space on all sides — space is the luxury signal. The 1:1 format is used to enforce stillness and symmetry, making the product feel considered and inevitable rather than placed.\n- Typography logic: No text is rendered into pixels in this pass. Every asset reserves the same clear, tonally even area for typography to be composited afterwards, in the same relative position across the set.\n- Product presentation: The ampoule bottle stands alone as the sole subject — no hands, no face, no lifestyle prop — because the product itself must carry the full weight of desirability. Its form, transparency, and capsule detail communicate precision and purity without distraction. The bottle is treated as a precious object, not a commodity.\nBUSINESS GOAL: Premium skincare launch in beauty_skincare for instagram\nCONSUMER INSIGHT: Women 25-40 buying brightening ampoules are not chasing a filtered, unrecognisable version of themselves — they are trying to reclaim the skin that feels most like them when they are rested, healthy, and at ease. The product is a shortcut back to their own baseline glow, not a transformation.\nWHO THIS IS FOR: This buyer is informed and slightly skeptical of over-promised skincare. She researches ingredients, reads reviews in multiple languages, and responds to restraint over hype. She equates visual calm with brand credibility. She is not buying hope — she is buying evidence presented beautifully. Value triggers: ingredient transparency, minimalist Korean beauty codes, the sense that the brand respects her intelligence.\nEMOTIONAL RESPONSE TO CREATE: Calm clarity, quiet trust\nCREATIVE MESSAGE: This single capsule holds everything your skin already knows it needs.\nVISUAL DIRECTION: A single Skin1004 ampoule bottle centred on a matte pale surface, cool off-white and soft celadon tones throughout, soft one-sided directional light that makes the glass glow without harsh reflections, the liquid inside luminous and warm against the cool exterior, generous empty space framing the bottle on all sides, refined and still.\nThis is the persuasive job the image has to do, and the reasoning behind it. Serve the message, not the product category — a literal depiction of the category is a failure even when it is well lit. The exact camera, lighting and layout that deliver this are resolved in the ART DIRECTION and COMMERCIAL LAYOUT sections; where those conflict with this section, they win, and an explicit client directive beats both.\n## USER HARD REQUIREMENTS\n1. FORBID low-contrast muddy lighting reducing mobile feed scannability\n2. FORBID tiny unreadable product placement\n3. FORBID extreme macro crop hiding usage context\n4. FORBID flat non-cinematic prompt rendering\n5. FORBID muddy low-contrast lighting\n6. FORBID low-contrast muddy lighting reducing mobile feed scannability\n7. FORBID tiny unreadable product placement\n8. FORBID overriding user explicit camera or lighting directives\n## TYPOGRAPHY & READABLE COPY\nNo readable typography authorized. Reserve clean typography area only. Do NOT render words, letters, fake brand names, prices, or decorative text into image pixels.\n## REFERENCE SEMANTICS\nReference images are evidence of PRODUCT IDENTITY, not source canvases.\nInterpret them as information about a physical product. Do not treat source-image pixels, crop boundaries, background, studio illumination, camera angle, shot distance, perspective, cast shadows, reflections, exposure, white balance, sharpness or depth of field as protected product identity. Do not composite or preserve the source photograph as a visual layer; re-render the product inside the new scene while staying faithful to reference-supported identity.\n**Protected (what the product is):** geometry, structural proportions, container form, logo, label text, authentic colours, materials, liquid identity, toppings and garnish.\n**Re-synthesized (how it is photographed):** camera angle, viewpoint height, framing, crop, perspective, hero scale, light direction, environmental reflections, contact and cast shadows, ambient colour response, focus.\n**Multi-product isolation:** each resolved PRODUCT_xx is an independent identity bound to its own reference evidence. Preserve each one's distinct differences. Do not average identities into a hybrid, do not clone one identity to satisfy another's instance count, and do not transfer features, materials, colours, labels, logos or liquids across identities. Correct quantity with wrong identities is an incorrect output.\n**Scene-native integration:** re-synthesize highlights, reflections, refraction, contact shadows, ambient colour, depth, focus and edge sharpness so every element shares one set of photographic conditions. Avoid any pasted cutout, sticker, collage or separately-lit appearance.\n**Single reference policy:** with one reference image, unseen surfaces are reconstructed conservatively without inventing unverified logos, text or structural features.\n## PRODUCT INSTANCE REQUIREMENTS\n- The final image MUST contain exactly 1 hero product instance (PRODUCT_01).\n- PRODUCT IDENTITY SOURCE: Reference image(s) [CONCEPT_REF_01].\n[REFERENCE IDENTITY LOCK]\nThe uploaded reference assets are commercial identity assets.\nPreserve:\n- exact product appearance\n- exact shape\n- exact packaging\n- exact logo\nAllowed:\n- new environment\n- new lighting\n- cinematic camera\n- premium composition\nForbidden:\n- redesign\n- replacement\n- invented packaging\n- fake logo\n- REFERENCE MANIFEST RELATIONSHIP TYPE: [SINGLE_PRODUCT]\n- REFERENCE MANIFEST METRICS: 1 Reference Image(s), 1 Product(s), 0 Logo(s).\n- [REF CONTROL] Prio: CONCEPT_REF_01(PRODUCT:0.9) | Lock: Product Silhouette & Geometry, Packaging Contours & Label Layout | Allow: Background Environment, Studio Illumination & Lighting, Camera Angle & Depth of Field | Forbid: Altering Product Shape, Inventing Unverified Text\n- PRODUCT PLANNING MANIFEST [HIGH] (Target Count: 1, Detected: 1):\n  * LOCK [PRODUCT_01] (Ampoule bottle as the hero on a clean surface, soft directional light, calm premium Korean skincare feeling. for brand Commercial Brand) [Refs: CONCEPT_REF_01]:\n  - Shape: 3D Product Geometry\n  - Material: Glass / Plastic Container\n  - Packaging: Product Container\n  - Color: Transparent / Glossy\n  - Label: Commercial Brand Branding\n  - Rules: Preserve exact silhouette, packaging appearance, colors & logo/label. No redesign, no replacement.\n[REFERENCE ADAPTATION RULES]\nReference image provides exact product identity ONLY. Do NOT copy flat background or flat lighting.\n- Synthesize realistic 3D depth, soft ground contact shadows, studio key lighting, and authentic surface reflections.\n- SINGLE-REFERENCE POLICY: Product(s) [PRODUCT_01] have only 1 reference image. Unseen surfaces must be reconstructed conservatively without inventing unverified logos, text, or structural controls.\n[CREATIVE DIRECTION]\n1. PRODUCT IDENTITY: Preserve exact product shape, packaging, texture, and silhouette. Preserve exact product packaging silhouette and materials\n2. LOGO PRESERVATION: Maintain exact brand mark placement, vector sharpness, and clearance space (do NOT generate fake logos).\n4. TYPOGRAPHY AREA: reserve clean typography area only for post-production text placement.\n## ART DIRECTION\n[RESOLVED ART DIRECTION]\nThis block is the ONLY authority on camera, lighting, composition, colour, environment, material and atmosphere. No other instruction in this prompt overrides it. Where any other section implies a different angle, lens, lighting rig or layout, this block wins.\n- CAMERA: Eye-level commercial hero angle (50mm lens), crisp corner-to-corner focus on product packaging.\n- LIGHTING: soft directional light\n- COMPOSITION: The bottle occupies the visual and emotional centre of the frame with generous negative space on all sides — space is the luxury signal. The 1:1 format is used to enforce stillness and symmetry, making the product feel considered and inevitable rather than placed.\n- COLOUR: A restrained palette anchored in cool off-whites and pale celadon or translucent sage tones — referencing Korean skincare's clean, clinical-meets-botanical aesthetic. A single warm undertone in the ampoule liquid creates contrast and draws the eye inward, signalling efficacy within purity.\n- ENVIRONMENT & SET: The ampoule bottle stands alone as the sole subject — no hands, no face, no lifestyle prop — because the product itself must carry the full weight of desirability. Its form, transparency, and capsule detail communicate precision and purity without distraction. The bottle is treated as a precious object, not a commodity. (client tone note: clean surface)\n- MATERIALS & SURFACES: Glass reads as genuinely weighty and refined — not plasticky. The liquid inside should appear luminous and slightly viscous, suggesting concentration and potency. The surface the bottle rests on should be matte and tactile, grounding the hero without competing with it. (client tone note: clean surface)\n- ATMOSPHERE [CLIENT DIRECTIVE — EXECUTE EXACTLY, DO NOT SUBSTITUTE]: calm, premium, clean — The viewer should feel serene trust in the product's quality, evoking the refined simplicity associated with premium Korean skincare.\nEXCLUSIONS:\n- FORBID low-contrast muddy lighting reducing mobile feed scannability\n- FORBID tiny unreadable product placement\n- FORBID extreme macro crop hiding usage context\n- FORBID flat non-cinematic prompt rendering\n- FORBID muddy low-contrast lighting\n- FORBID overriding user explicit camera or lighting directives\n## COMMERCIAL LAYOUT\n[COMMERCIAL LAYOUT PLAN]\nFORMAT: social ad at 9:16. Mobile feed unit competing against a thumb: it must stop the scroll in the first half-second, then say one thing.\nHOW THIS IS VIEWED: Encountered mid-scroll at thumb speed. The first half-second decides whether the rest is seen at all.\nSAFE MARGIN: keep all meaningful content, product edges and any text at least 8% in from every edge.\nATTENTION BUDGET (0–100). This is the order a viewer must read the frame in. Give the strongest element the optical emphasis — contrast, focus, scale and placement — and make sure nothing below it competes for that emphasis:\n- PRODUCT — 100/100. The scroll-stopper. Must be recognisable at thumbnail size before any text is read.\n- HEADLINE — 24/100. The hook, read only after the image has already stopped the thumb. (reserved space only — no text is rendered in this pass)\n- CTA — 12/100. Read last, by the minority who got that far. Present, not loud. (reserved space only — no text is rendered in this pass)\nEYE FLOW: top to bottom product first. Build the composition so the eye enters, travels and settles in that order; leading lines, focus falloff and tonal contrast should all reinforce it rather than fight it.\nNEGATIVE SPACE STRATEGY: Keep the platform chrome bands genuinely empty, and leave a quiet zone directly around the product so it separates from a busy feed rather than blending into it.\nRESERVED ZONES (percentages of the canvas, origin top-left). These areas must stay visually calm — even tone, low detail, no competing highlight, no part of the product crossing into them:\n- HEADLINE: x 8%, y 14%, w 84%, h 16%, center-aligned. Hook line, below platform chrome.\n- PRODUCT_FOCAL: x 10%, y 32%, w 80%, h 42%, center-aligned. Product large enough to read at thumbnail size — the scroll-stopper.\n- CTA: x 12%, y 76%, w 76%, h 8%, center-aligned. Action element above the bottom chrome band.\nREADABILITY: Story and Reels chrome overlays roughly the top 12% and bottom 18% of a 9:16 frame. Nothing that must be seen may sit there.\nTYPOGRAPHY: render NO text. The zones above are kept clear for typography that will be composited afterwards. Do not invent headlines, prices, badges, slogans, watermarks or placeholder lettering.\n## PROFESSIONAL KNOWLEDGE\n### UNIVERSAL PROFESSIONAL KNOWLEDGE\n#### [universal.camera_perspective_coherence] Universal Camera & Perspective Spatial Coherence\n**PERSPECTIVE CONSISTENCY\n- Objects and spatial elements that belong to the same physical scene should follow a coherent perspective framework appropriate to the chosen viewpoint.\n- Projection, vanishing behavior, surface orientation, and spatial depth should remain internally consistent so the environment feels intentionally constructed rather than accidentally distorted.\n- Perspective relationships should remain believable even when the creative treatment is unconventional.\n**FORESHORTENING & FORM READABILITY\n- Foreshortening should remain coherent with object geometry and viewing direction, preserving recognizable form and structural relationships.\n- Perspective distortion should support the intended representation rather than unintentionally altering important proportions, contours, or functional geometry.\n- Important visible form cues should remain understandable according to the product reference and communication needs.\n**SCALE & SPATIAL RELATIONSHIPS\n- Objects sharing the same implied physical space should maintain internally coherent scale relationships across depth.\n- Relative size, distance, overlap, and spatial placement should work together consistently with the chosen perspective.\n- Deliberate exaggeration or scale transformation may be used creatively when it reads as intentional rather than as an accidental geometric error.\n#### [universal.commercial_visual_hierarchy] Universal Commercial Visual Hierarchy Principles\n**HERO SUBJECT PRIORITY\n- The intended hero subject should remain perceptually clear within the overall visual hierarchy so viewers can recognize the primary commercial focus quickly.\n- Visual emphasis may emerge through relationships among scale, contrast, detail, placement, depth, color, spacing, and surrounding elements according to the needs of the image.\n- Supporting elements should reinforce context, message, or atmosphere without unintentionally competing with the primary subject.\n**FIGURE-GROUND LEGIBILITY\n- Important subjects should remain visually distinguishable from their surroundings through appropriate figure-ground relationships.\n- Separation may be established through tonal, color, spatial, edge, textural, depth, or other perceptual differences appropriate to the scene.\n- Product contours and important visual features should remain sufficiently readable without requiring a fixed separation technique.\n**VISUAL BALANCE & SPACE\n- Visual weight should feel intentional across the composition, with relationships among subjects, text, supporting elements, and empty areas contributing to a coherent whole.\n- Available space may support emphasis, communication, rhythm, or clarity when appropriate to the design.\n- Density and openness should respond to the intended message and composition rather than follow a fixed layout convention.\nRetrieved knowledge supplies supportive physical boundaries. It is non-exhaustive and does not rule out valid alternative creative solutions. For unfamiliar products, reason from the references, physical properties and the brief; an unknown product is not an unsupported one, so do not force it into an incorrect category.\n## OUTPUT CONTEXT\nINTENDED USE CASE: social_ad\nTARGET ASPECT RATIO: 9:16\nAll styling decisions for this output are stated once, in the ART DIRECTION and COMMERCIAL LAYOUT sections. Apply no additional house defaults.\n## CREATIVE EXECUTION\nWithin the art direction and layout above you hold full authority over every remaining creative decision — prop choice, surface detail, secondary staging, micro-composition, finishing. Avoid generic aesthetic cliché; commit to one deliberate direction rather than averaging several.\n## CONFLICT PRIORITY\nWhen instructions conflict, resolve strictly in this order:\n1. **Real product identity supported by reference evidence** — geometry, proportions, authentic colours, materials, contents, labels, logos. Excludes the reference photo's background, lighting, camera angle, framing, baked shadows, exposure and depth of field.\n2. **Verified factual and official brand information.**\n3. **Exact supplied copy text** — user-supplied visible copy is immutable.\n4. **User hard requirements.**\n5. **Client directives inside ART DIRECTION** — anything marked CLIENT DIRECTIVE outranks every other styling instruction, including this prompt's own defaults.\n6. **Campaign intent and creative brief.**\n7. **Art direction and commercial layout.**\n8. **Professional knowledge physical principles.**\n9. **Your own artistic execution** (lowest when in conflict with any of the above).\n## FINAL OUTPUT\nRender ONE finished production-grade commercial visual. Before rendering, verify: the product is faithful to the reference evidence; it looks photographed inside the scene rather than pasted; no source camera angle or framing has been inherited; every hard constraint is met; every rendered string is exact authorized copy with no metadata, slot labels or reference identifiers such as REF_01 or IMAGE 1 anywhere in the picture.\nOutput no moodboards, no alternative concepts, no before/after comparisons and no explanatory text.",
+      "prompt_chars": 21545,
+      "warnings": [
+        "NO_EXACT_COPY",
+        "KNOWLEDGE_TRIMMED_FOR_BUDGET",
+        "PROMPT_SECTIONS_REMOVED",
+        "PROMPT_TOKEN_BUDGET_HIGH"
+      ],
+      "prompt_available_at": "D:\\Tido\\tido-ai-video-factory-claude-code-pack\\apps\\web\\data\\deliveries\\skin1004-this-single-capsule-holds-everything-your"
+    },
+    {
+      "asset_type": "product_hero",
+      "use_case": "product_hero",
+      "aspect_ratio": "1:1",
+      "asset_goal": "Answer 'what exactly am I buying'. Material truth and product clarity are the whole job; this asset is reused across the site, the marketplace listing and the deck.",
+      "layout_logic": {
+        "eye_flow": "center_lock_product_only",
+        "negative_space_strategy": "Generous, even and deliberately uneventful. Emptiness here signals confidence and price; anything placed in it competes with the product.",
+        "safe_margin_percent": 10,
+        "zones": [
+          {
+            "role": "PRODUCT_FOCAL",
+            "x": 15,
+            "y": 12,
+            "width": 70,
+            "height": 76
+          }
+        ]
+      },
+      "visual_priority": [
+        {
+          "element": "product",
+          "importance": 100,
+          "role": "The entire subject. Surfaces, edges and label legibility carry all the persuasion."
+        }
+      ],
+      "prompt_plan": {
+        "campaign_dna_applied": [
+          "mood",
+          "colour_logic",
+          "lighting_logic",
+          "composition_logic",
+          "typography_logic",
+          "product_presentation"
+        ],
+        "asset_adaptations": [
+          "Strip the scene back to the product and its surface. The campaign mood survives in the light and the palette, not in props.",
+          "Move closer than any other asset in the set: label text, material grain and edges must be legible.",
+          "Remove headline and offer areas entirely; this asset carries no message of its own."
+        ],
+        "art_direction_sources": {
+          "lighting": "USER",
+          "materials": "STRATEGY",
+          "environment": "STRATEGY",
+          "atmosphere": "USER",
+          "composition": "STRATEGY",
+          "colour": "STRATEGY",
+          "camera": "KNOWLEDGE"
+        },
+        "art_direction_decisions": [
+          {
+            "dimension": "lighting",
+            "value": "soft directional light",
+            "source": "USER",
+            "confidence": 0.7,
+            "specificity": "MEDIUM",
+            "score": 0.595,
+            "client_locked": false
+          },
+          {
+            "dimension": "materials",
+            "value": "Glass reads as genuinely weighty and refined — not plasticky. The liquid inside should appear luminous and slightly viscous, suggesting concentration and potency. The surface the bottle rests on should be matte and tactile, grounding the hero without competing with it.",
+            "source": "STRATEGY",
+            "confidence": 0.75,
+            "specificity": "HIGH",
+            "score": 0.5687,
+            "client_locked": false,
+            "qualifiers": [
+              "clean surface"
+            ]
+          },
+          {
+            "dimension": "environment",
+            "value": "The ampoule bottle stands alone as the sole subject — no hands, no face, no lifestyle prop — because the product itself must carry the full weight of desirability. Its form, transparency, and capsule detail communicate precision and purity without distraction. The bottle is treated as a precious object, not a commodity.",
+            "source": "STRATEGY",
+            "confidence": 0.75,
+            "specificity": "HIGH",
+            "score": 0.5687,
+            "client_locked": false,
+            "qualifiers": [
+              "clean surface"
+            ]
+          },
+          {
+            "dimension": "atmosphere",
+            "value": "calm, premium, clean — The viewer should feel serene trust in the product's quality, evoking the refined simplicity associated with premium Korean skincare.",
+            "source": "USER",
+            "confidence": 0.95,
+            "specificity": "HIGH",
+            "score": 0.975,
+            "client_locked": true
+          },
+          {
+            "dimension": "composition",
+            "value": "The bottle occupies the visual and emotional centre of the frame with generous negative space on all sides — space is the luxury signal. The 1:1 format is used to enforce stillness and symmetry, making the product feel considered and inevitable rather than placed.",
+            "source": "STRATEGY",
+            "confidence": 0.75,
+            "specificity": "HIGH",
+            "score": 0.5687,
+            "client_locked": false
+          },
+          {
+            "dimension": "colour",
+            "value": "A restrained palette anchored in cool off-whites and pale celadon or translucent sage tones — referencing Korean skincare's clean, clinical-meets-botanical aesthetic. A single warm undertone in the ampoule liquid creates contrast and draws the eye inward, signalling efficacy within purity.",
+            "source": "STRATEGY",
+            "confidence": 0.75,
+            "specificity": "HIGH",
+            "score": 0.5687,
+            "client_locked": false
+          },
+          {
+            "dimension": "camera",
+            "value": "Eye-level commercial hero angle (50mm lens), crisp corner-to-corner focus on product packaging.",
+            "source": "KNOWLEDGE",
+            "confidence": 0.65,
+            "specificity": "HIGH",
+            "score": 0.4125,
+            "client_locked": false
+          }
+        ],
+        "knowledge_blocks": [
+          "universal.camera_perspective_coherence",
+          "universal.commercial_visual_hierarchy",
+          "universal.lighting_material_readability",
+          "universal.physical_scene_coherence",
+          "universal.typography_graphic_integration",
+          "property.transparent",
+          "specialist.product_hero_foundation"
+        ],
+        "client_locked_dimensions": [
+          "atmosphere"
+        ]
+      },
+      "final_prompt": "<!-- ID: master_prompt_v2 | VERSION: 3.0.0 -->\n# MASTER PROMPT V3 — TIDO IMAGE COMPILATION ARCHITECTURE\n## ROLE\nDownstream commercial image generation model. Produce one production-ready commercial visual with clear hierarchy, credible material optics, coherent scene physics and no generation artifacts, using the references, intent, constraints, copy, brand context and knowledge supplied below.\nSections appear in priority order. Earlier sections carry more authority than later ones, except where a section states otherwise.\n## CREATIVE INTENT\nCREATIVE CONCEPT: Ampoule bottle as the hero on a clean surface, soft directional light, calm premium Korean skincare feeling.\nVISUAL STYLE: commercial\nATTACHED REFERENCE ROLES (ORDER MATCHES MULTIPART IMAGES):\n- Image 1 (CONCEPT_REF_01): PRODUCT_01 identity reference\n[ASSET ADAPTATION — PRODUCT HERO]\nWHAT THIS ASSET IS FOR: Answer 'what exactly am I buying'. Material truth and product clarity are the whole job; this asset is reused across the site, the marketplace listing and the deck.\nHOW THE CAMPAIGN IS ADAPTED FOR THIS FORMAT — the campaign DNA above does not change; these are instructions about applying it here:\n- Strip the scene back to the product and its surface. The campaign mood survives in the light and the palette, not in props.\n- Move closer than any other asset in the set: label text, material grain and edges must be legible.\n- Remove headline and offer areas entirely; this asset carries no message of its own.\nLOCKED CLIENT INTENT — PRESERVE STRICTLY:\n- Subject: ampoule bottle\n- Environment: clean surface\n- Mood: calm, premium, clean\n- Visual style: Korean skincare commercial photography\n- Emotional goal: The viewer should feel serene trust in the product's quality, evoking the refined simplicity associated with premium Korean skincare.\n- Non-negotiable: Reference Identity Lock: Uploaded product reference identity takes strict priority over concept conflicts.\n- Non-negotiable: Preserve core subject: \"ampoule bottle\"\n- Non-negotiable: Preserve scene environment: \"clean surface\"\n- Non-negotiable: Respect brand identity: \"Skin1004\"\n- Non-negotiable: Ampoule bottle must be the hero of the image\n- Non-negotiable: Surface must appear clean\n- Non-negotiable: Overall feeling must be calm and premium Korean skincare\nCOMMERCIAL FRAMING:\n- Objective: Preserve the subject 'ampoule bottle' within 'clean surface' and raise its commercial impact for product_hero (hero material) incorporating domain expertise: [Macro Product Studio Commercial Foundation].\n- Visual hierarchy: Primary anchor: subject (75%). Secondary anchor: 'clean surface' (20%). Remainder ambient.\n- Why this works: The viewer should feel serene trust in the product's quality, evoking the refined simplicity associated with premium Korean skincare. The subject stays the hero and the requested environment is preserved; framing and light are tuned for 'product_hero' (hero material) delivery.\nEXPLICIT CLIENT DIRECTIVES — these are requirements, not suggestions. Execute them exactly; never substitute a house default:\n- lighting: soft directional light\n- material: clean surface\n## CAMPAIGN STRATEGY\nCAMPAIGN: Skin1004 — This single capsule holds everything your\nBIG IDEA: This single capsule holds everything your skin already knows it needs.\nCORE MESSAGE: Skin1004 positions the Tone Brightening Capsule Ampoule not as a corrective treatment but as a daily ritual of quiet confidence — science distilled into something beautifully simple.\nCAMPAIGN VISUAL DNA — every asset in this campaign shares these rules. They are what make a poster, a banner and a social ad read as one piece of work rather than three unrelated pictures. Adapt the format, never the DNA:\n- Mood: Still, cool, and unhurried — the emotional temperature of a well-lit apothecary shelf or a quiet morning before the day begins. Premium without performance.\n- Colour logic: A restrained palette anchored in cool off-whites and pale celadon or translucent sage tones — referencing Korean skincare's clean, clinical-meets-botanical aesthetic. A single warm undertone in the ampoule liquid creates contrast and draws the eye inward, signalling efficacy within purity.\n- Lighting logic: Soft directional light that wraps the bottle from one side, allowing the liquid inside to glow faintly with transmitted warmth while the exterior surface holds clean, controlled highlights that reveal the glass quality without flaring.\n- Composition logic: The bottle occupies the visual and emotional centre of the frame with generous negative space on all sides — space is the luxury signal. The 1:1 format is used to enforce stillness and symmetry, making the product feel considered and inevitable rather than placed.\n- Typography logic: No text is rendered into pixels in this pass. Every asset reserves the same clear, tonally even area for typography to be composited afterwards, in the same relative position across the set.\n- Product presentation: The ampoule bottle stands alone as the sole subject — no hands, no face, no lifestyle prop — because the product itself must carry the full weight of desirability. Its form, transparency, and capsule detail communicate precision and purity without distraction. The bottle is treated as a precious object, not a commodity.\nBUSINESS GOAL: Premium skincare launch in beauty_skincare for instagram\nCONSUMER INSIGHT: Women 25-40 buying brightening ampoules are not chasing a filtered, unrecognisable version of themselves — they are trying to reclaim the skin that feels most like them when they are rested, healthy, and at ease. The product is a shortcut back to their own baseline glow, not a transformation.\nWHO THIS IS FOR: This buyer is informed and slightly skeptical of over-promised skincare. She researches ingredients, reads reviews in multiple languages, and responds to restraint over hype. She equates visual calm with brand credibility. She is not buying hope — she is buying evidence presented beautifully. Value triggers: ingredient transparency, minimalist Korean beauty codes, the sense that the brand respects her intelligence.\nEMOTIONAL RESPONSE TO CREATE: Calm clarity, quiet trust\nCREATIVE MESSAGE: This single capsule holds everything your skin already knows it needs.\nVISUAL DIRECTION: A single Skin1004 ampoule bottle centred on a matte pale surface, cool off-white and soft celadon tones throughout, soft one-sided directional light that makes the glass glow without harsh reflections, the liquid inside luminous and warm against the cool exterior, generous empty space framing the bottle on all sides, refined and still.\nThis is the persuasive job the image has to do, and the reasoning behind it. Serve the message, not the product category — a literal depiction of the category is a failure even when it is well lit. The exact camera, lighting and layout that deliver this are resolved in the ART DIRECTION and COMMERCIAL LAYOUT sections; where those conflict with this section, they win, and an explicit client directive beats both.\n## USER HARD REQUIREMENTS\n1. FORBID wide environmental framing showing full room, distant horizon, or distant surroundings\n2. FORBID small subject scale occupying under 70% of frame height\n3. FORBID busy background clutter or distracting objects blocking product label\n4. FORBID extreme wide-angle distortion\n5. FORBID flat non-cinematic prompt rendering\n6. FORBID muddy low-contrast lighting\n7. FORBID wide environmental framing showing full room, distant horizon, or distant surroundings\n8. FORBID small subject scale occupying under 70% of frame height\n9. FORBID busy background clutter blocking product label\n10. FORBID overriding user explicit camera or lighting directives\n## TYPOGRAPHY & READABLE COPY\nNo readable typography authorized. Reserve clean typography area only. Do NOT render words, letters, fake brand names, prices, or decorative text into image pixels.\n## REFERENCE SEMANTICS\nReference images are evidence of PRODUCT IDENTITY, not source canvases.\nInterpret them as information about a physical product. Do not treat source-image pixels, crop boundaries, background, studio illumination, camera angle, shot distance, perspective, cast shadows, reflections, exposure, white balance, sharpness or depth of field as protected product identity. Do not composite or preserve the source photograph as a visual layer; re-render the product inside the new scene while staying faithful to reference-supported identity.\n**Protected (what the product is):** geometry, structural proportions, container form, logo, label text, authentic colours, materials, liquid identity, toppings and garnish.\n**Re-synthesized (how it is photographed):** camera angle, viewpoint height, framing, crop, perspective, hero scale, light direction, environmental reflections, contact and cast shadows, ambient colour response, focus.\n**Multi-product isolation:** each resolved PRODUCT_xx is an independent identity bound to its own reference evidence. Preserve each one's distinct differences. Do not average identities into a hybrid, do not clone one identity to satisfy another's instance count, and do not transfer features, materials, colours, labels, logos or liquids across identities. Correct quantity with wrong identities is an incorrect output.\n**Scene-native integration:** re-synthesize highlights, reflections, refraction, contact shadows, ambient colour, depth, focus and edge sharpness so every element shares one set of photographic conditions. Avoid any pasted cutout, sticker, collage or separately-lit appearance.\n**Single reference policy:** with one reference image, unseen surfaces are reconstructed conservatively without inventing unverified logos, text or structural features.\n## PRODUCT INSTANCE REQUIREMENTS\n- The final image MUST contain exactly 1 hero product instance (PRODUCT_01).\n- PRODUCT IDENTITY SOURCE: Reference image(s) [CONCEPT_REF_01].\n[REFERENCE IDENTITY LOCK]\nThe uploaded reference assets are commercial identity assets.\nPreserve:\n- exact product appearance\n- exact shape\n- exact packaging\n- exact logo\nAllowed:\n- new environment\n- new lighting\n- cinematic camera\n- premium composition\nForbidden:\n- redesign\n- replacement\n- invented packaging\n- fake logo\n- REFERENCE MANIFEST RELATIONSHIP TYPE: [SINGLE_PRODUCT]\n- REFERENCE MANIFEST METRICS: 1 Reference Image(s), 1 Product(s), 0 Logo(s).\n- [REF CONTROL] Prio: CONCEPT_REF_01(PRODUCT:0.9) | Lock: Product Silhouette & Geometry, Packaging Contours & Label Layout | Allow: Background Environment, Studio Illumination & Lighting, Camera Angle & Depth of Field | Forbid: Altering Product Shape, Inventing Unverified Text\n- PRODUCT PLANNING MANIFEST [HIGH] (Target Count: 1, Detected: 1):\n  * LOCK [PRODUCT_01] (Ampoule bottle as the hero on a clean surface, soft directional light, calm premium Korean skincare feeling. for brand Commercial Brand) [Refs: CONCEPT_REF_01]:\n  - Shape: 3D Product Geometry\n  - Material: Glass / Plastic Container\n  - Packaging: Product Container\n  - Color: Transparent / Glossy\n  - Label: Commercial Brand Branding\n  - Rules: Preserve exact silhouette, packaging appearance, colors & logo/label. No redesign, no replacement.\n[REFERENCE ADAPTATION RULES]\nReference image provides exact product identity ONLY. Do NOT copy flat background or flat lighting.\n- Synthesize realistic 3D depth, soft ground contact shadows, studio key lighting, and authentic surface reflections.\n- SINGLE-REFERENCE POLICY: Product(s) [PRODUCT_01] have only 1 reference image. Unseen surfaces must be reconstructed conservatively without inventing unverified logos, text, or structural controls.\n[CREATIVE DIRECTION]\n1. PRODUCT IDENTITY: Preserve exact product shape, packaging, texture, and silhouette. Preserve exact product packaging silhouette and materials\n2. LOGO PRESERVATION: Maintain exact brand mark placement, vector sharpness, and clearance space (do NOT generate fake logos).\n4. TYPOGRAPHY AREA: reserve clean typography area only for post-production text placement.\n## ART DIRECTION\n[RESOLVED ART DIRECTION]\nThis block is the ONLY authority on camera, lighting, composition, colour, environment, material and atmosphere. No other instruction in this prompt overrides it. Where any other section implies a different angle, lens, lighting rig or layout, this block wins.\n- CAMERA: Eye-level commercial hero angle (50mm lens), crisp corner-to-corner focus on product packaging.\n- LIGHTING: soft directional light\n- COMPOSITION: The bottle occupies the visual and emotional centre of the frame with generous negative space on all sides — space is the luxury signal. The 1:1 format is used to enforce stillness and symmetry, making the product feel considered and inevitable rather than placed.\n- COLOUR: A restrained palette anchored in cool off-whites and pale celadon or translucent sage tones — referencing Korean skincare's clean, clinical-meets-botanical aesthetic. A single warm undertone in the ampoule liquid creates contrast and draws the eye inward, signalling efficacy within purity.\n- ENVIRONMENT & SET: The ampoule bottle stands alone as the sole subject — no hands, no face, no lifestyle prop — because the product itself must carry the full weight of desirability. Its form, transparency, and capsule detail communicate precision and purity without distraction. The bottle is treated as a precious object, not a commodity. (client tone note: clean surface)\n- MATERIALS & SURFACES: Glass reads as genuinely weighty and refined — not plasticky. The liquid inside should appear luminous and slightly viscous, suggesting concentration and potency. The surface the bottle rests on should be matte and tactile, grounding the hero without competing with it. (client tone note: clean surface)\n- ATMOSPHERE [CLIENT DIRECTIVE — EXECUTE EXACTLY, DO NOT SUBSTITUTE]: calm, premium, clean — The viewer should feel serene trust in the product's quality, evoking the refined simplicity associated with premium Korean skincare.\nEXCLUSIONS:\n- FORBID wide environmental framing showing full room, distant horizon, or distant surroundings\n- FORBID small subject scale occupying under 70% of frame height\n- FORBID busy background clutter or distracting objects blocking product label\n- FORBID extreme wide-angle distortion\n- FORBID flat non-cinematic prompt rendering\n- FORBID muddy low-contrast lighting\n- FORBID busy background clutter blocking product label\n- FORBID overriding user explicit camera or lighting directives\n## COMMERCIAL LAYOUT\n[COMMERCIAL LAYOUT PLAN]\nFORMAT: product hero at 1:1. Catalogue-grade product photograph: the product is the entire subject and its surfaces carry the story.\nHOW THIS IS VIEWED: Looked at deliberately by someone already considering the purchase. It answers 'what exactly am I buying'.\nSAFE MARGIN: keep all meaningful content, product edges and any text at least 10% in from every edge.\nATTENTION BUDGET (0–100). This is the order a viewer must read the frame in. Give the strongest element the optical emphasis — contrast, focus, scale and placement — and make sure nothing below it competes for that emphasis:\n- PRODUCT — 100/100. The entire subject. Surfaces, edges and label legibility carry all the persuasion.\nEYE FLOW: center lock product only. Build the composition so the eye enters, travels and settles in that order; leading lines, focus falloff and tonal contrast should all reinforce it rather than fight it.\nNEGATIVE SPACE STRATEGY: Generous, even and deliberately uneventful. Emptiness here signals confidence and price; anything placed in it competes with the product.\nRESERVED ZONES (percentages of the canvas, origin top-left). These areas must stay visually calm — even tone, low detail, no competing highlight, no part of the product crossing into them:\n- PRODUCT_FOCAL: x 15%, y 12%, w 70%, h 76%, center-aligned. Product fills the frame with even breathing room; label faces camera and stays fully legible.\nREADABILITY: Label text on the product itself must be sharp and unobstructed. No graphic overlay competes with the product.\nTYPOGRAPHY: render NO text. The zones above are kept clear for typography that will be composited afterwards. Do not invent headlines, prices, badges, slogans, watermarks or placeholder lettering.\n## PROFESSIONAL KNOWLEDGE\n### UNIVERSAL PROFESSIONAL KNOWLEDGE\n#### [universal.camera_perspective_coherence] Universal Camera & Perspective Spatial Coherence\n**PERSPECTIVE CONSISTENCY\n- Objects and spatial elements that belong to the same physical scene should follow a coherent perspective framework appropriate to the chosen viewpoint.\n- Projection, vanishing behavior, surface orientation, and spatial depth should remain internally consistent so the environment feels intentionally constructed rather than accidentally distorted.\n- Perspective relationships should remain believable even when the creative treatment is unconventional.\n**FORESHORTENING & FORM READABILITY\n- Foreshortening should remain coherent with object geometry and viewing direction, preserving recognizable form and structural relationships.\n- Perspective distortion should support the intended representation rather than unintentionally altering important proportions, contours, or functional geometry.\n- Important visible form cues should remain understandable according to the product reference and communication needs.\n**SCALE & SPATIAL RELATIONSHIPS\n- Objects sharing the same implied physical space should maintain internally coherent scale relationships across depth.\n- Relative size, distance, overlap, and spatial placement should work together consistently with the chosen perspective.\n- Deliberate exaggeration or scale transformation may be used creatively when it reads as intentional rather than as an accidental geometric error.\n#### [universal.commercial_visual_hierarchy] Universal Commercial Visual Hierarchy Principles\n**HERO SUBJECT PRIORITY\n- The intended hero subject should remain perceptually clear within the overall visual hierarchy so viewers can recognize the primary commercial focus quickly.\n- Visual emphasis may emerge through relationships among scale, contrast, detail, placement, depth, color, spacing, and surrounding elements according to the needs of the image.\n- Supporting elements should reinforce context, message, or atmosphere without unintentionally competing with the primary subject.\n**FIGURE-GROUND LEGIBILITY\n- Important subjects should remain visually distinguishable from their surroundings through appropriate figure-ground relationships.\n- Separation may be established through tonal, color, spatial, edge, textural, depth, or other perceptual differences appropriate to the scene.\n- Product contours and important visual features should remain sufficiently readable without requiring a fixed separation technique.\n**VISUAL BALANCE & SPACE\n- Visual weight should feel intentional across the composition, with relationships among subjects, text, supporting elements, and empty areas contributing to a coherent whole.\n- Available space may support emphasis, communication, rhythm, or clarity when appropriate to the design.\n- Density and openness should respond to the intended message and composition rather than follow a fixed layout convention.\nRetrieved knowledge supplies supportive physical boundaries. It is non-exhaustive and does not rule out valid alternative creative solutions. For unfamiliar products, reason from the references, physical properties and the brief; an unknown product is not an unsupported one, so do not force it into an incorrect category.\n## OUTPUT CONTEXT\nINTENDED USE CASE: product_hero\nTARGET ASPECT RATIO: 1:1\nAll styling decisions for this output are stated once, in the ART DIRECTION and COMMERCIAL LAYOUT sections. Apply no additional house defaults.\n## CREATIVE EXECUTION\nWithin the art direction and layout above you hold full authority over every remaining creative decision — prop choice, surface detail, secondary staging, micro-composition, finishing. Avoid generic aesthetic cliché; commit to one deliberate direction rather than averaging several.\n## CONFLICT PRIORITY\nWhen instructions conflict, resolve strictly in this order:\n1. **Real product identity supported by reference evidence** — geometry, proportions, authentic colours, materials, contents, labels, logos. Excludes the reference photo's background, lighting, camera angle, framing, baked shadows, exposure and depth of field.\n2. **Verified factual and official brand information.**\n3. **Exact supplied copy text** — user-supplied visible copy is immutable.\n4. **User hard requirements.**\n5. **Client directives inside ART DIRECTION** — anything marked CLIENT DIRECTIVE outranks every other styling instruction, including this prompt's own defaults.\n6. **Campaign intent and creative brief.**\n7. **Art direction and commercial layout.**\n8. **Professional knowledge physical principles.**\n9. **Your own artistic execution** (lowest when in conflict with any of the above).\n## FINAL OUTPUT\nRender ONE finished production-grade commercial visual. Before rendering, verify: the product is faithful to the reference evidence; it looks photographed inside the scene rather than pasted; no source camera angle or framing has been inherited; every hard constraint is met; every rendered string is exact authorized copy with no metadata, slot labels or reference identifiers such as REF_01 or IMAGE 1 anywhere in the picture.\nOutput no moodboards, no alternative concepts, no before/after comparisons and no explanatory text.",
+      "prompt_chars": 21457,
+      "warnings": [
+        "NO_EXACT_COPY",
+        "KNOWLEDGE_TRIMMED_FOR_BUDGET",
+        "PROMPT_SECTIONS_REMOVED",
+        "PROMPT_TOKEN_BUDGET_HIGH"
+      ],
+      "prompt_available_at": "D:\\Tido\\tido-ai-video-factory-claude-code-pack\\apps\\web\\data\\deliveries\\skin1004-this-single-capsule-holds-everything-your"
+    },
+    {
+      "asset_type": "thumbnail",
+      "use_case": "ugc_thumbnail",
+      "aspect_ratio": "16:9",
+      "asset_goal": "Be recognised at postage-stamp size and be worth clicking. Instant recognition over detail; anything that only reads at full size is wasted here.",
+      "layout_logic": {
+        "eye_flow": "center_out_product_first",
+        "negative_space_strategy": "Incidental rather than designed. Space comes from a real room, not a studio sweep, and may be slightly off-balance.",
+        "safe_margin_percent": 6,
+        "zones": [
+          {
+            "role": "HEADLINE",
+            "x": 7,
+            "y": 8,
+            "width": 86,
+            "height": 16
+          },
+          {
+            "role": "PRODUCT_FOCAL",
+            "x": 12,
+            "y": 26,
+            "width": 76,
+            "height": 62
+          }
+        ]
+      },
+      "visual_priority": [
+        {
+          "element": "product",
+          "importance": 95,
+          "role": "Recognisable at 120px wide, held or used rather than displayed."
+        },
+        {
+          "element": "headline",
+          "importance": 18,
+          "role": "Optional overlay line in the creator's own voice. (reserved space only — no text is rendered in this pass)"
+        }
+      ],
+      "prompt_plan": {
+        "campaign_dna_applied": [
+          "mood",
+          "colour_logic",
+          "lighting_logic",
+          "composition_logic",
+          "typography_logic",
+          "product_presentation"
+        ],
+        "asset_adaptations": [
+          "Reduce to one recognisable shape. Anything that needs more than a glance to parse is removed.",
+          "Increase subject scale and tonal contrast beyond the social ad; this is judged at a fraction of the size.",
+          "Keep the campaign palette, but favour its highest-contrast pairing so the frame reads at 120px wide."
+        ],
+        "art_direction_sources": {
+          "lighting": "USER",
+          "materials": "STRATEGY",
+          "environment": "STRATEGY",
+          "atmosphere": "USER",
+          "composition": "STRATEGY",
+          "colour": "STRATEGY",
+          "camera": "KNOWLEDGE"
+        },
+        "art_direction_decisions": [
+          {
+            "dimension": "lighting",
+            "value": "soft directional light",
+            "source": "USER",
+            "confidence": 0.7,
+            "specificity": "MEDIUM",
+            "score": 0.595,
+            "client_locked": false
+          },
+          {
+            "dimension": "materials",
+            "value": "Glass reads as genuinely weighty and refined — not plasticky. The liquid inside should appear luminous and slightly viscous, suggesting concentration and potency. The surface the bottle rests on should be matte and tactile, grounding the hero without competing with it.",
+            "source": "STRATEGY",
+            "confidence": 0.75,
+            "specificity": "HIGH",
+            "score": 0.5687,
+            "client_locked": false,
+            "qualifiers": [
+              "clean surface"
+            ]
+          },
+          {
+            "dimension": "environment",
+            "value": "The ampoule bottle stands alone as the sole subject — no hands, no face, no lifestyle prop — because the product itself must carry the full weight of desirability. Its form, transparency, and capsule detail communicate precision and purity without distraction. The bottle is treated as a precious object, not a commodity.",
+            "source": "STRATEGY",
+            "confidence": 0.75,
+            "specificity": "HIGH",
+            "score": 0.5687,
+            "client_locked": false,
+            "qualifiers": [
+              "clean surface"
+            ]
+          },
+          {
+            "dimension": "atmosphere",
+            "value": "calm, premium, clean — The viewer should feel serene trust in the product's quality, evoking the refined simplicity associated with premium Korean skincare.",
+            "source": "USER",
+            "confidence": 0.95,
+            "specificity": "HIGH",
+            "score": 0.975,
+            "client_locked": true
+          },
+          {
+            "dimension": "composition",
+            "value": "The bottle occupies the visual and emotional centre of the frame with generous negative space on all sides — space is the luxury signal. The 1:1 format is used to enforce stillness and symmetry, making the product feel considered and inevitable rather than placed.",
+            "source": "STRATEGY",
+            "confidence": 0.75,
+            "specificity": "HIGH",
+            "score": 0.5687,
+            "client_locked": false
+          },
+          {
+            "dimension": "colour",
+            "value": "A restrained palette anchored in cool off-whites and pale celadon or translucent sage tones — referencing Korean skincare's clean, clinical-meets-botanical aesthetic. A single warm undertone in the ampoule liquid creates contrast and draws the eye inward, signalling efficacy within purity.",
+            "source": "STRATEGY",
+            "confidence": 0.75,
+            "specificity": "HIGH",
+            "score": 0.5687,
+            "client_locked": false
+          },
+          {
+            "dimension": "camera",
+            "value": "Eye-level commercial hero angle (50mm lens), crisp corner-to-corner focus on product packaging.",
+            "source": "KNOWLEDGE",
+            "confidence": 0.65,
+            "specificity": "HIGH",
+            "score": 0.4125,
+            "client_locked": false
+          }
+        ],
+        "knowledge_blocks": [
+          "universal.camera_perspective_coherence",
+          "universal.commercial_visual_hierarchy",
+          "universal.lighting_material_readability",
+          "universal.physical_scene_coherence",
+          "universal.typography_graphic_integration",
+          "property.transparent",
+          "specialist.ugc_thumbnail_foundation"
+        ],
+        "client_locked_dimensions": [
+          "atmosphere"
+        ]
+      },
+      "final_prompt": "<!-- ID: master_prompt_v2 | VERSION: 3.0.0 -->\n# MASTER PROMPT V3 — TIDO IMAGE COMPILATION ARCHITECTURE\n## ROLE\nDownstream commercial image generation model. Produce one production-ready commercial visual with clear hierarchy, credible material optics, coherent scene physics and no generation artifacts, using the references, intent, constraints, copy, brand context and knowledge supplied below.\nSections appear in priority order. Earlier sections carry more authority than later ones, except where a section states otherwise.\n## CREATIVE INTENT\nCREATIVE CONCEPT: Ampoule bottle as the hero on a clean surface, soft directional light, calm premium Korean skincare feeling.\nVISUAL STYLE: commercial\nATTACHED REFERENCE ROLES (ORDER MATCHES MULTIPART IMAGES):\n- Image 1 (CONCEPT_REF_01): PRODUCT_01 identity reference\n[ASSET ADAPTATION — THUMBNAIL]\nWHAT THIS ASSET IS FOR: Be recognised at postage-stamp size and be worth clicking. Instant recognition over detail; anything that only reads at full size is wasted here.\nHOW THE CAMPAIGN IS ADAPTED FOR THIS FORMAT — the campaign DNA above does not change; these are instructions about applying it here:\n- Reduce to one recognisable shape. Anything that needs more than a glance to parse is removed.\n- Increase subject scale and tonal contrast beyond the social ad; this is judged at a fraction of the size.\n- Keep the campaign palette, but favour its highest-contrast pairing so the frame reads at 120px wide.\nLOCKED CLIENT INTENT — PRESERVE STRICTLY:\n- Subject: ampoule bottle\n- Environment: clean surface\n- Mood: calm, premium, clean\n- Visual style: Korean skincare commercial photography\n- Emotional goal: The viewer should feel serene trust in the product's quality, evoking the refined simplicity associated with premium Korean skincare.\n- Non-negotiable: Reference Identity Lock: Uploaded product reference identity takes strict priority over concept conflicts.\n- Non-negotiable: Preserve core subject: \"ampoule bottle\"\n- Non-negotiable: Preserve scene environment: \"clean surface\"\n- Non-negotiable: Respect brand identity: \"Skin1004\"\n- Non-negotiable: Ampoule bottle must be the hero of the image\n- Non-negotiable: Surface must appear clean\n- Non-negotiable: Overall feeling must be calm and premium Korean skincare\nCOMMERCIAL FRAMING:\n- Objective: Preserve the subject 'ampoule bottle' within 'clean surface' and raise its commercial impact for ugc_thumbnail (authentic creator) incorporating domain expertise: [Authentic Creator UGC Thumbnail Strategy].\n- Visual hierarchy: Primary anchor: subject (70%). Secondary anchor: 'clean surface' (30%). Remainder ambient.\n- Why this works: The viewer should feel serene trust in the product's quality, evoking the refined simplicity associated with premium Korean skincare. The subject stays the hero and the requested environment is preserved; framing and light are tuned for 'ugc_thumbnail' (authentic creator) delivery.\nEXPLICIT CLIENT DIRECTIVES — these are requirements, not suggestions. Execute them exactly; never substitute a house default:\n- lighting: soft directional light\n- material: clean surface\n## CAMPAIGN STRATEGY\nCAMPAIGN: Skin1004 — This single capsule holds everything your\nBIG IDEA: This single capsule holds everything your skin already knows it needs.\nCORE MESSAGE: Skin1004 positions the Tone Brightening Capsule Ampoule not as a corrective treatment but as a daily ritual of quiet confidence — science distilled into something beautifully simple.\nCAMPAIGN VISUAL DNA — every asset in this campaign shares these rules. They are what make a poster, a banner and a social ad read as one piece of work rather than three unrelated pictures. Adapt the format, never the DNA:\n- Mood: Still, cool, and unhurried — the emotional temperature of a well-lit apothecary shelf or a quiet morning before the day begins. Premium without performance.\n- Colour logic: A restrained palette anchored in cool off-whites and pale celadon or translucent sage tones — referencing Korean skincare's clean, clinical-meets-botanical aesthetic. A single warm undertone in the ampoule liquid creates contrast and draws the eye inward, signalling efficacy within purity.\n- Lighting logic: Soft directional light that wraps the bottle from one side, allowing the liquid inside to glow faintly with transmitted warmth while the exterior surface holds clean, controlled highlights that reveal the glass quality without flaring.\n- Composition logic: The bottle occupies the visual and emotional centre of the frame with generous negative space on all sides — space is the luxury signal. The 1:1 format is used to enforce stillness and symmetry, making the product feel considered and inevitable rather than placed.\n- Typography logic: No text is rendered into pixels in this pass. Every asset reserves the same clear, tonally even area for typography to be composited afterwards, in the same relative position across the set.\n- Product presentation: The ampoule bottle stands alone as the sole subject — no hands, no face, no lifestyle prop — because the product itself must carry the full weight of desirability. Its form, transparency, and capsule detail communicate precision and purity without distraction. The bottle is treated as a precious object, not a commodity.\nBUSINESS GOAL: Premium skincare launch in beauty_skincare for instagram\nCONSUMER INSIGHT: Women 25-40 buying brightening ampoules are not chasing a filtered, unrecognisable version of themselves — they are trying to reclaim the skin that feels most like them when they are rested, healthy, and at ease. The product is a shortcut back to their own baseline glow, not a transformation.\nWHO THIS IS FOR: This buyer is informed and slightly skeptical of over-promised skincare. She researches ingredients, reads reviews in multiple languages, and responds to restraint over hype. She equates visual calm with brand credibility. She is not buying hope — she is buying evidence presented beautifully. Value triggers: ingredient transparency, minimalist Korean beauty codes, the sense that the brand respects her intelligence.\nEMOTIONAL RESPONSE TO CREATE: Calm clarity, quiet trust\nCREATIVE MESSAGE: This single capsule holds everything your skin already knows it needs.\nVISUAL DIRECTION: A single Skin1004 ampoule bottle centred on a matte pale surface, cool off-white and soft celadon tones throughout, soft one-sided directional light that makes the glass glow without harsh reflections, the liquid inside luminous and warm against the cool exterior, generous empty space framing the bottle on all sides, refined and still.\nThis is the persuasive job the image has to do, and the reasoning behind it. Serve the message, not the product category — a literal depiction of the category is a failure even when it is well lit. The exact camera, lighting and layout that deliver this are resolved in the ART DIRECTION and COMMERCIAL LAYOUT sections; where those conflict with this section, they win, and an explicit client directive beats both.\n## USER HARD REQUIREMENTS\n1. FORBID artificial studio pedestal look when authentic real-world scene is requested\n2. FORBID flat non-cinematic prompt rendering\n3. FORBID muddy low-contrast lighting\n4. FORBID overriding user explicit camera or lighting directives\n## TYPOGRAPHY & READABLE COPY\nNo readable typography authorized. Reserve clean typography area only. Do NOT render words, letters, fake brand names, prices, or decorative text into image pixels.\n## BRAND KNOWLEDGE\nBRAND NAME: Skin1004\n## REFERENCE SEMANTICS\nReference images are evidence of PRODUCT IDENTITY, not source canvases.\nInterpret them as information about a physical product. Do not treat source-image pixels, crop boundaries, background, studio illumination, camera angle, shot distance, perspective, cast shadows, reflections, exposure, white balance, sharpness or depth of field as protected product identity. Do not composite or preserve the source photograph as a visual layer; re-render the product inside the new scene while staying faithful to reference-supported identity.\n**Protected (what the product is):** geometry, structural proportions, container form, logo, label text, authentic colours, materials, liquid identity, toppings and garnish.\n**Re-synthesized (how it is photographed):** camera angle, viewpoint height, framing, crop, perspective, hero scale, light direction, environmental reflections, contact and cast shadows, ambient colour response, focus.\n**Multi-product isolation:** each resolved PRODUCT_xx is an independent identity bound to its own reference evidence. Preserve each one's distinct differences. Do not average identities into a hybrid, do not clone one identity to satisfy another's instance count, and do not transfer features, materials, colours, labels, logos or liquids across identities. Correct quantity with wrong identities is an incorrect output.\n**Scene-native integration:** re-synthesize highlights, reflections, refraction, contact shadows, ambient colour, depth, focus and edge sharpness so every element shares one set of photographic conditions. Avoid any pasted cutout, sticker, collage or separately-lit appearance.\n**Single reference policy:** with one reference image, unseen surfaces are reconstructed conservatively without inventing unverified logos, text or structural features.\n## PRODUCT INSTANCE REQUIREMENTS\n- The final image MUST contain exactly 1 hero product instance (PRODUCT_01).\n- PRODUCT IDENTITY SOURCE: Reference image(s) [CONCEPT_REF_01].\n[REFERENCE IDENTITY LOCK]\nThe uploaded reference assets are commercial identity assets.\nPreserve:\n- exact product appearance\n- exact shape\n- exact packaging\n- exact logo\nAllowed:\n- new environment\n- new lighting\n- cinematic camera\n- premium composition\nForbidden:\n- redesign\n- replacement\n- invented packaging\n- fake logo\n- REFERENCE MANIFEST RELATIONSHIP TYPE: [SINGLE_PRODUCT]\n- REFERENCE MANIFEST METRICS: 1 Reference Image(s), 1 Product(s), 0 Logo(s).\n- [REF CONTROL] Prio: CONCEPT_REF_01(PRODUCT:0.9) | Lock: Product Silhouette & Geometry, Packaging Contours & Label Layout | Allow: Background Environment, Studio Illumination & Lighting, Camera Angle & Depth of Field | Forbid: Altering Product Shape, Inventing Unverified Text\n- PRODUCT PLANNING MANIFEST [HIGH] (Target Count: 1, Detected: 1):\n  * LOCK [PRODUCT_01] (Ampoule bottle as the hero on a clean surface, soft directional light, calm premium Korean skincare feeling. for brand Commercial Brand) [Refs: CONCEPT_REF_01]:\n  - Shape: 3D Product Geometry\n  - Material: Glass / Plastic Container\n  - Packaging: Product Container\n  - Color: Transparent / Glossy\n  - Label: Commercial Brand Branding\n  - Rules: Preserve exact silhouette, packaging appearance, colors & logo/label. No redesign, no replacement.\n[REFERENCE ADAPTATION RULES]\nReference image provides exact product identity ONLY. Do NOT copy flat background or flat lighting.\n- Synthesize realistic 3D depth, soft ground contact shadows, studio key lighting, and authentic surface reflections.\n- SINGLE-REFERENCE POLICY: Product(s) [PRODUCT_01] have only 1 reference image. Unseen surfaces must be reconstructed conservatively without inventing unverified logos, text, or structural controls.\n[CREATIVE DIRECTION]\n1. PRODUCT IDENTITY: Preserve exact product shape, packaging, texture, and silhouette. Preserve exact product packaging silhouette and materials\n2. LOGO PRESERVATION: Maintain exact brand mark placement, vector sharpness, and clearance space (do NOT generate fake logos).\n4. TYPOGRAPHY AREA: reserve clean typography area only for post-production text placement.\n## ART DIRECTION\n[RESOLVED ART DIRECTION]\nThis block is the ONLY authority on camera, lighting, composition, colour, environment, material and atmosphere. No other instruction in this prompt overrides it. Where any other section implies a different angle, lens, lighting rig or layout, this block wins.\n- CAMERA: Eye-level commercial hero angle (50mm lens), crisp corner-to-corner focus on product packaging.\n- LIGHTING: soft directional light\n- COMPOSITION: The bottle occupies the visual and emotional centre of the frame with generous negative space on all sides — space is the luxury signal. The 1:1 format is used to enforce stillness and symmetry, making the product feel considered and inevitable rather than placed.\n- COLOUR: A restrained palette anchored in cool off-whites and pale celadon or translucent sage tones — referencing Korean skincare's clean, clinical-meets-botanical aesthetic. A single warm undertone in the ampoule liquid creates contrast and draws the eye inward, signalling efficacy within purity.\n- ENVIRONMENT & SET: The ampoule bottle stands alone as the sole subject — no hands, no face, no lifestyle prop — because the product itself must carry the full weight of desirability. Its form, transparency, and capsule detail communicate precision and purity without distraction. The bottle is treated as a precious object, not a commodity. (client tone note: clean surface)\n- MATERIALS & SURFACES: Glass reads as genuinely weighty and refined — not plasticky. The liquid inside should appear luminous and slightly viscous, suggesting concentration and potency. The surface the bottle rests on should be matte and tactile, grounding the hero without competing with it. (client tone note: clean surface)\n- ATMOSPHERE [CLIENT DIRECTIVE — EXECUTE EXACTLY, DO NOT SUBSTITUTE]: calm, premium, clean — The viewer should feel serene trust in the product's quality, evoking the refined simplicity associated with premium Korean skincare.\nEXCLUSIONS:\n- FORBID artificial studio pedestal look when authentic real-world scene is requested\n- FORBID flat non-cinematic prompt rendering\n- FORBID muddy low-contrast lighting\n- FORBID overriding user explicit camera or lighting directives\n## COMMERCIAL LAYOUT\n[COMMERCIAL LAYOUT PLAN]\nFORMAT: ugc thumbnail at 16:9. Creator-style frame that must not look art-directed, while still reading at thumbnail size.\nHOW THIS IS VIEWED: Judged as a person's own photo, at small size, against other people's photos. Polish reads as an ad and loses.\nSAFE MARGIN: keep all meaningful content, product edges and any text at least 6% in from every edge.\nATTENTION BUDGET (0–100). This is the order a viewer must read the frame in. Give the strongest element the optical emphasis — contrast, focus, scale and placement — and make sure nothing below it competes for that emphasis:\n- PRODUCT — 95/100. Recognisable at 120px wide, held or used rather than displayed.\n- HEADLINE — 18/100. Optional overlay line in the creator's own voice. (reserved space only — no text is rendered in this pass)\nEYE FLOW: center out product first. Build the composition so the eye enters, travels and settles in that order; leading lines, focus falloff and tonal contrast should all reinforce it rather than fight it.\nNEGATIVE SPACE STRATEGY: Incidental rather than designed. Space comes from a real room, not a studio sweep, and may be slightly off-balance.\nRESERVED ZONES (percentages of the canvas, origin top-left). These areas must stay visually calm — even tone, low detail, no competing highlight, no part of the product crossing into them:\n- HEADLINE: x 7%, y 8%, w 86%, h 16%, center-aligned. Optional overlay line, upper third.\n- PRODUCT_FOCAL: x 12%, y 26%, w 76%, h 62%, center-aligned. Product held or placed naturally, dominant in frame.\nREADABILITY: Product must be identifiable at 120px wide. Avoid studio-perfect symmetry; keep it plausibly hand-held.\nTYPOGRAPHY: render NO text. The zones above are kept clear for typography that will be composited afterwards. Do not invent headlines, prices, badges, slogans, watermarks or placeholder lettering.\n## PROFESSIONAL KNOWLEDGE\n### UNIVERSAL PROFESSIONAL KNOWLEDGE\n#### [universal.camera_perspective_coherence] Universal Camera & Perspective Spatial Coherence\n**PERSPECTIVE CONSISTENCY\n- Objects and spatial elements that belong to the same physical scene should follow a coherent perspective framework appropriate to the chosen viewpoint.\n- Projection, vanishing behavior, surface orientation, and spatial depth should remain internally consistent so the environment feels intentionally constructed rather than accidentally distorted.\n- Perspective relationships should remain believable even when the creative treatment is unconventional.\n**FORESHORTENING & FORM READABILITY\n- Foreshortening should remain coherent with object geometry and viewing direction, preserving recognizable form and structural relationships.\n- Perspective distortion should support the intended representation rather than unintentionally altering important proportions, contours, or functional geometry.\n- Important visible form cues should remain understandable according to the product reference and communication needs.\n**SCALE & SPATIAL RELATIONSHIPS\n- Objects sharing the same implied physical space should maintain internally coherent scale relationships across depth.\n- Relative size, distance, overlap, and spatial placement should work together consistently with the chosen perspective.\n- Deliberate exaggeration or scale transformation may be used creatively when it reads as intentional rather than as an accidental geometric error.\n#### [universal.commercial_visual_hierarchy] Universal Commercial Visual Hierarchy Principles\n**HERO SUBJECT PRIORITY\n- The intended hero subject should remain perceptually clear within the overall visual hierarchy so viewers can recognize the primary commercial focus quickly.\n- Visual emphasis may emerge through relationships among scale, contrast, detail, placement, depth, color, spacing, and surrounding elements according to the needs of the image.\n- Supporting elements should reinforce context, message, or atmosphere without unintentionally competing with the primary subject.\n**FIGURE-GROUND LEGIBILITY\n- Important subjects should remain visually distinguishable from their surroundings through appropriate figure-ground relationships.\n- Separation may be established through tonal, color, spatial, edge, textural, depth, or other perceptual differences appropriate to the scene.\n- Product contours and important visual features should remain sufficiently readable without requiring a fixed separation technique.\n**VISUAL BALANCE & SPACE\n- Visual weight should feel intentional across the composition, with relationships among subjects, text, supporting elements, and empty areas contributing to a coherent whole.\n- Available space may support emphasis, communication, rhythm, or clarity when appropriate to the design.\n- Density and openness should respond to the intended message and composition rather than follow a fixed layout convention.\nRetrieved knowledge supplies supportive physical boundaries. It is non-exhaustive and does not rule out valid alternative creative solutions. For unfamiliar products, reason from the references, physical properties and the brief; an unknown product is not an unsupported one, so do not force it into an incorrect category.\n## OUTPUT CONTEXT\nINTENDED USE CASE: ugc_thumbnail\nTARGET ASPECT RATIO: 16:9\nAll styling decisions for this output are stated once, in the ART DIRECTION and COMMERCIAL LAYOUT sections. Apply no additional house defaults.\n## CREATIVE EXECUTION\nWithin the art direction and layout above you hold full authority over every remaining creative decision — prop choice, surface detail, secondary staging, micro-composition, finishing. Avoid generic aesthetic cliché; commit to one deliberate direction rather than averaging several.\n## CONFLICT PRIORITY\nWhen instructions conflict, resolve strictly in this order:\n1. **Real product identity supported by reference evidence** — geometry, proportions, authentic colours, materials, contents, labels, logos. Excludes the reference photo's background, lighting, camera angle, framing, baked shadows, exposure and depth of field.\n2. **Verified factual and official brand information.**\n3. **Exact supplied copy text** — user-supplied visible copy is immutable.\n4. **User hard requirements.**\n5. **Client directives inside ART DIRECTION** — anything marked CLIENT DIRECTIVE outranks every other styling instruction, including this prompt's own defaults.\n6. **Campaign intent and creative brief.**\n7. **Art direction and commercial layout.**\n8. **Professional knowledge physical principles.**\n9. **Your own artistic execution** (lowest when in conflict with any of the above).\n## FINAL OUTPUT\nRender ONE finished production-grade commercial visual. Before rendering, verify: the product is faithful to the reference evidence; it looks photographed inside the scene rather than pasted; no source camera angle or framing has been inherited; every hard constraint is met; every rendered string is exact authorized copy with no metadata, slot labels or reference identifiers such as REF_01 or IMAGE 1 anywhere in the picture.\nOutput no moodboards, no alternative concepts, no before/after comparisons and no explanatory text.\n[CREATIVE & RENDER CONSTRAINTS]\n- PRODUCT IDENTITY LOCK: ACTIVE (Strict preservation of product silhouette, shape, color, and packaging)\n- LOGO GENERATION: FORBIDDEN (Never generate fake, modified, or synthetic brand logos)\n- TEXT GENERATION: FORBIDDEN (Zero text generation allowed)\n- TYPOGRAPHY MODE: reserve clean typography area only (Do NOT render typography/letters into image pixels)\n- COMMERCIAL PRIORITY: product > material > lighting > composition\n- NEGATIVE CONSTRAINTS: DO NOT generate fake text, random letters, artificial brand names, pseudo-typography, or invented labels. DO NOT invent synthetic logos or modify preserved product brand marks. Reserve clean, uncluttered negative space for post-production typography layout.",
+      "prompt_chars": 21674,
+      "warnings": [
+        "NO_EXACT_COPY",
+        "KNOWLEDGE_TRIMMED_FOR_BUDGET",
+        "PROMPT_TOKEN_BUDGET_HIGH"
+      ],
+      "prompt_available_at": "D:\\Tido\\tido-ai-video-factory-claude-code-pack\\apps\\web\\data\\deliveries\\skin1004-this-single-capsule-holds-everything-your"
+    }
+  ],
+  "delivery": {
+    "package_root": "D:\\Tido\\tido-ai-video-factory-claude-code-pack\\apps\\web\\data\\deliveries\\skin1004-this-single-capsule-holds-everything-your",
+    "manifest_path": "D:\\Tido\\tido-ai-video-factory-claude-code-pack\\apps\\web\\data\\deliveries\\skin1004-this-single-capsule-holds-everything-your\\delivery_manifest.json",
+    "summary_json_path": "D:\\Tido\\tido-ai-video-factory-claude-code-pack\\apps\\web\\data\\deliveries\\skin1004-this-single-capsule-holds-everything-your\\campaign_summary.json",
+    "summary_txt_path": "D:\\Tido\\tido-ai-video-factory-claude-code-pack\\apps\\web\\data\\deliveries\\skin1004-this-single-capsule-holds-everything-your\\campaign_summary.txt",
+    "file_count": 12
+  },
+  "diagnostics": {
+    "router_source": "concept-text-router",
+    "strategy_source": "MARKETING_BRAIN",
+    "interpretation_sources": [
+      "LLM_STRUCTURED"
+    ],
+    "gemini_calls": 1,
+    "llm_calls": 2,
+    "provider_calls": 0,
+    "duration_ms": 35344,
+    "warnings": [
+      "No reference images supplied: product identity comes from the brief text alone, so renders will not be identity-locked to a real product."
+    ]
+  }
+}

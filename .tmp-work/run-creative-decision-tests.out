@@ -1,0 +1,112 @@
+==============================================================
+CIOS PHASE 1 — CREATIVE DECISION ENGINE
+==============================================================
+
+🔹 1. Reasoning-to-Decision routing
+  ✓ Strategy domains route to STRATEGY, never to a camera instruction
+  ✓ Critic and channel route to ADVISORY (never any prompt)
+  ✓ Photography splits camera vs lighting by wording
+  ✓ layout→composition, color→colour, visual_direction→atmosphere
+
+🔹 2. Decision set construction
+  ✓ Two decisions on one dimension: higher score wins, loser recorded
+  ✓ environment/materials are recorded as unmapped, not silently dropped
+  ✓ Decision carries full traceability (Core §15)
+
+🔹 3. Layer separation (Governance §1, §5)
+  ✓ CreativeDirection carries ONLY decision text — no reasoning leaks
+  ✓ Strategic decisions never become visual instructions
+  ✓ Advisory (critic) decisions reach no prompt surface
+
+🔹 4. End-to-end: Premium skincare campaign
+[ART_DIRECTION_RESOLVED] {
+  provenance: { lighting: 'KNOWLEDGE', composition: 'KNOWLEDGE' },
+  decisions: [
+    'lighting<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 0
+}
+
+  ── Skin1004 — Tone Brightening Capsule Ampoule ──
+  context   : {"industry":"beauty","category":"skincare","audience":"women_35_50","objective":"product_launch","channel":"instagram","asset_type":"poster","brand_position":"premium"}
+  retrieved : strategy.identity_preservation.mature_skincare.001, layout.negative_space.luxury_hero.001, photography.soft_directional.premium_skincare.001, critic.generic_detection.category_sameness.001
+  routing   : strategy→STRATEGY, layout→ART_DIRECTION:composition, photography→ART_DIRECTION:lighting, critic→ADVISORY
+    AD  composition  Hold the product on a centred axis with generous negative space and no com
+    AD  lighting     Light the product with a single soft directional key at roughly 45 degrees
+    STR              Frame the campaign around identity preservation rather than correction or 
+  resolver  : lighting=KNOWLEDGE composition=KNOWLEDGE
+  ✓ Context resolves to beauty / women_35_50 / product_launch / premium
+  ✓ Produces lighting + composition decisions and a strategic decision
+  ✓ Resolver accepts them at the KNOWLEDGE tier
+[ART_DIRECTION_RESOLVED] {
+  provenance: { lighting: 'USER', composition: 'KNOWLEDGE' },
+  decisions: [
+    'lighting<-USER (conf 0.95, HIGH, score 0.975)',
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [ 'lighting' ],
+  suppressed_count: 1
+}
+  ✓ Client instruction still outranks Layer 2
+
+🔹 5. End-to-end: Coffee shop launch campaign
+[ART_DIRECTION_RESOLVED] {
+  provenance: { camera: 'KNOWLEDGE', colour: 'KNOWLEDGE' },
+  decisions: [
+    'camera<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'colour<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 0
+}
+
+  ── Cà phê Bến Nghé — quán mới khai trương ──
+  context   : {"industry":"food_beverage","category":"coffee","audience":"women_25_35","objective":"product_launch","channel":"instagram","asset_type":"social_ad"}
+  retrieved : strategy.ritual_framing.local_coffee.001, photography.texture_first.food_beverage.001, color.warm_neutral.hospitality_welcome.001
+  routing   : strategy→STRATEGY, photography→ART_DIRECTION:camera, color→ART_DIRECTION:colour
+    AD  camera       Use a close working distance with shallow depth of field so crema and stea
+    AD  colour       Build the palette from warm neutrals with a single saturated accent drawn 
+    STR              Anchor the launch in a specific daily ritual rather than the drink itself.
+  resolver  : camera=KNOWLEDGE colour=KNOWLEDGE
+  ✓ Vietnamese brief resolves to food_beverage / product_launch
+  ✓ Produces camera + colour decisions and the ritual strategy
+  ✓ Anti-pattern is captured as a guardrail, not a visual instruction
+  ✓ Resolver accepts coffee decisions at KNOWLEDGE tier
+
+🔹 6. End-to-end: Fashion social advertisement
+[ART_DIRECTION_RESOLVED] {
+  provenance: { composition: 'KNOWLEDGE', atmosphere: 'KNOWLEDGE' },
+  decisions: [
+    'composition<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)',
+    'atmosphere<-KNOWLEDGE (conf 0.65, HIGH, score 0.4125)'
+  ],
+  client_locks: [],
+  suppressed_count: 0
+}
+
+  ── ATELIER SIX — social ad ──
+  context   : {"industry":"fashion","category":"apparel","audience":"gen_z","objective":"awareness","channel":"tiktok","asset_type":"social_ad"}
+  retrieved : strategy.self_expression.fashion_genz.001, layout.mobile_first.social_ad_hierarchy.001, visual_direction.editorial_attitude.fashion_social.001
+  routing   : strategy→STRATEGY, layout→ART_DIRECTION:composition, visual_direction→ART_DIRECTION:atmosphere
+    AD  composition  Place the subject in the upper two thirds and keep the lower third clear f
+    AD  atmosphere   Set a confident editorial mood with high tonal contrast and a decisive, un
+    STR              Lead with a character and an attitude, not with the garment laid flat.
+  resolver  : composition=KNOWLEDGE atmosphere=KNOWLEDGE
+  ✓ Context resolves to fashion / gen_z / tiktok
+  ✓ Channel-specific layout rule is retrieved and applied
+  ✓ Produces atmosphere + composition and the expression strategy
+  ✓ Resolver accepts fashion decisions at KNOWLEDGE tier
+
+🔹 7. Cross-campaign differentiation
+  ✓ Three briefs produce three different decision sets
+  ✓ Knowledge from one industry does not surface for another
+
+🔹 8. Diagnostics completeness
+  ✓ Trace covers all four required stages
+  ✓ All fixture knowledge is governance-valid
+
+==============================================================
+26 passed, 0 failed
+==============================================================
