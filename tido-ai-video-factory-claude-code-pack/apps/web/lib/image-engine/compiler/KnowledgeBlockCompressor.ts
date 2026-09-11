@@ -96,6 +96,24 @@ const MODALS: [RegExp, string][] = [
 const EXECUTION =
   /\b(?:specular|reflect\w*|refract\w*|shadow\w*|contact|highlight\w*|diffus\w*|translucen\w*|transmission|material\w*|surface\w*|roughness|glossy|matte|texture\w*|finish|geometry|proportion\w*|scale|depth|volume|form|perspective|foreshorten\w*|vanishing|camera|lens|focal|aperture|focus|exposure|contrast|tonal|colour|color|saturation|white balance|temperature|illuminat\w*|light\w*|key|fill|rim|backlight|composition|framing|crop|placement|hierarchy|legib\w*|readab\w*|separation|figure-ground|negative space|margin|alignment|physical\w*|coheren\w*|believab\w*|plausib\w*|consistent\w*|edge\w*|contour\w*)\b/i;
 
+/**
+ * Design reasoning a renderer can also act on.
+ *
+ * The list above is physical and photographic; this one is about how an image is
+ * met and what it therefore has to accomplish. Both are instructions, but only
+ * the first was recognised, and the consequence showed up the moment the format
+ * foundation blocks were rewritten as design principles: the banner block went
+ * from seven bullets to two, losing "a banner sits inside a page the viewer came
+ * to for something else" and "one idea delivered beats three offered" while
+ * keeping the two sentences that happened to contain the word "type".
+ *
+ * A bullet saying the viewer gets one fixation is not theory and does not grant
+ * latitude — it is the reason the composition has to work a particular way, and
+ * for a format foundation block it is the entire content.
+ */
+const DESIGN =
+  /\b(?:viewer|audience|attention|glance|fixation|scroll\w*|interrupt\w*|curiosity|curious|message|idea|communicat\w*|silhouette|subject|persuad\w*|desirab\w*|recogni[sz]\w*|authentic\w*|credib\w*|polish|compet\w*|resolv\w*|encounter\w*|distance|first impression|stop|click|read)\b/i;
+
 /** Sentences that grant latitude rather than constrain execution. */
 const PERMISSIVE =
   /\b(?:may vary widely|may be used creatively|does not (?:depend|restrict)|need not|is not required|rather than (?:follow|depend on) a fixed|non-exhaustive|any (?:valid|appropriate) (?:approach|solution)|at the discretion|is permitted|remains open)\b/i;
@@ -194,8 +212,9 @@ export class KnowledgeBlockCompressor {
   private static isExecution(bullet: string): boolean {
     const t = String(bullet || "");
     if (!t.trim()) return false;
-    if (PERMISSIVE.test(t) && !EXECUTION.test(t)) return false;
-    return EXECUTION.test(t);
+    const instructive = EXECUTION.test(t) || DESIGN.test(t);
+    if (PERMISSIVE.test(t) && !instructive) return false;
+    return instructive;
   }
 
   /** One sentence, with the padding taken out. */

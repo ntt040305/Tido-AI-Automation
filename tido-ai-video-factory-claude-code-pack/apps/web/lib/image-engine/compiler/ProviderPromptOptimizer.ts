@@ -401,6 +401,16 @@ export class ProviderPromptOptimizer {
   private static readonly P1_DROP_ORDER = [
     "BRAND KNOWLEDGE",
     "OUTPUT CONTEXT",
+    // Last of the droppable sections, not because it is cheap but because it is
+    // the most valuable thing that is still legitimately droppable.
+    //
+    // It carries the format foundation block — the only place the knowledge
+    // system says what a banner is rather than a poster — so it goes only after
+    // brand facts and output metadata are gone. Promoting it to P0 was tried and
+    // reverted: measured on a serum launch across five runs, four exceeded the
+    // 20,000 hard limit because the prompt's non-knowledge content is already
+    // ~21,600 on its own. Protecting this section cannot work until that is
+    // reclaimed; forcing it only moves the failure to the provider.
     "PROFESSIONAL KNOWLEDGE",
   ];
 
@@ -546,7 +556,7 @@ export class ProviderPromptOptimizer {
    */
   private static compressSignalSections(text: string): { text: string; saved: number } {
     const SIGNAL =
-      /^(?:CREATIVE ANGLE|VISUAL DIRECTION|CREATIVE CONCEPT|VISUAL STYLE|COMMERCIAL FRAMING|LOCKED CLIENT INTENT|ATTACHED REFERENCE ROLES)|^\s*-\s*(?:Subject|Mood|Visual style|Emotional goal|Non-negotiable|Objective|Visual hierarchy|Why this works)/i;
+      /^(?:CREATIVE ANGLE|VISUAL DIRECTION|CREATIVE CONCEPT|VISUAL STYLE|COMMERCIAL FRAMING|LOCKED CLIENT INTENT|ATTACHED REFERENCE ROLES|ASSET CONTEXT|THE SCENE)|^\s*-\s*(?:Subject|Mood|Visual style|Emotional goal|Non-negotiable|Objective|Visual hierarchy|Why this works|What this format asks|Why this format serves|What is happening|Who is in frame)/i;
     // Prose that explains the prompt's own precedence rules.
     const META =
       /\b(?:where those conflict|this block wins|they win|outranks? (?:both|every other)|resolved in the ART DIRECTION|is a failure even when|the exact camera, lighting and layout)\b/i;

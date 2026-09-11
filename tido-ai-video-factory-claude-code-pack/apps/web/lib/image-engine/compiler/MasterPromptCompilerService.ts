@@ -501,6 +501,36 @@ export class MasterPromptCompilerService {
     // campaign concept dropped by the reducer.
     const vt = input.campaignDna ? undefined : strategy?.visual_translation;
 
+    // ── What kind of thing this is, before what is in it ─────────────
+    //
+    // Context, not a template. The considerations name what the format makes
+    // hard; they never name a layout, because the COMMERCIAL LAYOUT section
+    // below already carries the geometry and saying it twice in prose would turn
+    // a way of thinking into a formula. `asset_reasoning` is the strategy
+    // layer's answer to why this format suits THIS campaign, which differs
+    // between two posters for different clients and is the part no static text
+    // can supply.
+    //
+    // This sits inside CAMPAIGN STRATEGY, which is P0, so it survives every
+    // compression path. Measured before it existed, 42.5% of the prompt was
+    // byte-identical across all five asset types and the strategy section varied
+    // no more between formats than it did between two runs of one format.
+    const assetCtx = CommercialLayoutService.designConsiderations(input.useCase);
+    const assetLines: string[] = [];
+    if (assetCtx) {
+      assetLines.push(
+        `ASSET CONTEXT — ${assetCtx.format.replace(/_/g, " ").toUpperCase()}:`,
+        `- What this format asks of the design: ${assetCtx.considerations}`
+      );
+    }
+    const assetReasoning = String(strategy?.asset_reasoning || "").trim();
+    if (assetReasoning) {
+      assetLines.push(`- Why this format serves this campaign: ${assetReasoning}`);
+    }
+    if (assetLines.length > 0) {
+      strategyLines.push(...assetLines);
+    }
+
     // ── The scene comes first ──────────────────────────────────────────
     //
     // Nano Banana 2, like every image model, renders what the prompt names. A
@@ -837,13 +867,39 @@ export class MasterPromptCompilerService {
     // retrieval rank first, and only then universal core blocks — never below a
     // floor of two, because the universal set is what keeps a render physically
     // coherent.
-    const knowledgeFitCeiling = PromptBudgetManagerService.EMERGENCY_TARGET;
+    //
+    // The ceiling is the one the prompt is actually held to.
+    //
+    // It used to be PromptBudgetManagerService.EMERGENCY_TARGET, 22,000, while
+    // the optimizer downstream enforces 20,000. The two disagreed by 2,000
+    // characters and the consequence was total: this loop trimmed knowledge
+    // until the prompt fit 22,000, handed on ~21,600, and the optimizer then
+    // dropped BRAND KNOWLEDGE, OUTPUT CONTEXT and PROFESSIONAL KNOWLEDGE whole.
+    // Measured across ten captured production prompts, knowledge reached the
+    // renderer 0 times out of 10. Fitting to the real ceiling costs a block or
+    // two here and saves three entire sections there.
+    const knowledgeFitCeiling = Math.min(
+      PromptBudgetManagerService.EMERGENCY_TARGET,
+      ProviderPromptOptimizer.HARD_LIMIT
+    );
     const droppedKnowledgeIds: string[] = [];
     let specialistLimit = specialistContentBlocks.length;
     let universalLimit = universalContentBlocks.length;
     const UNIVERSAL_FLOOR = 2;
 
-    while (compiledPrompt.length > knowledgeFitCeiling && specialistLimit > 0) {
+    // The format foundation block is asset reasoning, not a specialist extra.
+    //
+    // It is the one block routed deterministically from the asset type, and it
+    // is the only place the knowledge system says what a banner is as opposed to
+    // a poster. `renderKnowledge` ranks by final_score and this block is
+    // inserted at 1.0, so it is always the last specialist standing — which
+    // means a floor of one is enough to keep it, and keeps nothing else.
+    const topSpecialistIsFoundation = [...specialistContentBlocks]
+      .sort((a, b) => (b.entry.final_score || 0) - (a.entry.final_score || 0))[0]
+      ?.entry.id.endsWith("_foundation") === true;
+    const SPECIALIST_FLOOR = topSpecialistIsFoundation ? 1 : 0;
+
+    while (compiledPrompt.length > knowledgeFitCeiling && specialistLimit > SPECIALIST_FLOOR) {
       specialistLimit--;
       knowledgeRender = renderKnowledge(specialistLimit, universalLimit);
       relevantKnowledgeText = knowledgeRender.text;

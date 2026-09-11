@@ -76,6 +76,39 @@ interface FormatSpec {
 }
 
 /**
+ * What each format asks a designer to think about.
+ *
+ * Kept deliberately free of geometry. The reserved zones in this same file
+ * already say where the headline and the product go for this format; these lines
+ * say why that format is hard and what makes an execution good rather than
+ * merely correct. Measured before this existed, five asset types produced
+ * prompts that were 42.5% byte-identical and whose strategy section varied at
+ * the same rate as two runs of the SAME format — the layout differed and the
+ * thinking behind it did not.
+ *
+ * Typography appears here as behaviour rather than as a position, which is the
+ * one thing the prompt previously said identically for every format.
+ */
+const DESIGN_CONSIDERATIONS: Record<string, string> = {
+  poster:
+    "Impact at first glance, before a word has been read. A hierarchy the eye follows without being instructed. A real relationship between picture and words \u2014 not words laid over a photograph. Type scaled for the distance this will actually be read from.",
+  billboard:
+    "One idea, resolved before the viewer has passed. Everything that is not that idea removed rather than made smaller. Type scaled for the distance and the speed.",
+  banner:
+    "A message that resolves faster than the intention to scroll past it. Information flowing across the horizontal rather than down it. Type that survives being short in height. Enough quiet for the message to occupy without fighting the product.",
+  website_banner:
+    "A message that resolves faster than the intention to scroll past it. Information flowing across the horizontal rather than down it. Type that survives being short in height. Enough quiet for the message to occupy without fighting the product.",
+  social_ad:
+    "A reason to stop that is visible before the image is understood. Legibility at arm's length on a phone. Type that reads as native to the feed rather than typeset. One idea \u2014 a second one will not be read.",
+  product_hero:
+    "The object's material and surface carrying the persuasion. Light that describes form rather than decorating it. Restraint in everything that is not the product. Type kept subordinate: the object is the argument.",
+  ugc_thumbnail:
+    "The whole idea legible at small size and at a glance. Human reaction reading before any detail does. At most a few words, heavy enough to survive scaling. No art-directed polish \u2014 it competes with real photographs and loses on polish.",
+  thumbnail_ugc:
+    "The whole idea legible at small size and at a glance. Human reaction reading before any detail does. At most a few words, heavy enough to survive scaling. No art-directed polish \u2014 it competes with real photographs and loses on polish.",
+};
+
+/**
  * Commercial Layout Service.
  *
  * Turns "reserve upper third clearance" into an actual rectangle.
@@ -176,6 +209,19 @@ export class CommercialLayoutService {
       rendersCopy,
       promptBlock: lines.join("\n"),
     };
+  }
+
+  /**
+   * The design considerations for an asset type, or null when the type is not
+   * one this service knows. Null rather than a poster default on purpose: an
+   * unrecognised format should say nothing rather than quietly assert poster
+   * thinking, which is how every unhandled path in this engine ends up looking
+   * like a poster.
+   */
+  public static designConsiderations(assetType?: string): { format: string; considerations: string } | null {
+    const format = String(assetType || "").trim().toLowerCase().replace(/[\s-]+/g, "_");
+    const considerations = DESIGN_CONSIDERATIONS[format];
+    return considerations ? { format, considerations } : null;
   }
 
   private static specFor(format: string, aspectRatio: string): FormatSpec {

@@ -52,6 +52,7 @@ const SUITES = [
   "run-visual-controls-tests",
   "run-visual-controls-integration-tests",
   "run-content-message-tests",
+  "run-asset-reasoning-tests",
 ];
 
 const here = path.dirname(__filename);

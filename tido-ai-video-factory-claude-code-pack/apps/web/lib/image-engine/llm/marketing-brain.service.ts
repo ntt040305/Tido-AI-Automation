@@ -1,7 +1,56 @@
 import { defaultLLMProviderService, LLMChatMessage, LLMProviderService } from "./llm-provider.service";
 import { MarketingBrainInput, MarketingBrainStrategy } from "./prompt-strategy.schema";
 
+/**
+ * How each asset type is encountered, and what that makes worth reasoning about.
+ *
+ * Deliberately not layouts. The format is a set of viewing conditions, and
+ * viewing conditions change what an image has to accomplish — they do not
+ * decide where the headline goes. Every entry therefore ends by naming several
+ * executions that all suit the format, so the brain treats this as context to
+ * reason from rather than an answer to copy.
+ *
+ * Only the entry for the requested format is sent, so this costs one block per
+ * render rather than five.
+ */
+const ASSET_REASONING_CONTEXT: Record<string, string> = {
+  poster:
+    "Met whole and at a glance, then approached if it earned that. One impression lands before a word is read, so the relationship between image and message IS the design. Worth reasoning about: what the picture says before the words are read, how much attention this campaign has actually earned, and what a viewer carries away from a single look. A poster can be a product hero, a told story, one emotional image, or purely conceptual — all four are right for some campaign.",
+  banner:
+    "Met peripherally, inside someone else's page, by a person doing something else. It competes with the content they came for and gets a fraction of a second of unwilling attention. Worth reasoning about: how fast the message resolves, what the viewer is scanning past it toward, and what would make stopping worth their while. Branding, promotional, storytelling and straight product banners are all legitimate.",
+  social_ad:
+    "Met mid-scroll, on a phone at arm's length, between two things the viewer would rather look at. It must earn a stop before it can say anything, and being recognised as advertising ends the stop. Worth reasoning about: what genuinely interrupts a scroll for this audience, what survives being seen small, and what the viewer can do in the next second. Many different images stop a scroll — choose the one this campaign supports.",
+  product_hero:
+    "The product is the subject rather than a participant, and the viewer is being invited to want it. Worth reasoning about: what makes this specific object desirable in the hand — material, weight, surface, how light behaves on it — and what a photograph can show that a description cannot. Do not assume an isolated studio pack shot: a hero can sit in a world, be in use, or be seen at macro scale, as long as the object stays the subject.",
+  ugc_thumbnail:
+    "Met small, in a grid, against real people's real photographs, and judged in well under a second. Polish that reads as advertising loses to something that reads as genuine. Worth reasoning about: what makes someone curious rather than informed, what human reaction is legible at this size, and what the viewer thinks they will get by clicking. Many storytelling approaches work here.",
+};
+
+/** Maps the UI's asset ids and their aliases onto the contexts above. */
+function assetContextFor(useCase?: string): { key: string; context: string } | null {
+  const raw = String(useCase || "").trim().toLowerCase().replace(/[\s-]+/g, "_");
+  const alias: Record<string, string> = {
+    poster: "poster",
+    billboard: "poster",
+    print: "poster",
+    banner: "banner",
+    website_banner: "banner",
+    web_banner: "banner",
+    social_ad: "social_ad",
+    social: "social_ad",
+    product_hero: "product_hero",
+    hero: "product_hero",
+    ugc_thumbnail: "ugc_thumbnail",
+    thumbnail_ugc: "ugc_thumbnail",
+    thumbnail: "ugc_thumbnail",
+    ugc: "ugc_thumbnail",
+  };
+  const key = alias[raw];
+  return key ? { key, context: ASSET_REASONING_CONTEXT[key] } : null;
+}
+
 export class MarketingBrainService {
+
   private llmProvider: LLMProviderService;
 
   constructor(provider?: LLMProviderService) {
@@ -51,6 +100,26 @@ gesture. If a word cannot be photographed, it does not belong in the visual
 fields — the exception is the client's own language, which you may keep when
 they used it.
 
+THE ASSET TYPE IS A REASONING CONTEXT, NOT A TEMPLATE.
+
+The format tells you how the image will be met: at what distance, among what
+else, with how much of the viewer's attention, and what they can do next. That
+changes what the image has to accomplish, and so it changes the scene. It does
+not hand you a layout.
+
+Before deciding anything visual, answer this: what is this asset type FOR, in
+THIS campaign? A poster for a coffee opening and a poster for a serum launch are
+one format doing two unrelated jobs. Several genuinely different executions are
+right for any format — a poster can be a product hero, a story, a single
+emotional image or a conceptual one. Choose the execution this campaign earns
+and say what the format contributed to that choice. Never choose it because the
+format usually looks a certain way.
+
+WRITE SHORT. Every field below is at most two sentences — scene_moment may run
+to three when the moment genuinely needs them. These are directions, not essays:
+the prompt has a hard character budget, and every extra sentence here is paid for
+by deleting a professional-knowledge rule somewhere else in the same prompt.
+
 STRICT JSON OUTPUT REQUIREMENT:
 Return ONLY a valid JSON object matching this structure:
 {
@@ -58,6 +127,7 @@ Return ONLY a valid JSON object matching this structure:
   "consumer_insight": "<the non-obvious truth about what this buyer actually wants. Never restate the product category.>",
   "emotional_response": "<two or three words: what the viewer should feel>",
   "creative_message": "<one sentence: the single thing this image says>",
+  "asset_reasoning": "<AT MOST TWO SENTENCES. What this asset type is FOR in this specific campaign, and what that means the image must do. Do NOT describe a layout and do NOT recite what the format usually looks like.>",
   "visual_translation": {
     "scene_moment": "<what is HAPPENING in the frame: place, action, the specific moment. A situation with a verb, not an adjective. This is the most important field you produce.>",
     "human_presence": "<who is in frame and what they are doing; or state plainly that no person appears and why that serves this image>",
@@ -90,9 +160,14 @@ Return ONLY a valid JSON object matching this structure:
     // Unspecified fields are omitted, not defaulted. Feeding the brain a generic
     // audience and goal it was never given produced generic strategy that read as
     // if the client had asked for it.
+    // The format is no longer a bare label. It used to arrive as this one line
+    // and nothing else in the instruction mentioned it, so the brain had a name
+    // for the format and no reason to treat it as anything.
+    const assetCtx = assetContextFor(input.useCase);
     const briefLines = [
       `- CONCEPT: ${input.concept}`,
       `- FORMAT / USE CASE: ${input.useCase || "Poster"}`,
+      assetCtx ? `- HOW THIS FORMAT IS ENCOUNTERED: ${assetCtx.context}` : "",
       `- ASPECT RATIO: ${input.aspectRatio || "1:1"}`,
       input.brandName ? `- BRAND NAME: ${input.brandName}` : "",
       input.brandInfo ? `- BRAND INFO: ${input.brandInfo}` : "",

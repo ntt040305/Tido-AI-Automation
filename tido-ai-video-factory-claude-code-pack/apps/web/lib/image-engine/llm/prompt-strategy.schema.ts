@@ -81,6 +81,23 @@ export interface MarketingBrainStrategy {
   creative_message?: string;
   /** The message rendered as visual decisions. */
   visual_translation?: VisualTranslation;
+  /**
+   * Why this asset type serves this particular campaign, and what that means the
+   * image has to do.
+   *
+   * The format used to reach the brain as one line of metadata — `FORMAT / USE
+   * CASE: poster` — with nothing anywhere telling it what a poster is or why it
+   * should care. Measured across five asset types on one brief, the strategy
+   * section varied at 0.21 similarity against a 0.24 same-format noise floor:
+   * the format changed nothing, and what looked like variation was the model
+   * answering differently twice.
+   *
+   * This field is the answer to "what is this asset FOR, in this campaign",
+   * which is a different question for a serum launch than for a coffee opening
+   * even when both are posters. It is reasoning, not a layout: it says why the
+   * format pushed the concept one way, and leaves the execution to the scene.
+   */
+  asset_reasoning?: string;
 
   // Backward-compatible fields for prompt compiler consumers
   target_audience?: string;
