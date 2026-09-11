@@ -59,6 +59,7 @@ export function CreativeBriefPanelContainer() {
       onUpdateMarketingContext={updateMarketingContext}
       onUpdateSalesContext={updateSalesContext}
       onUpdateCreativeDirection={updateCreativeDirection}
+      onUpdateContentMessage={(value: string) => updateBrief({ content_message: value })}
       onUpdateBrandIdentity={updateBrandIdentity}
       onGenerate={handleGenerate}
     />

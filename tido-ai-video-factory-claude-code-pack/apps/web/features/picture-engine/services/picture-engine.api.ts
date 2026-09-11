@@ -129,6 +129,9 @@ export async function createPictureAsset(
       if (hasProductAssets) {
         const formData = new FormData();
         formData.append("concept", concept);
+        if (brief.content_message?.trim()) {
+          formData.append("contentMessage", brief.content_message.trim());
+        }
         formData.append("useCase", useCase);
         formData.append("aspectRatio", aspectRatio);
         if (brandName) formData.append("brandName", brandName);

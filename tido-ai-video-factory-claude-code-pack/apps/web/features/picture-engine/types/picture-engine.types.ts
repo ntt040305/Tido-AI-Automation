@@ -91,6 +91,14 @@ export interface BrandIdentity {
 export interface CreativeBrief {
   asset_type: AssetType;
   creative_concept?: string;
+  /**
+   * Text the user wants to appear in the image, in their own words.
+   *
+   * Deliberately separate from `creative_concept`. The concept is why the image
+   * exists; this is what has to be readable in it. Users write "Khai trương giảm
+   * 20%" here — never "headline" or "CTA".
+   */
+  content_message?: string;
   marketing_context: MarketingContext;
   sales_context: SalesContext;
   creative_direction: CreativeDirection;

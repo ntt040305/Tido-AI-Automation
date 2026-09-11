@@ -141,8 +141,8 @@ check("A selected control becomes a hard requirement", () => {
   });
   assert.ok(adapted.success, "adapter rejected the request");
   const joined = adapted.hardRequirements.join(" | ");
-  assert.ok(/low-angle hero camera perspective/.test(joined), `not in hard requirements: ${joined}`);
-  assert.ok(/premium commercial product photography/.test(joined), joined);
+  assert.ok(/low-angle hero perspective/.test(joined), `not in hard requirements: ${joined}`);
+  assert.ok(/important and aspirational/.test(joined), `no creative meaning carried: ${joined}`);
 });
 
 check("The user-facing label travels with the instruction", () => {
@@ -162,7 +162,7 @@ check("Several controls all arrive", () => {
   });
   const joined = adapted.hardRequirements.join(" | ");
   for (const needle of [
-    "low-angle hero camera perspective",
+    "low-angle hero perspective",
     "soft directional key light",
     "dark low-key palette",
   ]) {
@@ -173,7 +173,7 @@ check("Several controls all arrive", () => {
 check("A control written in the concept is hard, because the user wrote it", () => {
   const adapted = adapt({ concept: "Ảnh sản phẩm, chụp góc thấp" });
   const joined = adapted.hardRequirements.join(" | ");
-  assert.ok(/low-angle hero camera perspective/.test(joined), `concept control lost: ${joined}`);
+  assert.ok(/low-angle hero perspective/.test(joined), `concept control lost: ${joined}`);
 });
 
 check("An AI suggestion never becomes a hard requirement", () => {
@@ -213,7 +213,7 @@ check("Tự chọn leaves the control entirely to art direction", () => {
 
 check("Only the control the user chose becomes hard", () => {
   const adapted = adapt({ creativeDirection: { visual_controls: { camera: "high_angle" } } });
-  const camera = adapted.hardRequirements.filter((h: string) => /elevated camera angle/.test(h));
+  const camera = adapted.hardRequirements.filter((h: string) => /elevated camera looking down/.test(h));
   assert.strictEqual(camera.length, 1, "the chosen camera is missing or duplicated");
   // The five untouched controls contribute nothing.
   for (const leaked of ["telephoto compression", "controlled studio lighting", "rule-of-thirds"]) {
@@ -230,7 +230,7 @@ check("A user selection still beats a conflicting concept here", () => {
     creativeDirection: { visual_controls: { camera: "low_angle" } },
   });
   const joined = adapted.hardRequirements.join(" | ");
-  assert.ok(/low-angle hero camera perspective/.test(joined), joined);
+  assert.ok(/low-angle hero perspective/.test(joined), joined);
   assert.ok(!/directly overhead top-down/.test(joined), `both angles reached the prompt: ${joined}`);
 });
 
@@ -241,7 +241,7 @@ check("Controls do not displace the user's own hard requirements", () => {
   });
   const joined = adapted.hardRequirements.join(" | ");
   assert.ok(joined.includes("Không dùng chữ tiếng Anh"), "the user's own requirement was lost");
-  assert.ok(/low-angle hero camera perspective/.test(joined), "the control was lost");
+  assert.ok(/low-angle hero perspective/.test(joined), "the control was lost");
 });
 
 console.log("\n" + "=".repeat(74));

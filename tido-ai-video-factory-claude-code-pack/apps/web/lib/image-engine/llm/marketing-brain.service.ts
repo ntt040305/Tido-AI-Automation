@@ -20,13 +20,36 @@ The step most people skip is the insight. Restating the product category is not 
   Weak:   "Luxury anti-aging skincare" → "a luxury woman holding a serum bottle"
   Strong: women buying anti-aging products are buying confidence and continuity with
           who they already are, not a younger face → feeling: trust, poise,
-          self-possession → message: this is care, not correction → visually: a
-          mature subject treated with dignity, calm premium air, soft directional
-          light, refined material rendering, minimal uncluttered composition.
+          self-possession → message: this is care, not correction → SCENE: a woman
+          in her fifties at her own bathroom mirror in morning light, mid-routine,
+          unhurried, looking at herself rather than at the camera → visually: her
+          face treated with dignity, soft directional light that keeps skin
+          texture honest, refined material rendering, uncluttered composition.
 
-Translate the message into visual decisions. Do not name lenses, focal lengths,
-apertures or lighting rigs — a separate art-direction layer owns those, and a
+Translate the message into a SCENE, then into visual decisions.
+
+A scene is what is happening: people, place, action, moment. "A welcoming
+atmosphere" is not a scene. "Two friends stepping in from the street, first
+coffees just set down, the door still open behind them" is a scene. An image
+model renders what you name; name qualities and it renders a well-lit object.
+
+Advertising images usually contain people doing something. Decide whether this
+one does. If it does not, say why not — a pack shot with no one in it is a
+legitimate choice, an advertisement that forgot to include anyone is not.
+
+State camera INTENT — why the camera sits where it does, and what that makes the
+viewer feel. Do not name lenses, focal lengths, apertures or lighting rigs: a
+separate art-direction layer turns your intent into those numbers, and a
 technical instruction from you would compete with the client's own directives.
+
+Avoid premium, luxury, cinematic, beautiful, stunning, high-end and their
+synonyms. They are verdicts on a finished picture, not things a camera can point
+at, and every brand claims them, so they carry no information and render as
+generic gloss. Name what would make a viewer reach that verdict instead: the
+weight of the glass, the way the light falls off, the unhurriedness of the
+gesture. If a word cannot be photographed, it does not belong in the visual
+fields — the exception is the client's own language, which you may keep when
+they used it.
 
 STRICT JSON OUTPUT REQUIREMENT:
 Return ONLY a valid JSON object matching this structure:
@@ -36,6 +59,9 @@ Return ONLY a valid JSON object matching this structure:
   "emotional_response": "<two or three words: what the viewer should feel>",
   "creative_message": "<one sentence: the single thing this image says>",
   "visual_translation": {
+    "scene_moment": "<what is HAPPENING in the frame: place, action, the specific moment. A situation with a verb, not an adjective. This is the most important field you produce.>",
+    "human_presence": "<who is in frame and what they are doing; or state plainly that no person appears and why that serves this image>",
+    "camera_intent": "<why the camera sits where it does and what that makes the viewer feel, e.g. 'low, so the product reads as something to look up to'. No lenses or focal lengths.>",
     "subject_representation": "<who or what is depicted, and why that choice serves the insight>",
     "atmosphere": "<the emotional temperature of the frame>",
     "lighting_character": "<quality and behaviour of light in plain words, e.g. 'soft directional light that keeps skin texture honest'>",

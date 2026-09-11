@@ -1,4 +1,5 @@
 import { ProductIdentityResolver } from "../compiler/ProductIdentityResolver";
+import { ConceptStructuringLayer } from "../director/ConceptStructuringLayer";
 import { VisualDirectionPlanner } from "../director/VisualDirectionPlanner";
 import { VisualDirectionResolver } from "../director/VisualDirectionResolver";
 import {
@@ -288,6 +289,61 @@ export class SimpleInputAdapterService {
         if (text && !copyItems.some((c) => c.text === text)) {
           copyItems.push({ text, type: "other" });
         }
+      });
+    }
+
+    // 7b. Content message -> authorized copy.
+    //
+    // This is the channel that actually makes text appear. `copyItems` drives
+    // TYPOGRAPHY & READABLE COPY in the compiler and `rendersCopy` in the layout
+    // service; with it empty the layout reserves blank zones and the prompt tells
+    // the renderer that no text is drawn this pass. A user who typed their offer
+    // into the concept box was hitting exactly that, because nothing turned
+    // prose into authorized copy.
+    //
+    // Roles are inferred so the user never has to know the words "headline" or
+    // "CTA". `ConceptStructuringLayer` already reads Vietnamese and English
+    // offers, discounts and calls to action, so it is reused rather than
+    // duplicated.
+    const contentLines = String(request.contentMessage || "")
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .filter(Boolean);
+
+    if (contentLines.length > 0) {
+      const intent = ConceptStructuringLayer.parse(contentLines.join(" . "));
+      for (const line of contentLines) {
+        if (copyItems.some((c) => c.text === line)) continue;
+        const lineIntent = ConceptStructuringLayer.parse(line);
+        let type: CopyItemInput["type"] = "other";
+        if (lineIntent.cta_required && line.split(/\s+/).length <= 5) type = "cta";
+        else if (/^(?:địa\s?chỉ|website|hotline|tel|sđt|phone|www\.|http)/i.test(line)) type = "other";
+        else if (lineIntent.discount || lineIntent.offer_type !== "none") type = "headline";
+        else if (!copyItems.some((c) => c.type === "headline")) type = "headline";
+        else type = "subheadline";
+        copyItems.push({ text: line, type });
+      }
+
+      // Stated as a requirement, not as background. The user asked for this text
+      // to be in the picture; the renderer is told so in the same words.
+      const purpose = intent.promotional
+        ? "Promotional communication"
+        : intent.text_required
+          ? "Informational communication"
+          : "Brand communication";
+      compilerBrief +=
+        `\n\nCONTENT MESSAGE — TEXT THAT MUST APPEAR IN THE IMAGE:` +
+        `\n- Main message: ${contentLines[0]}` +
+        (contentLines.length > 1 ? `\n- Supporting: ${contentLines.slice(1).join(" / ")}` : "") +
+        `\n- Purpose: ${purpose}` +
+        (intent.discount ? `\n- Offer figure to reproduce exactly: ${intent.discount}` : "") +
+        `\n- Visual requirement: render this text legibly and make it noticeable at a glance. The exact wording above is authorized copy and must be reproduced verbatim; do not paraphrase, translate or invent additional text.`;
+
+      console.log("[SIMPLE][CONTENT_MESSAGE]", {
+        lines: contentLines.length,
+        purpose,
+        discount: intent.discount || null,
+        roles: copyItems.map((c) => c.type),
       });
     }
 

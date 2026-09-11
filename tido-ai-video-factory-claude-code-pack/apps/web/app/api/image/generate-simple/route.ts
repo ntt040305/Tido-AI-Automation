@@ -15,6 +15,7 @@ export async function POST(req: NextRequest) {
       simpleRequest = {
         images: body.images || body.references || [],
         concept: body.concept || "",
+        contentMessage: body.contentMessage || "",
         useCase: body.useCase || "Poster",
         aspectRatio: body.aspectRatio || "1:1",
         brandName: body.brandName,
@@ -29,6 +30,7 @@ export async function POST(req: NextRequest) {
     } else if (contentType.includes("multipart/form-data")) {
       const formData = await req.formData();
       const concept = (formData.get("concept") as string) || "";
+      const contentMessage = (formData.get("contentMessage") as string) || "";
       const useCase = (formData.get("useCase") as string) || "Poster";
       const aspectRatio = (formData.get("aspectRatio") as string) || "1:1";
       const brandName = (formData.get("brandName") as string) || undefined;
@@ -129,6 +131,7 @@ export async function POST(req: NextRequest) {
       simpleRequest = {
         images: parsedImages,
         concept,
+        contentMessage,
         useCase,
         aspectRatio,
         brandName,

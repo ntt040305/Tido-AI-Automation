@@ -193,7 +193,7 @@ check("An instruction restated verbatim elsewhere is stated once", () => {
 
 // ── Smart merging (Task 4) ────────────────────────────────────────────────
 
-check("Four ways of saying premium lighting become one", () => {
+check("Four ways of saying premium lighting become one concrete one", () => {
   const prompt = [
     "## ART DIRECTION",
     "Use premium cinematic commercial lighting throughout.",
@@ -203,7 +203,7 @@ check("Four ways of saying premium lighting become one", () => {
   ].join("\n");
   const out = ProviderPromptOptimizer.optimize(prompt);
   assert.ok((out.telemetry.merges_applied || 0) >= 3, `only ${out.telemetry.merges_applied} merges`);
-  assert.ok(/premium cinematic advertising lighting/i.test(out.optimizedPrompt), "the merged phrase is absent");
+  assert.ok(/controlled directional advertising lighting/i.test(out.optimizedPrompt), "the merged phrase is absent");
 
   // What merging delivers is one vocabulary, not fewer characters. The agreed
   // replacement is longer than some variants it replaces ("luxury studio
@@ -216,8 +216,12 @@ check("Four ways of saying premium lighting become one", () => {
   for (const v of variants) {
     assert.ok(!v.test(out.optimizedPrompt), `variant ${v} survived the merge`);
   }
-  const collapsed = out.optimizedPrompt.match(/premium cinematic advertising lighting/gi) || [];
+  const collapsed = out.optimizedPrompt.match(/controlled directional advertising lighting/gi) || [];
   assert.strictEqual(collapsed.length, 4, `expected all four to collapse, got ${collapsed.length}`);
+  // And the one surviving vocabulary is not itself a verdict word — this pass
+  // used to unify on "premium cinematic", manufacturing exactly what the ROLE
+  // section now tells the renderer to disregard.
+  assert.ok(!/premium|cinematic|luxury/i.test(out.optimizedPrompt), out.optimizedPrompt);
 });
 
 check("A phrase used once is left alone", () => {
@@ -348,6 +352,60 @@ check("Optimization is idempotent", () => {
     const twice = ProviderPromptOptimizer.optimize(once).optimizedPrompt;
     assert.strictEqual(twice.length, once.length, "a second pass changed the prompt again");
   }
+});
+
+// ── What survives an oversized prompt (Nano Banana 2, Task 7) ─────────
+
+check("The scene, the product and the realism rules outlive the filler", () => {
+  const filler = "## BRAND KNOWLEDGE\n" + "Bernard Cafe was founded in 2011 and operates 40 stores. ".repeat(420);
+  const prompt = [
+    "## CREATIVE INTENT",
+    "CREATIVE CONCEPT: quan ca phe khai truong",
+    "## CAMPAIGN STRATEGY",
+    "THE SCENE — WHAT THE IMAGE ACTUALLY SHOWS:",
+    "- What is happening: two friends step in from the street, first coffees just set down.",
+    "- Who is in frame: one woman crossing the threshold, hand still on the door frame.",
+    "## PRODUCT IDENTITY",
+    "[IDENTITY LOCK] PRODUCT_01 Bernard Cafe bottle: preserve glass silhouette and label typography.",
+    "## COMMERCIAL LAYOUT",
+    "Headline zone occupies the upper third; product sits on the lower vertical axis.",
+    "## PROFESSIONAL KNOWLEDGE",
+    "Speculars stay physically plausible on glass; contact shadows anchor the bottle to the surface.",
+    filler,
+    "## OUTPUT CONTEXT",
+    "INTENDED USE CASE: Poster",
+  ].join("\n");
+  assert.ok(prompt.length > ProviderPromptOptimizer.HARD_LIMIT, "fixture is not over the limit");
+
+  const out = ProviderPromptOptimizer.optimize(prompt);
+  const t = out.optimizedPrompt;
+  // Scene and action.
+  assert.ok(/What is happening: two friends step in/.test(t), "the scene was dropped");
+  assert.ok(/Who is in frame/.test(t), "the human presence was dropped");
+  // Product identity, creative intent, composition.
+  assert.ok(/Bernard Cafe bottle/.test(t), "product identity was dropped");
+  assert.ok(/quan ca phe khai truong/.test(t), "creative intent was dropped");
+  assert.ok(/Headline zone occupies the upper third/.test(t), "composition was dropped");
+  // Realism. This is the one the drop order used to sacrifice first: the
+  // selection took the highest rank out of a list written least-valuable-first,
+  // so the physical rules went before the brand's founding date.
+  assert.ok(/Speculars stay physically plausible/.test(t), "the physical rules were dropped");
+  assert.ok(!/founded in 2011/.test(t), "the filler survived instead");
+});
+
+check("Least valuable goes first, and unclassified sections outlive the list", () => {
+  const heavy = (h: string) => `## ${h}\n` + `${h} body text that is long enough to matter. `.repeat(180);
+  const prompt = [
+    "## PRODUCT IDENTITY",
+    "[IDENTITY LOCK] preserve the silhouette.",
+    heavy("BRAND KNOWLEDGE"),
+    heavy("PROFESSIONAL KNOWLEDGE"),
+    heavy("ATMOSPHERE"),
+  ].join("\n");
+  const out = ProviderPromptOptimizer.optimize(prompt);
+  const dropped = (out.telemetry.tiers_dropped || []).join(" ");
+  assert.ok(/BRAND KNOWLEDGE/.test(dropped), `brand knowledge survived first: ${dropped}`);
+  assert.ok(!/ATMOSPHERE/.test(dropped), `an unclassified section went before a classified one: ${dropped}`);
 });
 
 console.log("\n" + "=".repeat(74));

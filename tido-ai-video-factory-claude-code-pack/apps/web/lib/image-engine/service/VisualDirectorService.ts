@@ -118,7 +118,7 @@ export class VisualDirectorService {
     const typography_clearance_art_direction = `Preserve dedicated ${profile.textClearanceZone.replace("_", " ")} typography clearance zone. Ensure background contrast in this region is uncluttered for graphic copy overlays.`;
 
     // 7. Negative Composition Constraints
-    const negative_composition_constraints: string[] = ["FORBID flat non-cinematic prompt rendering", "FORBID muddy low-contrast lighting"];
+    const negative_composition_constraints: string[] = ["FORBID flat frontal lighting with no directional key, no shadow falloff and no depth separation", "FORBID muddy low-contrast lighting"];
 
     if (profile.focusMode === "hero_material") {
       negative_composition_constraints.push(

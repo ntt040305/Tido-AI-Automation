@@ -29,6 +29,7 @@ export interface CreativeBriefPanelProps {
   onUpdateMarketingContext: (updates: Partial<MarketingContext>) => void;
   onUpdateSalesContext: (updates: Partial<SalesContext>) => void;
   onUpdateCreativeDirection: (updates: Partial<CreativeDirection>) => void;
+  onUpdateContentMessage: (value: string) => void;
   onUpdateBrandIdentity: (updates: Partial<BrandIdentity>) => void;
   onGenerate: () => void;
 }
@@ -41,6 +42,7 @@ export function CreativeBriefPanel({
   onUpdateCreativeConcept,
   onUpdateAssetConfiguration,
   onUpdateCreativeDirection,
+  onUpdateContentMessage,
   onUpdateBrandIdentity,
   onGenerate,
 }: CreativeBriefPanelProps) {
@@ -320,6 +322,37 @@ export function CreativeBriefPanel({
             </div>
           </div>
         )}
+      </div>
+
+      {/* Content Message.
+          Sits between the concept and the visual direction because that is the
+          order the questions actually come in: what the campaign is, then what
+          the image has to say, then how it should look. Optional — a user who
+          wants no text simply leaves it empty, and a user who wants text no
+          longer has to bury it inside their creative brief. */}
+      <div className="space-y-2">
+        <label className="text-[13.5px] font-semibold text-text flex items-center gap-1.5">
+          <span aria-hidden>📝</span>
+          <span>Nội dung muốn xuất hiện trên ảnh</span>
+          <span className="text-text3 font-normal">(Optional)</span>
+        </label>
+        <p className="text-[11.5px] text-text3 leading-relaxed">
+          Nhập các thông tin bạn muốn xuất hiện trên ảnh. Nếu để trống, AI có thể tự đề xuất nội
+          dung phù hợp với mục tiêu thiết kế.
+        </p>
+        <textarea
+          value={brief.content_message || ""}
+          onChange={(e) => onUpdateContentMessage(e.target.value)}
+          rows={3}
+          placeholder={[
+            "Khai trương giảm 20%",
+            "Mua 2 tặng 1",
+            "Ưu đãi tháng này",
+            "Ra mắt sản phẩm mới",
+            "Địa chỉ / Website / Hotline",
+          ].join("\n")}
+          className="w-full bg-surface2/60 border border-borderStrong text-text rounded-xl text-[13px] px-3.5 py-2.5 leading-relaxed focus:border-text2 outline-none resize-y placeholder:text-text3/70"
+        />
       </div>
 
       {/* Visual Direction Plan — Phase 4.1.5.

@@ -10,6 +10,40 @@ import { IdentityControlMetadata, ProductManifest } from "../types";
  * feel, what the image says, and only then how that looks.
  */
 export interface VisualTranslation {
+  /**
+   * What is happening in the frame — the moment, as an event.
+   *
+   * The six fields below it are all *qualities*: atmosphere, light character,
+   * material, colour. An image model given only qualities renders a well-lit
+   * object, which is why "an invitation to experience the cafe" came back as a
+   * warm photograph of a cup. Qualities describe how a picture feels; only a
+   * scene says what is in it.
+   *
+   * Written as a situation with a verb: "two friends stepping in from the
+   * street, first coffees just set down, door still open behind them" — never
+   * "a welcoming atmosphere".
+   */
+  scene_moment?: string;
+  /**
+   * Who is present and what they are doing, or an explicit reason nobody is.
+   *
+   * Optional in the sense that a pack shot legitimately has no one in it. It is
+   * not optional to *decide*: an advertising image with no human presence and no
+   * reason for that absence is a catalogue photograph.
+   */
+  human_presence?: string;
+  /**
+   * Why the camera is where it is, in intent rather than millimetres.
+   *
+   * The strategy layer used to be forbidden from mentioning camera at all, so
+   * that art direction would own the numbers. The prohibition went too far: it
+   * left camera with no strategic input whatsoever, and every brief without a
+   * reference image fell through to the asset-type default. Intent and
+   * specification are different things — "placed low so the product reads as
+   * something to look up to" is a decision art direction can then express as an
+   * angle and a focal length.
+   */
+  camera_intent?: string;
   /** Who or what is actually depicted, and why that choice serves the insight. */
   subject_representation: string;
   /** The emotional temperature of the frame. */

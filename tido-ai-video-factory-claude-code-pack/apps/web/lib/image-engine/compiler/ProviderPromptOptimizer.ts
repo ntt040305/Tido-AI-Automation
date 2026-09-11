@@ -77,6 +77,16 @@ export class ProviderPromptOptimizer {
    * requirement than a rationale.
    */
   private static readonly P0_SECTIONS = [
+    // The creative signal. These two carry everything the Marketing Brain and
+    // Creative Interpretation worked out from the concept — the emotional angle,
+    // the visual idea, the composition intent, the commercial goal, and the
+    // client's own locked non-negotiables. They were classified P1 and, because
+    // they are also the largest non-P0 sections, they were the first thing
+    // dropped: measured on the eight largest real prompts, 8 of 8 lost one of
+    // them. The system understood the brief and then deleted its understanding
+    // to save characters.
+    "CAMPAIGN STRATEGY",
+    "CREATIVE INTENT",
     "PRODUCT IDENTITY",
     "MULTI-PRODUCT IDENTITY ISOLATION",
     "PRODUCT INSTANCE REQUIREMENTS",
@@ -113,15 +123,19 @@ export class ProviderPromptOptimizer {
    *
    * Every group below was observed in real compiled prompts saying one thing four
    * ways. The replacement keeps the strongest reading of the group rather than
-   * the shortest: "premium cinematic advertising lighting" carries premium,
-   * cinematic and advertising, so nothing in the group's meaning is lost.
+   * the shortest, so nothing in the group's meaning is lost.
+   *
+   * It used to unify them as "premium cinematic advertising lighting", which
+   * made this pass a *source* of the three words the prompt now tells the
+   * renderer to ignore. Premium, cinematic and luxury are verdicts on a finished
+   * picture; the merged phrase names the treatment instead.
    */
   private static readonly MERGE_GROUPS: { name: string; pattern: RegExp; replacement: string }[] = [
     {
       name: "LIGHTING_QUALITY",
       pattern:
         /\b(?:premium\s+)?(?:cinematic|high[- ]end|luxury|professional|campaign|commercial)\s+(?:studio\s+|advertising\s+|commercial\s+|campaign\s+)?lighting\b/gi,
-      replacement: "premium cinematic advertising lighting",
+      replacement: "controlled directional advertising lighting",
     },
     {
       name: "IMAGE_QUALITY",
@@ -216,6 +230,14 @@ export class ProviderPromptOptimizer {
       group.pattern.lastIndex = 0;
     }
 
+    // The same scene description repeated once per product instance.
+    const shared = this.foldRepeatedParentheticals(text);
+    if (shared.folded > 0) {
+      text = shared.text;
+      removed_sections.push(`FOLDED_REPEATED_SCENE_x${shared.folded}`);
+      compression_applied = true;
+    }
+
     // Instructions restated verbatim elsewhere in the prompt.
     const contained = this.dropContainedSubLines(text);
     if (contained.removed > 0) {
@@ -235,6 +257,21 @@ export class ProviderPromptOptimizer {
     }
 
     text = text.replace(/\n{3,}/g, "\n\n").trim();
+
+    // ── 3a. Compress the creative signal rather than lose it ───────────
+    // P0 is never dropped, so once the strategy sections became P0 the budget
+    // had to come from somewhere. It comes from inside them: the five signals
+    // below are kept and the surrounding meta-prose — the paragraphs explaining
+    // which section outranks which — is not. That prose is about the prompt's
+    // own architecture and tells the renderer nothing about the picture.
+    if (text.length > this.SOFT_THRESHOLD) {
+      const compressed = this.compressSignalSections(text);
+      if (compressed.saved > 0) {
+        text = compressed.text;
+        removed_sections.push(`SIGNAL_META_PROSE_${compressed.saved}chars`);
+        compression_applied = true;
+      }
+    }
 
     // ── 3. Priority tiers ──────────────────────────────────────────────
     // Nothing below the soft threshold is touched. A 12,000-character prompt is
@@ -348,22 +385,48 @@ export class ProviderPromptOptimizer {
   }
 
   /**
-   * Drops the largest P1 section, once.
+   * Drops the least valuable P1 section, once.
    *
-   * Largest rather than last: the point is to reach the budget with the fewest
-   * decisions lost, and one 3,000-character atmosphere section costs less than
-   * six 500-character ones. P0 is filtered out before anything is considered.
+   * By value, not by size. The previous rule took the *largest* P1 section on
+   * the reasoning that this reaches the budget with the fewest sections lost —
+   * but the largest section is the campaign strategy, which is the most
+   * valuable content outside P0. Optimising for the number of sections removed
+   * rather than for what they were worth deleted the best reasoning in the
+   * prompt first, every time.
+   *
+   * `P1_DROP_ORDER` is least valuable first. A section nobody has classified is
+   * dropped only after every classified one, because an unknown section is more
+   * likely to be a requirement than a rationale.
    */
+  private static readonly P1_DROP_ORDER = [
+    "BRAND KNOWLEDGE",
+    "OUTPUT CONTEXT",
+    "PROFESSIONAL KNOWLEDGE",
+  ];
+
   private static dropLowestP1(text: string): { text: string; dropped: string[] } {
     const parts = text.split(/\n(?=## )/);
     let target = -1;
-    let targetSize = 0;
+    let bestRank = Number.POSITIVE_INFINITY;
     parts.forEach((part, i) => {
       const heading = part.split("\n")[0] || "";
       if (!heading.startsWith("## ")) return;
       if (this.inTier(heading, this.P0_SECTIONS)) return;
-      if (part.length > targetSize) {
-        targetSize = part.length;
+      const rank = this.P1_DROP_ORDER.findIndex((name) =>
+        heading.replace(/^#+\s*/, "").trim().toUpperCase().includes(name)
+      );
+      // Unclassified sections rank last (highest number), so they survive until
+      // everything explicitly judged droppable has gone.
+      const effective = rank < 0 ? this.P1_DROP_ORDER.length : rank;
+      // Lowest rank first — the list reads least-valuable-first, so the section
+      // to lose is the one nearest its head. Taking the maximum instead spent
+      // the list from the wrong end: the realised order was unclassified, then
+      // PROFESSIONAL KNOWLEDGE — the section holding specular behaviour, contact
+      // shadows and material response — then OUTPUT CONTEXT, then BRAND
+      // KNOWLEDGE. Realism was the first classified casualty of an oversized
+      // prompt, which is the opposite of what the list says.
+      if (effective < bestRank) {
+        bestRank = effective;
         target = i;
       }
     });
@@ -417,6 +480,94 @@ export class ProviderPromptOptimizer {
       return true;
     });
     return { text: kept.join("\n"), removed };
+  }
+
+  /**
+   * Folds a scene description repeated once per product instance.
+   *
+   * A multi-product prompt lists every instance with the same parenthetical
+   * concept text attached:
+   *
+   *   * PRODUCT_01: Bound strictly to [REF_01]. (Ba ly ca phe ... studio ...)
+   *   * PRODUCT_02: Bound strictly to [REF_02]. (Ba ly ca phe ... studio ...)
+   *   * PRODUCT_03: Bound strictly to [REF_03]. (Ba ly ca phe ... studio ...)
+   *
+   * The scene is one scene. Stating it three times costs thousands of
+   * characters and adds nothing, and on a three-product prompt it is the
+   * difference between 21,400 characters and fitting the provider's limit
+   * without touching a single product identity instruction.
+   *
+   * Exact-duplicate text only, and the first occurrence is always kept in full,
+   * so no information is lost — the later instances point at it.
+   */
+  private static foldRepeatedParentheticals(text: string): { text: string; folded: number } {
+    const counts = new Map<string, number>();
+    const paren = /\(([^()]{60,})\)/g;
+    let m: RegExpExecArray | null;
+    while ((m = paren.exec(text))) {
+      const body = m[1].trim();
+      counts.set(body, (counts.get(body) || 0) + 1);
+    }
+
+    let folded = 0;
+    let out = text;
+    for (const [body, n] of counts) {
+      if (n < 2) continue;
+      let seen = 0;
+      out = out.split(`(${body})`).reduce((acc, part, i, arr) => {
+        if (i === arr.length - 1) return acc + part;
+        seen++;
+        // The first occurrence keeps the full text; the rest reference it.
+        const replacement = seen === 1 ? `(${body})` : "(same scene as described above)";
+        if (seen > 1) folded++;
+        return acc + part + replacement;
+      }, "");
+    }
+    return { text: out, folded };
+  }
+
+  /**
+   * Keeps the five creative signals and drops the meta-prose around them.
+   *
+   *   emotional angle     CREATIVE ANGLE, Mood, Emotional goal
+   *   visual concept      VISUAL DIRECTION, CREATIVE CONCEPT, Visual style
+   *   composition intent  Visual hierarchy, composition, layout
+   *   commercial goal     Objective, COMMERCIAL FRAMING
+   *   creative hook       Why this works, Subject, and every Non-negotiable
+   *
+   * What goes is the explanatory paragraph each section carries about which
+   * other section outranks it. That is architecture commentary: it costs three
+   * to four hundred characters per section and describes the prompt rather than
+   * the picture.
+   *
+   * Non-negotiables are never touched. They are the client's own locked intent —
+   * "Must not look like a normal product listing", "Must be formatted as a 1:1
+   * poster" — and were being dropped wholesale with the section around them.
+   */
+  private static compressSignalSections(text: string): { text: string; saved: number } {
+    const SIGNAL =
+      /^(?:CREATIVE ANGLE|VISUAL DIRECTION|CREATIVE CONCEPT|VISUAL STYLE|COMMERCIAL FRAMING|LOCKED CLIENT INTENT|ATTACHED REFERENCE ROLES)|^\s*-\s*(?:Subject|Mood|Visual style|Emotional goal|Non-negotiable|Objective|Visual hierarchy|Why this works)/i;
+    // Prose that explains the prompt's own precedence rules.
+    const META =
+      /\b(?:where those conflict|this block wins|they win|outranks? (?:both|every other)|resolved in the ART DIRECTION|is a failure even when|the exact camera, lighting and layout)\b/i;
+
+    const before = text.length;
+    const parts = text.split(/\n(?=## )/);
+    const out = parts.map((part) => {
+      const heading = part.split("\n")[0] || "";
+      if (!/^##\s+(?:CAMPAIGN STRATEGY|CREATIVE INTENT)\b/i.test(heading)) return part;
+      const kept = part.split("\n").filter((line) => {
+        const l = line.trim();
+        if (!l || l.startsWith("## ")) return true;
+        if (SIGNAL.test(l)) return true;
+        // A long paragraph that is only about section precedence.
+        if (META.test(l) && l.length > 120) return false;
+        return true;
+      });
+      return kept.join("\n");
+    });
+    const joined = out.join("\n");
+    return { text: joined, saved: before - joined.length };
   }
 
   /** Removes sentences that appear more than once verbatim. */

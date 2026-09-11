@@ -1120,6 +1120,20 @@ export interface SimpleInputRequestV1 {
     role?: AssetRoleV1;
   }[];
   concept: string;
+  /**
+   * Text the user wants to appear in the image, in their own words.
+   *
+   * Kept separate from `concept` on purpose. The concept says why the image
+   * exists — the campaign, the feeling, the audience. This says what has to be
+   * readable in it. Mixing them was making both harder to interpret: a concept
+   * containing "giảm 20%" had to be mined for a promotional requirement, and a
+   * user who only wanted to state their offer had to write a creative brief to
+   * do it.
+   *
+   * Free text, one message per line. No layout vocabulary is expected from the
+   * user: they write "Khai trương giảm 20%", not "headline".
+   */
+  contentMessage?: string;
   useCase: string;
   aspectRatio: string;
   brandName?: string;

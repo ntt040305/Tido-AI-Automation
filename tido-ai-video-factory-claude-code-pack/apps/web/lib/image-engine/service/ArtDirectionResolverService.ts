@@ -507,7 +507,13 @@ export class ArtDirectionResolverService {
 
     const lines: string[] = [
       "[RESOLVED ART DIRECTION]",
-      "This block is the ONLY authority on camera, lighting, composition, typography, colour, environment, material and atmosphere. No other instruction in this prompt overrides it. Where any other section implies a different angle, lens, lighting rig or layout, this block wins.",
+      // Precedence, stated once and consistently: USER > CONCEPT > AI STRATEGY >
+      // DEFAULT. The previous wording claimed this block was "the ONLY authority"
+      // and that "no other instruction overrides it", which contradicted the
+      // prompt's own CONFLICT PRIORITY section — that ranks user hard
+      // requirements above art direction. The renderer was told two different
+      // things about precedence on exactly the dimensions that matter most.
+      "This block is the resolved art direction for camera, lighting, composition, typography, colour, environment, material and atmosphere. It is what to execute unless the client said otherwise: an explicit user requirement or client directive outranks it, and the user's own concept outranks anything derived from strategy. Where no client instruction covers a dimension, this block is final.",
       "",
     ];
 

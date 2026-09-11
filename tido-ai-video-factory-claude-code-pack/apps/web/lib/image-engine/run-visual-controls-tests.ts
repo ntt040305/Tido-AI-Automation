@@ -84,11 +84,15 @@ check("The Tự chọn note is available for the UI", () => {
 
 check("The documented examples map as specified", () => {
   const camera = VISUAL_CONTROLS.find((c) => c.key === "camera")!.options.find((o) => o.id === "low_angle")!;
-  assert.ok(/low-angle/i.test(camera.instruction) && /premium commercial product photography/i.test(camera.instruction), camera.instruction);
+  // The instruction now carries the creative consequence as well as the
+  // parameter: a control that only says "low angle" gives the renderer a
+  // camera position and no reason for it.
+  assert.ok(/low-angle/i.test(camera.instruction), camera.instruction);
+  assert.ok(/important|aspirational|looks up/i.test(camera.instruction), `no creative meaning: ${camera.instruction}`);
   const light = VISUAL_CONTROLS.find((c) => c.key === "lighting")!.options.find((o) => o.id === "luxury_soft")!;
   assert.ok(/soft directional key light/i.test(light.instruction), light.instruction);
   assert.ok(/controlled highlights/i.test(light.instruction), light.instruction);
-  assert.ok(/premium advertising lighting/i.test(light.instruction), light.instruction);
+  assert.ok(/expensive-feeling|made carefully/i.test(light.instruction), `no creative meaning: ${light.instruction}`);
 });
 
 // ── Precedence ────────────────────────────────────────────────────────────
@@ -187,7 +191,7 @@ check("A selected camera changes the camera line in the prompt", () => {
   const auto = CreativeDirectorPipeline.run({ ...BRIEF, concept: PLAIN });
   const set = CreativeDirectorPipeline.run({ ...BRIEF, concept: PLAIN, controls: { camera: "low_angle" } });
   assert.notStrictEqual(auto.visual.camera.angle, set.visual.camera.angle, "the angle did not change");
-  assert.ok(/low-angle hero camera perspective/.test(set.assembled.prompt), "the instruction is absent from the prompt");
+  assert.ok(/low-angle hero perspective/.test(set.assembled.prompt), "the instruction is absent from the prompt");
 });
 
 check("A selected lighting changes the lighting line in the prompt", () => {
@@ -197,13 +201,13 @@ check("A selected lighting changes the lighting line in the prompt", () => {
     controls: { lighting: "luxury_soft" },
   });
   assert.ok(/soft directional key light/.test(set.visual.lighting.source), set.visual.lighting.source);
-  assert.ok(/premium advertising lighting/.test(set.assembled.prompt));
+  assert.ok(/expensive-feeling and calm, the light of something made carefully/.test(set.assembled.prompt));
 });
 
 check("A concept-detected control reaches the prompt too", () => {
   const pkg = CreativeDirectorPipeline.run({ ...BRIEF, concept: "ảnh sản phẩm chụp góc thấp" });
   assert.strictEqual(pkg.visual_controls.controls.camera.source, "concept_detected");
-  assert.ok(/low-angle hero camera perspective/.test(pkg.assembled.prompt));
+  assert.ok(/low-angle hero perspective/.test(pkg.assembled.prompt));
 });
 
 check("Binding controls are marked as client instructions", () => {
@@ -258,7 +262,7 @@ check("Controls compose with the commercial poster path", () => {
     controls: { camera: "low_angle", typography: "bold_impact" },
   });
   const p = pkg.assembled.prompt;
-  assert.ok(/low-angle hero camera perspective/.test(p), "the camera control was lost");
+  assert.ok(/low-angle hero perspective/.test(p), "the camera control was lost");
   assert.ok(p.includes("50%"), "the discount was lost");
   assert.ok(/\[TEXT RENDERING — REQUIRED, NOT OPTIONAL\]/.test(p), "text enforcement was lost");
   assert.ok(/heavy condensed display typography/.test(p), "the typography control was lost");

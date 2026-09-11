@@ -332,8 +332,8 @@ export class MasterPromptCompilerService {
     instanceLines.push(`Allowed:`);
     instanceLines.push(`- new environment`);
     instanceLines.push(`- new lighting`);
-    instanceLines.push(`- cinematic camera`);
-    instanceLines.push(`- premium composition`);
+    instanceLines.push(`- a different camera angle, distance and crop from the reference`);
+    instanceLines.push(`- a different arrangement of the product within the frame`);
     instanceLines.push(`Forbidden:`);
     instanceLines.push(`- redesign`);
     instanceLines.push(`- replacement`);
@@ -500,9 +500,27 @@ export class MasterPromptCompilerService {
     // which is what pushed these prompts over the ceiling and got the whole
     // campaign concept dropped by the reducer.
     const vt = input.campaignDna ? undefined : strategy?.visual_translation;
+
+    // ── The scene comes first ──────────────────────────────────────────
+    //
+    // Nano Banana 2, like every image model, renders what the prompt names. A
+    // list of qualities — atmosphere, colour signals, material treatment —
+    // produces a well-lit object, which is how "an invitation to experience the
+    // cafe" came back as a warm photograph of a cup. What is HAPPENING has to be
+    // stated before how it should feel, because the model builds the frame from
+    // nouns and verbs and then grades it with the adjectives.
+    const sceneLines = [
+      vt?.scene_moment ? `- What is happening: ${vt.scene_moment}` : "",
+      vt?.human_presence ? `- Who is in frame: ${vt.human_presence}` : "",
+    ].filter(Boolean);
+    if (sceneLines.length > 0) {
+      strategyLines.push("THE SCENE — WHAT THE IMAGE ACTUALLY SHOWS:", ...sceneLines);
+    }
+
     if (vt) {
       const vtLines = [
         vt.subject_representation ? `- Subject treatment: ${vt.subject_representation}` : "",
+        vt.camera_intent ? `- Why the camera sits where it does: ${vt.camera_intent}` : "",
         vt.atmosphere ? `- Atmosphere: ${vt.atmosphere}` : "",
         vt.lighting_character ? `- Light should feel: ${vt.lighting_character}` : "",
         vt.material_treatment ? `- Materials should read: ${vt.material_treatment}` : "",
@@ -512,8 +530,39 @@ export class MasterPromptCompilerService {
       if (vtLines.length > 0) {
         strategyLines.push("VISUAL TRANSLATION OF THAT MESSAGE:", ...vtLines);
       }
-    } else if (strategy?.prompt_guidance) {
-      strategyLines.push(`VISUAL DIRECTION: ${strategy.prompt_guidance}`);
+    }
+
+    // `prompt_guidance` is included alongside the structured translation, not
+    // instead of it.
+    //
+    // This used to be an `else if`, so on every render where `visual_translation`
+    // existed — which is every render where the model answers properly — the
+    // guidance was silently discarded. It is the single most concrete sentence
+    // the strategy layer produces, the one that reads "a confident woman in her
+    // early 40s, mid-conversation, the cup already in her hand". Six fields of
+    // adjectives survived and the one sentence containing a person was thrown
+    // away.
+    //
+    // It is skipped when it restates the scene rather than adding to it. Exact
+    // equality is too narrow a test for that — a retelling with three words
+    // changed passes it — so the test is content-word overlap, at 70% of the
+    // guidance's own vocabulary already present in the scene.
+    //
+    // Measured on the four phase briefs, the overlap runs 0.37 to 0.49: the
+    // guidance is a genuinely different condensation of the frame, not a repeat,
+    // and this guard fires on none of them. It is a safety net for the case where
+    // the strategy layer answers the scene question twice, not a saving to count
+    // on.
+    const guidance = String(strategy?.prompt_guidance || "").trim();
+    const sceneText = `${vt?.scene_moment || ""} ${vt?.human_presence || ""}`.toLowerCase();
+    const words = (s: string) => new Set(s.toLowerCase().match(/[\p{L}\p{N}]{4,}/gu) || []);
+    const gWords = words(guidance);
+    const sWords = words(sceneText);
+    let shared = 0;
+    gWords.forEach((w) => { if (sWords.has(w)) shared++; });
+    const restatesScene = gWords.size > 0 && shared / gWords.size >= 0.7;
+    if (guidance && !restatesScene) {
+      strategyLines.push(`VISUAL DIRECTION: ${guidance}`);
     }
 
     // Campaign DNA leads the section when this render is one asset of a set: the
@@ -524,7 +573,7 @@ export class MasterPromptCompilerService {
     }
 
     const campaignStrategyText = strategyLines.length > 0
-      ? `${strategyLines.join("\n")}\n\nThis is the persuasive job the image has to do, and the reasoning behind it. Serve the message, not the product category — a literal depiction of the category is a failure even when it is well lit. The exact camera, lighting and layout that deliver this are resolved in the ART DIRECTION and COMMERCIAL LAYOUT sections; where those conflict with this section, they win, and an explicit client directive beats both.`
+      ? `${strategyLines.join("\n")}\n\nBuild the frame from the scene above first — the place, the people and the moment — then apply the treatment. An image that has the right mood and no situation in it is a product photograph, and a literal depiction of the product category is a failure even when it is well lit. The exact camera, lighting and layout are resolved in the ART DIRECTION and COMMERCIAL LAYOUT sections; where those conflict with this section, they win, and an explicit client directive beats both.`
       : "No campaign strategy supplied. Serve the creative intent directly.";
     provenance.campaign_strategy = {
       source: strategy ? "marketing_brain" : "none",
