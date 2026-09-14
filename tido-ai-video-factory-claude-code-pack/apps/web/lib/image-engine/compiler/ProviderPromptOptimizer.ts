@@ -556,7 +556,7 @@ export class ProviderPromptOptimizer {
    */
   private static compressSignalSections(text: string): { text: string; saved: number } {
     const SIGNAL =
-      /^(?:CREATIVE ANGLE|VISUAL DIRECTION|CREATIVE CONCEPT|VISUAL STYLE|COMMERCIAL FRAMING|LOCKED CLIENT INTENT|ATTACHED REFERENCE ROLES|ASSET CONTEXT|THE SCENE)|^\s*-\s*(?:Subject|Mood|Visual style|Emotional goal|Non-negotiable|Objective|Visual hierarchy|Why this works|What this format asks|Why this format serves|What is happening|Who is in frame)/i;
+      /^(?:CREATIVE ANGLE|VISUAL DIRECTION|CREATIVE CONCEPT|VISUAL STYLE|COMMERCIAL FRAMING|LOCKED CLIENT INTENT|ATTACHED REFERENCE ROLES|ASSET CONTEXT|THE SCENE|WHAT THIS IMAGE MUST ACHIEVE|HOW THIS BRAND BEHAVES|HOW THE FRAME SHOULD BE READ|THE ROUTE TAKEN|CONSUMER INSIGHT|EMOTIONAL RESPONSE TO CREATE|CREATIVE MESSAGE|BUSINESS GOAL|WHO THIS IS FOR)|^\s*-\s*(?:Subject|Mood|Visual style|Emotional goal|Non-negotiable|Objective|Visual hierarchy|Why this works|What this format asks|Why this format serves|What is happening|Who is in frame)/i;
     // Prose that explains the prompt's own precedence rules.
     const META =
       /\b(?:where those conflict|this block wins|they win|outranks? (?:both|every other)|resolved in the ART DIRECTION|is a failure even when|the exact camera, lighting and layout)\b/i;

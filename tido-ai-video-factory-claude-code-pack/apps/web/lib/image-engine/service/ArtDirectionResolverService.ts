@@ -235,7 +235,30 @@ export class ArtDirectionResolverService {
       push("composition", "STRATEGY", vt?.composition_principle || strategy.composition_strategy || strategy.composition);
       push("colour", "STRATEGY", vt?.colour_direction);
       push("environment", "STRATEGY", vt?.subject_representation);
-      push("camera", "STRATEGY", strategy.camera_direction);
+      // Camera intent carries the tier's full confidence rather than being
+      // discounted for its vocabulary.
+      //
+      // `classifySpecificity` rewards concrete photographic terms, which is right
+      // for mood words and wrong here: the strategy layer is explicitly forbidden
+      // from naming lenses, focal lengths and apertures, because art direction
+      // owns those. Scoring it down for lacking them means a reasoned decision
+      // ("placed low so the bottle reads as something to look up to", MEDIUM,
+      // 0.3868) loses to a generic knowledge default that happens to contain a
+      // number ("eye-level 50mm commercial hero angle", HIGH, 0.4125). The
+      // declared tier order says STRATEGY outranks KNOWLEDGE; specificity
+      // weighting was silently inverting it for the one dimension where we
+      // require the strategy to be non-technical.
+      //
+      // Only `camera_intent` gets this: it exists only when the model actually
+      // reasoned about where the camera sits, unlike the legacy field below.
+      if (vt?.typography_intent) {
+        push("typography", "STRATEGY", vt.typography_intent, 1.0);
+      }
+      if (vt?.camera_intent) {
+        push("camera", "STRATEGY", vt.camera_intent, 1.0);
+      } else {
+        push("camera", "STRATEGY", strategy.camera_direction);
+      }
     }
 
     // ── Tier 4: retrieved professional knowledge ──────────────────────────

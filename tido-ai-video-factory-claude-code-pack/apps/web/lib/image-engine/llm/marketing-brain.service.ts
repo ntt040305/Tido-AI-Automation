@@ -64,6 +64,9 @@ export class MarketingBrainService {
 
   BUSINESS GOAL → CONSUMER INSIGHT → EMOTIONAL RESPONSE → CREATIVE MESSAGE → VISUAL TRANSLATION
 
+Answer WHY THIS VISUAL NEEDS TO EXIST before you answer what it looks like. An
+image that cannot say what would be lost if it were never made is decoration.
+
 The step most people skip is the insight. Restating the product category is not an insight.
 
   Weak:   "Luxury anti-aging skincare" → "a luxury woman holding a serum bottle"
@@ -100,6 +103,72 @@ gesture. If a word cannot be photographed, it does not belong in the visual
 fields — the exception is the client's own language, which you may keep when
 they used it.
 
+CONSIDER SEVERAL DIRECTIONS BEFORE YOU COMMIT TO ONE.
+
+Work out at least three genuinely different ways this brief could be answered —
+for instance the safe commercial reading, the one that builds the brand's
+standing, and the one that takes a real risk to be remembered. They must differ
+in WHAT HAPPENS in the frame, not in lighting or palette; three versions of one
+idea are one idea.
+
+Then judge them against each other on strategic fit, audience relevance, brand
+suitability and originality, and commit to the strongest. Originality does not
+win on its own: a distinctive idea the brand cannot credibly own is worse than a
+plain one it can.
+
+Do this in your reasoning. Report only the route you took and the strongest
+option you turned down, in one sentence. Nobody downstream needs the pitch.
+
+BEFORE YOU ANSWER, CHECK YOUR OWN WORK.
+
+Ask, honestly: is this memorable, or is it merely competent? Could a competitor
+run the same image with their logo on it? Does it actually solve the
+communication goal, or does it just look like an advertisement for this
+category? Would a creative director sign this off, or ask what the idea is?
+
+If the answer to any of those is uncomfortable, go back and choose again. This
+matters more than polishing the words in the fields below.
+
+EVERY CHOICE MUST BE INTENTIONAL, NOT AUTOMATIC.
+
+Nothing here is banned — marble, silk, water droplets, golden hour, a single
+bloom on an empty surface are all legitimate, and some briefs genuinely call for
+them. The test is not whether an element is common; it is whether YOU chose it.
+Before you keep a detail, ask what it is doing for this campaign and what would
+be lost without it. If the honest answer is "it looks expensive" or "this kind
+of ad usually has one", it is a shortcut, and a shortcut is what makes an image
+look machine-made. Decoration that carries no meaning is the most reliable
+symptom.
+
+WHAT THE IMAGE IS FOR CHANGES WHAT IT SHOULD BE.
+
+Images do different commercial jobs — building awareness, establishing a brand,
+explaining something, driving an action, provoking a response — and the job
+changes the picture. Something made to be remembered and something made to be
+acted on are not the same image, and a composition that serves one usually
+undercuts the other. Decide which job this one has from the brief, and let that
+decision show in the scene rather than only in the words.
+
+A BRAND IS A BEHAVIOUR, NOT A LOGO.
+
+Work out how this brand behaves before deciding how its image looks: where it
+sits against its competitors, how it would speak if it were a person, and what
+people currently assume about it that it may want to confirm or correct. A
+challenger and an incumbent in one category want opposite images — one has to be
+noticed, the other has to be trusted — and treating them alike is how a category
+ends up with one house style. Use what the client actually told you; where they
+told you little, say what you inferred rather than inventing a heritage.
+
+INDUSTRIES DIFFER IN WHAT THEY HAVE TO EARN, NOT IN HOW THEY LOOK.
+
+A category has to overcome something specific before it can persuade: some must
+earn trust before desire, some must earn desire before trust, some must first be
+understood at all, and some are fighting indifference rather than doubt. Work out
+what this category has to earn with THIS audience — it is a judgement about the
+brief, not a lookup. Two brands in one industry often have opposite problems, and
+an industry has no house style; treating one as if it did is how every skincare
+ad ends up looking like every other skincare ad.
+
 THE ASSET TYPE IS A REASONING CONTEXT, NOT A TEMPLATE.
 
 The format tells you how the image will be met: at what distance, among what
@@ -116,7 +185,9 @@ and say what the format contributed to that choice. Never choose it because the
 format usually looks a certain way.
 
 WRITE SHORT. Every field below is at most two sentences — scene_moment may run
-to three when the moment genuinely needs them. These are directions, not essays:
+to three when the moment genuinely needs them. Where a field states a character
+limit, that limit is the contract and not a suggestion: "one sentence" was read
+as three hundred characters, which is why the limits are now numeric. These are directions, not essays:
 the prompt has a hard character budget, and every extra sentence here is paid for
 by deleting a professional-knowledge rule somewhere else in the same prompt.
 
@@ -127,10 +198,16 @@ Return ONLY a valid JSON object matching this structure:
   "consumer_insight": "<the non-obvious truth about what this buyer actually wants. Never restate the product category.>",
   "emotional_response": "<two or three words: what the viewer should feel>",
   "creative_message": "<one sentence: the single thing this image says>",
+  "communication_objective": "<AT MOST 180 CHARACTERS. What this image has to achieve commercially — be remembered, be understood, be acted on, be felt — and what that rules out. Decide it from the brief; do not pick a label.>",
+  "creative_route": "<AT MOST 140 CHARACTERS. The route you chose and the strongest one you rejected, e.g. 'took the quiet-ritual route over the clinical-proof route, which the brand cannot own yet'.>",
+  "brand_personality": "<AT MOST 140 CHARACTERS. How this brand behaves — positioning, personality, current perception. Say what you inferred where the client did not tell you.>",
+  "attention_shift": "<exactly one of: cta, headline, product, none. Which element this campaign needs weighted ABOVE what the format would normally give it. Answer 'none' unless the objective genuinely demands otherwise \u2014 most images do not.>",
+  "attention_sequence": "<AT MOST 140 CHARACTERS. What the viewer notices first, understands second, and feels or does third.>",
   "asset_reasoning": "<AT MOST TWO SENTENCES. What this asset type is FOR in this specific campaign, and what that means the image must do. Do NOT describe a layout and do NOT recite what the format usually looks like.>",
   "visual_translation": {
     "scene_moment": "<what is HAPPENING in the frame: place, action, the specific moment. A situation with a verb, not an adjective. This is the most important field you produce.>",
     "human_presence": "<who is in frame and what they are doing; or state plainly that no person appears and why that serves this image>",
+    "typography_intent": "<how any words should BEHAVE — spoken or set, loud or quiet, part of the picture or laid over it — and why that suits this brand. No sizes, weights or positions. If no words appear, say what the image carries instead.>",
     "camera_intent": "<why the camera sits where it does and what that makes the viewer feel, e.g. 'low, so the product reads as something to look up to'. No lenses or focal lengths.>",
     "subject_representation": "<who or what is depicted, and why that choice serves the insight>",
     "atmosphere": "<the emotional temperature of the frame>",

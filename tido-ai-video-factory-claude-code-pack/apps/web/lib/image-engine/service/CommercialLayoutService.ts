@@ -125,6 +125,96 @@ const DESIGN_CONSIDERATIONS: Record<string, string> = {
  * rather than re-deriving layout from prose.
  */
 export class CommercialLayoutService {
+  /**
+   * How an image's commercial job shifts the attention it should spend.
+   *
+   * The format spec sets the baseline — a thumbnail and a poster budget attention
+   * differently whatever the campaign. What the baseline could not see is that a
+   * campaign built to be REMEMBERED and one built to be ACTED ON want different
+   * allocations inside the same format. Measured across six industries on one
+   * format, the attention budget came out byte-identical every time, including
+   * for an image whose own stated objective was "provoke action, not build
+   * recall" and whose CTA was nevertheless weighted 35/100 "present but
+   * subordinate", the same as a luxury poster built explicitly not to be acted on.
+   *
+   * This is a modulation, not a template: it nudges the format's own numbers by a
+   * few points and never replaces them, so a poster stays a poster. Both the
+   * shift and its size are deliberately small, because the layout spec knows more
+   * about the format than a keyword match knows about the campaign.
+   */
+  private static objectiveShift(shift?: string): { element: string; delta: number; note: string }[] {
+    switch (String(shift || "none").trim().toLowerCase()) {
+      case "cta":
+        return [
+          { element: "cta", delta: 20, note: "This image is meant to be acted on, so the offer is not decoration." },
+          { element: "headline", delta: 5, note: "" },
+          { element: "product", delta: -5, note: "" },
+        ];
+      case "headline":
+        return [
+          { element: "headline", delta: 15, note: "This image has something to say in words, so they carry more of the load." },
+          { element: "cta", delta: -5, note: "" },
+        ];
+      case "product":
+        return [
+          { element: "product", delta: 10, note: "This image rests on the product itself." },
+          { element: "cta", delta: -5, note: "" },
+        ];
+      default:
+        // The format's own allocation, unchanged. This is the usual answer.
+        return [];
+    }
+  }
+
+  /** Retained for callers with no reasoned shift: a weak signal, and labelled as one. */
+  private static objectiveShiftFromText(objective?: string): { element: string; delta: number; note: string }[] {
+    const t = String(objective || "").toLowerCase();
+    if (!t.trim()) return [];
+    // Matched loosely and in both languages, because this arrives as free text
+    // from a brief rather than as a controlled value.
+    // Unicode lookarounds, not `\b`. `\b` is ASCII-only, so a trailing diacritic
+    // ends the match: "thúc đẩy dùng thử" never matched /\bdùng thử\b/ and the one
+    // brief that most needed a conversion shift silently received none.
+    const any = (terms: string[]) =>
+      new RegExp(`(?<![\\p{L}\\p{N}])(?:${terms.join("|")})(?![\\p{L}\\p{N}])`, "iu").test(t);
+    const conversion = any([
+      "conversion", "convert", "action", "act now", "sale", "sales", "purchase", "buy", "order",
+      "promo", "promotion", "offer", "discount", "trial",
+      "dùng thử", "mua", "khuyến mãi", "ưu đãi", "giảm giá", "đặt hàng", "chuyển đổi", "hành động",
+    ]);
+    const awareness = any([
+      "awareness", "branding", "brand", "recall", "remember", "memorable", "launch", "reveal", "identity",
+      "thương hiệu", "nhận diện", "ra mắt", "ghi nhớ",
+    ]);
+    const education = any([
+      "education", "educate", "explain", "inform", "how it works", "demo", "understood",
+      "hướng dẫn", "giải thích", "thông tin",
+    ]);
+
+    // Conversion is tested first: a launch that is also a promotion is trying to
+    // sell today, and "ra mắt ... giảm 20%" should not be read as pure awareness.
+    if (conversion) {
+      return [
+        { element: "cta", delta: 20, note: "This image is meant to be acted on, so the offer is not decoration." },
+        { element: "headline", delta: 5, note: "" },
+        { element: "product", delta: -5, note: "" },
+      ];
+    }
+    if (awareness) {
+      return [
+        { element: "product", delta: 5, note: "This image is meant to be remembered rather than acted on." },
+        { element: "cta", delta: -10, note: "" },
+      ];
+    }
+    if (education) {
+      return [
+        { element: "headline", delta: 10, note: "This image has something to explain, so the words carry more of the load." },
+        { element: "cta", delta: -5, note: "" },
+      ];
+    }
+    return [];
+  }
+
   public static plan(input: {
     assetType?: string;
     aspectRatio?: string;
@@ -132,6 +222,8 @@ export class CommercialLayoutService {
     hasLogoAsset?: boolean;
     objective?: string;
     targetChannel?: string;
+    /** The reasoned shift, when the strategy layer produced one. */
+    attentionShift?: string;
   }): CommercialLayoutPlan {
     const format = (input.assetType || "poster").toLowerCase().replace(/[\s-]+/g, "_");
     const aspectRatio = input.aspectRatio || "4:5";
@@ -147,9 +239,34 @@ export class CommercialLayoutService {
     );
     // Without authorized copy nothing textual will be rendered, so the attention
     // that would have gone to a headline returns to the product.
+    // The campaign's job shifts the format's baseline before the copy check does,
+    // so that an image with no authorized copy still loses its CTA weight rather
+    // than being handed a conversion boost it cannot spend.
+    const shifts = input.attentionShift
+      ? this.objectiveShift(input.attentionShift)
+      : this.objectiveShiftFromText(input.objective);
+    const objectiveNotes: string[] = [];
+    const shifted = shifts.length
+      ? priority.map((p) => {
+          const s = shifts.find((x) => x.element === p.element);
+          if (!s) return p;
+          if (s.note) objectiveNotes.push(s.note);
+          const importance = Math.max(5, Math.min(100, p.importance + s.delta));
+          // Only rewrite the role when the shift is large enough to have changed
+          // what the element is for. A few points is a nudge, not a new job.
+          const role =
+            s.delta >= 15
+              ? `${p.role.replace(/\s*(?:Present but subordinate|subordinate)\.?\s*$/i, "").trim()} Raised for this campaign: it has real work to do here, not a corner.`
+              : s.delta <= -10
+              ? `${p.role} Deliberately quiet in this campaign.`
+              : p.role;
+          return { ...p, importance, role };
+        })
+      : priority;
+
     const effectivePriority = rendersCopy
-      ? priority
-      : priority.map((p) =>
+      ? shifted
+      : shifted.map((p) =>
           p.element === "product"
             ? { ...p, importance: Math.min(100, p.importance + 10) }
             : p.element === "headline" || p.element === "cta"
@@ -165,6 +282,7 @@ export class CommercialLayoutService {
       "",
       "ATTENTION BUDGET (0–100). This is the order a viewer must read the frame in. Give the strongest element the optical emphasis — contrast, focus, scale and placement — and make sure nothing below it competes for that emphasis:",
       ...effectivePriority.map((p) => `- ${p.element.toUpperCase()} — ${p.importance}/100. ${p.role}`),
+      ...(objectiveNotes.length ? [objectiveNotes[0]] : []),
       "",
       `EYE FLOW: ${spec.eyeFlow.replace(/_/g, " ")}. Build the composition so the eye enters, travels and settles in that order; leading lines, focus falloff and tonal contrast should all reinforce it rather than fight it.`,
       "",

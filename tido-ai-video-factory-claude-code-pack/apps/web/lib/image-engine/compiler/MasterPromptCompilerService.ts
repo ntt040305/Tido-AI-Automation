@@ -268,10 +268,29 @@ export class MasterPromptCompilerService {
         ...locked.non_negotiable_constraints.map((c) => `- Non-negotiable: ${c}`),
         ``,
         `COMMERCIAL FRAMING:`,
-        `- Objective: ${enh.creative_objective}`,
-        `- Visual hierarchy: ${enh.visual_hierarchy}`,
-        `- Why this works: ${enh.commercial_reasoning}`,
+        // The objective, without the part that describes our own retrieval.
+        //
+        // It arrived as "...raise its commercial impact for poster (editorial
+        // story) incorporating domain expertise: [Poster Communication & Spatial
+        // Foundation]" — the trailing clause names the knowledge blocks we
+        // happened to select. That is a fact about this pipeline, not an
+        // instruction about the picture, and the renderer cannot act on it.
+        `- Objective: ${String(enh.creative_objective || "").replace(/\s*incorporating domain expertise:.*$/i, ".").trim()}`,
       ];
+
+      // `- Visual hierarchy:` and `- Why this works:` are deliberately not emitted.
+      //
+      // Visual hierarchy here read "Primary anchor: subject (55%). Remaining 45%
+      // is supporting space and atmosphere" while COMMERCIAL LAYOUT states the
+      // same hierarchy per element with real attention weights — the weaker of
+      // two copies.
+      //
+      // `commercial_reasoning` is built by prefixing `lockedIntent.emotional_goal`
+      // verbatim and appending "The subject stays the hero; framing and light are
+      // tuned for '<asset>' delivery". The first half duplicates the Emotional
+      // goal line four lines above it, character for character, and the second
+      // half is the pipeline agreeing with itself. Measured on a serum launch the
+      // pair cost 351 characters of a prompt that had none to spare.
 
       // Explicit client directives are repeated here as intent (not as execution)
       // so they survive even if a later section is trimmed under budget pressure.
@@ -321,30 +340,24 @@ export class MasterPromptCompilerService {
       instanceLines.push(`- DISTINCT PRODUCT IDENTITY ISOLATION: Each listed PRODUCT_xx is a separate physical identity. Preserve each product's reference-supported characteristics and distinct differences. Do NOT clone one product identity to satisfy another, do NOT average identities into a hybrid, and do NOT transfer product-specific features across distinct identities.`);
     }
 
-    // Phase 2.4 Explicit Reference Identity Lock Block
-    instanceLines.push(`\n[REFERENCE IDENTITY LOCK]`);
-    instanceLines.push(`The uploaded reference assets are commercial identity assets.`);
-    instanceLines.push(`Preserve:`);
-    instanceLines.push(`- exact product appearance`);
-    instanceLines.push(`- exact shape`);
-    instanceLines.push(`- exact packaging`);
-    instanceLines.push(`- exact logo`);
-    instanceLines.push(`Allowed:`);
-    instanceLines.push(`- new environment`);
-    instanceLines.push(`- new lighting`);
-    instanceLines.push(`- a different camera angle, distance and crop from the reference`);
-    instanceLines.push(`- a different arrangement of the product within the frame`);
-    instanceLines.push(`Forbidden:`);
-    instanceLines.push(`- redesign`);
-    instanceLines.push(`- replacement`);
-    instanceLines.push(`- invented packaging`);
-    instanceLines.push(`- fake logo\n`);
+    // Phase 2.4 identity lock, reduced to what is not already stated.
+    //
+    // This was nineteen lines listing Preserve / Allowed / Forbidden. The
+    // REFERENCE SEMANTICS section states the same separation unconditionally and
+    // in better prose — what the product IS versus how it is PHOTOGRAPHED — so
+    // all but two of these concepts appeared in the same prompt twice. The two
+    // that did not are the ones kept here.
+    instanceLines.push(
+      `\n[REFERENCE IDENTITY LOCK] References are identity evidence: never redesign or replace the product, never invent packaging it does not have, and never generate a logo or brand mark that is not in the reference.\n`
+    );
 
     // Inject Phase 2.2 & 2.4 Reference Manifest Identity Lock Rules
     const refManifest = input.routingResult.reference_manifest;
     if (refManifest) {
-      instanceLines.push(`- REFERENCE MANIFEST RELATIONSHIP TYPE: [${refManifest.relationship_type.toUpperCase()}]`);
-      instanceLines.push(`- REFERENCE MANIFEST METRICS: ${refManifest.total_references} Reference Image(s), ${refManifest.detected_products_count} Product(s), ${refManifest.detected_logos_count} Logo(s).`);
+      // Relationship type and reference counts are router bookkeeping. The
+      // renderer is holding the images and can count them; what it cannot infer
+      // is which product each one binds to, and that is stated below.
+      instanceLines.push(`- REFERENCE RELATIONSHIP: ${refManifest.relationship_type.toUpperCase()}`);
 
       if (refManifest.identity_control_metadata) {
         instanceLines.push(`- ${refManifest.identity_control_metadata.compact_directive}`);
@@ -378,9 +391,18 @@ export class MasterPromptCompilerService {
       }
     }
 
+    // Which products are single-reference, without restating the policy.
+    //
+    // REFERENCE SEMANTICS carries the rule itself ("with one reference image,
+    // unseen surfaces are reconstructed conservatively without inventing
+    // unverified logos, text or structural features"). What it cannot know is
+    // WHICH products that applies to, which is the only part worth spending
+    // characters on here.
     const singleRefProducts = resolvedGroups.filter((p) => p.reference_ids.length === 1);
     if (singleRefProducts.length > 0) {
-      instanceLines.push(`- SINGLE-REFERENCE POLICY: Product(s) [${singleRefProducts.map((p) => p.product_id).join(", ")}] have only 1 reference image. Unseen surfaces must be reconstructed conservatively without inventing unverified logos, text, or structural controls.`);
+      instanceLines.push(
+        `- SINGLE-REFERENCE PRODUCTS (apply the single reference policy above): ${singleRefProducts.map((p) => p.product_id).join(", ")}.`
+      );
     }
 
     // Check for high-importance unknowns
@@ -417,21 +439,56 @@ export class MasterPromptCompilerService {
     let typographyAndReadableCopyText = "";
 
     if (copyItems.length > 0) {
+      // Typography as communication design, not as a fixed hierarchy.
+      //
+      // This section used to open with one sentence prescribing the same order
+      // for every render: "primary emphasis > secondary subtitle > product
+      // identity/offer > action". It was byte-identical across all five asset
+      // types and every brand, which made it a template rather than a decision —
+      // a launch line on a thumbnail and a price on a banner were being given the
+      // same treatment because nothing ever asked what the words were for.
+      //
+      // What replaces it are the questions a designer answers, plus the roles the
+      // caller actually supplied. The roles are evidence about what each string
+      // DOES; the relative emphasis is left to be decided from them, the brand
+      // and the format, all of which are stated elsewhere in this prompt.
+      const roleOf = (item: CopyItemInput | string): string => {
+        if (typeof item === "string") return "";
+        const t = (item.type || "").trim();
+        return t && t !== "other" ? t.replace(/_/g, " ") : "";
+      };
+      const anyRole = copyItems.some((i) => roleOf(i));
+
       const lines: string[] = [
-        "Integrate the authorized copy using appropriate visual hierarchy (primary emphasis > secondary subtitle > product identity/offer > action). Preserve exact spelling, capitalization, punctuation, numbers, and accents. Only the quoted strings below may appear as readable typography in the rendered visual; all other prompt text consists of non-visible generation instructions:\n",
+        "The strings below are the only words that may appear in the image. Reproduce them exactly \u2014 spelling, capitalization, punctuation, numbers and accents \u2014 and render no others; every other line in this prompt is a non-visible instruction.",
+        "",
+        "Decide their treatment rather than applying a default. Which string carries the message, and which merely supports it? Does the emphasis come from size, weight, colour, or the space around it? Does the type sit with the image or on top of it? Type that has to fight the picture behind it is placed wrong, not sized wrong. Let the brand and the way this format is read decide how loud it is \u2014 both are stated above.",
+        "",
       ];
 
       copyItems.forEach((item) => {
         const text = typeof item === "string" ? item : item.text;
         if (text && text.trim()) {
-          lines.push(`"${text.trim()}"`);
+          const role = roleOf(item);
+          lines.push(role ? `"${text.trim()}"  \u2014 supplied as: ${role}` : `"${text.trim()}"`);
         }
       });
+
+      if (anyRole) {
+        lines.push(
+          "",
+          "The roles above are what the client called each string, not an instruction about size or position."
+        );
+      }
 
       typographyAndReadableCopyText = lines.join("\n");
     } else {
       warnings.push("NO_EXACT_COPY");
-      typographyAndReadableCopyText = "No readable typography authorized. Reserve clean typography area only. Do NOT render words, letters, fake brand names, prices, or decorative text into image pixels.";
+      // No copy was authorized, which is a decision in itself: this image has to
+      // communicate without words. Previously this line only forbade text and
+      // told the renderer to leave a gap for type that is never coming.
+      typographyAndReadableCopyText =
+        "No copy is authorized, so this image communicates entirely without words \u2014 the picture carries the whole message. Render no words, letters, invented brand names, prices, labels or decorative lettering anywhere in the frame. Compose for a finished image rather than leaving a blank band for type that will not be added.";
     }
 
     provenance.exact_copy = { source: "user.copyItems", items: copyItems };
@@ -482,6 +539,19 @@ export class MasterPromptCompilerService {
       );
     } else if (strategy?.commercial_goal) {
       strategyLines.push(`BUSINESS GOAL: ${strategy.commercial_goal}`);
+    }
+    // What this image has to achieve, stated before who it is for.
+    //
+    // The business goal above is the campaign's goal ("ra mạt sản phẩm"); this is
+    // the IMAGE's goal, which is a narrower question and the one that decides
+    // composition. An image made to be remembered and an image made to be acted
+    // on are different pictures, and until now nothing in the prompt separated
+    // them.
+    if (strategy?.communication_objective) {
+      strategyLines.push(`WHAT THIS IMAGE MUST ACHIEVE: ${strategy.communication_objective}`);
+    }
+    if (strategy?.brand_personality) {
+      strategyLines.push(`HOW THIS BRAND BEHAVES: ${strategy.brand_personality}`);
     }
     if (strategy?.consumer_insight) strategyLines.push(`CONSUMER INSIGHT: ${strategy.consumer_insight}`);
     if (strategy?.target_customer_psychology) {
@@ -560,6 +630,23 @@ export class MasterPromptCompilerService {
       if (vtLines.length > 0) {
         strategyLines.push("VISUAL TRANSLATION OF THAT MESSAGE:", ...vtLines);
       }
+    }
+
+    // The reading order, and the road not taken.
+    //
+    // `attention_sequence` is what the viewer should experience — notice,
+    // understand, then feel or act. COMMERCIAL LAYOUT allocates attention as
+    // numbers per element, which is the same question answered mechanically; the
+    // numbers cannot say what the second beat is FOR.
+    //
+    // `creative_route` is one line naming the direction chosen over the strongest
+    // alternative. It is in the prompt because a renderer that knows an image is
+    // deliberately quiet will not brighten it back toward the safe version.
+    if (strategy?.attention_sequence) {
+      strategyLines.push(`HOW THE FRAME SHOULD BE READ: ${strategy.attention_sequence}`);
+    }
+    if (strategy?.creative_route) {
+      strategyLines.push(`THE ROUTE TAKEN: ${strategy.creative_route}`);
     }
 
     // `prompt_guidance` is included alongside the structured translation, not
@@ -745,7 +832,12 @@ export class MasterPromptCompilerService {
       aspectRatio: input.aspectRatio,
       copyItems: input.copyItems,
       hasLogoAsset: input.hasLogoAsset ?? ((input.routingResult.reference_manifest?.detected_logos_count || 0) > 0),
-      objective: input.marketingContext?.objective,
+      // The image's own job, when the strategy layer worked one out, and the
+      // campaign's objective otherwise. These differ: a consideration campaign
+      // whose brief says "cân nhắc mua hàng" contains the word for "buy" without
+      // being a hard sell, and the reasoned objective says so.
+      objective: strategy?.communication_objective || input.marketingContext?.objective,
+      attentionShift: strategy?.attention_shift,
       targetChannel: input.marketingContext?.target_channel,
     });
     provenance.commercial_layout = {

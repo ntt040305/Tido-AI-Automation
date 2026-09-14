@@ -107,7 +107,14 @@ export class CreativeKnowledgeService {
     // 5 Cinematic style
     const guidanceLines: string[] = [
       "[CREATIVE DIRECTION]",
-      `1. PRODUCT IDENTITY: Preserve exact product shape, packaging, texture, and silhouette. ${creativeDirection.quality_checks[0] || ""}`,
+      // The preserve-the-product half is dropped: REFERENCE SEMANTICS states it
+      // once as Protected, the identity lock states it again, and this line then
+      // stated it a third time before appending a quality check that usually
+      // repeated it a fourth ("Preserve exact product packaging silhouette and
+      // materials"). Only the quality check, which is product-specific, remains.
+      ...(creativeDirection.quality_checks[0]
+        ? [`1. PRODUCT IDENTITY CHECK: ${creativeDirection.quality_checks[0]}`]
+        : []),
       `2. LOGO PRESERVATION: Maintain exact brand mark placement, vector sharpness, and clearance space (do NOT generate fake logos).`,
       `3. COMMERCIAL COMPOSITION: ${creativeDirection.composition_strategy} Camera: ${creativeDirection.camera_direction}`,
       `4. TYPOGRAPHY AREA: ${creativeDirection.typography_strategy}`,

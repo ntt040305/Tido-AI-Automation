@@ -3,6 +3,33 @@ import { usePictureEngineStore } from "../stores/picture-engine.store";
 import { IMAGE_ENGINE_CONFIG } from "../../../lib/image-engine/config";
 
 /**
+ * Internal tester identity, for routing to the experiment pipeline.
+ *
+ * Two guards, and the second is the one that matters:
+ *
+ *   1. The value comes from `NEXT_PUBLIC_TIDO_TESTER_ID`. This file runs in the
+ *      browser, and Next.js only puts `NEXT_PUBLIC_`-prefixed variables into the
+ *      client bundle — a plain `TIDO_TESTER_ID` would read as `undefined` here
+ *      and the header would silently never be sent.
+ *
+ *   2. It is read only when `NODE_ENV !== "production"`. Next.js inlines
+ *      NODE_ENV at build time, so in a production build this whole branch is a
+ *      constant `false` and the bundler removes it — the variable cannot ship to
+ *      real users even if someone sets it in a production environment by
+ *      mistake. That is the property worth having: production safety should not
+ *      depend on an operator remembering not to set a variable.
+ *
+ * Returns an empty object rather than a header with an undefined value, so a
+ * developer who has not set the variable sends no header at all and is routed to
+ * stable like any other user.
+ */
+function internalTesterHeaders(): Record<string, string> {
+  if (process.env.NODE_ENV === "production") return {};
+  const testerId = (process.env.NEXT_PUBLIC_TIDO_TESTER_ID || "").trim();
+  return testerId ? { "x-tido-tester-id": testerId } : {};
+}
+
+/**
  * Service Layer Abstraction for Picture Engine API
  * Real End-to-End Execution connecting to Backend Image Engine (/api/image/generate-simple)
  */
@@ -200,6 +227,10 @@ export async function createPictureAsset(
 
         res = await fetch("/api/image/generate-simple", {
           method: "POST",
+          // Only the tester header. Content-Type is deliberately left unset so
+          // the browser generates the multipart boundary; setting it by hand
+          // here would corrupt the upload.
+          headers: internalTesterHeaders(),
           body: formData,
           signal: controller.signal,
         });
@@ -208,6 +239,7 @@ export async function createPictureAsset(
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            ...internalTesterHeaders(),
           },
           body: JSON.stringify({
             concept,

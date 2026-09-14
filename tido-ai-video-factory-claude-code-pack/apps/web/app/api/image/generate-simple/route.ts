@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { SimpleImageGenerationOrchestratorService } from "@/lib/image-engine/service/SimpleImageGenerationOrchestratorService";
+import { PipelineRouter } from "@/lib/image-engine/evolution/PipelineRouter";
 import { SimpleInputRequestV1, AssetRoleV1 } from "@/lib/image-engine/types";
 
 export const runtime = "nodejs";
@@ -162,8 +162,21 @@ export async function POST(req: NextRequest) {
 
     let result: any;
     try {
+      // The only line this phase changes in the stable request path.
+      //
+      // `PipelineRouter.run` has the same signature as the orchestrator call it
+      // replaces and, with default flags, does exactly one extra thing: it reads
+      // a small JSON file, finds active_pipeline is "stable", and calls the same
+      // orchestrator with the same argument. Routing failures fall back to
+      // stable rather than propagating, so the worst case of this indirection is
+      // the behaviour that existed before it.
+      //
+      // The tester id comes from a header rather than from any account field:
+      // internal routing must not depend on who a user is, and the value is
+      // written to the comparison log where personal identifiers do not belong.
+      const testerId = req.headers.get("x-tido-tester-id") || undefined;
       result = await Promise.race([
-        SimpleImageGenerationOrchestratorService.generateSimpleImage(simpleRequest),
+        PipelineRouter.run(simpleRequest, undefined, { testerId }),
         timeoutPromise,
       ]);
     } finally {

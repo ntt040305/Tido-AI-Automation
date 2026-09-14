@@ -46,3 +46,4 @@ next-env.d.ts
 .verify-build/
 .benchmark-out/
 .human-benchmark/
+data/evolution/generation-log.jsonl
