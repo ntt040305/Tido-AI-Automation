@@ -159,6 +159,105 @@ export interface FeatureFlags {
      * user still wins and nothing is touched.
      */
     typography_control_priority_v1: boolean;
+
+    /**
+     * AssetIntent V2 — the format offers routes instead of assigning one.
+     *
+     * Three fields in `AssetContext` answered the question rather than asking
+     * it: banner named a layout, and the thumbnail entry required a person and
+     * then wrote type around that person's face. Measured on a live run, the
+     * director read the banner line back and returned it as its own creative
+     * idea, so the template travelled in as context and came out as a decision.
+     *
+     * On, the format also states the routes that legitimately solve it and the
+     * ways it fails while still being a competent picture. Both are inputs for
+     * the director to reason with; neither reaches the prompt, because a list of
+     * strategies the renderer can read is a menu, which is the same defect
+     * wearing a different name.
+     *
+     * Off, `assetContextFor` and `assetContextBrief` return exactly what they
+     * returned before this flag existed, character for character.
+     */
+    asset_intent_v2: boolean;
+
+    /**
+     * The director's brief, assembled through a typed context instead of inline.
+     *
+     * The nine-field object literal in `ExperimentPipeline` was built from three
+     * places in the request with nothing naming or typing the result, so what a
+     * decision rested on could not be answered after the fact. This routes the
+     * same nine fields through `buildContext` and `toDirectorBrief`, and records
+     * the evidence — product image, logo, recognised format, stated industry —
+     * that was previously invisible.
+     *
+     * It infers nothing and decides nothing. On and off must produce the same
+     * `DirectorBriefInput`, and a test asserts that across a matrix of requests;
+     * the flag exists so the claim can be withdrawn in one line rather than
+     * because the two paths are expected to differ.
+     */
+    creative_decision_context_v1: boolean;
+
+    /**
+     * The director reads the client's own attachments.
+     *
+     * Until now the product photograph and the logo reached Nano Banana as
+     * reference images and no reasoning layer had seen either: camera, lighting
+     * and composition were decided for a product from a description of it. On,
+     * one vision call reads the attachments and the director is handed a bounded
+     * summary that keeps observation and interpretation apart.
+     *
+     * Requires `creative_decision_context_v1`, because the result lives on the
+     * context. Enabled alone it is a switch with nothing behind it, and the
+     * pipeline treats it as off.
+     *
+     * Every failure — no image, an unparseable answer, an answer that survives no
+     * filtering, a thrown error — yields null. There is deliberately no fallback
+     * description: a plausible sentence about a product nobody looked at is worse
+     * than none, because it is indistinguishable from evidence.
+     */
+    visual_dna_v1: boolean;
+
+    /**
+     * The route is chosen, not assigned.
+     *
+     * Three direction names were written into the director's JSON contract —
+     * Commercial Safe, Premium Brand, Creative Exploration — so every brief came
+     * back answered by the same three commercial attitudes regardless of product,
+     * audience, objective or format. On, the director develops three of the routes
+     * the format actually offers, judges each against the product, the audience,
+     * the objective, the brand, the channel and what can be produced, and quotes
+     * the words each judgement rests on.
+     *
+     * Requires `asset_intent_v2`, which is where the routes come from. Without
+     * routes there is nothing to choose between and the flag is treated as off.
+     *
+     * It REPLACES the fixed triad rather than joining it: two systems inventing
+     * directions for one brief is the two-scene defect at the strategy layer.
+     */
+    creative_strategy_selection_v1: boolean;
+
+    /**
+     * Several products, one photograph.
+     *
+     * Measured on a three-product render: the compiled prompt ran to 21,684
+     * characters and contained zero lines describing any relationship between
+     * the products. Everything that mentioned them told the renderer to keep
+     * them apart — three separate identities, do not clone, do not average,
+     * three reference priorities at 0.9 — and the layout reserved one
+     * PRODUCT_FOCAL zone for all three. The render was three glasses in a row,
+     * evenly spaced, equally lit, with no contact shadow under any of them.
+     * That is the prompt working as written.
+     *
+     * On, and only when two or more products are attached, the director is
+     * asked why these products belong in one frame and what that makes
+     * physically true: one ground, one key light, a depth order, contact. The
+     * isolation instructions are untouched — they are why two products do not
+     * become a hybrid. This adds the counterweight nobody had written.
+     *
+     * It is not a layout. It says what must be true of the scene and leaves the
+     * arrangement to the renderer.
+     */
+    multi_product_staging_v1: boolean;
   };
   /** Which component builds an experiment run may use. */
   components: Record<ComponentName, boolean>;
@@ -189,6 +288,11 @@ export const DEFAULT_FLAGS: FeatureFlags = {
     creative_bridge_v1: false,
     typography_roles_v1: false,
     typography_control_priority_v1: false,
+    asset_intent_v2: false,
+    creative_decision_context_v1: false,
+    visual_dna_v1: false,
+    creative_strategy_selection_v1: false,
+    multi_product_staging_v1: false,
   },
   components: {
     prompt_compiler: false,

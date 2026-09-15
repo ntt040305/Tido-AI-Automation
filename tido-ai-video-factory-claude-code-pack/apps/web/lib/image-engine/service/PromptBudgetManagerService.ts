@@ -1,3 +1,5 @@
+import { tierFor } from "../compiler/prompt-section-policy";
+
 export interface PromptSectionRemoval {
   section: string;
   priority: number;
@@ -60,50 +62,19 @@ export class PromptBudgetManagerService {
   public static readonly EMERGENCY_TARGET = Number(process.env.PROMPT_TARGET_CHARS || 22000);
 
   /**
-   * Section priority. Anything unrecognised defaults to 5, so a new section is
-   * treated as ordinary content rather than silently becoming the first casualty.
+   * Section ranking now comes from `prompt-section-policy`, which
+   * `ProviderPromptOptimizer` is checked against by the test suite.
+   *
+   * It used to be a private table here, and it disagreed with the optimizer's
+   * on the sections that matter most: the optimizer declared ART DIRECTION and
+   * COMMERCIAL LAYOUT undroppable while this service ranked them 4 and 6, and
+   * this service runs second, so its opinion was the one that shipped. Measured
+   * on five production prompts — art direction cut to 16 characters on four of
+   * five, commercial layout gone on five of five.
+   *
+   * Two rankings for one prompt is the defect. The table moved; the loop below
+   * did not.
    */
-  private static readonly SECTION_PRIORITY: { match: RegExp; priority: number }[] = [
-    // 0 — control scaffolding. Without these the model does not know what to emit.
-    { match: /^ROLE$/i, priority: 0 },
-    { match: /^CONFLICT PRIORITY$/i, priority: 0 },
-    { match: /^FINAL OUTPUT$/i, priority: 0 },
-
-    // 1 — what the client actually asked for.
-    { match: /^CREATIVE INTENT$/i, priority: 1 },
-
-    // 2 — the campaign concept and its visual DNA.
-    //
-    // This sat at the bottom of the ranking when it held only campaign framing.
-    // It now carries the campaign DNA — the rules that make five separate renders
-    // read as one campaign — so dropping it first turned a coordinated asset set
-    // into five unrelated pictures, silently, on every asset.
-    { match: /^CAMPAIGN STRATEGY$/i, priority: 2 },
-
-    // 2 — hard user constraints, including authorized copy.
-    { match: /^USER HARD REQUIREMENTS$/i, priority: 2 },
-    { match: /^TYPOGRAPHY & READABLE COPY$/i, priority: 2 },
-
-    // 3 — reference identity locks.
-    { match: /^PRODUCT INSTANCE REQUIREMENTS$/i, priority: 3 },
-    { match: /^INSPIRATION REFERENCE — SUBJECT LOCK$/i, priority: 3 },
-    { match: /^REFERENCE SEMANTICS$/i, priority: 3 },
-
-    // 4 — the single resolved art direction.
-    { match: /^ART DIRECTION$/i, priority: 4 },
-
-    // 5 — retrieved professional knowledge.
-    { match: /^PROFESSIONAL KNOWLEDGE$/i, priority: 5 },
-
-    // 6 — output rules and format layout.
-    { match: /^COMMERCIAL LAYOUT$/i, priority: 6 },
-    { match: /^OUTPUT CONTEXT$/i, priority: 6 },
-    { match: /^CREATIVE EXECUTION$/i, priority: 6 },
-    { match: /^CREATIVE & RENDER CONSTRAINTS$/i, priority: 6 },
-
-    // 7 — brand background. Valuable, but the image still reads without it.
-    { match: /^BRAND KNOWLEDGE$/i, priority: 7 },
-  ];
 
   public enforceBudget(
     prompt: string,
@@ -193,6 +164,23 @@ export class PromptBudgetManagerService {
     const lines = text.split("\n");
     const sections: PromptSection[] = [];
     let current: PromptSection = { name: "PREAMBLE", priority: 0, body: "" };
+    /**
+     * The ranking of the `## ` heading the parser is currently inside.
+     *
+     * A bracketed block is a CHILD of the heading above it, not a sibling of it.
+     * Before this was tracked, `[RESOLVED ART DIRECTION]` was ranked by its own
+     * name, matched no rule, and fell to the default 5 — so the resolved art
+     * direction was thrown away ahead of content its parent outranked, and
+     * `## ART DIRECTION` survived owning nothing but its own heading line.
+     * Measured on five production prompts: art direction reduced to 16
+     * characters on four of five, commercial layout gone entirely on five of
+     * five, and `[CREATIVE & RENDER CONSTRAINTS]` dropped from inside
+     * `## FINAL OUTPUT`, a section priority 0 declares undroppable.
+     *
+     * Null until the first heading, so a bracket that appears in the preamble
+     * is ranked exactly as it was before.
+     */
+    let parentPriority: number | null = null;
 
     const flush = () => {
       if (current.body.trim()) sections.push({ ...current, body: current.body.replace(/\s+$/, "") });
@@ -205,7 +193,14 @@ export class PromptBudgetManagerService {
 
       if (name) {
         flush();
-        current = { name, priority: this.priorityFor(name), body: `${line}\n` };
+        // Annotated rather than inferred: `parentPriority` is assigned from this
+        // constant two lines down, and without a declared type the compiler
+        // reports the pair as circular (TS7022).
+        const priority: number = heading
+          ? this.priorityFor(name)
+          : parentPriority ?? this.priorityFor(name);
+        if (heading) parentPriority = priority;
+        current = { name, priority, body: `${line}\n` };
       } else {
         current.body += `${line}\n`;
       }
@@ -215,14 +210,11 @@ export class PromptBudgetManagerService {
   }
 
   private static priorityFor(name: string): number {
-    const clean = name.replace(/^\[|\]$/g, "").trim();
-    for (const rule of this.SECTION_PRIORITY) {
-      if (rule.match.test(clean)) return rule.priority;
-    }
-    // Bracketed blocks emitted by services carry identity or constraint content
-    // far more often than not, so an unknown one is treated as ordinary content
-    // rather than as the first thing to throw away.
-    return 5;
+    // Unrecognised names fall to TIER_ORDINARY inside `tierFor`, on the same
+    // reasoning the local default carried: a block emitted by a layer nobody
+    // updated the table for is far more likely to be a requirement than a
+    // rationale, so it outlives everything explicitly judged droppable.
+    return tierFor(name);
   }
 
   /**

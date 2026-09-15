@@ -1,0 +1,73 @@
+{
+  "captured_at_phase": "current",
+  "note": "Behaviour BEFORE the Phase 0B fix. Written once, then never again; Phase 0B diffs against it.",
+  "thresholds": {
+    "emergency_target": 22000,
+    "hard_maximum": 24000
+  },
+  "realistic_prompt": {
+    "input_chars": 26518,
+    "output_chars": 21275,
+    "blocks_before": [
+      "ROLE",
+      "CREATIVE INTENT",
+      "CAMPAIGN STRATEGY",
+      "PRODUCT INSTANCE REQUIREMENTS",
+      "REFERENCE SEMANTICS",
+      "USER HARD REQUIREMENTS",
+      "ART DIRECTION",
+      "RESOLVED ART DIRECTION",
+      "COMMERCIAL LAYOUT",
+      "COMMERCIAL LAYOUT PLAN",
+      "TYPOGRAPHY & READABLE COPY",
+      "CONFLICT PRIORITY",
+      "FINAL OUTPUT",
+      "CREATIVE & RENDER CONSTRAINTS"
+    ],
+    "blocks_after": [
+      "ROLE",
+      "CREATIVE INTENT",
+      "CAMPAIGN STRATEGY",
+      "PRODUCT INSTANCE REQUIREMENTS",
+      "REFERENCE SEMANTICS",
+      "USER HARD REQUIREMENTS",
+      "ART DIRECTION",
+      "TYPOGRAPHY & READABLE COPY",
+      "CONFLICT PRIORITY",
+      "FINAL OUTPUT",
+      "CREATIVE & RENDER CONSTRAINTS"
+    ],
+    "blocks_removed": [
+      {
+        "section": "COMMERCIAL LAYOUT PLAN",
+        "priority": 1,
+        "chars": 2256
+      },
+      {
+        "section": "COMMERCIAL LAYOUT",
+        "priority": 1,
+        "chars": 20
+      },
+      {
+        "section": "RESOLVED ART DIRECTION",
+        "priority": 1,
+        "chars": 2964
+      }
+    ],
+    "duplicate_lines_removed": 0,
+    "truncated": false
+  },
+  "oversized_prompt": {
+    "input_chars": 26292,
+    "output_chars": 19316,
+    "blocks_removed": [
+      "BRAND KNOWLEDGE:p4",
+      "OUTPUT CONTEXT:p3",
+      "PROFESSIONAL KNOWLEDGE:p3"
+    ]
+  },
+  "clean_sub_threshold_prompt": {
+    "input_chars": 7114,
+    "byte_identical": true
+  }
+}

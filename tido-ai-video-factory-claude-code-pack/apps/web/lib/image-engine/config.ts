@@ -155,6 +155,24 @@ export const IMAGE_ENGINE_CONFIG = {
    */
   SUPPORTED_ASPECT_RATIOS: ["1:1", "9:16", "16:9"],
   IMGSTUDIO_SUPPORTED_ASPECT_RATIOS: ["1:1", "9:16", "16:9"],
+
+  /**
+   * References ImgStudio accepts in one edit request.
+   *
+   * The provider answers a fourth image with HTTP 400 and "Provider only
+   * supports maximum 3 images per edit request". Declared here rather than
+   * discovered on the wire, next to the aspect ratios, because both are the same
+   * kind of fact: something the provider will refuse, knowable before the call,
+   * and cheaper to check than to be told.
+   *
+   * Overridable by env so a ceiling the provider raises does not need a deploy.
+   * Gemini and Cloudflare have their own, which is why this one carries the
+   * provider's name.
+   */
+  IMGSTUDIO_MAX_REFERENCE_IMAGES:
+    Number(process.env.IMGSTUDIO_MAX_REFERENCE_IMAGES) > 0
+      ? Number(process.env.IMGSTUDIO_MAX_REFERENCE_IMAGES)
+      : 3,
 };
 
 export function resolveDataPath(relativePath: string): string {

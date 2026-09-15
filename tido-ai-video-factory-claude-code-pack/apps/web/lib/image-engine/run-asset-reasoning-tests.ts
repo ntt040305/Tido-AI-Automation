@@ -133,7 +133,16 @@ check("The compressor keeps design reasoning, not only physical rules", () => {
 });
 
 check("ASSET CONTEXT survives an oversized prompt", () => {
-  const filler = "## BRAND KNOWLEDGE\n" + "Tido Skin was founded in 2014. ".repeat(900);
+  // Sized against the live ceiling rather than a fixed repeat count. Written as
+  // `.repeat(900)` this fixture was oversized only while the limit happened to
+  // be 20,000; once `PROMPT_HARD_MAXIMUM_CHARS` moved it, the case asserted
+  // nothing and said so only when the suite was finally run under that
+  // configuration.
+  const filler =
+    "## BRAND KNOWLEDGE\n" +
+    "Tido Skin was founded in 2014. ".repeat(
+      Math.ceil((ProviderPromptOptimizer.HARD_LIMIT * 1.4) / 31)
+    );
   const prompt = [
     "## CAMPAIGN STRATEGY",
     "ASSET CONTEXT — BANNER:",

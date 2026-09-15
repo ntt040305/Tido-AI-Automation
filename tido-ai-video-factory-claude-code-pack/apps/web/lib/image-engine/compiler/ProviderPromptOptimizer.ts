@@ -1,3 +1,56 @@
+import { tierFor, TIER_CREATIVE, TIER_SUPPORTING } from "./prompt-section-policy";
+
+/**
+ * The ceiling this optimizer holds a prompt to.
+ *
+ * Read once at module load, from the same variable
+ * `PromptBudgetManagerService.HARD_MAXIMUM` and
+ * `PromptBudgetValidator.DEFAULT_PROVIDER_HARD_LIMIT` read, so the three agree
+ * by construction rather than by somebody remembering to update all three.
+ *
+ * A missing, malformed or non-positive value falls back to 20,000 — the literal
+ * this replaced — so an unconfigured environment is unchanged.
+ */
+const DEFAULT_HARD_LIMIT = 20000;
+const DEFAULT_SOFT_THRESHOLD = 17000;
+const CONFIGURED_HARD_LIMIT = (() => {
+  const raw = Number(process.env.PROMPT_HARD_MAXIMUM_CHARS);
+  return Number.isFinite(raw) && raw > 0 ? raw : DEFAULT_HARD_LIMIT;
+})();
+
+/**
+ * How much generic craft doctrine a prompt may carry per character of decided
+ * creative direction.
+ *
+ * A separate budget from the length ceiling, because they answer different
+ * questions. The ceiling asks what the provider accepts. This asks what the
+ * renderer can still hear.
+ *
+ * Why it exists
+ * -------------
+ * The ceiling used to be a hardcoded 20,000 and, as a side effect nobody chose,
+ * it kept `PROFESSIONAL KNOWLEDGE`, `BRAND KNOWLEDGE` and `OUTPUT CONTEXT` out
+ * of every prompt. Raising it to the provider's real limit removed that side
+ * effect, and measured across the change: professional knowledge went from 0 to
+ * 5,157 characters while the resolved art direction shrank from 2,571 to 2,310.
+ * Generic guidance outweighed the decision 2.2 to 1, and render quality fell
+ * from about 6.75 to about 2-3 out of 10.
+ *
+ * The prompt was not too long. The signal in it was too dilute — which is why
+ * this is a ratio and not another ceiling, and why lowering the ceiling back
+ * would have fixed the symptom by re-imposing an accident.
+ *
+ * The default reproduces the ratio that produced 6.75 across seventy renders.
+ * Intermediate values have never been measured; the variable exists so they can
+ * be, deliberately, one at a time. Set it above 1 to disable the budget entirely
+ * and return to the behaviour this repairs.
+ */
+const DEFAULT_MAX_GENERIC_RATIO = 0.15;
+const MAX_GENERIC_RATIO = (() => {
+  const raw = Number(process.env.PROMPT_MAX_GENERIC_RATIO);
+  return Number.isFinite(raw) && raw >= 0 ? raw : DEFAULT_MAX_GENERIC_RATIO;
+})();
+
 export interface PromptOptimizationTelemetry {
   before_chars: number;
   after_chars: number;
@@ -63,10 +116,34 @@ export class ProviderPromptOptimizer {
    *
    * P0 is never touched at any level.
    */
-  public static readonly SOFT_THRESHOLD = 17000;
-  public static readonly HARD_LIMIT = 20000;
+  /**
+   * The ceiling, taken from the same configuration every other budget actor
+   * reads instead of from a literal.
+   *
+   * It was `20000`, written here and nowhere else. `PROMPT_HARD_MAXIMUM_CHARS`
+   * later moved `PromptBudgetManagerService.HARD_MAXIMUM` and
+   * `PromptBudgetValidator.DEFAULT_PROVIDER_HARD_LIMIT` to 32,000, and this
+   * number did not move with them — so the strictest ceiling in the system was
+   * the one nobody could configure, and it was 12,000 characters below what the
+   * provider actually accepts. Every render reached the renderer having had its
+   * brand facts, output context and professional knowledge removed to satisfy a
+   * limit that no longer described anything.
+   *
+   * The fallback is the old literal, so an environment that sets nothing behaves
+   * exactly as it did before.
+   */
+  public static readonly HARD_LIMIT = CONFIGURED_HARD_LIMIT;
+  /**
+   * Where intelligent compression starts. Deliberately NOT scaled with the
+   * ceiling: dropping explanation-only blocks and duplicated lines above 17,000
+   * is existing behaviour that costs nothing, and widening it would be a
+   * compression-strategy change rather than a ceiling alignment.
+   *
+   * Clamped so a small configured ceiling cannot invert the two bands.
+   */
+  public static readonly SOFT_THRESHOLD = Math.min(DEFAULT_SOFT_THRESHOLD, CONFIGURED_HARD_LIMIT);
   /** Kept as an alias: several existing suites and services read this name. */
-  public static readonly WARN_THRESHOLD = 17000;
+  public static readonly WARN_THRESHOLD = Math.min(DEFAULT_SOFT_THRESHOLD, CONFIGURED_HARD_LIMIT);
 
   /**
    * Sections that may never be dropped, however tight the budget.
@@ -294,7 +371,14 @@ export class ProviderPromptOptimizer {
     // twenty largest real prompts still over the hard limit while reporting that
     // a tier had been dropped, which reads as success.
     let p1Guard = 0;
-    while (text.length > this.HARD_LIMIT && p1Guard < 12) {
+    // Two reasons to keep dropping, and they are different reasons. Over the
+    // ceiling means the provider will refuse it. Over the generic budget means
+    // the provider will accept it and render something generic, which is the
+    // failure that does not announce itself.
+    while (
+      (text.length > this.HARD_LIMIT || this.signalMix(text).ratio > MAX_GENERIC_RATIO) &&
+      p1Guard < 12
+    ) {
       const p1 = this.dropLowestP1(text);
       if (!p1.dropped.length) break;
       text = p1.text;
@@ -323,6 +407,7 @@ export class ProviderPromptOptimizer {
     }
 
     const after_chars = text.length;
+    const mix = ProviderPromptOptimizer.signalMix(text);
     const budget_status: "OK" | "WARN" | "OVER_HARD_LIMIT" =
       after_chars > this.HARD_LIMIT
         ? "OVER_HARD_LIMIT"
@@ -348,7 +433,33 @@ export class ProviderPromptOptimizer {
       merges_applied,
       tiers_dropped,
       removed_sections: removed_sections.length,
+      // The ceiling in force, printed on every run rather than only when it is
+      // breached. It used to be a literal nobody could see from the outside,
+      // which is how a 20,000-character limit went on cutting prompts for weeks
+      // after the configuration around it moved to 32,000.
+      hard_limit: ProviderPromptOptimizer.HARD_LIMIT,
+      soft_threshold: ProviderPromptOptimizer.SOFT_THRESHOLD,
+      // The signal budget, printed on every run. The regression this repairs was
+      // invisible for a day because nothing reported the mix — only the length,
+      // which was inside every limit the whole time.
+      creative_chars: mix.creative,
+      generic_chars: mix.generic,
+      generic_ratio: mix.ratio,
+      generic_ratio_max: MAX_GENERIC_RATIO,
+      section_chars: mix.sections,
+      ceiling_source: process.env.PROMPT_HARD_MAXIMUM_CHARS
+        ? "PROMPT_HARD_MAXIMUM_CHARS"
+        : "default",
     });
+    if (mix.ratio > MAX_GENERIC_RATIO) {
+      console.warn("[PROMPT_OPTIMIZER][SIGNAL_DILUTE]", {
+        creative_chars: mix.creative,
+        generic_chars: mix.generic,
+        ratio: mix.ratio,
+        max: MAX_GENERIC_RATIO,
+        note: "General craft guidance still outweighs the decided direction after every droppable tier was spent.",
+      });
+    }
     if (budget_status !== "OK") {
       console.warn("[PROMPT_OPTIMIZER][BUDGET]", {
         status: budget_status,
@@ -360,6 +471,55 @@ export class ProviderPromptOptimizer {
     }
 
     return { optimizedPrompt: text, telemetry };
+  }
+
+  /**
+   * How much of the prompt is decided direction and how much is general craft.
+   *
+   * Classification comes from `prompt-section-policy`, the table both reducers
+   * already read, so there is no second opinion about what a section is worth.
+   * Creative is tier 1 — creative intent, campaign strategy, art direction,
+   * commercial layout. Generic is everything from tier 3 down: retrieved
+   * knowledge, brand background, output metadata, explanation.
+   *
+   * Sections nobody classified count as neither. They are usually a requirement
+   * from a layer this table has not been told about, and charging them to either
+   * side would make an unknown section change the budget.
+   */
+  public static signalMix(text: string): {
+    creative: number;
+    generic: number;
+    ratio: number;
+    sections: Record<string, number>;
+  } {
+    const sections: Record<string, number> = {};
+    let creative = 0;
+    let generic = 0;
+    for (const part of text.split(/\n(?=## )/)) {
+      const heading = (part.split("\n")[0] || "").replace(/^#+\s*/, "").trim();
+      if (!part.startsWith("## ")) continue;
+      sections[heading] = part.length;
+      const tier = tierFor(heading);
+      if (tier === TIER_CREATIVE) creative += part.length;
+      else if (tier >= TIER_SUPPORTING) generic += part.length;
+    }
+    return {
+      creative,
+      generic,
+      /**
+       * No decided direction means the budget does not apply.
+       *
+       * The first version reported this as fully dilute, on the reasoning that
+       * all-generic is the worst possible mix. That was wrong, and a test caught
+       * it: a prompt carrying knowledge and no `## ART DIRECTION` is not a
+       * diluted prompt, it is a prompt of a different shape — a fragment, or a
+       * stage that has not reached art direction yet — and emptying it protects
+       * nothing. Dilution is a relationship between two things; with one of them
+       * absent there is no ratio to enforce.
+       */
+      ratio: creative > 0 ? Number((generic / creative).toFixed(3)) : 0,
+      sections,
+    };
   }
 
   /** Whether a `## HEADING` belongs to a tier. */

@@ -54,9 +54,34 @@ console.log("\nMASTER_PROMPT_OPTIMIZATION_V2\n");
 
 check("The budget spends the provider's full allowance", () => {
   // Corrected: the earlier band chased brevity and cost the prompt its
-  // photographic instructions. Everything under the provider's 20,000 is free.
-  assert.strictEqual(ProviderPromptOptimizer.SOFT_THRESHOLD, 17000);
-  assert.strictEqual(ProviderPromptOptimizer.HARD_LIMIT, 20000);
+  // photographic instructions. Everything under the provider's allowance is free.
+  //
+  // The ceiling is read from `PROMPT_HARD_MAXIMUM_CHARS` now, falling back to the
+  // 20,000 this used to assert outright. Written as a literal it passed on an
+  // unconfigured machine and failed on a configured one while the code was
+  // correct on both, so it asserts the contract instead: an unset environment is
+  // unchanged, a set one is honoured, and the soft band never overtakes the hard
+  // one.
+  const configured = process.env.PROMPT_HARD_MAXIMUM_CHARS;
+  if (!configured) {
+    assert.strictEqual(ProviderPromptOptimizer.HARD_LIMIT, 20000, "the fallback ceiling moved");
+    assert.strictEqual(ProviderPromptOptimizer.SOFT_THRESHOLD, 17000, "the fallback soft band moved");
+  } else {
+    assert.strictEqual(
+      ProviderPromptOptimizer.HARD_LIMIT,
+      Number(configured),
+      "the configured ceiling was ignored"
+    );
+  }
+  assert.ok(
+    ProviderPromptOptimizer.SOFT_THRESHOLD <= ProviderPromptOptimizer.HARD_LIMIT,
+    "the soft band sits above the hard ceiling"
+  );
+  assert.strictEqual(
+    ProviderPromptOptimizer.WARN_THRESHOLD,
+    ProviderPromptOptimizer.SOFT_THRESHOLD,
+    "the WARN_THRESHOLD alias drifted"
+  );
 });
 
 check("A prompt under the soft threshold is left alone", () => {
@@ -235,7 +260,12 @@ check("A phrase used once is left alone", () => {
 // ── Priority hierarchy (Task 2) ───────────────────────────────────────────
 
 check("P0 survives even when the prompt is far over the hard limit", () => {
-  const filler = "Atmosphere should feel warm and inviting across the whole frame. ".repeat(400);
+  // Sized against the live ceiling, not a literal. Written as `.repeat(400)` the
+  // fixture was "far over" only while the ceiling happened to be 20,000; once
+  // PROMPT_HARD_MAXIMUM_CHARS moved it, the test asserted nothing.
+  const filler = "Atmosphere should feel warm and inviting across the whole frame. ".repeat(
+    Math.ceil((ProviderPromptOptimizer.HARD_LIMIT * 1.4) / 65)
+  );
   const prompt = [
     "## PRODUCT IDENTITY",
     "[IDENTITY LOCK] PRODUCT_01 Bernard Cafe bottle: preserve glass silhouette and label typography.",
@@ -262,9 +292,13 @@ check("P0 survives even when the prompt is far over the hard limit", () => {
 check("A prompt that is all P0 is reported over budget rather than cut", () => {
   const prompt = [
     "## PRODUCT IDENTITY",
-    "[IDENTITY LOCK] preserve the silhouette. ".repeat(300),
+    "[IDENTITY LOCK] preserve the silhouette. ".repeat(
+      Math.ceil((ProviderPromptOptimizer.HARD_LIMIT * 0.7) / 41)
+    ),
     "## PRODUCT INSTANCE REQUIREMENTS",
-    "Render the bottle facing camera. ".repeat(300),
+    "Render the bottle facing camera. ".repeat(
+      Math.ceil((ProviderPromptOptimizer.HARD_LIMIT * 0.7) / 33)
+    ),
   ].join("\n");
   const out = ProviderPromptOptimizer.optimize(prompt);
   assert.ok(out.optimizedPrompt.includes("[IDENTITY LOCK]"), "P0 was cut to reach the budget");
@@ -357,7 +391,23 @@ check("Optimization is idempotent", () => {
 // ── What survives an oversized prompt (Nano Banana 2, Task 7) ─────────
 
 check("The scene, the product and the realism rules outlive the filler", () => {
-  const filler = "## BRAND KNOWLEDGE\n" + "Bernard Cafe was founded in 2011 and operates 40 stores. ".repeat(420);
+  // Scaled to the live ceiling for the same reason as the fixture above: written
+  // as `.repeat(420)` this was oversized only while the ceiling was 20,000.
+  const filler =
+    "## BRAND KNOWLEDGE\n" +
+    "Bernard Cafe was founded in 2011 and operates 40 stores. ".repeat(
+      Math.ceil((ProviderPromptOptimizer.HARD_LIMIT * 1.5) / 56)
+    );
+  // The campaign section carries the bulk a real compiled prompt carries —
+  // roughly 4,500 characters against 20,000 — because the optimizer now weighs
+  // generic content against decided direction as well as against the ceiling.
+  // Written with four lines of creative content and 48,000 of brand trivia, this
+  // fixture described a prompt in which everything is dilution, and the budget
+  // correctly emptied it. What the case is for is the drop ORDER, and that is
+  // still what it proves: brand trivia must go before the physical rules.
+  const campaignBulk = "Campaign DNA line that ties the five assets together. ".repeat(
+    Math.ceil((ProviderPromptOptimizer.HARD_LIMIT * 0.22) / 53)
+  );
   const prompt = [
     "## CREATIVE INTENT",
     "CREATIVE CONCEPT: quan ca phe khai truong",
@@ -365,6 +415,7 @@ check("The scene, the product and the realism rules outlive the filler", () => {
     "THE SCENE — WHAT THE IMAGE ACTUALLY SHOWS:",
     "- What is happening: two friends step in from the street, first coffees just set down.",
     "- Who is in frame: one woman crossing the threshold, hand still on the door frame.",
+    campaignBulk,
     "## PRODUCT IDENTITY",
     "[IDENTITY LOCK] PRODUCT_01 Bernard Cafe bottle: preserve glass silhouette and label typography.",
     "## COMMERCIAL LAYOUT",
@@ -394,7 +445,13 @@ check("The scene, the product and the realism rules outlive the filler", () => {
 });
 
 check("Least valuable goes first, and unclassified sections outlive the list", () => {
-  const heavy = (h: string) => `## ${h}\n` + `${h} body text that is long enough to matter. `.repeat(180);
+  // Each section is sized so the three together clear the live ceiling; a fixed
+  // repeat count only cleared the 20,000 this used to be pinned to.
+  const heavy = (h: string) =>
+    `## ${h}\n` +
+    `${h} body text that is long enough to matter. `.repeat(
+      Math.ceil((ProviderPromptOptimizer.HARD_LIMIT * 0.5) / 44)
+    );
   const prompt = [
     "## PRODUCT IDENTITY",
     "[IDENTITY LOCK] preserve the silhouette.",

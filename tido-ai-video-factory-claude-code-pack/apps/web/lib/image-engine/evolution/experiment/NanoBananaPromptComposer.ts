@@ -379,6 +379,27 @@ export class NanoBananaPromptComposer {
       lines.push("```");
     }
 
+    // The chosen route, where strategy selection replaced the fixed triad.
+    //
+    // Only the winner travels. The candidates that were considered, the six
+    // assessments behind each and the routes that were offered stop at the
+    // director: a renderer handed a list of strategies is handed a menu, and a
+    // menu is the template this replaced wearing a different word. That is the
+    // same rule `applyCreativeDecision` follows on the control path, so both
+    // modes put the same thing in front of the renderer.
+    if (j.strategy?.selected) {
+      const st = j.strategy;
+      lines.push(
+        "",
+        "## THE ROUTE THIS BRIEF IS ANSWERED BY",
+        "```",
+        `CHOSEN ROUTE: ${st.selected}`
+      );
+      if (st.selection_reason) lines.push(`WHY THAT ROUTE HERE: ${st.selection_reason}`);
+      if (st.why_not_runner_up) lines.push(`DELIBERATELY NOT: ${st.why_not_runner_up}`);
+      lines.push("```");
+    }
+
     // Order follows Part 8: concept, then who the brand is and who is looking,
     // then the visual decisions, then what the elements mean.
     //
@@ -451,6 +472,48 @@ export class NanoBananaPromptComposer {
           ...rows,
           "```"
         );
+      }
+    }
+
+    // Several products, one photograph.
+    //
+    // The counterweight to the isolation instructions the compiled prompt
+    // already carries. Measured on a three-product render: every line that
+    // mentioned the products told the renderer to keep them apart — separate
+    // identities, do not clone, do not average — and nothing said they shared a
+    // scene. The result was three objects in a row with no contact shadow under
+    // any of them, which is the prompt working as written.
+    //
+    // Isolation is not weakened here. What is added is the sentence that was
+    // never written beside it: that distinct identities are standing on one
+    // floor, under one light, at different depths.
+    if (j.staging) {
+      const st = j.staging;
+      const rel = st.relationship;
+      const facts = [
+        st.hierarchy ? `HIERARCHY: ${st.hierarchy}` : "",
+        st.grouping ? `THEY READ AS ONE GROUP BECAUSE: ${st.grouping}` : "",
+        st.shared_ground ? `ALL OF THEM STAND ON: ${st.shared_ground}` : "",
+        st.light_direction ? `ONE KEY LIGHT FOR THE WHOLE GROUP: ${st.light_direction}` : "",
+        st.depth_order ? `DEPTH: ${st.depth_order}` : "",
+        st.interaction ? `CONTACT: ${st.interaction}` : "",
+      ].filter(Boolean);
+      if (facts.length) {
+        lines.push(
+          "",
+          "## THESE PRODUCTS SHARE ONE PHOTOGRAPH",
+          "```",
+          "They are not separate cut-outs placed on a background. Keeping each",
+          "product's identity distinct does not mean keeping them visually separate."
+        );
+        if (rel?.relationship_type) {
+          lines.push(
+            `THEY BELONG TOGETHER AS: ${rel.relationship_type}` +
+              (rel.strategic_reason ? ` — ${rel.strategic_reason}` : "")
+          );
+        }
+        if (rel?.visual_implication) lines.push(`WHICH MEANS THE PICTURE MUST SHOW: ${rel.visual_implication}`);
+        lines.push("", ...facts, "```");
       }
     }
 

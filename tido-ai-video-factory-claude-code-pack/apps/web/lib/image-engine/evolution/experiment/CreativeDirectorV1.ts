@@ -79,6 +79,122 @@ export interface CreativeReview {
   what_changed?: string;
 }
 
+/** One judgement about a candidate, and the words it rests on. */
+export interface StrategyVerdict {
+  stance: "supports" | "neutral" | "works_against";
+  because: string;
+  /**
+   * Quoted from the brief or from the attached-image analysis.
+   *
+   * Checked rather than trusted. A verdict whose evidence appears nowhere in
+   * what the director was given is downgraded to neutral and marked unverified:
+   * the same discipline `VisualDNA` uses for inference, for the same reason —
+   * an assessment nobody can trace is a preference with a schema around it.
+   */
+  evidence: string;
+}
+
+/** A route developed far enough to be judged against the others. */
+export interface StrategyCandidate {
+  route: string;
+  core_idea: string;
+  why_this_route: string;
+  assessment: {
+    product: StrategyVerdict;
+    audience: StrategyVerdict;
+    objective: StrategyVerdict;
+    brand: StrategyVerdict;
+    channel: StrategyVerdict;
+    feasibility: StrategyVerdict;
+  };
+  /** V2 depth, when `creative_strategy_intelligence_v1` is also on. */
+  emotional_objective?: string;
+  audience_reaction?: string;
+}
+
+/**
+ * Which route this brief is answered by, and why that one.
+ *
+ * Replaces the three fixed names — Commercial Safe, Premium Brand, Creative
+ * Exploration — which were written into the JSON contract itself and so came
+ * back identically for every product, every audience and every format. Three
+ * commercial attitudes are not three communication strategies, and a brief that
+ * can be answered by the same three whatever it says has not been read.
+ */
+export interface CreativeStrategy {
+  candidates: StrategyCandidate[];
+  selected: string;
+  selection_reason: string;
+  runner_up: string;
+  why_not_runner_up: string;
+  /** Every route offered, in the order it was offered. Distribution is measurable. */
+  routes_offered: string[];
+  /** The subset developed into candidates. */
+  routes_developed: string[];
+}
+
+/**
+ * Why these products are in one picture together.
+ *
+ * The question that was never asked. Measured on a three-product render: the
+ * compiled prompt contained twenty-one thousand characters and not one line
+ * describing any relationship between the products. Every line that mentioned
+ * them was an isolation instruction — "each is a separate physical identity",
+ * "do NOT clone", "do NOT average", three reference priorities at 0.9, 0.9, 0.9
+ * — and the layout reserved one PRODUCT_FOCAL zone for all three. The renderer
+ * produced three separated objects in a row, which is the prompt working
+ * exactly as written.
+ *
+ * Isolation is right and stays. What was missing is its counterweight, and a
+ * counterweight has to start from why the products belong in the same frame.
+ *
+ * `relationship_type` is free text on purpose. A closed set — collection,
+ * hero_support, comparison, bundle, lifestyle — would be the menu problem this
+ * project has removed twice already: the model returns the shape it is given,
+ * and a list of five becomes five templates. Those words appear in the
+ * instructions as examples of the KIND of answer wanted, and the director is
+ * told in as many words that its own phrase is better than any of them.
+ */
+export interface ProductRelationshipDecision {
+  /** In the director's own words. Not chosen from a list. */
+  relationship_type: string;
+  /** Why THESE products are together in THIS brief, for THIS audience. */
+  strategic_reason: string;
+  /** What that relationship means the picture has to show. */
+  visual_implication: string;
+  /** What it means for which product leads, and whether one should. */
+  hierarchy_implication: string;
+}
+
+/**
+ * How the group is physically staged, derived from why it exists.
+ *
+ * Every field answers a specific way the three-product render failed: no
+ * contact shadow anchoring anything, no single key direction, no overlap or
+ * depth ordering, no readable ground plane, no hierarchy, no interaction.
+ *
+ * It is not a layout. It says what must be physically true of the scene — one
+ * light, one floor, who is in front — and leaves the arrangement to the
+ * renderer, which is the difference between staging and a template.
+ */
+export interface MultiProductStaging {
+  relationship: ProductRelationshipDecision;
+  /** Which product leads and which support, or why none should. */
+  hierarchy: string;
+  /** How the group reads as one thing: gathered, ranked, spread, layered. */
+  grouping: string;
+  /** The surface they all stand on, and how it recedes. */
+  shared_ground: string;
+  /** One key direction for the whole group. */
+  light_direction: string;
+  /** What is in front of what, and where they overlap. */
+  depth_order: string;
+  /** How they touch the ground, each other, or a hand. */
+  interaction: string;
+  /** Why this staging, for this relationship and this brief. */
+  reason: string;
+}
+
 export interface DecisionWithReason {
   choice: string;
   reason: string;
@@ -116,6 +232,16 @@ export interface CreativeJudgment {
    * do not.
    */
   copy_roles?: CopyRoleJudgment[];
+  /**
+   * Strategy Selection V1. Present only when the flag is on and the format
+   * offered routes to choose between.
+   */
+  strategy?: CreativeStrategy;
+  /**
+   * Multi-Product Staging V1. Present only when the brief carries two or more
+   * products and the flag is on.
+   */
+  staging?: MultiProductStaging;
 }
 
 /** One authorized string, the job it does here, and why that is the job. */
@@ -134,6 +260,34 @@ export interface DirectorBriefInput {
    * this existed.
    */
   assetContext?: string;
+  /**
+   * What the client's own attachments were read to contain.
+   *
+   * Supplied only when `visual_dna_v1` is on and an image was analysed. Without
+   * it this director decides camera, lighting and composition for a product it
+   * has never seen, which is what it did before this field existed.
+   *
+   * Optional, and last in the brief: it informs the decisions, it does not make
+   * them.
+   */
+  visualDNA?: string;
+  /**
+   * The routes this format offers, already shuffled by the caller.
+   *
+   * They also appear inside `assetContext` as prose. They are repeated here so
+   * the director is asked for a structured answer about a known list rather than
+   * about whatever it remembers reading, and so the pipeline — not the model —
+   * owns the order that was presented.
+   */
+  routes?: string[];
+  /**
+   * How many products the client attached.
+   *
+   * Asked for only when it is two or more: a single-product brief has no
+   * relationship to reason about, and asking anyway would invite one to be
+   * invented.
+   */
+  productCount?: number;
   concept: string;
   contentMessage?: string;
   brandName?: string;
@@ -156,6 +310,17 @@ export interface JudgmentFlags {
   review?: boolean;
   /** Typography Foundation Cleanup V1. Independent of every flag above. */
   copyRoles?: boolean;
+  /**
+   * Strategy Selection V1. Replaces the fixed triad rather than joining it:
+   * two systems generating directions for one brief is the two-scene defect at
+   * the strategy layer.
+   */
+  strategySelection?: boolean;
+  /**
+   * Multi-Product Staging V1. Independent of every flag above; resolved by the
+   * caller, which is the only place the product count is known.
+   */
+  multiProductStaging?: boolean;
 }
 
 const EXPLORATION_BLOCK = `
@@ -207,6 +372,72 @@ Where the brief describes what the format is for, decide against THAT, not
 against the category. The same product wants different typography on something
 read at a glance and something read while deciding whether to buy — and the
 right answer for one is often wrong for the other.`;
+
+const STRATEGY_SELECTION_BLOCK = `
+PART 1 — CHOOSE THE ROUTE, THEN COMMIT TO IT.
+
+The format above lists the routes that legitimately solve it. They are
+alternatives of equal standing; the order they appear in carries no meaning and
+is shuffled every time, so the first is not the recommended one.
+
+Develop THREE of them into real directions. Say why those three are the three
+worth developing for THIS brief — not why they are interesting in general.
+
+For each, judge six things. Each judgement is one of supports, neutral or
+works_against, a short reason, and EVIDENCE quoted from what you were given: a
+phrase from the brief, from the audience, from the objective, or from the
+observations of the client's attachments. Quote it; do not paraphrase it.
+
+  product      does what this product actually is support this route
+  audience     does it work on the people described
+  objective    does it serve what the campaign is for
+  brand        can this brand credibly own it
+  channel      does it walk into the way this format fails
+  feasibility  can it be produced as a still image
+
+Where you were told nothing — no audience, no attached image — say neutral and
+put "not supplied" in evidence. An invented reason is worse than an absent one.
+
+Then choose, and name the runner-up and why it lost.
+
+Your selection_reason must be unusable for a different product. If the sentence
+you write would read the same for something else in the same format, you have
+described the route rather than chosen it.`;
+
+const STAGING_BLOCK = `
+THESE PRODUCTS ARE IN ONE PHOTOGRAPH TOGETHER. WHY?
+
+Answer that before anything else. Not "there are three of them" — why THESE, for
+THIS audience, in THIS campaign. A set that shares an occasion is not a set that
+invites comparison, and neither is a headline product with two behind it.
+
+Name the relationship in your own words. Words like collection, hero and
+support, comparison, bundle or a scene from someone's life are examples of the
+KIND of answer wanted, not a list to pick from; a phrase of your own that fits
+this brief is better than any of them, and repeating one of those five back is a
+sign you have described the count rather than the reason.
+
+Then stage it. The relationship decides the staging, and you must be able to say
+how.
+
+Everything else in this brief tells the renderer to keep these products APART —
+each is a separate identity, do not blend them, do not transfer features. That
+is correct and it stays. But nothing yet tells it they share a photograph, and
+without that it produces objects cut out and placed side by side on a
+background. Say what is physically true of the scene they share:
+
+  hierarchy        which one leads and which support — or why none should, and
+                   what then stops the picture reading as a catalogue row
+  grouping         what makes them read as one thing rather than three things
+  shared_ground    the surface all of them stand on, and how it recedes
+  light_direction  ONE key direction for the whole group. Not three.
+  depth_order      what is in front of what, and where they overlap. Objects at
+                   identical depth, evenly spaced and equally lit, are the
+                   failure this exists to prevent.
+  interaction      how they touch the ground, each other, or a hand
+
+Do not arrange a layout. Say what must be true of the scene and let the frame
+follow from it.`;
 
 const COPY_ROLES_BLOCK = `
 DECIDE WHAT EACH STRING IS DOING.
@@ -312,6 +543,90 @@ direction before answering, and report what you changed. Do not report a weak
 score and leave the work as it was — the score exists to trigger the revision,
 not to decorate it.`;
 
+/**
+ * Holds every strategy verdict to the words it claims to rest on.
+ *
+ * A verdict whose evidence appears nowhere in what the director was given is not
+ * refused outright — a weak reading of one dimension should not discard a whole
+ * candidate — but it is downgraded to neutral and marked, so nothing downstream
+ * can mistake it for something that was checked. The same rule `VisualDNA` uses
+ * on inference, and for the same reason: the only difference between a finding
+ * and an invention is whether anything looked.
+ *
+ * Matching is deliberately forgiving about case and whitespace and deliberately
+ * strict about length: a three-word quote matches almost any text and so proves
+ * nothing.
+ */
+class VisualStrategyCheck {
+  private static readonly MIN_QUOTE = 8;
+
+  public static verify(strategy: CreativeStrategy, given: string): void {
+    const haystack = given.toLowerCase().replace(/\s+/g, " ");
+    let downgraded = 0;
+    for (const candidate of strategy.candidates || []) {
+      const a = candidate?.assessment as Record<string, StrategyVerdict> | undefined;
+      if (!a) continue;
+      for (const key of Object.keys(a)) {
+        const v = a[key];
+        if (!v || v.stance === "neutral") continue;
+        const quote = String(v.evidence || "").toLowerCase().replace(/\s+/g, " ").trim();
+        if (/^not supplied$/.test(quote)) continue;
+        if (quote.length >= this.MIN_QUOTE && haystack.includes(quote)) continue;
+        a[key] = {
+          stance: "neutral",
+          because: v.because,
+          evidence: `unverified: ${v.evidence || "(none)"}`,
+        };
+        downgraded++;
+      }
+    }
+    if (downgraded) {
+      console.warn("[EXPERIMENT][STRATEGY] verdicts downgraded for unquotable evidence", {
+        downgraded,
+        candidates: strategy.candidates?.length ?? 0,
+      });
+    }
+  }
+}
+
+/**
+ * How long one judgement call may take, and whether a failure is worth repeating.
+ *
+ * The timeout was 180,000ms written into the call, with one unconditional retry
+ * after it — a worst case of six minutes for a feature whose entire generation
+ * is meant to finish in two. It was never a considered number; it was headroom
+ * chosen when nothing was measured.
+ *
+ * 60,000 is the default because a real judgement returns in well under it, and
+ * because a call that has not answered in a minute is not going to answer in
+ * three. `LLM_DIRECTOR_TIMEOUT_MS` moves it without a deploy.
+ */
+const DIRECTOR_TIMEOUT_MS = (() => {
+  const raw = Number(process.env.LLM_DIRECTOR_TIMEOUT_MS);
+  return Number.isFinite(raw) && raw > 0 ? raw : 60000;
+})();
+
+/**
+ * Whether trying the same request again could plausibly succeed.
+ *
+ * The retry exists for a measured reason: run back to back, the gateway produced
+ * no usable judgment on 2 of 7 briefs because it returned something unparseable
+ * or timed out under load. Those are worth repeating.
+ *
+ * A refused connection, an expired key and an exhausted quota are not. Repeating
+ * them buys nothing and costs the full timeout a second time, which is how a
+ * dead gateway turns a two-minute render into a nine-minute one while producing
+ * exactly the same fallback it would have produced immediately.
+ */
+function worthRetrying(err: unknown): boolean {
+  const m = String((err as any)?.message || err).toLowerCase();
+  if (/fetch failed|econnrefused|enotfound|eai_again|socket hang up|network/.test(m)) return false;
+  if (/(401|402|403|429)|unauthoriz|forbidden|quota|rate.?limit|insufficient|billing/.test(m)) {
+    return false;
+  }
+  return true;
+}
+
 export class CreativeDirectorV1 {
   private llm: LLMProviderService;
 
@@ -326,7 +641,7 @@ export class CreativeDirectorV1 {
     const anyFlag =
       flags.exploration || flags.reasoning || flags.antiGeneric ||
       flags.strategy || flags.consumer || flags.brand || flags.semantics || flags.review ||
-      flags.copyRoles;
+      flags.copyRoles || flags.strategySelection || flags.multiProductStaging;
     if (!anyFlag) return null;
 
     const parts: string[] = [];
@@ -361,7 +676,27 @@ export class CreativeDirectorV1 {
   }`);
     }
 
-    if (flags.exploration) {
+    // Strategy selection replaces exploration rather than joining it. Two
+    // systems inventing directions for one brief is the two-scene defect a phase
+    // of this project was spent removing, moved up a layer.
+    if (flags.strategySelection && brief.routes?.length) {
+      parts.push(STRATEGY_SELECTION_BLOCK);
+      const depth = flags.strategy
+        ? `, "emotional_objective": "<what the viewer should feel>", "audience_reaction": "<how they should react>"`
+        : "";
+      const verdict = (k: string) =>
+        `"${k}": { "stance": "supports|neutral|works_against", "because": "<short>", "evidence": "<quoted from the brief, or 'not supplied'>" }`;
+      shape.push(`  "strategy": {
+    "candidates": [
+      { "route": "<one of the routes offered, copied exactly>", "core_idea": "<what happens in the frame>", "why_this_route": "<what in THIS brief makes it right>"${depth},
+        "assessment": { ${["product", "audience", "objective", "brand", "channel", "feasibility"].map(verdict).join(", ")} } }
+    ],
+    "selected": "<the route you chose, copied exactly>",
+    "selection_reason": "<why it beat the others, naming this product, this audience or this objective>",
+    "runner_up": "<the route you turned down last>",
+    "why_not_runner_up": "<what it could not do here>"
+  }`);
+    } else if (flags.exploration) {
       parts.push(EXPLORATION_BLOCK);
       // The strategy flag adds two fields to every direction. They are declared
       // here rather than only described in the prose above, because the model
@@ -427,6 +762,27 @@ suitability, originality, commercial effectiveness and production feasibility.`
   ]`);
     }
 
+    // Asked only when there is a group to reason about. One product has no
+    // relationship, and a director asked for one anyway will invent one.
+    if (flags.multiProductStaging && (brief.productCount ?? 0) >= 2) {
+      parts.push(STAGING_BLOCK);
+      shape.push(`  "staging": {
+    "relationship": {
+      "relationship_type": "<your own phrase for why these belong in one frame>",
+      "strategic_reason": "<why THESE products, for THIS audience, in THIS campaign>",
+      "visual_implication": "<what that relationship means the picture must show>",
+      "hierarchy_implication": "<what it means for which one leads, if any>"
+    },
+    "hierarchy": "<which leads, which support, or why none does>",
+    "grouping": "<what makes them read as one thing>",
+    "shared_ground": "<the surface they share and how it recedes>",
+    "light_direction": "<one key direction for the whole group>",
+    "depth_order": "<what is in front of what, and where they overlap>",
+    "interaction": "<how they touch the ground, each other, or a hand>",
+    "reason": "<why this staging for this relationship and this brief>"
+  }`);
+    }
+
     if (flags.copyRoles) {
       parts.push(COPY_ROLES_BLOCK);
       // Declared in the contract, not only in the prose. Measured earlier in
@@ -486,6 +842,18 @@ ${shape.join(",\n")}
       // would state the format twice and say nothing extra the second time.
       brief.assetContext ? brief.assetContext : brief.useCase ? `FORMAT: ${brief.useCase}` : "",
       brief.aspectRatio ? `ASPECT RATIO: ${brief.aspectRatio}` : "",
+      brief.visualDNA ? `
+${brief.visualDNA}` : "",
+      (brief.productCount ?? 0) >= 2
+        ? `PRODUCTS ATTACHED: ${brief.productCount} distinct products in one image`
+        : "",
+      brief.routes?.length
+        ? [
+            "",
+            "ROUTES OFFERED FOR THIS FORMAT, in the order presented:",
+            ...brief.routes.map((r) => `  - ${r}`),
+          ].join("\n")
+        : "",
     ].filter(Boolean);
 
     const started = Date.now();
@@ -503,8 +871,16 @@ ${shape.join(",\n")}
     // One retry, not a loop: if a second attempt also fails, a stable render is
     // a better outcome than one the user waited three more minutes for.
     for (let attempt = 1; attempt <= 2; attempt++) {
-      const result = await this.attempt(system, user, started, attempt);
-      if (result) return result;
+      const { judgment, retryable } = await this.attempt(system, user, started, attempt);
+      if (judgment) return judgment;
+      if (!retryable) {
+        console.warn("[EXPERIMENT][CREATIVE_JUDGMENT_V1] not retrying", {
+          attempt,
+          elapsed_ms: Date.now() - started,
+          reason: "a second identical request cannot change this outcome",
+        });
+        return null;
+      }
     }
     return null;
   }
@@ -514,7 +890,7 @@ ${shape.join(",\n")}
     user: string,
     started: number,
     attempt: number
-  ): Promise<CreativeJudgment | null> {
+  ): Promise<{ judgment: CreativeJudgment | null; retryable: boolean }> {
     try {
       const raw = await this.llm.generateChatCompletion(
         [
@@ -532,16 +908,22 @@ ${shape.join(",\n")}
         // generic check, written partly in Vietnamese, which tokenises far less
         // efficiently than English. The parser was blamed first; it was the
         // budget.
-        { temperature: 0.85, max_tokens: 8000, timeoutMs: 180000 }
+        { temperature: 0.85, max_tokens: 8000, timeoutMs: DIRECTOR_TIMEOUT_MS }
       );
 
       const judgment = this.parse(raw);
+      if (judgment?.strategy) {
+        VisualStrategyCheck.verify(judgment.strategy, `${system}
+${user}`);
+      }
       if (!judgment) {
         console.warn("[EXPERIMENT][CREATIVE_JUDGMENT_V1] unparseable response", {
           attempt,
           chars: raw?.length ?? 0,
         });
-        return null;
+        // Measured: the gateway does this intermittently under consecutive load,
+        // and a second ask usually lands. This one is worth repeating.
+        return { judgment: null, retryable: true };
       }
 
       console.log("[EXPERIMENT][CREATIVE_JUDGMENT_V1]", {
@@ -552,22 +934,30 @@ ${shape.join(",\n")}
         has_reasoning: Boolean(judgment.reasoning),
         generic_flagged: judgment.generic_check?.flagged?.length ?? 0,
         generic_revised: judgment.generic_check?.revised ?? null,
+        staging_relationship: judgment.staging?.relationship?.relationship_type ?? null,
+        strategy_selected: judgment.strategy?.selected ?? null,
+        strategy_candidates: judgment.strategy?.candidates?.length ?? 0,
+        strategy_offered: judgment.strategy?.routes_offered?.length ?? 0,
         has_brand: Boolean(judgment.brand),
         has_consumer: Boolean(judgment.consumer),
         semantics: judgment.semantics?.length ?? 0,
         review_scores: judgment.review?.scores ?? null,
         review_refined: judgment.review?.refined ?? null,
       });
-      return judgment;
+      return { judgment, retryable: false };
     } catch (err: any) {
       // The render continues on the stable prompt. An experiment that can fail a
       // generation is a worse trade than an experiment that sometimes does
       // nothing.
+      const retryable = worthRetrying(err);
       console.warn("[EXPERIMENT][CREATIVE_JUDGMENT_V1] attempt failed", {
         attempt,
+        elapsed_ms: Date.now() - started,
+        timeout_ms: DIRECTOR_TIMEOUT_MS,
+        retryable,
         error: err?.message || String(err),
       });
-      return null;
+      return { judgment: null, retryable };
     }
   }
 
@@ -589,7 +979,9 @@ ${shape.join(",\n")}
           !parsed.brand &&
           !parsed.consumer &&
           !parsed.semantics &&
-          !parsed.review
+          !parsed.review &&
+          !parsed.strategy &&
+          !parsed.staging
         ) {
           return null;
         }

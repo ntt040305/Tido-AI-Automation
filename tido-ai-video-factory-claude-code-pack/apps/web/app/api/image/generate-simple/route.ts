@@ -4,7 +4,28 @@ import { SimpleInputRequestV1, AssetRoleV1 } from "@/lib/image-engine/types";
 
 export const runtime = "nodejs";
 
+/**
+ * Where the wall clock goes at the API boundary.
+ *
+ * Measured across three renders: the orchestrator reported 112,877ms of a
+ * 147,474ms request, and the 34,597ms difference lived somewhere between the
+ * socket and the pipeline call with nothing watching it. The gap grew with the
+ * number of attachments — 255ms at one image, 19,358ms at two, 34,597ms at
+ * three — which is the shape of work done per image, not of a fixed overhead.
+ *
+ * Timestamps only. Nothing here changes what the route does or what it returns.
+ */
 export async function POST(req: NextRequest) {
+  const T_received = Date.now();
+  let tFormDone = T_received;
+  let tExtractDone = T_received;
+  let tBuffersDone = T_received;
+  let tRequestBuilt = T_received;
+  let tPipelineDone = T_received;
+  let attachmentBytes = 0;
+  let attachmentCount = 0;
+  let bufferMs = 0;
+
   try {
     const contentType = req.headers.get("content-type") || "";
 
@@ -29,6 +50,7 @@ export async function POST(req: NextRequest) {
       };
     } else if (contentType.includes("multipart/form-data")) {
       const formData = await req.formData();
+      tFormDone = Date.now();
       const concept = (formData.get("concept") as string) || "";
       const contentMessage = (formData.get("contentMessage") as string) || "";
       const useCase = (formData.get("useCase") as string) || "Poster";
@@ -75,6 +97,7 @@ export async function POST(req: NextRequest) {
 
       const rawImages = formData.getAll("images");
       const rawInspirationImages = formData.getAll("inspirationImages");
+      tExtractDone = Date.now();
       const parsedImages: {
         reference_id: string;
         buffer: Buffer;
@@ -86,7 +109,10 @@ export async function POST(req: NextRequest) {
       for (let i = 0; i < rawImages.length; i++) {
         const item = rawImages[i];
         if (item instanceof File) {
+          const bStart = Date.now();
           const arrayBuffer = await item.arrayBuffer();
+          bufferMs += Date.now() - bStart;
+          attachmentBytes += arrayBuffer.byteLength;
           parsedImages.push({
             reference_id: `REF_${String(i + 1).padStart(2, "0")}`,
             buffer: Buffer.from(arrayBuffer),
@@ -105,7 +131,10 @@ export async function POST(req: NextRequest) {
       for (let i = 0; i < rawInspirationImages.length; i++) {
         const item = rawInspirationImages[i];
         if (item instanceof File) {
+          const bStart = Date.now();
           const arrayBuffer = await item.arrayBuffer();
+          bufferMs += Date.now() - bStart;
+          attachmentBytes += arrayBuffer.byteLength;
           const index = parsedImages.length + 1;
           parsedImages.push({
             reference_id: `REF_${String(index).padStart(2, "0")}`,
@@ -116,6 +145,9 @@ export async function POST(req: NextRequest) {
           });
         }
       }
+
+      tBuffersDone = Date.now();
+      attachmentCount = parsedImages.length;
 
       console.log("[INSPIRATION_TRANSPORT][ROUTE]", {
         received_product_images: rawImages.length,
@@ -140,6 +172,7 @@ export async function POST(req: NextRequest) {
         creativeDirection,
         salesContext,
       };
+      tRequestBuilt = Date.now();
     } else {
       return NextResponse.json(
         {
@@ -181,6 +214,7 @@ export async function POST(req: NextRequest) {
       ]);
     } finally {
       clearTimeout(timeoutId);
+      tPipelineDone = Date.now();
     }
 
     if (!result.success) {
@@ -215,7 +249,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       generationId: result.generationId,
       status: result.status,
@@ -228,6 +262,25 @@ export async function POST(req: NextRequest) {
       strategy: result.strategy,
       diagnostics: result.diagnostics,
     });
+    const tSent = Date.now();
+
+    // One line, at the boundary, so the wall clock can be attributed instead of
+    // inferred. Durations and counts only — the payload itself is never logged.
+    console.log("[API_TIMING]", {
+      generation_id: result.generationId,
+      attachments: attachmentCount,
+      attachment_bytes: attachmentBytes,
+      form_parse_ms: tFormDone - T_received,
+      image_extract_ms: tExtractDone - tFormDone,
+      image_buffer_ms: bufferMs,
+      image_stage_ms: tBuffersDone - tExtractDone,
+      request_build_ms: tRequestBuilt - tBuffersDone,
+      pipeline_run_ms: tPipelineDone - tRequestBuilt,
+      serialize_ms: tSent - tPipelineDone,
+      route_total_ms: tSent - T_received,
+    });
+
+    return response;
   } catch (err: any) {
     console.error("[SIMPLE][ERROR]", {
       stage: "SERVER_ROUTE",

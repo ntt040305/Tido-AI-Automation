@@ -89,6 +89,29 @@ export interface CreativeDecision {
    * actually exists, which is on the compiled prompt.
    */
   copy_roles: Array<{ text: string; role: string; reason: string }>;
+
+  /**
+   * The route this brief was answered by, and why that one.
+   *
+   * Only these two travel. The candidates that were considered, the six
+   * assessments behind each, and the routes that were offered all stop at the
+   * director: a renderer handed a list of strategies is handed a menu, and a
+   * menu is the template this replaced wearing a different word.
+   */
+  strategy_route: string;
+  strategy_reason: string;
+
+  /**
+   * Why several products share this frame, and what that makes physically true.
+   *
+   * Travels as a counterweight, not a replacement. The isolation instructions
+   * stay exactly as they are — they are the reason two products do not become a
+   * hybrid — and these lines say the thing that was never said beside them:
+   * that the separate identities are standing in one photograph, on one floor,
+   * under one light.
+   */
+  product_relationship: string;
+  staging_requirements: string[];
 }
 
 
@@ -200,24 +223,59 @@ const clean = (v: unknown): string => String(v ?? "").replace(/\s+/g, " ").trim(
  * judgment features it depends on.
  */
 export function toCreativeDecision(j: CreativeJudgment): CreativeDecision | null {
+  // Strategy selection replaces the fixed directions, so the scene comes from the
+  // candidate that won. Falling back to `directions` keeps every run that does
+  // not use selection working exactly as it did.
+  const winner = j.strategy
+    ? j.strategy.candidates?.find((c) => c?.route === j.strategy!.selected) || j.strategy.candidates?.[0]
+    : null;
   const chosen = j.directions?.find((d) => d.name === j.selected) || j.directions?.[0];
-  const scene = clean(chosen?.core_idea);
+  const scene = clean(winner?.core_idea) || clean(chosen?.core_idea);
 
   // Without a scene there is nothing to take control WITH, and a decision object
   // carrying only a camera angle would override the brain's scene with nothing.
-  if (!scene) return null;
+  //
+  // Staging is the exception, and it is one because it does not take control of
+  // anything: it adds physical facts about a shared scene to the hard
+  // requirements and leaves the brain's scene alone. A judgment that says how
+  // three products stand together is worth carrying even when it did not choose
+  // what the picture shows.
+  if (!scene && !j.staging) return null;
 
   const r = j.reasoning;
   return {
-    selected_direction: clean(j.selected) || clean(chosen?.name),
-    creative_goal: clean(j.selection_reason) || clean(j.consumer?.intended_action),
-    visual_story: clean(chosen?.why_it_fits),
+    selected_direction: clean(j.strategy?.selected) || clean(j.selected) || clean(chosen?.name),
+    creative_goal:
+      clean(j.strategy?.selection_reason) ||
+      clean(j.selection_reason) ||
+      clean(j.consumer?.intended_action),
+    visual_story: clean(winner?.why_this_route) || clean(chosen?.why_it_fits),
     scene_definition: scene,
     camera_decision: clean(r?.camera?.choice),
     lighting_decision: clean(r?.lighting?.choice),
     composition_decision: clean(r?.composition?.choice),
     typography_decision: clean(r?.typography?.choice),
     environment_decision: clean(chosen?.visual_language),
+    product_relationship: j.staging
+      ? [
+          clean(j.staging.relationship?.relationship_type),
+          clean(j.staging.relationship?.strategic_reason),
+        ].filter(Boolean).join(" — ")
+      : "",
+    // One line per physical fact. Separate entries rather than a paragraph so a
+    // reducer that ever has to shorten this drops a fact, not half a sentence.
+    staging_requirements: j.staging
+      ? [
+          j.staging.hierarchy ? `Hierarchy: ${clean(j.staging.hierarchy)}` : "",
+          j.staging.grouping ? `They read as one group because: ${clean(j.staging.grouping)}` : "",
+          j.staging.shared_ground ? `All of them stand on: ${clean(j.staging.shared_ground)}` : "",
+          j.staging.light_direction ? `One key light for the whole group: ${clean(j.staging.light_direction)}` : "",
+          j.staging.depth_order ? `Depth: ${clean(j.staging.depth_order)}` : "",
+          j.staging.interaction ? `Contact: ${clean(j.staging.interaction)}` : "",
+        ].filter(Boolean)
+      : [],
+    strategy_route: clean(j.strategy?.selected),
+    strategy_reason: clean(j.strategy?.selection_reason),
     important_visual_elements: (j.semantics || [])
       .map((s) => clean(s?.element))
       .filter(Boolean)
@@ -258,7 +316,8 @@ export function toCreativeDecision(j: CreativeJudgment): CreativeDecision | null
       .map((s) => `${clean(s.element)} — ${clean(s.communicates)}`)
       .slice(0, 6),
 
-    deliberately_avoided: clean(j.rejected_reason),
+    deliberately_avoided:
+      clean(j.strategy?.why_not_runner_up) || clean(j.rejected_reason),
 
     copy_roles: (j.copy_roles || [])
       .filter((c) => c?.text && c?.role)
@@ -318,12 +377,18 @@ export function applyCreativeDecision(
 ): SimpleInputRequestV1 {
   const original = clean(request.concept);
 
-  const conceptLines: string[] = [
-    original,
-    "",
-    "ART DIRECTION HAS BEEN DECIDED FOR THIS BRIEF. Execute it rather than reinterpreting it.",
-    `SCENE: ${fit(decision.scene_definition, SCENE_BUDGET)}`,
-  ];
+  // The scene block is emitted only when there is a scene. A decision that
+  // carries staging alone must not announce that art direction has been decided
+  // and then name no picture — that sentence would take authority away from the
+  // brain without putting anything in its place.
+  const conceptLines: string[] = decision.scene_definition
+    ? [
+        original,
+        "",
+        "ART DIRECTION HAS BEEN DECIDED FOR THIS BRIEF. Execute it rather than reinterpreting it.",
+        `SCENE: ${fit(decision.scene_definition, SCENE_BUDGET)}`,
+      ]
+    : [original];
   if (decision.camera_decision) conceptLines.push(`CAMERA: ${fit(decision.camera_decision, DECISION_BUDGET)}`);
   if (decision.lighting_decision) conceptLines.push(`LIGHTING: ${fit(decision.lighting_decision, DECISION_BUDGET)}`);
   if (decision.composition_decision) conceptLines.push(`COMPOSITION: ${fit(decision.composition_decision, DECISION_BUDGET)}`);
@@ -344,6 +409,27 @@ export function applyCreativeDecision(
   const safeAvoid = decision.avoid_elements.filter((a) => !IDENTITY_TERMS.test(a));
 
   const hardRequirements = [...(request.hardRequirements || [])];
+  // The chosen route and the reason for it, and nothing else from the strategy
+  // layer. What was considered and rejected is reasoning; what was decided is an
+  // instruction, and only the second belongs in front of a renderer.
+  // Placed before the strategy line and the include-list so the physical facts
+  // about the scene are stated before anything that decorates it.
+  if (decision.staging_requirements.length) {
+    hardRequirements.push(
+      "These products appear in ONE photograph together, not as separate cut-outs placed on a background. " +
+        (decision.product_relationship
+          ? `They belong together as: ${decision.product_relationship}. `
+          : "") +
+        "Keeping each product's identity distinct does not mean keeping them visually separate — they share a scene:"
+    );
+    for (const line of decision.staging_requirements) hardRequirements.push(`  ${line}`);
+  }
+  if (decision.strategy_route) {
+    hardRequirements.push(
+      `This image answers the brief as: ${decision.strategy_route}.` +
+        (decision.strategy_reason ? ` Why that route here: ${decision.strategy_reason}` : "")
+    );
+  }
   if (decision.environment_decision) {
     hardRequirements.push(`Render it as: ${decision.environment_decision}`);
   }
@@ -387,6 +473,9 @@ export function decisionTelemetry(decision: CreativeDecision, concept?: string) 
   const dropped = decision.avoid_elements.filter((a) => IDENTITY_TERMS.test(a));
   return {
     direction: decision.selected_direction,
+    strategy_route: decision.strategy_route || null,
+    product_relationship: decision.product_relationship || null,
+    staging_lines: decision.staging_requirements.length,
     scene_chars: decision.scene_definition.length,
     // The validator rejects a concept over 1,000 characters, so this number is
     // load-bearing rather than informational.

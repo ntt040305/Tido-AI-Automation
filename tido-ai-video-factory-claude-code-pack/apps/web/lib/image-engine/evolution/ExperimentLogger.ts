@@ -38,11 +38,52 @@ export interface GenerationLogEntry {
   prompt_chars?: number;
   reference_count?: number;
   error_code?: string;
+  /**
+   * Per-stage durations, copied from the diagnostics the orchestrator already
+   * produces.
+   *
+   * They were computed on every render and printed to a console nobody keeps, so
+   * "where do the 200 seconds go" had no answer that survived the terminal
+   * scrollback. Durations only — the policy above still holds, and a number of
+   * milliseconds carries no customer content.
+   */
+  pipeline_timing?: Record<string, number>;
+  /** Provider sub-stages, where the adapter reported them. */
+  provider_timing?: Record<string, number>;
 }
 
 const LOG_PATH = process.env.TIDO_EVOLUTION_LOG_PATH
   ? path.resolve(process.env.TIDO_EVOLUTION_LOG_PATH)
   : path.join(process.cwd(), "data", "evolution", "generation-log.jsonl");
+
+/**
+ * The adapter's own measurements, when it reported any.
+ *
+ * Read defensively: `remoteDetails` is an open shape and a provider that never
+ * heard of these keys is normal, not an error.
+ */
+function pickProviderTiming(
+  result: SimpleImageGenerationResultV1
+): Record<string, number> | undefined {
+  // The adapter's details reach the result under several names depending on the
+  // path that produced it, and are also written to the render's metadata file.
+  // All the candidates are checked rather than the first one guessed: a lookup
+  // that silently missed is what made the first instrumented run report nothing
+  // while the numbers sat in metadata.json the whole time.
+  const r = result as any;
+  const d =
+    r?.remoteDetails ||
+    r?.remote_details ||
+    r?.diagnostics?.remoteDetails ||
+    r?.project?.output?.remote_details ||
+    r?.project?.output?.metadata?.remote_details;
+  if (!d) return undefined;
+  const out: Record<string, number> = {};
+  for (const k of ["api_request_ms", "download_ms", "download_bytes", "attempts"]) {
+    if (typeof d[k] === "number") out[k] = d[k];
+  }
+  return Object.keys(out).length ? out : undefined;
+}
 
 export function logGeneration(
   decision: RoutingDecision,
@@ -64,6 +105,8 @@ export function logGeneration(
     prompt_chars: result.diagnostics?.promptChars,
     reference_count: result.diagnostics?.referenceCount,
     error_code: result.error?.code,
+    pipeline_timing: result.diagnostics?.pipeline_timing,
+    provider_timing: pickProviderTiming(result),
   };
 
   try {

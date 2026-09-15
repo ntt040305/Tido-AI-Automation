@@ -8,6 +8,11 @@ import {
   formatBytes,
 } from "../service/ImageNormalizationService";
 import { ProviderErrorClassifier, ProviderErrorVerdict } from "./ProviderErrorClassifier";
+import { ReferencePackingService } from "./reference-packing/ReferencePackingService";
+import {
+  applyPackedReferenceProtocol,
+  protocolTelemetry,
+} from "./reference-packing/PackedReferenceProtocol";
 import {
   ImageGenerationProvider,
   ProviderImageGenerationInput,
@@ -21,6 +26,20 @@ export interface ImgStudioRemoteDetails {
   provider_name?: string;
   model?: string;
   url?: string;
+  /**
+   * Measurement only, added so the wait can be attributed rather than guessed.
+   *
+   * `provider_wait_ms` in the pipeline timing covers both the request and the
+   * file download as one number, and this adapter neither queues nor polls: the
+   * generation happens inside the POST. Splitting the two is the difference
+   * between knowing the model is slow and assuming it.
+   *
+   * Nothing reads these to make a decision.
+   */
+  api_request_ms?: number;
+  download_ms?: number;
+  download_bytes?: number;
+  attempts?: number;
 }
 
 export interface ImgStudioProviderOutput extends ProviderImageGenerationOutput {
@@ -55,6 +74,9 @@ export class ImgStudioImageGenerationProvider implements ImageGenerationProvider
     const providerId = process.env.IMGSTUDIO_PROVIDER_ID || "flow-nano-banana-2";
     const resolution = process.env.TIDO_IMAGE_OUTPUT_RESOLUTION || input.imageSize || "1K";
     const quality = process.env.TIDO_IMAGE_OUTPUT_QUALITY || "standard";
+    // Measurement only; neither value changes any decision below.
+    let apiRequestMs = 0;
+    let downloadMs = 0;
     const timeoutMs = parseInt(process.env.IMG_PROVIDER_TIMEOUT_MS || "160000", 10) || IMAGE_ENGINE_CONFIG.GENERATION_TIMEOUT_MS || 160000;
 
     // 1. API Key Check (Non-retryable)
@@ -95,7 +117,7 @@ export class ImgStudioImageGenerationProvider implements ImageGenerationProvider
     let idempotencyKey = baseIdempotencyKey;
     let rotateKeyBeforeNextAttempt = false;
 
-    const realReferences = (input.references || []).filter((ref) => {
+    const candidateReferences = (input.references || []).filter((ref) => {
       if (!ref) return false;
       if (ref.reference_id?.includes("CONCEPT_REF")) return false;
       let bufLen = 0;
@@ -108,6 +130,97 @@ export class ImgStudioImageGenerationProvider implements ImageGenerationProvider
       }
       return bufLen > 0;
     });
+
+    // 3. Pre-call Reference Capacity Handling (Non-retryable)
+    //
+    // Same seam as the aspect ratio check above and as the ceilings Gemini and
+    // Cloudflare already declare: a fact about the provider, settled before the
+    // wire rather than learned from a 400. The decision itself is not here —
+    // this calls the packing module and acts on what it returns, so the ceiling
+    // stays a provider fact and the handling stays testable without a provider.
+    //
+    // Three outcomes. It fits, so nothing happened. It fits once things that
+    // carry no identity are shed. Or the products themselves outnumber the
+    // slots, and they travel as one identity sheet plus the highest-resolution
+    // originals that still fit beside it.
+    const packing = await ReferencePackingService.pack({
+      references: candidateReferences,
+      manifest: input.reference_manifest,
+      options: { limit: IMAGE_ENGINE_CONFIG.IMGSTUDIO_MAX_REFERENCE_IMAGES },
+    });
+
+    if (packing.status === "IMPOSSIBLE") {
+      console.error("[ImgStudioProvider][REFERENCE_CAPACITY_BLOCKED]", {
+        status: packing.status,
+        received: candidateReferences.length,
+        limit: IMAGE_ENGINE_CONFIG.IMGSTUDIO_MAX_REFERENCE_IMAGES,
+        products_in: packing.products_in.length,
+        reason: packing.reason,
+      });
+      return {
+        success: false,
+        error: {
+          code: "REFERENCE_LIMIT_EXCEEDED",
+          message:
+            `Nhà cung cấp chỉ nhận tối đa ${IMAGE_ENGINE_CONFIG.IMGSTUDIO_MAX_REFERENCE_IMAGES} ` +
+            `ảnh tham chiếu, và ${packing.products_in.length} sản phẩm này không gộp được vào một ảnh. ` +
+            `Hãy tách brief thành nhiều lần tạo.`,
+          details: {
+            error_code: "REFERENCE_LIMIT_EXCEEDED",
+            stage: "PROVIDER_CAPABILITY_CHECK",
+            provider_limit: IMAGE_ENGINE_CONFIG.IMGSTUDIO_MAX_REFERENCE_IMAGES,
+            received: candidateReferences.length,
+            distinct_products: packing.products_in,
+            shed_without_loss: packing.dropped,
+            reason: packing.reason,
+            suggestion: "Split the brief into more than one generation",
+          },
+        },
+      };
+    }
+
+    // A product that entered and did not come out is the one failure this whole
+    // path exists to prevent. Checked here rather than trusted, because the
+    // check costs nothing and the alternative is a render that looks finished
+    // with a product quietly missing from it.
+    const lostProducts = packing.products_in.filter((p) => !packing.products_out.includes(p));
+    if (lostProducts.length) {
+      console.error("[ImgStudioProvider][REFERENCE_PACKING_UNSOUND]", {
+        products_in: packing.products_in.length,
+        products_out: packing.products_out.length,
+        lost: lostProducts,
+      });
+      return {
+        success: false,
+        error: {
+          code: "REFERENCE_LIMIT_EXCEEDED",
+          message:
+            `Không thể chuyển đủ ${packing.products_in.length} sản phẩm tới nhà cung cấp ` +
+            `mà không bỏ sót. Hãy tách brief thành nhiều lần tạo.`,
+          details: {
+            error_code: "REFERENCE_LIMIT_EXCEEDED",
+            stage: "REFERENCE_PACKING",
+            lost_products: lostProducts,
+          },
+        },
+      };
+    }
+
+    // The sheet is now in the payload; this is where it acquires a meaning.
+    //
+    // The only point in the system where the compiled prompt and the packing map
+    // both exist — packing happens here, and everything upstream finished its
+    // work before there was a sheet to describe. Returns the same string when
+    // nothing was packed, so every ordinary render is byte-identical.
+    const effectivePrompt = applyPackedReferenceProtocol(input.prompt, packing);
+    if (effectivePrompt !== input.prompt) {
+      console.log(
+        "[REFERENCE_PACKING][PROTOCOL]",
+        protocolTelemetry(packing, effectivePrompt.length - input.prompt.length)
+      );
+    }
+
+    const realReferences = packing.references;
     const hasRealReferences = realReferences.length > 0;
     const endpoint = this.selectEndpoint(baseUrl, hasRealReferences);
 
@@ -235,7 +348,7 @@ export class ImgStudioImageGenerationProvider implements ImageGenerationProvider
 
       if (hasRealReferences) {
         const formData = new FormData();
-        formData.append("prompt", input.prompt);
+        formData.append("prompt", effectivePrompt);
         multipartKeys.push("prompt");
         formData.append("provider_id", providerId);
         multipartKeys.push("provider_id");
@@ -270,7 +383,7 @@ export class ImgStudioImageGenerationProvider implements ImageGenerationProvider
       } else {
         requestHeaders["Content-Type"] = "application/json";
         requestBody = JSON.stringify({
-          prompt: input.prompt,
+          prompt: effectivePrompt,
           provider_id: providerId,
           aspect_ratio: input.aspectRatio || "1:1",
           resolution,
@@ -292,6 +405,11 @@ export class ImgStudioImageGenerationProvider implements ImageGenerationProvider
 
         const res = await Promise.race([fetchPromise, timeoutPromise]);
         const duration_ms = Date.now() - attemptStartTime;
+        // Measurement only. The generation happens inside this POST — this
+        // adapter does not queue or poll — so this number is the render itself,
+        // and separating it from the file download is the difference between
+        // knowing the model is slow and guessing that it is.
+        apiRequestMs = duration_ms;
 
         if (!res.ok) {
           let errBody = "";
@@ -466,6 +584,7 @@ export class ImgStudioImageGenerationProvider implements ImageGenerationProvider
         // Download Generated Image File
         const fileUrl = json.url.startsWith("http") ? json.url : `${baseUrl}${json.url}`;
 
+        const downloadStart = Date.now();
         const imageDownloadRes = await fetch(fileUrl, {
           method: "GET",
           headers: {
@@ -490,6 +609,7 @@ export class ImgStudioImageGenerationProvider implements ImageGenerationProvider
 
         const arrayBuffer = await imageDownloadRes.arrayBuffer();
         const imageBuffer = Buffer.from(arrayBuffer);
+        downloadMs = Date.now() - downloadStart;
 
         if (!imageBuffer || imageBuffer.length === 0) {
           return {
@@ -502,6 +622,15 @@ export class ImgStudioImageGenerationProvider implements ImageGenerationProvider
         }
 
         const contentType = imageDownloadRes.headers.get("content-type") || input.mimeType || "image/webp";
+
+        console.log("[ImgStudioProvider][TIMING]", {
+          generationId: input.generationId,
+          attempt,
+          api_request_ms: apiRequestMs,
+          download_ms: downloadMs,
+          download_bytes: imageBuffer.length,
+          note: "this adapter posts and waits; there is no queue or poll stage",
+        });
 
         console.log("[ImgStudioProvider][SUCCESS]", {
           attempt,
@@ -517,6 +646,10 @@ export class ImgStudioImageGenerationProvider implements ImageGenerationProvider
           imageBuffer,
           mimeType: contentType,
           remoteDetails: {
+            api_request_ms: apiRequestMs,
+            download_ms: downloadMs,
+            download_bytes: imageBuffer.length,
+            attempts: attempt,
             remote_image_id: json.id,
             cost_vnd: json.cost_vnd,
             balance_vnd: json.balance_vnd,
