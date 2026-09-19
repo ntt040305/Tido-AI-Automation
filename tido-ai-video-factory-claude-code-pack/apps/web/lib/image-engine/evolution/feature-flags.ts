@@ -258,6 +258,110 @@ export interface FeatureFlags {
      * arrangement to the renderer.
      */
     multi_product_staging_v1: boolean;
+    /**
+     * Layout Context Bridge V1. Carries decisions already made to where
+     * layout is described. Adds no reasoning of its own, so it is inert
+     * unless a director flag is also on to produce something to carry.
+     */
+    layout_context_bridge_v1: boolean;
+    /**
+     * Layout Priority Alignment V1. Rewrites the one clause that made
+     * COMMERCIAL LAYOUT the final authority on composition, so geometry
+     * stays binding and creative intent stops arriving pre-outranked.
+     * Rides on the bridge: without a context block there is nothing for
+     * the replacement clause to name.
+     */
+    layout_priority_alignment_v1: boolean;
+    /**
+     * Creative Constraint Calibration V1. States what creative intent governs
+     * and what it does not license, so a direction written in words stops
+     * being read as a list of props to build. Independent of the bridge.
+     */
+    creative_constraint_calibration_v1: boolean;
+    /**
+     * Format Challenge V1. Turns the format's failure modes from a list the
+     * director eliminates with into a set of tests a route has to answer.
+     *
+     * Rides on `creative_strategy_selection_v1`: the requirement it adds is a
+     * requirement on a candidate, and without route selection there are no
+     * candidates. Inert on its own, and the brief it renders is byte-identical
+     * to the V2 brief when this is off.
+     */
+    format_challenge_v1: boolean;
+    /**
+     * Product Truth V1. Assembles what is known about the product — functional
+     * truth from the client's declared sales context, sensory reality from the
+     * VisualDNA observation — with every claim labelled by how it is known.
+     *
+     * Rides on `creative_decision_context_v1`: the truth lives on the decision
+     * context, so enabling it alone would build an object nothing holds. The
+     * sensory tier additionally needs `visual_dna_v1`, without which it is
+     * ABSENT rather than wrong.
+     *
+     * Assembly only in this phase. Nothing reads it, no prompt changes, and the
+     * three fields that would need a judgement stay ABSENT.
+     */
+    product_truth_v1: boolean;
+    /**
+     * Creative Director Authority V1.
+     *
+     * `lockedIntent` is not the client. It is produced by
+     * `CreativeInterpretation`, whose three sources are all LLM readings OF the
+     * brief, and its camera/lighting/composition/material/environment arrays
+     * were pushed at USER — the top tier — and printed as "EXPLICIT CLIENT
+     * DIRECTIVES ... never substitute a house default".
+     *
+     * With this on, those dimensions are tiered CREATIVE_DIRECTOR unless the
+     * client actually locked them in the visual direction panel. A real lock
+     * still wins; an inference no longer impersonates one.
+     *
+     * Wired by Route 1: this pipeline resolves the flag and the user's real
+     * locks, hands both to the orchestrator as options, and the orchestrator
+     * puts them on `MasterPromptCompilerInput`. The compiler forwards two
+     * booleans to the resolver and never learns what a flag is — the boundary
+     * that has always held in this engine still holds.
+     */
+    creative_director_authority_v1: boolean;
+    /**
+     * Creative Blueprint V1 — Phase 2.0, schema only.
+     *
+     * Nothing constructs a blueprint and nothing reads one. The flag exists so
+     * the schema can land, be tested and be reviewed before any behaviour
+     * depends on it, and so that turning it on later is one switch rather than
+     * a merge.
+     *
+     * Deliberately inert until E2 reports. E2 measures whether render quality
+     * moves when the Creative Director stops being outranked by inferred art
+     * direction. If it does not move, then this system is not limited by what
+     * the director is permitted to decide, and sixteen more decision fields
+     * would be the wrong response — the same conclusion `format_challenge_v1`
+     * reached the expensive way.
+     */
+    creative_blueprint_v1: boolean;
+    /**
+     * Phase 1.1B. Assembles ProductTruth + VisualDNA + Marketing Strategy into
+     * a Creative Brief and puts it in front of the director.
+     *
+     * Off by default like every flag here. Its cost is prompt characters and a
+     * brief the director may or may not use better than the raw truth object,
+     * which is a question for a render benchmark rather than an assumption.
+     */
+    creative_brief_v1: boolean;
+    /**
+     * Phase 1. Who is buying and what they are trying to solve, assembled
+     * deterministically from ProductTruth and the marketing strategy.
+     */
+    marketing_insight_v1: boolean;
+    /**
+     * Phases 2–5. The unified creative reasoning layer: concept, art direction,
+     * photography, typography and layout resolved in one place and carried to
+     * the renderer as a single blueprint.
+     *
+     * Off by default. Its cost is prompt characters and a block the renderer
+     * may or may not execute better than the composed director output, which is
+     * a question for a render benchmark rather than an assumption.
+     */
+    professional_creative_brain_v1: boolean;
   };
   /** Which component builds an experiment run may use. */
   components: Record<ComponentName, boolean>;
@@ -293,6 +397,16 @@ export const DEFAULT_FLAGS: FeatureFlags = {
     visual_dna_v1: false,
     creative_strategy_selection_v1: false,
     multi_product_staging_v1: false,
+    layout_context_bridge_v1: false,
+    layout_priority_alignment_v1: false,
+    creative_constraint_calibration_v1: false,
+    format_challenge_v1: false,
+    product_truth_v1: false,
+    creative_director_authority_v1: false,
+    creative_blueprint_v1: false,
+    creative_brief_v1: false,
+    marketing_insight_v1: false,
+    professional_creative_brain_v1: false,
   },
   components: {
     prompt_compiler: false,

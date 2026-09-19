@@ -2,6 +2,9 @@ import { SimpleInputRequestV1 } from "../../types";
 import { AssetContext, assetContextFor } from "./AssetContext";
 import { DirectorBriefInput } from "./CreativeDirectorV1";
 import { summarizeVisualDNA, VisualDNA } from "./VisualDNAAnalyzer";
+import { buildProductTruth, ProductTruth, summarizeProductTruth } from "./ProductTruth";
+import { CreativeBrief, summarizeCreativeBrief } from "./CreativeBrief";
+import { CreativeBriefBuilderService } from "./CreativeBriefBuilderService";
 
 /**
  * What is known before any creative decision is made.
@@ -59,6 +62,23 @@ export interface CreativeDecisionContextInput {
    * take the equivalence test with it.
    */
   visualDNA?: VisualDNA | null;
+  /**
+   * Product Truth V1. Passed in resolved, for the same reason `assetIntent` and
+   * `visualDNA` are: whether a feature is on is a routing decision, and a
+   * context builder that re-read the flags would be a second place where that
+   * decision is made.
+   */
+  productTruth?: boolean;
+  /**
+   * Phase 1.1B. Resolved by the caller, for the same reason every other flag
+   * here is: whether a feature is on is a routing decision, and a context
+   * builder that re-read the flags would be a second place it gets made.
+   *
+   * A brief needs ProductTruth to say anything, so this only has an effect when
+   * `productTruth` is on too. That dependency is enforced by the caller rather
+   * than assumed here.
+   */
+  creativeBrief?: boolean;
 }
 
 /** The client's own words, copied, never interpreted. */
@@ -126,6 +146,19 @@ export interface CreativeDecisionContext {
   /** What the attached images show, or null when nothing was read. */
   visual_dna: VisualDNA | null;
   evidence: CreativeDecisionEvidence;
+  /**
+   * What is known about the product, with each claim labelled by how it is
+   * known. Absent entirely when `product_truth_v1` is off, so a run without the
+   * flag produces the object it always produced — which is the equivalence the
+   * previous phases established and this one must not break.
+   */
+  product_truth?: ProductTruth;
+  /**
+   * The strategic reading of the truth object, with each statement naming the
+   * inputs that produced it. Absent entirely when `creative_brief_v1` is off,
+   * so a run without the flag produces the object it always produced.
+   */
+  creative_brief?: CreativeBrief;
 }
 
 /** Roles that mean "this is the product", per `AssetRoleV1`. */
@@ -173,7 +206,24 @@ export function buildContext(input: CreativeDecisionContextInput): CreativeDecis
   const { request, assetIntent, assetIntentBrief, visualDNA } = input;
   const mc = request.marketingContext;
 
+  // Spread rather than assigned, so with the flag off the returned object has no
+  // `product_truth` key at all. `deepStrictEqual` distinguishes an absent key
+  // from an undefined one, and the equivalence test depends on that.
+  const truth = input.productTruth ? buildProductTruth({ request, visualDNA }) : null;
+  const productTruth = truth ? { product_truth: truth } : {};
+
+  // Strategy is deliberately not passed: `MasterPromptCompilerService` produces
+  // it AFTER the director judges, so at this point in the pipeline it does not
+  // exist. The builder reports the fields that depend on it as missing, which
+  // is the honest reading of the pipeline as it actually runs.
+  const creativeBrief =
+    input.creativeBrief && truth
+      ? { creative_brief: CreativeBriefBuilderService.build({ productTruth: truth, visualDNA }) }
+      : {};
+
   return {
+    ...productTruth,
+    ...creativeBrief,
     user: {
       concept: request.concept,
       content_message: request.contentMessage,
@@ -224,8 +274,20 @@ export function toDirectorBrief(context: CreativeDecisionContext): DirectorBrief
   // — or with the flag off — produces the nine keys it always produced, which is
   // the equivalence the previous phase established and this one must not break.
   const visualDNA = summarizeVisualDNA(context.visual_dna);
+  // Emitted on the same terms as `visualDNA`: only when there is something to
+  // say, and spread so the key is absent rather than undefined when there is
+  // not. `deepStrictEqual` distinguishes those and the equivalence test depends
+  // on it.
+  const productTruth = summarizeProductTruth(context.product_truth);
+  // Emitted on the same terms as the two above: only when there is something to
+  // say, and spread so the key is absent rather than undefined when there is
+  // not. `deepStrictEqual` distinguishes those and the equivalence test depends
+  // on it.
+  const creativeBrief = summarizeCreativeBrief(context.creative_brief);
   return {
     ...(visualDNA ? { visualDNA } : {}),
+    ...(productTruth ? { productTruth } : {}),
+    ...(creativeBrief ? { creativeBrief } : {}),
     assetContext: context.asset_intent ? context.asset_intent_brief : undefined,
     concept: context.user.concept,
     contentMessage: context.user.content_message,

@@ -8,14 +8,45 @@ import { LockedIntent, VisualExecutionDirectives } from "./CreativeInterpretatio
  * all else being equal.
  */
 export type ArtDirectionTier =
-  | "USER"            // 1. explicit client requirement
-  | "REFERENCE"       // 2. analysis of an uploaded reference image
-  | "STRATEGY"        // 3. marketing reasoning for this campaign
-  | "KNOWLEDGE"       // 4. retrieved professional knowledge
-  | "ASSET_DEFAULT";  // 5. asset-type profile fallback
+  | "USER"              // 1. explicit client requirement
+  | "CREATIVE_DIRECTOR" // 1.5 — see below
+  | "REFERENCE"         // 2. analysis of an uploaded reference image
+  | "STRATEGY"          // 3. marketing reasoning for this campaign
+  | "KNOWLEDGE"         // 4. retrieved professional knowledge
+  | "ASSET_DEFAULT";    // 5. asset-type profile fallback
 
+/**
+ * Phase 1.1D. `CREATIVE_DIRECTOR` sits between USER and REFERENCE, at 1.5.
+ *
+ * A fraction rather than a renumbering: these ranks are only ever compared, and
+ * eight test files plus ten assertions read the existing values. Shifting four
+ * tiers to insert one would be a change to stable behaviour in order to express
+ * an ordering the existing numbers already express perfectly well.
+ *
+ * Why the tier is needed at all
+ * -----------------------------
+ * `lockedIntent` is not the client. It comes from `CreativeInterpretation`,
+ * whose three sources — LLM_STRUCTURED, ROUTER_STRUCTURED_INTENT and
+ * DETERMINISTIC_FALLBACK — are all readings OF the brief, never the brief. Its
+ * camera, lighting, composition, material and environment arrays were pushed at
+ * USER, the top tier, and the compiler then printed them under "EXPLICIT CLIENT
+ * DIRECTIVES — these are requirements, not suggestions. Execute them exactly;
+ * never substitute a house default."
+ *
+ * So a model's inference about a brief was laundered into the client's own
+ * instruction and given authority over every other layer, including the
+ * director. Measured on the Cafe Florian product-hero brief: the client wrote
+ * one sentence about bottled cold brew, and the prompt carried "camera:
+ * Eye-level, square-on", "lighting: Chiaroscuro studio lighting", "composition:
+ * Dead-center vertical alignment" as explicit client directives. The client said
+ * none of it.
+ *
+ * That is why expanding what the Creative Director decides would have changed
+ * nothing on its own: whatever it decided was outranked before it was written.
+ */
 const TIER_RANK: Record<ArtDirectionTier, number> = {
   USER: 1,
+  CREATIVE_DIRECTOR: 1.5,
   REFERENCE: 2,
   STRATEGY: 3,
   KNOWLEDGE: 4,
@@ -25,6 +56,10 @@ const TIER_RANK: Record<ArtDirectionTier, number> = {
 /** How much authority a tier carries before confidence and specificity apply. */
 const TIER_WEIGHT: Record<ArtDirectionTier, number> = {
   USER: 1.0,
+  // Below a real client lock and above an image analysis. A director's decision
+  // is a judgement about this brief; a reference analysis is a fact about a
+  // different picture.
+  CREATIVE_DIRECTOR: 0.9,
   REFERENCE: 0.85,
   STRATEGY: 0.65,
   KNOWLEDGE: 0.5,
@@ -106,12 +141,50 @@ export interface ResolvedArtDirection {
 
 export interface ArtDirectionResolverInput {
   lockedIntent: LockedIntent;
+  /**
+   * Phase 1.1D. Dimensions the client genuinely locked, from the visual
+   * direction panel (`creativeDirection.visual_controls`). A key here means the
+   * user actually chose that value; "auto" and absent both mean they did not.
+   *
+   * This is the only signal in the request that distinguishes a client
+   * instruction from a model's reading of one.
+   */
+  userLockedDimensions?: Record<string, boolean>;
+  /**
+   * Phase 1.1D, `creative_director_authority_v1`. Resolved by the caller, as
+   * every other flag in this engine is. With it off the tiering is byte-
+   * identical to what it has always been.
+   */
+  creativeDirectorAuthority?: boolean;
   inspirationStyleManifest?: InspirationStyleManifest;
   marketingStrategy?: MarketingBrainStrategy;
   knowledgeDirection?: KnowledgeCreativeDirection;
   assetDefaults?: VisualExecutionDirectives;
   assetType?: string;
   aspectRatio?: string;
+}
+
+/**
+ * Did the CLIENT lock this dimension, or did a model infer it?
+ *
+ * Phase 0.4-A. This used to be a closure inside `resolve`, which meant the
+ * resolver knew the answer and the compiler did not. The compiler prints the
+ * directive block from `lockedIntent` several hundred lines before the resolver
+ * runs, so with authority on it was still announcing model inferences as
+ * "EXPLICIT CLIENT DIRECTIVES ... never substitute a house default". Measured
+ * across E2: that header appeared in 12/12 prompts of BOTH arms, which is why
+ * 24 renders moved +0.14 — the tiering changed and the instruction did not.
+ *
+ * Exported so there is ONE definition of what a client lock is. Two copies of
+ * this rule drifting apart is the same defect wearing a different name.
+ */
+export function isClientLockedDimension(
+  dimension: string,
+  opts: { creativeDirectorAuthority?: boolean; userLockedDimensions?: Record<string, boolean> }
+): boolean {
+  // Authority off: everything is treated as the client's, exactly as before.
+  if (!opts.creativeDirectorAuthority) return true;
+  return Boolean(opts.userLockedDimensions?.[dimension]);
 }
 
 /**
@@ -187,12 +260,23 @@ export class ArtDirectionResolverService {
 
     const li = input.lockedIntent;
 
-    // ── Tier 1: explicit client requirements ──────────────────────────────
-    push("camera", "USER", li.camera_requirements?.join("; "));
-    push("lighting", "USER", li.lighting_requirements?.join("; "));
-    push("composition", "USER", li.composition_requirements?.join("; "));
-    push("materials", "USER", li.material_requirements?.join("; "));
-    push("environment", "USER", li.environment?.join(", "));
+    // ── Tier 1: requirements, at the authority they have actually earned ──
+    //
+    // With `creative_director_authority_v1` off this is USER for everything,
+    // exactly as before. With it on, a dimension is USER only when the client
+    // locked it in the visual direction panel; otherwise it is an inference
+    // about the brief and is tiered as the director's decision, which is what
+    // it is. `subject`, `mood` and `emotional_goal` are unaffected either way —
+    // they are readings of what the client SAID, not art direction invented for
+    // them.
+    const tierFor = (dimension: string): ArtDirectionTier =>
+      isClientLockedDimension(dimension, input) ? "USER" : "CREATIVE_DIRECTOR";
+
+    push("camera", tierFor("camera"), li.camera_requirements?.join("; "));
+    push("lighting", tierFor("lighting"), li.lighting_requirements?.join("; "));
+    push("composition", tierFor("composition"), li.composition_requirements?.join("; "));
+    push("materials", tierFor("materials"), li.material_requirements?.join("; "));
+    push("environment", tierFor("environment"), li.environment?.join(", "));
     push("atmosphere", "USER", [li.mood?.join(", "), li.emotional_goal].filter(Boolean).join(" — "));
 
     // ── Tier 2: analysis of an uploaded reference image ───────────────────

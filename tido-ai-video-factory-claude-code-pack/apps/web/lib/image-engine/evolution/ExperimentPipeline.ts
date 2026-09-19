@@ -13,10 +13,23 @@ import {
   toDirectorBrief,
 } from "./experiment/CreativeDecisionContext";
 import { VisualDNA, VisualDNAAnalyzer, visualDNATelemetry } from "./experiment/VisualDNAAnalyzer";
+import { productTruthTelemetry } from "./experiment/ProductTruth";
+import { briefTelemetry } from "./experiment/CreativeBrief";
+import { buildMarketingInsight, marketingInsightTelemetry, MarketingInsight } from "./experiment/MarketingInsight";
+import { buildProductMeaning, productMeaningTelemetry, ProductMeaning } from "./experiment/ProductMeaning";
+import { ProfessionalCreativeBrain } from "./experiment/ProfessionalCreativeBrain";
+import { blueprintTelemetry } from "./experiment/CreativeBlueprint";
 import { NanoBananaPromptComposer, TypographyFixes } from "./experiment/NanoBananaPromptComposer";
 import { AUTO } from "../director/visual-controls.types";
 import { applyCreativeDecision, decisionTelemetry, toCreativeDecision } from "./experiment/CreativeDecision";
 import { assetContextBrief, assetContextFor, shuffleRoutes } from "./experiment/AssetContext";
+import type { AssetContext } from "./experiment/AssetContext";
+import { directionTelemetry, resolveSelectedDirection } from "./experiment/CreativeDirectionResolver";
+import {
+  buildLayoutContext,
+  layoutContextTelemetry,
+  renderLayoutContext,
+} from "./experiment/LayoutContextBridge";
 
 /**
  * Distinct products attached, counted the way the decision context counts them.
@@ -88,6 +101,125 @@ function cacheKeyFor(images: { role?: string; buffer?: Buffer }[]): string {
  * longer prompt. Neither applies to stable, and both stop the moment a flag is
  * turned off.
  */
+/**
+ * CREATIVE_STRATEGY_TRACE — one line per render saying what the intelligence
+ * layers actually decided.
+ *
+ * Phase 1 turns on eight layers that have never run in production. The audit
+ * that preceded it found 115 logged renders carrying only ever one enabled
+ * feature, which means every claim about what these layers do is still a claim
+ * about code rather than about output. This line is what makes the difference
+ * checkable: it reports the decision, not the flag, so a layer that is switched
+ * on but produces nothing reads as empty here instead of reading as success in
+ * `features_enabled`.
+ *
+ * On `risk`: the brief asks for a risk field and no such field exists anywhere
+ * in the judgment. Rather than invent a score, this reports the two real signals
+ * closest to it — the failure modes the format is known for (asset context V2)
+ * and the tradeoff the director knowingly accepted when it passed over the
+ * runner-up route. Both are things someone can act on; a fabricated number is
+ * not.
+ *
+ * Values are truncated. This goes to a server log on every render, and the
+ * fields it carries are free text from a model that has no length contract.
+ */
+/**
+ * Records which routes were put in front of the director.
+ *
+ * `CreativeStrategy.routes_offered` is declared on the interface and read at the
+ * judgment-telemetry call site, and nothing has ever written to it: the director
+ * is not asked for it and the pipeline never filled it in. So `strategy_offered`
+ * has logged 0 on every run, and the shuffle whose stated purpose is that
+ * "distribution is measurable" has never been measurable.
+ *
+ * The pipeline is the right place to fix that rather than the director prompt.
+ * It is the pipeline that chose and shuffled the list, so it knows what was
+ * offered with certainty; asking the model to repeat the list back would be
+ * asking it to recall an input, which is a worse source than the input.
+ *
+ * Only fills what is missing. A director that does start returning the field
+ * keeps its own answer.
+ */
+function recordRoutesOffered(
+  judgment: CreativeJudgment | null,
+  routes?: string[]
+): CreativeJudgment | null {
+  if (!judgment?.strategy || !routes?.length) return judgment;
+  if (judgment.strategy.routes_offered?.length) return judgment;
+  judgment.strategy.routes_offered = [...routes];
+  return judgment;
+}
+
+const TRACE_MAX = 160;
+function clip(v?: string | null): string | undefined {
+  if (!v) return undefined;
+  const t = String(v).replace(/\s+/g, " ").trim();
+  if (!t) return undefined;
+  return t.length > TRACE_MAX ? `${t.slice(0, TRACE_MAX)}…` : t;
+}
+
+function logCreativeStrategyTrace(args: {
+  judgment: CreativeJudgment | null;
+  assetCtx: AssetContext | null;
+  objective?: string;
+  flagsOn: string[];
+}): void {
+  const j = args.judgment;
+  const a = args.assetCtx;
+  const direction = resolveSelectedDirection(j);
+  console.log("[EXPERIMENT][CREATIVE_STRATEGY_TRACE]", {
+    // Did creative intelligence reach the prompt? These come from the resolver
+    // the composer reads, so `composer_used_direction` is a statement about the
+    // prompt rather than a hope about it.
+    ...directionTelemetry(direction),
+    composer_received_direction: Boolean(j),
+    composer_used_direction: Boolean(direction),
+    // What the format is, and what the layers were asked to do about it.
+    asset_type: a?.asset_type,
+    campaign_goal: clip(args.objective) || clip(a?.communication_goal),
+
+    // The decisions themselves.
+    selected_strategy: clip(j?.strategy?.selected),
+    // Read through the same resolver the composer uses, so the trace cannot
+    // disagree with the prompt. Reading `j.selected` directly is what made this
+    // field report `undefined` on every strategy-selection run while a direction
+    // had in fact been chosen — a log that hid the defect instead of showing it.
+    visual_direction: clip(direction?.name),
+    emotion: clip(j?.brand?.emotional_territory) || clip(j?.consumer?.first_feeling),
+    composition_reasoning: clip(j?.reasoning?.composition?.choice),
+
+    // Standing in for a `risk` field the schema does not have.
+    format_failure_modes: a?.failure_modes?.length || 0,
+    tradeoff_accepted: clip(j?.strategy?.why_not_runner_up),
+
+    // Format Challenge V1. The measurement that says whether the rebalance took.
+    //
+    // `risk_taken` empty while the flag is on means the director answered the
+    // challenge by avoiding every failure mode, which is the behaviour being
+    // corrected wearing a new field — so this reads as a null result rather than
+    // as a success, which is the distinction the trace exists to make.
+    risk_taken: clip(
+      j?.strategy?.candidates?.find((c) => c?.route === j?.strategy?.selected)?.risks
+    ),
+    risk_earned_by: clip(
+      j?.strategy?.candidates?.find((c) => c?.route === j?.strategy?.selected)?.earns_it
+    ),
+
+    // Whether each layer produced anything at all. A true here with an empty
+    // value above is the failure this trace exists to surface.
+    produced: {
+      strategy: Boolean(j?.strategy),
+      brand: Boolean(j?.brand),
+      consumer: Boolean(j?.consumer),
+      reasoning: Boolean(j?.reasoning),
+      staging: Boolean(j?.staging),
+      asset_context: Boolean(a),
+      routes_offered: j?.strategy?.routes_offered?.length || 0,
+    },
+    flags_on: args.flagsOn,
+  });
+}
+
 export class ExperimentPipeline {
   public static readonly VERSION = "V4.0.5_EXPERIMENT";
 
@@ -110,7 +242,29 @@ export class ExperimentPipeline {
      */
     judgmentSource: CreativeJudgment | null | Promise<CreativeJudgment | null>,
     controlled = false,
-    fixesFor?: (judgment: CreativeJudgment | null) => TypographyFixes | undefined
+    fixesFor?: (judgment: CreativeJudgment | null) => TypographyFixes | undefined,
+    /**
+     * Layout Context Bridge V1. Built from the judgment for the same reason
+     * `fixesFor` is: on the concurrent path there is no judgment yet when the
+     * provider is wrapped.
+     */
+    layoutContextFor?: (judgment: CreativeJudgment | null) => string | undefined,
+    alignLayoutPriority = false,
+    creativeConstraint?: { productCount: number },
+    carryNonSceneReasoning = false,
+    /**
+     * Phase 5. The Creative Blueprint, rendered for the prompt.
+     *
+     * Built from the judgment for the same reason `fixesFor` is: on the
+     * concurrent path there is no judgment yet when the provider is wrapped.
+     *
+     * Appended AFTER the composer rather than inside it. The composer has a
+     * settled contract and 163 tests reading it; widening that signature to
+     * carry a block it does not interpret would be churn for nothing. Last
+     * position is also the right one — the blueprint says which line wins when
+     * two conflict, and recency is how a renderer reads that.
+     */
+    blueprintFor?: (judgment: CreativeJudgment | null) => string | undefined
   ): ImageGenerationProvider {
     return {
       async generateImage(input: ProviderImageGenerationInput) {
@@ -118,7 +272,28 @@ export class ExperimentPipeline {
         const judgment = await judgmentSource;
         const directorWaitMs = Date.now() - waitStart;
         const fixes = fixesFor ? fixesFor(judgment) : undefined;
-        const composed = NanoBananaPromptComposer.compose(input.prompt, judgment, controlled, fixes);
+        const layoutContext = layoutContextFor ? layoutContextFor(judgment) : undefined;
+        const composed = NanoBananaPromptComposer.compose(
+          input.prompt,
+          judgment,
+          controlled,
+          fixes,
+          layoutContext,
+          alignLayoutPriority,
+          creativeConstraint,
+          carryNonSceneReasoning
+        );
+        const blueprintText = blueprintFor ? blueprintFor(judgment) : undefined;
+        const finalPrompt = blueprintText ? `${composed}
+
+${blueprintText}` : composed;
+        if (blueprintText) {
+          console.log("[EXPERIMENT][CREATIVE_BLUEPRINT_TRANSMITTED]", {
+            blueprint_chars: blueprintText.length,
+            prompt_chars_before: composed.length,
+            prompt_chars_after: finalPrompt.length,
+          });
+        }
         if (composed !== input.prompt) {
           console.log("[EXPERIMENT][NANO_BANANA_PROMPT]", {
             stable_chars: input.prompt.length,
@@ -144,7 +319,7 @@ export class ExperimentPipeline {
               input.prompt.length > PromptBudgetManagerService.EMERGENCY_TARGET,
           });
         }
-        return inner.generateImage({ ...input, prompt: composed });
+        return inner.generateImage({ ...input, prompt: finalPrompt });
       },
     };
   }
@@ -202,12 +377,69 @@ export class ExperimentPipeline {
     const controlled = Boolean(f.creative_director_control_v1);
     const assetAware = Boolean(f.asset_type_intelligence_v1);
     const bridge = Boolean(f.creative_bridge_v1);
+    // `bridge` is read in exactly one place: inside `if (controlled)` below. On a
+    // run without `creative_director_control_v1` it changes nothing, and the
+    // router still reports it in `features_enabled` — a flag that looks enabled
+    // and does nothing, which is how three separate defects in this project
+    // survived a full phase each.
+    if (bridge && !Boolean(f.creative_director_control_v1)) {
+      console.warn(
+        "[EXPERIMENT][CREATIVE_BRIDGE] enabled without creative_director_control_v1 — inert on this run",
+        { reason: "the bridge only applies where the decision rewrites the brief, which is control mode" }
+      );
+    }
     const rolesFix = Boolean(f.typography_roles_v1);
     const loopFix = Boolean(f.typography_control_priority_v1);
     const contextV1 = Boolean(f.creative_decision_context_v1);
     // Rides on the context flag: the analysis lives on the context, so enabling
     // it alone would pay for a vision call nothing reads.
     const visualDNAOn = contextV1 && Boolean(f.visual_dna_v1);
+    // Product Truth V1. Rides on the context for the same reason VisualDNA does
+    // — the object it produces hangs off the context — and is warned about when
+    // enabled without it, because a flag that is on and does nothing is how
+    // three separate defects in this project survived a full phase each.
+    const productTruthOn = contextV1 && Boolean(f.product_truth_v1);
+    // A brief reads the truth object, so it cannot run without one. Stated as a
+    // dependency here rather than assumed in the builder, so the one place that
+    // resolves flags is the one place that knows what depends on what.
+    const creativeBriefOn = productTruthOn && Boolean(f.creative_brief_v1);
+    // Both read the truth object, so neither runs without one. Stated here
+    // rather than assumed downstream, so the one place that resolves flags is
+    // the one place that knows what depends on what.
+    const marketingInsightOn = productTruthOn && Boolean(f.marketing_insight_v1);
+    const brainOn = productTruthOn && Boolean(f.professional_creative_brain_v1);
+
+    // Phase 1.1D — Creative Director authority over inferred art direction.
+    //
+    // Resolved here because this is the layer that reads flags, and handed to
+    // the orchestrator as an option so the compiler never has to. `lockedIntent`
+    // is an LLM reading of the brief; the visual direction panel is the client.
+    // Only the second is a lock.
+    const cdAuthorityOn = Boolean(f.creative_director_authority_v1);
+    const vc = request.creativeDirection?.visual_controls || {};
+    const userLockedDimensions: Record<string, boolean> = {};
+    for (const [dimension, value] of Object.entries(vc)) {
+      // `auto` and an absent key both mean the control was left on Tự chọn,
+      // which is the user declining to choose rather than choosing.
+      if (value && String(value).toLowerCase() !== AUTO) userLockedDimensions[dimension] = true;
+    }
+    if (cdAuthorityOn) {
+      console.log("[EXPERIMENT][CD_AUTHORITY]", {
+        applied: true,
+        user_locked: Object.keys(userLockedDimensions),
+        director_controls: ["camera", "lighting", "composition", "materials", "environment"].filter(
+          (d) => !userLockedDimensions[d]
+        ),
+      });
+    }
+    const cdAuthorityOptions = cdAuthorityOn
+      ? { creativeDirectorAuthority: true, userLockedDimensions }
+      : {};
+    if (Boolean(f.product_truth_v1) && !productTruthOn) {
+      console.warn("[EXPERIMENT][PRODUCT_TRUTH] enabled without creative_decision_context_v1 — inert on this run", {
+        reason: "the truth object hangs off the decision context, and there is no context to hang it on",
+      });
+    }
     // Null when the asset type is unrecognised, which leaves the director where
     // it was rather than handing it poster thinking for a format nobody mapped.
     // V2 corrects three entries that stated an answer instead of a problem, and
@@ -228,6 +460,20 @@ export class ExperimentPipeline {
     const strategyOn = Boolean(f.creative_strategy_selection_v1) && Boolean(assetCtx?.possible_strategies?.length);
     const routes = strategyOn ? shuffleRoutes(assetCtx!.possible_strategies!) : undefined;
     judgmentFlags.strategySelection = strategyOn;
+
+    // Format Challenge V1. Gated on route selection actually running, for the
+    // same reason the bridge is gated on control mode: a flag that is enabled and
+    // does nothing is how three separate defects in this project survived a full
+    // phase each. Warned about rather than silently ignored.
+    const challengeOn = strategyOn && Boolean(f.format_challenge_v1);
+    judgmentFlags.formatChallenge = challengeOn;
+    if (Boolean(f.format_challenge_v1) && !challengeOn) {
+      console.warn("[EXPERIMENT][FORMAT_CHALLENGE] enabled without route selection — inert on this run", {
+        reason: "the challenge is a requirement on a candidate, and there are no candidates without routes",
+        creative_strategy_selection_v1: Boolean(f.creative_strategy_selection_v1),
+        use_case: request.useCase,
+      });
+    }
     if (Boolean(f.creative_strategy_selection_v1) && !strategyOn) {
       console.warn("[EXPERIMENT][STRATEGY] no routes for this format — selection not applied", {
         use_case: request.useCase,
@@ -249,6 +495,8 @@ export class ExperimentPipeline {
         "creative_bridge_v1", "typography_roles_v1", "typography_control_priority_v1",
         "asset_intent_v2", "creative_decision_context_v1", "visual_dna_v1",
         "creative_strategy_selection_v1", "multi_product_staging_v1",
+        "format_challenge_v1", "product_truth_v1", "creative_brief_v1",
+        "marketing_insight_v1", "professional_creative_brain_v1",
       ];
       const otherFlags = decision.features_enabled.filter((n) => !IMPLEMENTED.includes(n));
       if (otherFlags.length) {
@@ -263,7 +511,7 @@ export class ExperimentPipeline {
 
     const mc = request.marketingContext;
     const assetBrief = assetCtx
-      ? assetContextBrief(assetCtx, { includeStrategies: intentV2 })
+      ? assetContextBrief(assetCtx, { includeStrategies: intentV2, includeChallenges: challengeOn })
       : undefined;
 
     // Two ways to build one object, kept side by side for a release.
@@ -301,13 +549,53 @@ export class ExperimentPipeline {
     }
 
     let brief: DirectorBriefInput;
+    // Held outside the context branch so the blueprint closure below can read
+    // them. Null on the legacy path, which is what keeps that path unchanged.
+    let marketingInsight: MarketingInsight | null = null;
+    let productMeaning: ProductMeaning | null = null;
+    let productTruthForBrain: import("./experiment/ProductTruth").ProductTruth | null = null;
     if (contextV1) {
       const context = buildContext({
         request,
         assetIntent: assetCtx,
         assetIntentBrief: assetBrief,
         visualDNA,
+        productTruth: productTruthOn,
+        creativeBrief: creativeBriefOn,
       });
+      // Assembly only in this phase. `toDirectorBrief` is untouched, so the
+      // director receives exactly what it received before — the truth object
+      // hangs off the context and is reported, and nothing reads it yet.
+      if (productTruthOn) {
+        console.log("[EXPERIMENT][PRODUCT_TRUTH]", productTruthTelemetry(context.product_truth));
+      }
+      if (creativeBriefOn) {
+        console.log("[EXPERIMENT][CREATIVE_BRIEF]", briefTelemetry(context.creative_brief));
+      }
+      // Strategy is deliberately not passed: `MasterPromptCompilerService`
+      // produces it AFTER the director judges, so at this point it does not
+      // exist. The insight reports the fields that depend on it as missing,
+      // which is the honest reading of the pipeline as it actually runs.
+      if (marketingInsightOn || brainOn) {
+        // ProductTruth's DERIVED tier, built first because the insight below
+        // and the brain both read it. Measured on run_20260919_003: without it
+        // only 3 of 26 blueprint decisions rested on the product.
+        productMeaning = buildProductMeaning({
+          productTruth: context.product_truth,
+          visualDNA,
+        });
+        console.log("[EXPERIMENT][PRODUCT_MEANING]", productMeaningTelemetry(productMeaning));
+        marketingInsight = buildMarketingInsight({
+          productTruth: context.product_truth,
+          productMeaning,
+          audience: mc?.target_audience,
+          objective: mc?.objective,
+        });
+        if (marketingInsightOn) {
+          console.log("[EXPERIMENT][MARKETING_INSIGHT]", marketingInsightTelemetry(marketingInsight));
+        }
+      }
+      productTruthForBrain = context.product_truth ?? null;
       brief = {
         ...toDirectorBrief(context),
         ...(routes ? { routes } : {}),
@@ -357,6 +645,41 @@ export class ExperimentPipeline {
           }
         : undefined;
 
+    // Layout Context Bridge V1.
+    //
+    // Deliberately NOT part of `judgmentFlags`, and therefore not part of
+    // `anyJudgment`. The bridge asks the director for nothing — it carries
+    // decisions other flags already produced — so a run with this flag alone has
+    // nothing to carry and correctly exits to stable. That is the opposite of
+    // the staging and strategy wiring defects, where a flag that DID change what
+    // the director was asked was resolved after the exit.
+    const layoutBridgeOn = Boolean(f.layout_context_bridge_v1);
+    // Rides on the bridge for the same reason the composer gates on the block:
+    // the replacement clause names LAYOUT CONTEXT, so enabling it without one
+    // would point the renderer at a section that is not there.
+    const layoutPriorityOn = layoutBridgeOn && Boolean(f.layout_priority_alignment_v1);
+    // Independent of the bridge: the over-decoration this calibrates comes from
+    // any creative intent reaching the renderer, and the judgment block carries
+    // plenty of it on its own.
+    const creativeConstraint = Boolean(f.creative_constraint_calibration_v1)
+      ? { productCount }
+      : undefined;
+    if (Boolean(f.layout_priority_alignment_v1) && !layoutBridgeOn) {
+      console.warn("[EXPERIMENT][LAYOUT_PRIORITY] enabled without layout_context_bridge_v1 — not applied");
+    }
+    const layoutContextFor = layoutBridgeOn
+      ? (j: CreativeJudgment | null): string | undefined => {
+          const ctx = buildLayoutContext({
+            judgment: j,
+            productCount,
+            assetIntent: assetCtx,
+          });
+          const block = renderLayoutContext(ctx);
+          console.log("[EXPERIMENT][LAYOUT_CONTEXT]", layoutContextTelemetry(ctx, block.length));
+          return block || undefined;
+        }
+      : undefined;
+
     const judgeStart = Date.now();
 
     // ── The concurrent path ────────────────────────────────────────────────
@@ -370,6 +693,29 @@ export class ExperimentPipeline {
     // In control mode the judgment is an INPUT to the pipeline: it rewrites the
     // concept and the hard requirements before the Marketing Brain reads them.
     // That dependency is real and this path leaves it alone.
+    /**
+     * Phase 5. The blueprint, resolved from whatever the director produced.
+     *
+     * Undefined when the flag is off, which is what keeps the composed prompt
+     * byte-identical. Built here rather than in the wrapper so the wrapper stays
+     * a transport and the reasoning stays in one place.
+     */
+    const blueprintFor = brainOn
+      ? (j: CreativeJudgment | null) => {
+          const dec = j ? toCreativeDecision(j) : null;
+          const bp = ProfessionalCreativeBrain.assemble({
+            productTruth: productTruthForBrain,
+            productMeaning,
+            marketingInsight,
+            visualDNA,
+            decision: dec,
+            judgment: j,
+          });
+          console.log("[EXPERIMENT][CREATIVE_BLUEPRINT]", blueprintTelemetry(bp));
+          return ProfessionalCreativeBrain.render(bp);
+        }
+      : undefined;
+
     if (!controlled) {
       const judgmentPromise = new CreativeDirectorV1()
         .judge(brief, judgmentFlags)
@@ -379,6 +725,13 @@ export class ExperimentPipeline {
             produced: Boolean(j),
             product_count: productCount,
             concurrent: true,
+          });
+          recordRoutesOffered(j, routes);
+          logCreativeStrategyTrace({
+            judgment: j,
+            assetCtx,
+            objective: mc?.objective,
+            flagsOn: decision.features_enabled,
           });
           return j;
         })
@@ -392,11 +745,25 @@ export class ExperimentPipeline {
           return null;
         });
 
+
+
       const innerConcurrent = options?.generationProvider || new ImgStudioImageGenerationProvider();
       try {
         return await StablePipeline.run(request, {
           ...options,
-          generationProvider: this.wrapProvider(innerConcurrent, judgmentPromise, false, fixesFor),
+          ...cdAuthorityOptions,
+          generationProvider: this.wrapProvider(
+            innerConcurrent,
+            judgmentPromise,
+            false,
+            fixesFor,
+            layoutContextFor,
+            layoutPriorityOn,
+            creativeConstraint,
+            // Uncontrolled: the whole judgment is appended anyway.
+            false,
+            blueprintFor
+          ),
         });
       } catch (err: any) {
         console.error("[EVOLUTION][EXPERIMENT] generation failed", {
@@ -407,6 +774,13 @@ export class ExperimentPipeline {
     }
 
     const judgment = await new CreativeDirectorV1().judge(brief, judgmentFlags);
+    recordRoutesOffered(judgment, routes);
+    logCreativeStrategyTrace({
+      judgment,
+      assetCtx,
+      objective: mc?.objective,
+      flagsOn: decision.features_enabled,
+    });
     console.log("[EXPERIMENT][JUDGMENT_LATENCY]", {
       elapsed_ms: Date.now() - judgeStart,
       produced: Boolean(judgment),
@@ -437,7 +811,15 @@ export class ExperimentPipeline {
     if (controlled) {
       const decision = toCreativeDecision(judgment);
       if (decision) {
-        effectiveRequest = applyCreativeDecision(request, decision, bridge);
+        // `false`, and deliberately.
+        //
+        // The bridge's original job was to push four one-line summaries of the
+        // brand, the audience, the element meanings and the rejected direction
+        // into hardRequirements, because control mode had deleted the sections
+        // that carried them. The composer now carries those same four as full
+        // sections instead, so passing `bridge` here too would state each of
+        // them twice — once as a sentence and once as a block. One carrier.
+        effectiveRequest = applyCreativeDecision(request, decision, false);
         // The communication goal travels as a hard requirement, not in the
         // concept: the concept is budget-constrained, and the brain does not
         // need to turn a goal into a scene — it needs to know what the scene it
@@ -452,6 +834,23 @@ export class ExperimentPipeline {
           };
         }
         console.log("[EXPERIMENT][DIRECTOR_CONTROL]", decisionTelemetry(decision, effectiveRequest.concept));
+        // Phase 1.1D. What the director actually decided, in one line, so a
+        // reader can see the decision rather than infer it from the flag list.
+        // Truncated: these are free text from a model with no length contract.
+        console.log("[CREATIVE_DIRECTOR_DECISION]", {
+          concept: clip(decision.selected_direction) || clip(decision.strategy_route) || null,
+          scene: clip(decision.scene_definition),
+          camera: clip(decision.camera_decision),
+          lighting: clip(decision.lighting_decision),
+          composition: clip(decision.composition_decision),
+          composition_reasoning: clip(judgment.reasoning?.composition?.reason),
+          typography: clip(decision.typography_decision),
+          typography_reasoning: clip(judgment.reasoning?.typography?.reason),
+          environment: clip(decision.environment_decision),
+          // Empty here while `creative_director_authority_v1` is unwired: these
+          // reach the renderer at USER tier as somebody else's directive.
+          authority: "see ART_DIRECTION provenance",
+        });
         if (judgment.staging) {
           console.log("[EXPERIMENT][STAGING]", {
             product_count: productCount,
@@ -479,7 +878,18 @@ export class ExperimentPipeline {
     try {
       return await StablePipeline.run(effectiveRequest, {
         ...options,
-        generationProvider: this.wrapProvider(inner, judgment, controlled, fixesFor),
+        ...cdAuthorityOptions,
+        generationProvider: this.wrapProvider(
+          inner,
+          judgment,
+          controlled,
+          fixesFor,
+          layoutContextFor,
+          layoutPriorityOn,
+          creativeConstraint,
+          bridge,
+          blueprintFor
+        ),
       });
     } catch (err: any) {
       console.error("[EVOLUTION][EXPERIMENT] generation failed", {

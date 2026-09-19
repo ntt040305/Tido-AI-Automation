@@ -63,12 +63,52 @@ export interface AssetContext {
    * pictures that did not work.
    */
   failure_modes?: string[];
+
+  /**
+   * Format Challenge V1. What a route must DO to earn each failure mode's risk,
+   * index-aligned with `failure_modes`.
+   *
+   * Why this exists
+   * ---------------
+   * The failure modes are well written — they describe outcomes, not components,
+   * and a test asserts none of them is an instruction. The defect was that the
+   * list arrived with no verb. A model choosing among routes, handed a list of
+   * ways to fail and told nothing about what to do with it, uses it to
+   * eliminate; there is nothing else it can do with it.
+   *
+   * Measured across twelve renders: the director rejected the richer option in
+   * five of eight stated tradeoffs, and its own words were "dilutes",
+   * "distracts", "clutter", "visual noise". "The setting competes with the
+   * object" names a RELATIONSHIP failure and was heard as a COMPONENT ban —
+   * avoid settings. Six of twelve renders then chose a route that explicitly
+   * disclaims having an idea.
+   *
+   * A challenge is the verb. It keeps the failure exactly as written and adds
+   * what answering it looks like, so a distinctive route has a defined way to
+   * survive selection rather than only a way to be disqualified.
+   *
+   * Separate from `failure_modes` rather than replacing it, for two reasons: the
+   * existing field is asserted to be non-imperative and these are deliberately
+   * imperative, and keeping them apart means the failure wording is provably
+   * unchanged.
+   */
+  challenges?: string[];
 }
 
 /** Options for rendering the brief. Absent means V1 output, byte for byte. */
 export interface AssetContextBriefOptions {
   /** V2. Append the strategy list and the failure modes. */
   includeStrategies?: boolean;
+  /**
+   * Format Challenge V1. Render each failure mode with what answering it looks
+   * like, under a header that says they are tests rather than hazards.
+   *
+   * Independent of `includeStrategies` and inert without it: the challenges are
+   * about choosing between routes, and with no routes in the brief there is
+   * nothing to choose between. Omitting this returns the V2 string byte for
+   * byte, which is what makes the flag a real switch rather than a label.
+   */
+  includeChallenges?: boolean;
 }
 
 /**
@@ -267,6 +307,47 @@ const INTENT_V2_FAILURE_MODES: Record<string, string[]> = {
   ],
 };
 
+/**
+ * Format Challenge V1 — what answering each failure mode looks like.
+ *
+ * Index-aligned with `INTENT_V2_FAILURE_MODES`, and a test asserts the alignment
+ * rather than trusting it.
+ *
+ * Every line is a question a route can answer, never a component to avoid. The
+ * distinction is the whole phase: "if you use a setting, say what it does for
+ * the product that no backdrop could" keeps the setting available and makes it
+ * expensive, where "the setting competes with the object" alone made it
+ * forbidden. A challenge that named a thing to drop would be this file choosing
+ * the picture, which is the defect one level up.
+ */
+const INTENT_V2_CHALLENGES: Record<string, string[]> = {
+  poster: [
+    "state the idea in the picture alone; if the line is doing the work, change the picture",
+    "name the one thing a viewer would describe to someone else afterwards",
+    "say what the words add that the picture cannot",
+  ],
+  social_ad: [
+    "if it reads as advertising, say what makes it worth reading anyway",
+    "name the one idea, and say what you cut to protect it",
+    "say how the product pays off whatever made them stop",
+  ],
+  product_hero: [
+    "if you use a setting, say what it does for the product that no backdrop could",
+    "name the one surface that rewards a second look, and how the light finds it",
+    "name what you are not flattering, and why the honesty sells better",
+  ],
+  banner: [
+    "say what lands in the first pass, and what you accepted losing to protect it",
+    "name what survives the crop, and where it sits",
+    "say what is read first, and why it earns that position over the benefit",
+  ],
+  ugc_thumbnail: [
+    "if it is composed, say what makes it still read as someone's own photograph",
+    "name what stays legible at thumbnail size, and what you let go",
+    "say what real thing creates the curiosity",
+  ],
+};
+
 const ALIASES: Record<string, string> = {
   poster: "poster",
   billboard: "poster",
@@ -304,6 +385,9 @@ export function assetContextFor(assetType?: string, v2 = false): AssetContext | 
     ...INTENT_V2_OVERRIDES[key],
     possible_strategies: INTENT_V2_STRATEGIES[key],
     failure_modes: INTENT_V2_FAILURE_MODES[key],
+    // Carried on the context whenever V2 is on. Only the RENDERING is gated, so
+    // the flag controls what the director is told and not what this file knows.
+    challenges: INTENT_V2_CHALLENGES[key],
   };
 }
 
@@ -341,11 +425,31 @@ export function assetContextBrief(
       );
     }
     if (ctx.failure_modes?.length) {
-      lines.push(
-        "",
-        "HOW THIS FORMAT FAILS WHILE STILL BEING A COMPETENT PICTURE:",
-        ...ctx.failure_modes.map((f) => `  - ${f}`)
-      );
+      // Format Challenge V1. The heading is unchanged, and so is every failure
+      // line — what changes is that each one now arrives with what answering it
+      // looks like, and two sentences saying these are tests rather than hazards.
+      //
+      // Requires the challenges to be present AND aligned. A partial list would
+      // pair a failure with someone else's answer, which is worse than no answer,
+      // so anything short of exact alignment falls back to the V2 output.
+      const paired =
+        options?.includeChallenges &&
+        ctx.challenges?.length === ctx.failure_modes.length;
+
+      lines.push("", "HOW THIS FORMAT FAILS WHILE STILL BEING A COMPETENT PICTURE:");
+
+      if (paired) {
+        lines.push(
+          "These are not things to avoid. They are the tests a route has to pass, and a",
+          "route that touches one is not disqualified — it owes an answer. Name the one",
+          "you are risking and say how you pay for it."
+        );
+        for (const [i, f] of ctx.failure_modes.entries()) {
+          lines.push(`  - ${f}`, `      → ${ctx.challenges![i]}`);
+        }
+      } else {
+        lines.push(...ctx.failure_modes.map((f) => `  - ${f}`));
+      }
     }
   }
 

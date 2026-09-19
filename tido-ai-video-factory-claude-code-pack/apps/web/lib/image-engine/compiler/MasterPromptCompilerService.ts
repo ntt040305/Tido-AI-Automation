@@ -25,7 +25,7 @@ import { PromptCompressionService } from "./PromptCompressionService";
 import { PromptBudgetManagerService } from "../service/PromptBudgetManagerService";
 import { CreativeKnowledgeService } from "../service/CreativeKnowledgeService";
 import { CreativeConstraintService } from "../service/CreativeConstraintService";
-import { ArtDirectionResolverService } from "../service/ArtDirectionResolverService";
+import { ArtDirectionResolverService, isClientLockedDimension } from "../service/ArtDirectionResolverService";
 import { CommercialLayoutService } from "../service/CommercialLayoutService";
 import { RenderReadinessValidator } from "../validation/RenderReadinessValidator";
 
@@ -294,17 +294,44 @@ export class MasterPromptCompilerService {
 
       // Explicit client directives are repeated here as intent (not as execution)
       // so they survive even if a later section is trimmed under budget pressure.
-      const explicitAsks = [
-        ...(locked.camera_requirements || []).map((c) => `camera: ${c}`),
-        ...(locked.lighting_requirements || []).map((c) => `lighting: ${c}`),
-        ...(locked.composition_requirements || []).map((c) => `composition: ${c}`),
-        ...(locked.material_requirements || []).map((c) => `material: ${c}`),
+      //
+      // Phase 0.4-A. Each line is filed under whoever actually decided it.
+      // `lockedIntent` mixes two things the client cannot tell apart: what they
+      // typed, and what `CreativeInterpretationService` inferred from one
+      // sentence of brief. With authority on, the inferred lines are the
+      // director's and are labelled as the director's; the client's locks keep
+      // the language they have always had. The same predicate the resolver uses
+      // decides which is which, so the prompt and the tier ladder cannot drift.
+      const authorityOpts = {
+        creativeDirectorAuthority: input.creativeDirectorAuthority,
+        userLockedDimensions: input.userLockedDimensions,
+      };
+      const askLines: { dimension: string; line: string }[] = [
+        ...(locked.camera_requirements || []).map((c) => ({ dimension: "camera", line: `camera: ${c}` })),
+        ...(locked.lighting_requirements || []).map((c) => ({ dimension: "lighting", line: `lighting: ${c}` })),
+        ...(locked.composition_requirements || []).map((c) => ({ dimension: "composition", line: `composition: ${c}` })),
+        ...(locked.material_requirements || []).map((c) => ({ dimension: "materials", line: `material: ${c}` })),
       ];
-      if (explicitAsks.length > 0) {
+      const clientAsks = askLines.filter((a) => isClientLockedDimension(a.dimension, authorityOpts));
+      const directorAsks = askLines.filter((a) => !isClientLockedDimension(a.dimension, authorityOpts));
+
+      if (clientAsks.length > 0) {
         interpLines.push(
           ``,
           `EXPLICIT CLIENT DIRECTIVES — these are requirements, not suggestions. Execute them exactly; never substitute a house default:`,
-          ...explicitAsks.map((a) => `- ${a}`)
+          ...clientAsks.map((a) => `- ${a.line}`)
+        );
+      }
+      if (directorAsks.length > 0) {
+        // Deliberately weaker language than the client block. These are the art
+        // director's calls for this brief: binding on the render, but a reader
+        // is told they came from the director, and serving the idea is allowed
+        // to beat executing the letter. Claiming otherwise is the laundering
+        // this split exists to end.
+        interpLines.push(
+          ``,
+          `ART DIRECTOR'S DECISIONS — chosen for this brief, not dictated by the client. Execute them as written unless doing so would break the idea they serve:`,
+          ...directorAsks.map((a) => `- ${a.line}`)
         );
       }
 
@@ -421,6 +448,31 @@ export class MasterPromptCompilerService {
       highImportanceUnknowns.forEach((unk) => instanceLines.push(`  * ${unk}`));
     }
 
+    // ── Product Identity Protection ───────────────────────────────────────
+    //
+    // Phase 0.4-B. Unconditional, because the locks above are not: they only
+    // appear when a reference manifest happens to carry them, and the failure
+    // this prevents happens exactly when it does not.
+    //
+    // Measured across E2's 24 renders: the product's own label survived intact
+    // in five of six scenarios, and was destroyed in 4/4 renders of the hero
+    // scenario — the campaign copy was printed ONTO the label in place of the
+    // real text, in both arms and both runs. The hero frame is where it fails
+    // because it is the frame with nowhere else for copy to go, so the model
+    // puts the words on the only surface it has.
+    //
+    // Four properties, named as properties. Not a house style and not a
+    // category rule: a label, a logo, a silhouette and a colour exist for a
+    // bottle, a carton, a laptop and a coat alike.
+    instanceLines.push(
+      `- PRODUCT IDENTITY PROTECTION — the product is photographed, never redesigned:`,
+      `  * Label: reproduce every word, mark and proportion exactly as the reference shows. Do not rewrite, retranslate, re-typeset, add to, remove from or leave blank any part of it.`,
+      `  * Logo: the reference's mark, letterforms and spacing. Do not restyle it or substitute another.`,
+      `  * Packaging shape: the reference's silhouette, proportions, closure and material. Do not slim, round, stretch or resize it.`,
+      `  * Product colour: the reference's colours, including the contents seen through the container. Do not re-tint to match the scene.`,
+      `  * A blank, partial or illegible label is a failed render, not a clean one.`
+    );
+
     const productInstanceRequirementsText = instanceLines.join("\n");
     provenance.product_instance_requirements = { source: "compiler_routing_fusion", text: productInstanceRequirementsText };
 
@@ -480,6 +532,18 @@ export class MasterPromptCompilerService {
           "The roles above are what the client called each string, not an instruction about size or position."
         );
       }
+
+      // Phase 0.4-B, the second half of Product Identity Protection.
+      //
+      // The strings above are the campaign's, and the label's words are the
+      // product's. Nothing previously said they were different things, so in
+      // the hero scenario — the one frame with no free space for copy — the
+      // renderer resolved the tension by printing the campaign onto the label,
+      // in 4 of 4 renders. This says where the words go.
+      lines.push(
+        "",
+        "These strings are campaign copy. They belong to the layout, not to the product: set them in the frame around it and never on the label, cap, packaging or any other product surface. The words already printed on the product are part of the product — reproduce them exactly and do not replace them with any string above."
+      );
 
       typographyAndReadableCopyText = lines.join("\n");
     } else {
@@ -789,6 +853,10 @@ export class MasterPromptCompilerService {
     });
 
     const artDirection = ArtDirectionResolverService.resolve({
+      // Phase 1.1D. Both absent on every existing caller, so the tiering they
+      // get is the tiering they have always got.
+      creativeDirectorAuthority: input.creativeDirectorAuthority,
+      userLockedDimensions: input.userLockedDimensions,
       lockedIntent: input.creativeInterpretation?.locked_intent || {
         subject: [],
         environment: [],

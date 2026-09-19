@@ -511,12 +511,16 @@ check("Unranked sections keep the order the compiler chose", () => {
 
 check("The judgment reaches the prompt as decisions with reasons", () => {
   const out = NanoBananaPromptComposer.compose("## ROLE\nr", JUDGMENT as any);
-  assert.ok(/## CREATIVE DIRECTION — THE ONE CHOSEN/.test(out), "the chosen direction is absent");
+  // Heading and labels moved to the Phase 0.1 contract, which names the section
+  // `## CREATIVE DIRECTION` and its lines WHY THIS DIRECTION / HOW IT SHOULD
+  // APPEAR / WHY OTHER DIRECTIONS WERE NOT USED. The information carried is the
+  // same; only the wording of the labels changed, and this assertion caught it.
+  assert.ok(/## CREATIVE DIRECTION/.test(out), "the chosen direction is absent");
   assert.ok(/CHOSEN DIRECTION: Premium Brand/.test(out));
   assert.ok(/hands around a cup/.test(out), "the chosen direction's idea is absent");
   // The rejected direction is carried on purpose: a renderer that knows an image
   // is deliberately quiet will not drift it back toward the safe version.
-  assert.ok(/DELIBERATELY NOT DOING:/.test(out), "the rejected direction is absent");
+  assert.ok(/WHY OTHER DIRECTIONS WERE NOT USED:/.test(out), "the rejected direction is absent");
   assert.ok(/## VISUAL DECISIONS — EACH WITH ITS REASON/.test(out));
   assert.strictEqual((out.match(/^  WHY: /gm) || []).length, 5, "not every decision carries a reason");
   assert.ok(/## WHY THIS IS NOT THE CATEGORY DEFAULT/.test(out));
@@ -788,7 +792,15 @@ check("Control is wired so the rewritten request reaches the pipeline", () => {
   // Matched on the prefix for the reason the comment above already gives: this
   // assertion pinned the closing paren and duly failed when a fourth parameter
   // was added, with nothing broken.
-  assert.ok(/wrapProvider\(inner, judgment, controlled/.test(src), "control is not passed to the composer");
+  // Whitespace-tolerant for the third time this assertion has been loosened. It
+  // pinned the closing paren, then the argument count, and now the fact that the
+  // arguments were on one line — the call reached seven parameters and had to
+  // wrap. What it is actually asserting is that `controlled` reaches the
+  // composer, and that is all it should be able to fail on.
+  assert.ok(
+    /wrapProvider\(\s*inner,\s*judgment,\s*controlled\b/.test(src),
+    "control is not passed to the composer"
+  );
   // And a judgment that cannot produce a decision says so rather than pretending.
   assert.ok(/no scene in the judgment/.test(src), "a sceneless judgment silently does nothing");
 });
@@ -2088,7 +2100,11 @@ check("CONCURRENCY: control mode stays sequential, because the dependency is rea
   // In control mode the judgment rewrites the concept and the hard requirements
   // before the Marketing Brain reads them. That ordering is the feature.
   const seqAwait = PIPELINE_SRC.indexOf("const judgment = await new CreativeDirectorV1()");
-  const apply = PIPELINE_SRC.indexOf("applyCreativeDecision(request, decision, bridge)");
+  // Matched without the third argument. What this test asserts is the ORDERING —
+  // await the director, rewrite the request, then run the pipeline — and pinning
+  // the bridge parameter made it fail when Phase 0.3 set that argument to false
+  // and moved the bridged reasoning to the composer, with the ordering intact.
+  const apply = PIPELINE_SRC.indexOf("applyCreativeDecision(request, decision,");
   const stable = PIPELINE_SRC.indexOf("return await StablePipeline.run(effectiveRequest");
   assert.ok(seqAwait > 0 && apply > 0 && stable > 0, "the control path was restructured");
   assert.ok(seqAwait < apply, "the decision is applied before the judgment exists");
@@ -2331,8 +2347,8 @@ check("ACTIVATION: reading the asset context early cannot reach the network", ()
     path.join(process.cwd(), "lib", "image-engine", "evolution", "experiment", "AssetContext.ts"),
     "utf-8"
   );
-  assert.ok(!/await/.test(src), "AssetContext now awaits something");
-  assert.ok(!/fetch\s*\(/.test(src), "AssetContext now performs a request");
+  assert.ok(!/await/.test(src), "AssetContext now awaits something");
+  assert.ok(!/fetch\s*\(/.test(src), "AssetContext now performs a request");
   assert.ok(
     /export function assetContextFor/.test(src),
     "assetContextFor is no longer a plain synchronous function"

@@ -255,7 +255,19 @@ export function toCreativeDecision(j: CreativeJudgment): CreativeDecision | null
     lighting_decision: clean(r?.lighting?.choice),
     composition_decision: clean(r?.composition?.choice),
     typography_decision: clean(r?.typography?.choice),
-    environment_decision: clean(chosen?.visual_language),
+    // Phase 0.5. The winner first, exactly as `scene` does on line 233.
+    //
+    // This read `chosen?.visual_language` alone, and `chosen` is the EXPLORATION
+    // field. Phase 0.2 added `visual_language` to `StrategyCandidate` and taught
+    // the resolver to read it, but this function is not one of the four readers
+    // Phase 0.1 replaced — so on every strategy-selection run in control mode the
+    // half of the decision that says HOW the frame is rendered resolved
+    // correctly, was logged correctly, and then reached the renderer by no route
+    // at all. The renderer got a subject and invented the photograph around it.
+    //
+    // The asymmetry was one field, not the file: `scene_definition` two lines up
+    // has always fallen back to the winner. This makes the pair consistent.
+    environment_decision: clean(winner?.visual_language) || clean(chosen?.visual_language),
     product_relationship: j.staging
       ? [
           clean(j.staging.relationship?.relationship_type),
@@ -424,10 +436,35 @@ export function applyCreativeDecision(
     );
     for (const line of decision.staging_requirements) hardRequirements.push(`  ${line}`);
   }
+  // What this image is, named to the renderer — in the vocabulary of whichever
+  // branch chose it.
+  //
+  // The two branches choose different KINDS of thing and the sentences say so.
+  // Strategy selection picks a ROUTE: a commercial answer to the brief, which is
+  // what "answers the brief as" claims. Exploration picks a DIRECTION: a named
+  // creative idea with a body. Calling a direction a route would be the menu
+  // problem in one sentence, so they get one sentence each.
+  //
+  // This matters beyond tidiness. An earlier attempt extended the route line to
+  // cover exploration and broke `run-evolution-tests.ts:2030` ("Runs without
+  // strategy selection produce the decision they always did"), which asserts a
+  // legacy judgment must not grow a STRATEGY line. That contract is right: the
+  // defect was never that exploration lacked a route, it was that exploration
+  // named nothing at all. `selected_direction` and `creative_goal` are computed
+  // from both branches on lines 247-251 and, until now, were read only by
+  // telemetry — the name reached the log and not the picture.
+  //
+  // Same defect class as `environment_decision` above: a value resolved
+  // correctly, then dropped on one branch by the emitter rather than the reader.
   if (decision.strategy_route) {
     hardRequirements.push(
       `This image answers the brief as: ${decision.strategy_route}.` +
         (decision.strategy_reason ? ` Why that route here: ${decision.strategy_reason}` : "")
+    );
+  } else if (decision.selected_direction) {
+    hardRequirements.push(
+      `The creative direction chosen for this image: ${decision.selected_direction}.` +
+        (decision.creative_goal ? ` Why this direction here: ${decision.creative_goal}` : "")
     );
   }
   if (decision.environment_decision) {

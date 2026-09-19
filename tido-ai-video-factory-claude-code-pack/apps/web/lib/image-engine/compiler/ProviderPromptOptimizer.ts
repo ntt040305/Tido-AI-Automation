@@ -13,6 +13,17 @@ import { tierFor, TIER_CREATIVE, TIER_SUPPORTING } from "./prompt-section-policy
  */
 const DEFAULT_HARD_LIMIT = 20000;
 const DEFAULT_SOFT_THRESHOLD = 17000;
+/**
+ * How close to the ceiling a prompt may get before compression begins.
+ *
+ * 0.85 is not a tuned value; it is the ratio the old pinned pair already
+ * expressed (17,000 of 20,000), kept so that raising the ceiling is the only
+ * thing that changes behaviour here.
+ */
+const COMPRESSION_START_RATIO = (() => {
+  const raw = Number(process.env.PROMPT_COMPRESSION_START_RATIO);
+  return Number.isFinite(raw) && raw > 0 && raw <= 1 ? raw : 0.85;
+})();
 const CONFIGURED_HARD_LIMIT = (() => {
   const raw = Number(process.env.PROMPT_HARD_MAXIMUM_CHARS);
   return Number.isFinite(raw) && raw > 0 ? raw : DEFAULT_HARD_LIMIT;
@@ -134,16 +145,36 @@ export class ProviderPromptOptimizer {
    */
   public static readonly HARD_LIMIT = CONFIGURED_HARD_LIMIT;
   /**
-   * Where intelligent compression starts. Deliberately NOT scaled with the
-   * ceiling: dropping explanation-only blocks and duplicated lines above 17,000
-   * is existing behaviour that costs nothing, and widening it would be a
-   * compression-strategy change rather than a ceiling alignment.
+   * Where compression starts — now derived from the ceiling instead of pinned
+   * below it.
    *
-   * Clamped so a small configured ceiling cannot invert the two bands.
+   * It was `min(17000, HARD_LIMIT)`, and the comment here argued that widening
+   * it would be a strategy change rather than a ceiling alignment. That was true
+   * when the ceiling was 20,000. It stopped being true when
+   * `PROMPT_HARD_MAXIMUM_CHARS` moved the ceiling to 32,000 and this number
+   * stayed at 17,000: compression then began 15,000 characters before anything
+   * was at risk. Measured against the render log, 99 of 100 prompts crossed
+   * 17,000, so very nearly every render had explanation prose stripped out of
+   * CAMPAIGN STRATEGY and its P2 sections dropped to satisfy a budget that had
+   * 15,000 characters of headroom left.
+   *
+   * The ratio reproduces the old number exactly where nothing is configured:
+   * 0.85 x 20,000 is 17,000. So an environment that sets no variables behaves
+   * as it always did, and an environment that raises the ceiling gets a band
+   * that moves with it.
    */
-  public static readonly SOFT_THRESHOLD = Math.min(DEFAULT_SOFT_THRESHOLD, CONFIGURED_HARD_LIMIT);
-  /** Kept as an alias: several existing suites and services read this name. */
-  public static readonly WARN_THRESHOLD = Math.min(DEFAULT_SOFT_THRESHOLD, CONFIGURED_HARD_LIMIT);
+  public static readonly SOFT_THRESHOLD = Math.min(
+    Math.floor(CONFIGURED_HARD_LIMIT * COMPRESSION_START_RATIO),
+    CONFIGURED_HARD_LIMIT
+  );
+  /**
+   * Kept as an alias: several existing suites and services read this name.
+   *
+   * Derived from SOFT_THRESHOLD rather than recomputed. Recomputing it is how it
+   * silently drifted when the band moved to a ratio — two expressions that were
+   * equal by coincidence rather than by construction.
+   */
+  public static readonly WARN_THRESHOLD = ProviderPromptOptimizer.SOFT_THRESHOLD;
 
   /**
    * Sections that may never be dropped, however tight the budget.
@@ -334,6 +365,58 @@ export class ProviderPromptOptimizer {
     }
 
     text = text.replace(/\n{3,}/g, "\n\n").trim();
+
+    // ── 2b. The gate: hygiene is done, compression is what is conditional ──
+    //
+    // Everything above this line is hygiene — retrieval metadata the renderer
+    // cannot use, four phrasings of one idea merged into one, a scene repeated
+    // once per product folded back to once, instructions restated verbatim. None
+    // of it removes meaning, and none of it is about length.
+    //
+    // Everything below removes content: explanation prose out of the strategy
+    // sections, then P2 sections, then P1 sections, then formatting. That is the
+    // part that must only run when something is actually at risk.
+    //
+    // The gate sat at the top of this method first, which is the literal reading
+    // of "within the provider limit, pass through unchanged". Three existing
+    // tests disagreed, and they were right: stripping `final_score: 0.91` out of
+    // a 400-character prompt is not a budget decision, and neither is folding a
+    // scene description repeated per product. Compression is conditional;
+    // hygiene never was.
+    //
+    // Dilution is checked here for the same reason. The P1 loop below runs on
+    // `length > HARD_LIMIT || ratio > MAX_GENERIC_RATIO`, and that second arm is
+    // deliberately length-independent — a prompt can be inside every limit and
+    // still be mostly boilerplate.
+    const entryMix = ProviderPromptOptimizer.signalMix(text);
+    if (text.length <= this.SOFT_THRESHOLD && entryMix.ratio <= MAX_GENERIC_RATIO) {
+      const after_chars = text.length;
+      console.log("[PROMPT_OPTIMIZER]", {
+        before_chars,
+        after_chars,
+        ratio: before_chars ? Number((after_chars / before_chars).toFixed(3)) : 1,
+        budget_status: "OK",
+        mode: "NO_COMPRESSION",
+        reason: `within band: ${after_chars} <= soft ${ProviderPromptOptimizer.SOFT_THRESHOLD} (hard ${ProviderPromptOptimizer.HARD_LIMIT}), generic ratio ${entryMix.ratio} <= ${MAX_GENERIC_RATIO}`,
+        hard_limit: ProviderPromptOptimizer.HARD_LIMIT,
+        soft_threshold: ProviderPromptOptimizer.SOFT_THRESHOLD,
+        merges_applied,
+        removed_sections: removed_sections.length,
+        generic_ratio: entryMix.ratio,
+      });
+      return {
+        optimizedPrompt: text,
+        telemetry: {
+          before_chars,
+          after_chars,
+          removed_sections,
+          compression_applied,
+          tiers_dropped: [],
+          merges_applied,
+          budget_status: "OK",
+        },
+      };
+    }
 
     // ── 3a. Compress the creative signal rather than lose it ───────────
     // P0 is never dropped, so once the strategy sections became P0 the budget

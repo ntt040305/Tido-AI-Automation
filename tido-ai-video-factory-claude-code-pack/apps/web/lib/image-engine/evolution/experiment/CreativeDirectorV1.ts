@@ -98,6 +98,17 @@ export interface StrategyVerdict {
 export interface StrategyCandidate {
   route: string;
   core_idea: string;
+  /**
+   * Phase 0.2. How the frame is RENDERED, not what is in it.
+   *
+   * The exploration branch has carried this since it existed; this branch did
+   * not, so a strategy-selection run reached the renderer with a subject and no
+   * photograph — the single field separating "what happens" from "how it looks".
+   *
+   * Optional, because every judgment produced before this field existed is still
+   * a valid judgment and the resolver must not start throwing on them.
+   */
+  visual_language?: string;
   why_this_route: string;
   assessment: {
     product: StrategyVerdict;
@@ -110,6 +121,16 @@ export interface StrategyCandidate {
   /** V2 depth, when `creative_strategy_intelligence_v1` is also on. */
   emotional_objective?: string;
   audience_reaction?: string;
+  /**
+   * Format Challenge V1. The failure mode this route risks, copied from the
+   * brief's list, and what the route does that pays for it.
+   *
+   * Optional, like every field added after the fact: a judgment produced before
+   * this existed is still a valid judgment, and nothing downstream may start
+   * throwing on one.
+   */
+  risks?: string;
+  earns_it?: string;
 }
 
 /**
@@ -272,6 +293,28 @@ export interface DirectorBriefInput {
    */
   visualDNA?: string;
   /**
+   * What is known about the product, and how it is known.
+   *
+   * Supplied only when `product_truth_v1` is on. It deliberately does NOT
+   * repeat the material observation — `visualDNA` above already carries that,
+   * and stating one observation twice is the duplicate-carrier defect this
+   * project has paid for twice. What it adds is the half nothing else carries:
+   * what the client DECLARED the product does, and an explicit list of what is
+   * NOT established, so a direction is not built on an invented difference.
+   */
+  productTruth?: string;
+  /**
+   * The strategic reading of the product, with every statement naming what
+   * produced it.
+   *
+   * Supplied only when `creative_brief_v1` is on, and only when ProductTruth is
+   * on too — a brief with no truth object to read has nothing to say. It sits
+   * BELOW `productTruth` on purpose: the facts come first and the reading of
+   * them second, so a director who disagrees with the reading can still see
+   * what it was read from.
+   */
+  creativeBrief?: string;
+  /**
    * The routes this format offers, already shuffled by the caller.
    *
    * They also appear inside `assetContext` as prose. They are repeated here so
@@ -321,6 +364,16 @@ export interface JudgmentFlags {
    * caller, which is the only place the product count is known.
    */
   multiProductStaging?: boolean;
+  /**
+   * Format Challenge V1. Requires each candidate to name the failure mode it
+   * risks and say how it earns it.
+   *
+   * Only meaningful alongside `strategySelection`: it is a requirement on a
+   * candidate, and without route selection there are no candidates. Gated
+   * separately anyway, so the rebalance can be measured on its own — a combined
+   * change would attribute a win to whichever half was louder.
+   */
+  formatChallenge?: boolean;
 }
 
 const EXPLORATION_BLOCK = `
@@ -373,6 +426,41 @@ against the category. The same product wants different typography on something
 read at a glance and something read while deciding whether to buy — and the
 right answer for one is often wrong for the other.`;
 
+/**
+ * Format Challenge V1 — how the failure modes are meant to be used.
+ *
+ * The list of failure modes has always been well written: it names outcomes, not
+ * components, and a test asserts none of them is an instruction. What it never
+ * had was a verb. Measured over twelve renders, the director used it to
+ * eliminate — five of eight stated tradeoffs rejected the richer option, in the
+ * vocabulary of "dilutes", "distracts", "clutter", "visual noise" — and six of
+ * twelve renders then chose a route that explicitly disclaims having an idea.
+ *
+ * "The setting competes with the object" names a RELATIONSHIP failure. It was
+ * heard as a COMPONENT ban: avoid settings. This block is the correction, and it
+ * is deliberately short — the instruction that produced the behaviour was an
+ * absence, so the repair is a presence, not an argument.
+ */
+const FORMAT_CHALLENGE_BLOCK = `
+HOW TO USE THE FAILURE MODES.
+
+They are tests, not a list of things to avoid. Every one of them is a way this
+format fails while still being a competent picture, and the safest route — the
+one that touches none of them — is usually the forgettable one.
+
+So a route that risks a failure mode is not disqualified. It owes an answer.
+
+For each candidate, name the failure mode it risks and say how it earns the
+risk: what the route does that pays for it. A candidate that risks nothing is
+telling you it has no idea, and you should say so in its assessment rather than
+rewarding it.
+
+Do not drop an element because it appears in a failure mode. A setting that
+competes with the object is a failure; a setting that explains the object is the
+answer to it. The difference is what the element DOES, and that is your decision
+to make, not the format's.
+`;
+
 const STRATEGY_SELECTION_BLOCK = `
 PART 1 — CHOOSE THE ROUTE, THEN COMMIT TO IT.
 
@@ -382,6 +470,12 @@ is shuffled every time, so the first is not the recommended one.
 
 Develop THREE of them into real directions. Say why those three are the three
 worth developing for THIS brief — not why they are interesting in general.
+
+A direction is not finished at what happens in the frame. Say how it is
+RENDERED as well: the light, the distance, the surface, the colour. "A bottle on
+a table" is a subject; "raking light from behind, the label half in shadow, a
+worn wood surface close to the lens" is a photograph. Without that second half
+the renderer receives a subject and invents the picture around it.
 
 For each, judge six things. Each judgement is one of supports, neutral or
 works_against, a short reason, and EVIDENCE quoted from what you were given: a
@@ -684,11 +778,19 @@ export class CreativeDirectorV1 {
       const depth = flags.strategy
         ? `, "emotional_objective": "<what the viewer should feel>", "audience_reaction": "<how they should react>"`
         : "";
+      if (flags.formatChallenge) parts.push(FORMAT_CHALLENGE_BLOCK);
       const verdict = (k: string) =>
         `"${k}": { "stance": "supports|neutral|works_against", "because": "<short>", "evidence": "<quoted from the brief, or 'not supplied'>" }`;
+      // Format Challenge V1. Two fields, asked of every candidate rather than
+      // only the winner: a requirement that applies after the choice is made is
+      // a rationalisation, and rationalising the safe pick is the behaviour this
+      // phase exists to change.
+      const challenge = flags.formatChallenge
+        ? `, "risks": "<the failure mode from HOW THIS FORMAT FAILS that this route risks, copied exactly>", "earns_it": "<how this route answers that failure's challenge — what it does that pays for the risk>"`
+        : "";
       shape.push(`  "strategy": {
     "candidates": [
-      { "route": "<one of the routes offered, copied exactly>", "core_idea": "<what happens in the frame>", "why_this_route": "<what in THIS brief makes it right>"${depth},
+      { "route": "<one of the routes offered, copied exactly>", "core_idea": "<what happens in the frame>", "visual_language": "<how it is rendered: light, distance, surface, colour — concretely>", "why_this_route": "<what in THIS brief makes it right>"${depth}${challenge},
         "assessment": { ${["product", "audience", "objective", "brand", "channel", "feasibility"].map(verdict).join(", ")} } }
     ],
     "selected": "<the route you chose, copied exactly>",
@@ -844,6 +946,10 @@ ${shape.join(",\n")}
       brief.aspectRatio ? `ASPECT RATIO: ${brief.aspectRatio}` : "",
       brief.visualDNA ? `
 ${brief.visualDNA}` : "",
+      brief.productTruth ? `
+${brief.productTruth}` : "",
+      brief.creativeBrief ? `
+${brief.creativeBrief}` : "",
       (brief.productCount ?? 0) >= 2
         ? `PRODUCTS ATTACHED: ${brief.productCount} distinct products in one image`
         : "",

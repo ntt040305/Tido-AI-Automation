@@ -687,6 +687,25 @@ export interface InspirationPromptDirective {
 }
 
 export interface MasterPromptCompilerInput {
+  /**
+   * Phase 1.1D. Whether the Creative Director outranks inferred art direction.
+   *
+   * Resolved by the caller and passed in, never read here: no feature flag has
+   * ever crossed into the compiler, and this does not start. Absent means the
+   * tiering behaves exactly as it always has, which is what keeps every
+   * existing caller — campaign, edit, benchmark — byte-identical.
+   */
+  creativeDirectorAuthority?: boolean;
+  /**
+   * Dimensions the client genuinely locked in the visual direction panel.
+   *
+   * The only signal that separates a client instruction from a model's reading
+   * of one. `lockedIntent` is NOT that signal: it comes from
+   * `CreativeInterpretation`, whose three sources are all LLM readings of the
+   * brief, and it was being pushed at USER tier and printed as "EXPLICIT CLIENT
+   * DIRECTIVES".
+   */
+  userLockedDimensions?: Record<string, boolean>;
   productReferences?: (ProductReferenceInput | string)[];
   brief?: string;
   productCount?: number;

@@ -50,6 +50,12 @@ export class SimpleImageGenerationOrchestratorService {
       generationProvider?: ImageGenerationProvider;
       compilerService?: MasterPromptCompilerService;
       mockRoutingResult?: RoutingResultSchema;
+      /**
+       * Phase 1.1D. Carried from the pipeline, which is the layer that reads
+       * flags, to the compiler input, which is the layer that must not.
+       */
+      creativeDirectorAuthority?: boolean;
+      userLockedDimensions?: Record<string, boolean>;
     }
   ): Promise<SimpleImageGenerationResultV1> {
     const totalStart = Date.now();
@@ -462,6 +468,8 @@ export class SimpleImageGenerationOrchestratorService {
         marketingStrategy: groqStrategy,
         marketingContext: request.marketingContext,
         hasLogoAsset: adapted.brandAssets.length > 0,
+        creativeDirectorAuthority: options?.creativeDirectorAuthority,
+        userLockedDimensions: options?.userLockedDimensions,
       };
 
       const compilerRes = await compilerService.compile(fullCompilerInput);

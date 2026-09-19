@@ -1,4 +1,5 @@
 import { CreativeJudgment } from "./CreativeDirectorV1";
+import { resolveSelectedDirection } from "./CreativeDirectionResolver";
 import { reconcileCopyRoles } from "./CreativeDecision";
 import { specFor } from "../../director/visual-controls.types";
 
@@ -142,14 +143,70 @@ export class NanoBananaPromptComposer {
      * makes this whole path a no-op rather than a behaviour that has to be
      * unwound.
      */
-    fixes?: TypographyFixes
+    fixes?: TypographyFixes,
+    /**
+     * Layout Context Bridge V1. A pre-rendered block, or nothing.
+     *
+     * Passed in already built rather than derived here: it needs the product
+     * count, which lives in the pipeline, and the composer has never had a
+     * reason to know one. Appended, never substituted — the layout section it
+     * sits beside is not touched.
+     */
+    layoutContext?: string,
+    /**
+     * Layout Priority Alignment V1. Only meaningful alongside a context block:
+     * rewriting the clause to name LAYOUT CONTEXT while no such section exists
+     * would point the renderer at nothing, so this is gated on both.
+     */
+    alignLayoutPriority = false,
+    /**
+     * Creative Constraint Calibration V1.
+     *
+     * Independent of the bridge. The over-decoration it corrects comes from any
+     * creative intent reaching the renderer — the judgment block carries plenty
+     * on its own — so tying this to the bridge would leave the commonest path
+     * uncalibrated. `productCount` is supplied because the block's closing claim
+     * is about this render's attachments.
+     */
+    creativeConstraint?: { productCount: number },
+    /**
+     * Creative Bridge Calibration V1 (`creative_bridge_v1`), in control mode.
+     *
+     * Only meaningful alongside `controlled`. In an uncontrolled run the whole
+     * judgment is appended already, so there is nothing for this to restore —
+     * which is precisely why the flag read as inert for its whole life.
+     */
+    carryNonSceneReasoning = false
   ): string {
     if (!judgment) return compiledPrompt;
 
     let out = this.reorder(compiledPrompt);
 
-    if (!controlled) {
-      const judgmentBlock = this.renderJudgment(judgment);
+    // Before the judgment block, so the reasoning that follows is read against
+    // the context rather than the other way round. In control mode it still
+    // applies: the direction governs the scene from inside the prompt, but
+    // nothing in that path tells the layout section how many products there are.
+    if (layoutContext) {
+      out = [out, layoutContext].join("\n\n");
+      // Only with a context present. The replacement clause names LAYOUT
+      // CONTEXT, and naming a section the prompt does not contain would be
+      // worse than the sentence it replaced.
+      if (alignLayoutPriority) {
+        const aligned = this.applyLayoutPriority(out);
+        console.log("[EXPERIMENT][LAYOUT_PRIORITY]", {
+          mode: aligned.mode,
+          delta: aligned.prompt.length - out.length,
+        });
+        out = aligned.prompt;
+      }
+    }
+
+    // Phase 0.3. Control mode used to emit nothing here; it now emits the half
+    // of the judgment its rewritten brief does not already contain, when the
+    // bridge flag asks for it. Without the flag the old behaviour stands, so
+    // enabling control mode alone changes nothing that was not already true.
+    if (!controlled || carryNonSceneReasoning) {
+      const judgmentBlock = this.renderJudgment(judgment, controlled);
       // Appended rather than inserted near the top. The compiled prompt states
       // its own precedence rules in CONFLICT PRIORITY, and dropping a new
       // authority ahead of them would contradict a section the renderer has
@@ -158,10 +215,187 @@ export class NanoBananaPromptComposer {
       if (judgmentBlock) out = `${out}\n\n${judgmentBlock}`;
     }
 
+    // Last, deliberately. It is a constraint on everything above it — the layout
+    // context, the route, the staging, the reasoning — and a constraint that
+    // arrives before the thing it constrains has to be remembered rather than
+    // applied. Placed here it is the final word the renderer reads about how far
+    // the creative direction reaches.
+    if (creativeConstraint) {
+      const calibrated = this.applyCreativeConstraint(out, creativeConstraint);
+      console.log("[EXPERIMENT][CREATIVE_CONSTRAINT]", {
+        product_count: creativeConstraint.productCount,
+        added_chars: calibrated.added,
+      });
+      out = calibrated.prompt;
+    }
+
     return this.applyTypographyFixes(out, fixes);
   }
 
   /** Runs whichever repairs were enabled, each independently of the other. */
+  /**
+   * The sentence that decided every composition argument before it started.
+   *
+   * The compiled prompt ends its strategy section by naming a winner: "where
+   * those conflict with this section, they win". Measured across Phases 1 to 5,
+   * that single clause is why none of the composition reasoning the Creative
+   * Decision Layer produces has ever influenced a frame — `composition_decision`
+   * lands in the section the sentence declares subordinate, and so does the
+   * layout context the bridge now carries. Both arrive already outranked.
+   *
+   * What replaces it is not "LAYOUT CONTEXT wins". Swapping which layer is
+   * supreme would break the thing the old sentence was protecting: the reserved
+   * zones are a contract with the compositor that will place real type over this
+   * render later, and a renderer that felt free to move them would produce
+   * images the typography stage cannot finish. So geometry stays binding, intent
+   * becomes the thing the composition is built FROM inside that geometry, and
+   * the client directive still beats both.
+   *
+   * Matched exactly and replaced once. If the compiler ever rewords the clause
+   * this finds nothing, changes nothing and says so — a silent miss here would
+   * look exactly like the flag working.
+   */
+  private static readonly LAYOUT_PRECEDENCE_CLAUSE =
+    "The exact camera, lighting and layout are resolved in the ART DIRECTION and COMMERCIAL LAYOUT sections; " +
+    "where those conflict with this section, they win, and an explicit client directive beats both.";
+
+  private static readonly LAYOUT_PRECEDENCE_REPLACEMENT =
+    "The exact camera and lighting are resolved in ART DIRECTION. COMMERCIAL LAYOUT gives the binding geometry — " +
+    "reserved zones, safe margins, the space that stays clear — and those measurements are not negotiable. " +
+    "LAYOUT CONTEXT gives the creative intent: why this image exists, what the products are to each other, and " +
+    "where the emphasis belongs. Build the composition from the intent, inside the geometry; satisfy both rather " +
+    "than choosing between them. An explicit client directive beats all of them.";
+
+  /**
+   * The short form, for prompts the clause never reached.
+   *
+   * Measured against the hundred renders this system has logged: 99 of them are
+   * longer than the optimizer's soft threshold, and above that threshold
+   * `compressSignalSections` strips precedence prose out of CAMPAIGN STRATEGY by
+   * design — its META pattern matches "the exact camera, lighting and layout"
+   * and "where those conflict" explicitly. So the sentence this phase was
+   * written to rewrite is already gone from almost every prompt that ships.
+   *
+   * That makes the real production state neither "COMMERCIAL LAYOUT wins" nor
+   * "satisfy both", but nothing at all — two sections describing composition
+   * with no stated relationship, and a renderer left to guess. Stating it is the
+   * point of the phase; replacing a sentence was only the means.
+   *
+   * Kept to two sentences because it is added after the optimizer has finished
+   * and is therefore budget nobody upstream accounted for.
+   */
+  private static readonly LAYOUT_PRECEDENCE_SHORT =
+    "HOW TO READ THESE TWO SECTIONS: COMMERCIAL LAYOUT gives the binding geometry — reserved zones, safe " +
+    "margins, the space that stays clear — and those measurements are not negotiable. LAYOUT CONTEXT gives " +
+    "the creative intent, and the composition inside that geometry is built from it. Satisfy both rather " +
+    "than choosing between them.";
+
+  /**
+   * Rewrites the precedence clause so layout context is read as intent rather
+   * than as a footnote — or states the relationship outright when the clause
+   * never survived the optimizer.
+   *
+   * Returns `{ prompt, mode }` so the caller can log which of the two happened.
+   * A silent no-op and a working rewrite look identical from outside, and that
+   * is precisely the failure this phase would otherwise ship.
+   */
+  public static applyLayoutPriority(prompt: string): { prompt: string; mode: "replaced" | "stated" } {
+    if (prompt.includes(this.LAYOUT_PRECEDENCE_CLAUSE)) {
+      return {
+        prompt: prompt.replace(this.LAYOUT_PRECEDENCE_CLAUSE, this.LAYOUT_PRECEDENCE_REPLACEMENT),
+        mode: "replaced",
+      };
+    }
+    return { prompt: [prompt, this.LAYOUT_PRECEDENCE_SHORT].join("\n\n"), mode: "stated" };
+  }
+
+  /**
+   * What creative intent is allowed to do, and what it is not.
+   *
+   * Render validation found the previous phase working too well. Once layout
+   * context stopped arriving pre-outranked, the renderer began treating creative
+   * intent as a build list: a Tết coffee promotion came back with the atmosphere
+   * fully realised as objects, the product placed into a scene rather than being
+   * the reason for one, and a background competing with the thing being sold.
+   *
+   * The correction is not less intent. Intent decides how the product is
+   * photographed — the framing, the light, the distance, what the eye reaches
+   * first — and all of that was the point of Phases 5.1 and 5.1.5. What it never
+   * meant was that a direction expressed in words is a list of props to build.
+   *
+   * Why there is no table in here
+   * ----------------------------
+   * The obvious implementation is a lookup: perfume gets an empty frame, food
+   * gets ingredients, seasonal campaigns get a capped ornament budget. That is
+   * the hardcoded creative rule this project has banned since its first phase,
+   * and it would be wrong at exactly the moments it mattered — a perfume brand
+   * whose whole story is the harvest, a food brand whose story is restraint.
+   *
+   * So the block states an ordering and one test: an object that is not the
+   * product must be traceable to a line in this prompt and must do something for
+   * the sale. That is the same grounding discipline the strategy and visual-DNA
+   * layers already use, and it adapts because the prompt it points at adapts.
+   * The luxury/food/seasonal cases come out differently because their briefs
+   * differ, not because this file knows what a perfume is.
+   */
+  private static readonly CREATIVE_CONSTRAINT_BLOCK = [
+    "## CREATIVE CONSTRAINT",
+    "",
+    "WHEN THESE PULL AGAINST EACH OTHER, THIS IS THE ORDER:",
+    "1. Product identity. The uploaded product's shape, label, colour, material and proportions are facts, not starting points.",
+    "2. What this image has to achieve commercially.",
+    "3. The creative intent stated above.",
+    "4. Atmosphere and environment.",
+    "Fourth means it yields to the three above it.",
+    "",
+    "WHAT THE CREATIVE INTENT DECIDES",
+    "Composition, hierarchy, camera position and distance, lighting, colour, mood, and which element the eye " +
+      "reaches first. Intent decides how the product is photographed.",
+    "",
+    "WHAT IT DOES NOT AUTHORISE",
+    "It does not ask for objects to be added. A direction written in words is not a list of props to build. " +
+      "Reach atmosphere first through light, colour, depth of field, surface and framing — the ways a " +
+      "photographer builds mood without adding anything to the frame.",
+    "",
+    "BEFORE PUTTING ANYTHING IN THE FRAME THAT IS NOT THE PRODUCT",
+    "Point to the line in this prompt that asks for it, and say what it does for the sale. An element that makes " +
+      "the product more wanted, more understood or more trusted has earned its place. One that only signals the " +
+      "theme has not, and belongs in the lighting and the colour instead. If two things compete for the eye, " +
+      "one of them is decoration.",
+    "",
+    "THIS IS NOT AN INSTRUCTION TO EMPTY THE FRAME",
+    "A full frame and a bare one are both correct answers. What is not correct is fullness that is not working.",
+  ].join("\n");
+
+  /**
+   * The line that only makes sense when real product photographs were attached.
+   *
+   * Kept separate because it is a claim about this render's inputs, and a prompt
+   * with no uploaded product would be asserting something untrue.
+   */
+  private static productSubjectLine(productCount: number): string {
+    if (productCount < 1) return "";
+    return (
+      `\n\nTHE ${productCount === 1 ? "PRODUCT IN THIS FRAME IS" : `${productCount} PRODUCTS IN THIS FRAME ARE`} ` +
+      `SUPPLIED AS ${productCount === 1 ? "A PHOTOGRAPH" : "PHOTOGRAPHS"}. ` +
+      `${productCount === 1 ? "It is" : "They are"} the subject. Nothing added to the frame may overlap ` +
+      `${productCount === 1 ? "it" : "them"}, obscure ${productCount === 1 ? "its" : "their"} outline, or hold ` +
+      `more contrast than ${productCount === 1 ? "it does" : "they do"}.`
+    );
+  }
+
+  /**
+   * Appends the constraint block. Pure string work; returns the added length so
+   * the caller can log what it cost.
+   */
+  public static applyCreativeConstraint(
+    prompt: string,
+    opts: { productCount: number }
+  ): { prompt: string; added: number } {
+    const block = this.CREATIVE_CONSTRAINT_BLOCK + this.productSubjectLine(opts.productCount);
+    return { prompt: [prompt, block].join("\n\n"), added: block.length + 2 };
+  }
+
   private static applyTypographyFixes(prompt: string, fixes?: TypographyFixes): string {
     if (!fixes) return prompt;
     let out = prompt;
@@ -356,26 +590,52 @@ export class NanoBananaPromptComposer {
     return [preamble, ...ordered].filter((p) => p !== "").join("\n");
   }
 
-  private static renderJudgment(j: CreativeJudgment): string {
+  /**
+   * Phase 0.3 — which half of the judgment a control-mode run still needs.
+   *
+   * Control mode writes the DECISION into the brief before the pipeline runs:
+   * SCENE, CAMERA, LIGHTING, COMPOSITION and TYPOGRAPHY go into the concept, and
+   * staging plus the strategy route go into hardRequirements. Appending those
+   * again would state one scene twice, which reads as two scenes — the defect
+   * this mode exists to remove.
+   *
+   * But that argument only covers the four blocks that repeat those fields. It
+   * was applied to all eight. Brand positioning, audience psychology, element
+   * semantics and the anti-generic justification are written nowhere in the
+   * rewritten brief, so suppressing them deleted reasoning the renderer never
+   * received by any route — and `creative_bridge_v1` existed to push four terse
+   * one-line summaries back in through hardRequirements to partly cover the loss.
+   *
+   * Measured on one judgment: uncontrolled carries 1,404 characters of judgment,
+   * controlled carries 71, and the bridge restores four lines of it.
+   *
+   * `nonSceneOnly` emits the four that do not repeat the brief. Nothing else
+   * about this method changes, so an uncontrolled run is byte-identical.
+   */
+  private static renderJudgment(j: CreativeJudgment, nonSceneOnly = false): string {
     const lines: string[] = [];
 
-    if (j.selected) {
-      lines.push(
-        "## CREATIVE DIRECTION — THE ONE CHOSEN, AND WHY",
-        "```",
-        `CHOSEN DIRECTION: ${j.selected}`
-      );
-      const chosen = j.directions.find((d) => d.name === j.selected) || j.directions[0];
-      if (chosen) {
-        if (chosen.core_idea) lines.push(`WHAT HAPPENS IN THE FRAME: ${chosen.core_idea}`);
-        if (chosen.visual_language) lines.push(`HOW IT IS RENDERED: ${chosen.visual_language}`);
-        if (chosen.why_it_fits) lines.push(`WHY THIS BRIEF EARNS IT: ${chosen.why_it_fits}`);
+    // One reader for a decision that had four.
+    //
+    // This block used to access `j.selected` directly, which is the field the
+    // exploration branch fills. Strategy selection is the other arm of the same
+    // `if/else` in the director, so on those runs `selected` was "" and the whole
+    // section was skipped while a direction had in fact been chosen and logged.
+    // Three other call sites resolved the same question with their own
+    // precedence, two of them the reverse of this one. `resolveSelectedDirection`
+    // is now the only place that decides.
+    const direction = nonSceneOnly ? null : resolveSelectedDirection(j);
+    if (direction) {
+      lines.push("## CREATIVE DIRECTION", "```", `CHOSEN DIRECTION: ${direction.name}`);
+      // Every line below is omitted when the director left the field empty.
+      // A placeholder here would be the renderer's instruction for the frame.
+      if (direction.reasoning) lines.push(`WHY THIS DIRECTION: ${direction.reasoning}`);
+      for (const line of direction.appearance) lines.push(`HOW IT SHOULD APPEAR: ${line}`);
+      // Included on purpose. A renderer that knows an image is deliberately quiet
+      // will not drift it back toward the safe version it was chosen over.
+      for (const line of direction.rejectedReasons) {
+        lines.push(`WHY OTHER DIRECTIONS WERE NOT USED: ${line}`);
       }
-      if (j.selection_reason) lines.push(`WHY IT BEAT THE ALTERNATIVES: ${j.selection_reason}`);
-      // The rejected direction is included on purpose. A renderer that knows an
-      // image is deliberately quiet will not drift it back toward the safe
-      // version it was chosen over.
-      if (j.rejected_reason) lines.push(`DELIBERATELY NOT DOING: ${j.rejected_reason}`);
       lines.push("```");
     }
 
@@ -387,7 +647,7 @@ export class NanoBananaPromptComposer {
     // menu is the template this replaced wearing a different word. That is the
     // same rule `applyCreativeDecision` follows on the control path, so both
     // modes put the same thing in front of the renderer.
-    if (j.strategy?.selected) {
+    if (!nonSceneOnly && j.strategy?.selected) {
       const st = j.strategy;
       lines.push(
         "",
@@ -450,7 +710,7 @@ export class NanoBananaPromptComposer {
       }
     }
 
-    if (j.reasoning) {
+    if (!nonSceneOnly && j.reasoning) {
       const r = j.reasoning;
       const row = (label: string, d?: { choice: string; reason: string }) =>
         d && d.choice ? `${label}: ${d.choice}\n  WHY: ${d.reason || "—"}` : "";
@@ -487,7 +747,7 @@ export class NanoBananaPromptComposer {
     // Isolation is not weakened here. What is added is the sentence that was
     // never written beside it: that distinct identities are standing on one
     // floor, under one light, at different depths.
-    if (j.staging) {
+    if (!nonSceneOnly && j.staging) {
       const st = j.staging;
       const rel = st.relationship;
       const facts = [
