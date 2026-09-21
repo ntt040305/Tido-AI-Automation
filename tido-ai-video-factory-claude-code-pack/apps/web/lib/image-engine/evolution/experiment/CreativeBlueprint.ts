@@ -83,6 +83,27 @@ export interface Decision {
   because: string;
   derived_from: DecisionBasis;
   confidence: "low" | "medium" | "high";
+  /**
+   * What this choice is meant to do commercially.
+   *
+   * OPTIONAL, and that is the design. Most fields have no source for it: the
+   * pipeline knows the format's communication goal and the campaign objective,
+   * and it does not know what a lens choice does to conversion. Writing one
+   * anyway would be the invention every layer here refuses, so it is populated
+   * where a real source exists and left undefined where none does.
+   */
+  commercial_effect?: string;
+  /**
+   * What was considered and turned down, and why.
+   *
+   * Also optional, for the same reason. The engine records exactly one genuine
+   * rejection per brief -- `CreativeStrategy.why_not_runner_up`, carried into
+   * `CreativeDecision.deliberately_avoided` -- and no per-field alternatives at
+   * all. A rejected alternative invented for a spacing decision would read like
+   * reasoning and be fiction, which is worse than an empty field because it
+   * survives review.
+   */
+  alternative_rejected?: string;
 }
 
 // ── the six directions ──────────────────────────────────────────────────────
@@ -317,6 +338,19 @@ export function validateBlueprint(
     ) {
       fail(section, field, "the basis restates the decision instead of grounding it");
     }
+    // Present-but-empty is worse than absent: it reads as answered.
+    if (d.commercial_effect !== undefined && !d.commercial_effect.trim()) {
+      fail(section, field, "commercial_effect is present but empty");
+    }
+    if (d.alternative_rejected !== undefined && !d.alternative_rejected.trim()) {
+      fail(section, field, "alternative_rejected is present but empty");
+    }
+    if (
+      d.alternative_rejected?.trim() &&
+      d.alternative_rejected.trim().toLowerCase() === d.value.trim().toLowerCase()
+    ) {
+      fail(section, field, "the rejected alternative is the decision itself");
+    }
   };
 
   checkDecision("story", "story", b.story);
@@ -380,6 +414,11 @@ export function blueprintTelemetry(b: CreativeBlueprint | null | undefined) {
     // "director" is a director talking to itself, which Phase 0.5 measured as
     // producing category defaults.
     grounded_in_product: (byBasis.product_truth || 0) + (byBasis.visual_dna || 0),
+    // How much of the blueprint can say what it is FOR and what it beat. Left
+    // deliberately low rather than padded; the number is the honest coverage of
+    // a source that mostly does not exist yet.
+    with_commercial_effect: decisions.filter((d) => d.decision?.commercial_effect?.trim()).length,
+    with_alternative_rejected: decisions.filter((d) => d.decision?.alternative_rejected?.trim()).length,
     metrics: b.metrics,
     missing: b.missing.length,
     provenance: b.provenance,

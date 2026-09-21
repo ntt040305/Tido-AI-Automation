@@ -51,6 +51,21 @@ export class SimpleImageGenerationOrchestratorService {
       compilerService?: MasterPromptCompilerService;
       mockRoutingResult?: RoutingResultSchema;
       /**
+       * A marketing strategy the caller has already produced.
+       *
+       * Phase 5 of the optimization pass. The strategy used to be generated
+       * HERE, which is downstream of the Creative Director: the director chose
+       * a direction, and only afterwards did anything reason about the customer.
+       * `grounded_in_strategy_score` was 0 on every measured render because the
+       * insight layer had nothing to read at the time it ran.
+       *
+       * When supplied, this is used INSTEAD of generating one. The call count is
+       * unchanged -- the same single marketing-brain call happens, earlier. When
+       * absent the behaviour below is byte-identical to what it always was,
+       * which is what keeps every existing caller and test unaffected.
+       */
+      precomputedStrategy?: import("../llm/prompt-strategy.schema").MarketingBrainStrategy;
+      /**
        * Phase 1.1D. Carried from the pipeline, which is the layer that reads
        * flags, to the compiler input, which is the layer that must not.
        */
@@ -134,7 +149,7 @@ export class SimpleImageGenerationOrchestratorService {
       console.log("[SIMPLE][01.5 GROQ MARKETING BRAIN] START");
       const mbStart = Date.now();
       const marketingBrain = new MarketingBrainService();
-      const groqStrategy = await marketingBrain.generateStrategy({
+      const groqStrategy = options?.precomputedStrategy ?? await marketingBrain.generateStrategy({
         concept: request.concept,
         useCase: request.useCase,
         aspectRatio: request.aspectRatio,
@@ -151,6 +166,10 @@ export class SimpleImageGenerationOrchestratorService {
       groqMarketingBrainDurationMs = Date.now() - mbStart;
       console.log("[SIMPLE][01.5 GROQ MARKETING BRAIN] PASS", {
         creative_angle: groqStrategy.creative_angle,
+        // Whether this stage spent a call or reused one the pipeline had
+        // already made. The number of calls is the same either way; only the
+        // ORDER changed, and the order is the whole point.
+        reused_precomputed: Boolean(options?.precomputedStrategy),
       });
 
       // 1.8 Reference Image Preprocessing Layer

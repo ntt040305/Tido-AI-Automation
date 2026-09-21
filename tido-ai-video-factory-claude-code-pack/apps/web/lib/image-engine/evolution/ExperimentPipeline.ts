@@ -18,7 +18,24 @@ import { briefTelemetry } from "./experiment/CreativeBrief";
 import { buildMarketingInsight, marketingInsightTelemetry, MarketingInsight } from "./experiment/MarketingInsight";
 import { buildProductMeaning, productMeaningTelemetry, ProductMeaning } from "./experiment/ProductMeaning";
 import { ProfessionalCreativeBrain } from "./experiment/ProfessionalCreativeBrain";
+import { HumanTensionAnalyzer } from "../reasoning/HumanTensionAnalyzer";
+import { buildDesignSystem, designSystemTelemetry, renderDesignSystem } from "./experiment/DesignSystem";
+import { buildComposition, compositionTelemetry, renderComposition } from "./experiment/VisualComposition";
+import { planAssets, assetTelemetry, renderAssets } from "./experiment/AssetIntelligence";
+import { chooseStructure, structureTelemetry } from "./experiment/CampaignStructure";
+import { adaptFormats, adaptationTelemetry } from "./experiment/FormatAdaptation";
+import { buildDesignProject, projectTelemetry } from "./experiment/DesignProject";
+import { buildGeometry, geometryTelemetry, renderGeometry } from "./experiment/LayoutGeometry";
+import { buildTypographySystem, typographyTelemetry, renderTypography } from "./experiment/TypographySystem";
+import { buildCreativeDocument, documentTelemetry } from "./experiment/CreativeDocument";
+import { critiqueRender, criticTelemetry } from "../benchmark/CommercialRenderCritic";
+import { buildProductionContext, validateContext, productionTelemetry } from "./experiment/ProductionPipeline";
+import { buildTextLayers, NO_TEXT_DIRECTIVE, typographyRenderTelemetry } from "./experiment/TypographyRenderer";
+import { exportSvg, exportCanva, exportPsdModel, exportTelemetry } from "./experiment/ExportLayer";
 import { blueprintTelemetry } from "./experiment/CreativeBlueprint";
+import { CreativeRefinementLoop } from "./experiment/CreativeRefinementLoop";
+import { MarketingBrainService } from "../llm/marketing-brain.service";
+import type { MarketingBrainStrategy } from "../llm/prompt-strategy.schema";
 import { NanoBananaPromptComposer, TypographyFixes } from "./experiment/NanoBananaPromptComposer";
 import { AUTO } from "../director/visual-controls.types";
 import { applyCreativeDecision, decisionTelemetry, toCreativeDecision } from "./experiment/CreativeDecision";
@@ -264,7 +281,11 @@ export class ExperimentPipeline {
      * position is also the right one — the blueprint says which line wins when
      * two conflict, and recency is how a renderer reads that.
      */
-    blueprintFor?: (judgment: CreativeJudgment | null) => string | undefined
+    blueprintFor?: (
+      judgment: CreativeJudgment | null,
+      headroom: number,
+      composedPrompt: string
+    ) => string | undefined
   ): ImageGenerationProvider {
     return {
       async generateImage(input: ProviderImageGenerationInput) {
@@ -283,7 +304,12 @@ export class ExperimentPipeline {
           creativeConstraint,
           carryNonSceneReasoning
         );
-        const blueprintText = blueprintFor ? blueprintFor(judgment) : undefined;
+        // Headroom against the budget the compiler itself enforces. The
+        // blueprint is appended after compilation, so without this it escapes
+        // the discipline every other section is held to: measured live, the
+        // prompt reached 30,402 characters against a 24,000 hard maximum.
+        const headroom = PromptBudgetManagerService.HARD_MAXIMUM - composed.length - 2;
+        const blueprintText = blueprintFor ? blueprintFor(judgment, headroom, composed) : undefined;
         const finalPrompt = blueprintText ? `${composed}
 
 ${blueprintText}` : composed;
@@ -363,6 +389,9 @@ ${blueprintText}` : composed;
       // Typography Foundation Cleanup V1. Enabling this alone is a valid run:
       // the director is asked for nothing but the copy roles.
       copyRoles: Boolean(f.typography_roles_v1),
+      // Declared here so the object's inferred type includes it; the value
+      // is resolved below, once the routes AssetIntent V2 supplies are known.
+      formatChallenge: false,
       // Requires the routes AssetIntent V2 supplies, so it is resolved below,
       // where the asset context is known — but above `anyJudgment`, which reads
       // it. Assigned after the early return, this was the staging bug again:
@@ -408,6 +437,13 @@ ${blueprintText}` : composed;
     // the one place that knows what depends on what.
     const marketingInsightOn = productTruthOn && Boolean(f.marketing_insight_v1);
     const brainOn = productTruthOn && Boolean(f.professional_creative_brain_v1);
+    const strategyFirstOn = Boolean(f.strategy_first_v1);
+    const tensionOn = brainOn && Boolean(f.reasoning_tension_v1);
+    const productionOn = brainOn && Boolean(f.design_production_v1);
+    const executionOn = brainOn && Boolean(f.execution_layer_v1);
+    const productionPipelineOn = executionOn && Boolean(f.production_pipeline_v2);
+    const realTypographyOn = executionOn && Boolean(f.real_typography_v1);
+    const exportOn = executionOn && Boolean(f.export_layer_v1);
 
     // Phase 1.1D — Creative Director authority over inferred art direction.
     //
@@ -496,7 +532,9 @@ ${blueprintText}` : composed;
         "asset_intent_v2", "creative_decision_context_v1", "visual_dna_v1",
         "creative_strategy_selection_v1", "multi_product_staging_v1",
         "format_challenge_v1", "product_truth_v1", "creative_brief_v1",
-        "marketing_insight_v1", "professional_creative_brain_v1",
+        "marketing_insight_v1", "professional_creative_brain_v1", "strategy_first_v1",
+        "reasoning_tension_v1", "design_production_v1", "execution_layer_v1",
+        "production_pipeline_v2", "vision_iteration_v1", "real_typography_v1", "export_layer_v1",
       ];
       const otherFlags = decision.features_enabled.filter((n) => !IMPLEMENTED.includes(n));
       if (otherFlags.length) {
@@ -551,8 +589,46 @@ ${blueprintText}` : composed;
     let brief: DirectorBriefInput;
     // Held outside the context branch so the blueprint closure below can read
     // them. Null on the legacy path, which is what keeps that path unchanged.
+    // Phase 5. The same single marketing-brain call the stable pipeline would
+    // have made, made HERE so the director and the insight layer can read it.
+    // It is handed down through `precomputedStrategy` so nothing repeats it.
+    //
+    // Failure is survivable on purpose: a strategy that does not arrive leaves
+    // the run exactly where it was before this flag existed, and a creative
+    // upgrade is not worth an outage.
+    let earlyStrategy: MarketingBrainStrategy | null = null;
+    if (strategyFirstOn) {
+      const stratStart = Date.now();
+      try {
+        earlyStrategy = await new MarketingBrainService().generateStrategy({
+          concept: request.concept,
+          useCase: request.useCase,
+          aspectRatio: request.aspectRatio,
+          brandName: request.brandName,
+          brandInfo: request.brandInfo,
+          copyItems: (request.copyItems || []).map((i: any) => (typeof i === "string" ? i : i.text)),
+          targetAudience: mc?.target_audience,
+          marketingGoal: mc?.objective,
+          productName: (request as any).salesContext?.product_name,
+        });
+        console.log("[EXPERIMENT][STRATEGY_FIRST]", {
+          produced: true,
+          creative_angle: earlyStrategy?.creative_angle,
+          has_consumer_insight: Boolean(earlyStrategy?.consumer_insight),
+          elapsed_ms: Date.now() - stratStart,
+        });
+      } catch (err: any) {
+        console.warn("[EXPERIMENT][STRATEGY_FIRST] failed, continuing without it", {
+          error: err?.message || String(err),
+        });
+      }
+    }
     let marketingInsight: MarketingInsight | null = null;
     let productMeaning: ProductMeaning | null = null;
+    // Hoisted for the same reason `productTruthForBrain` is: the blueprint
+    // closure below sits outside the context branch, and a binding declared
+    // inside it is not in scope there. That exact mistake cost 12 renders.
+    let hasLogoForBrain = false;
     let productTruthForBrain: import("./experiment/ProductTruth").ProductTruth | null = null;
     if (contextV1) {
       const context = buildContext({
@@ -588,6 +664,7 @@ ${blueprintText}` : composed;
         marketingInsight = buildMarketingInsight({
           productTruth: context.product_truth,
           productMeaning,
+          strategy: earlyStrategy,
           audience: mc?.target_audience,
           objective: mc?.objective,
         });
@@ -596,6 +673,7 @@ ${blueprintText}` : composed;
         }
       }
       productTruthForBrain = context.product_truth ?? null;
+      hasLogoForBrain = Boolean(context.evidence?.has_logo);
       brief = {
         ...toDirectorBrief(context),
         ...(routes ? { routes } : {}),
@@ -701,18 +779,190 @@ ${blueprintText}` : composed;
      * a transport and the reasoning stays in one place.
      */
     const blueprintFor = brainOn
-      ? (j: CreativeJudgment | null) => {
+      ? (j: CreativeJudgment | null, headroom: number, composedPrompt: string) => {
           const dec = j ? toCreativeDecision(j) : null;
+          // The first call from the render path into `reasoning/`. Pure and
+          // static, so it costs nothing and cannot fail a render; the analyzer
+          // truncates its own ladder rather than guessing past its evidence.
+          let tension: { statement: string; step: string; matched: boolean; archetype: string } | null = null;
+          const challenge = (assetCtx?.challenges || [])[0] || (assetCtx?.failure_modes || [])[0] || "";
+          if (tensionOn && challenge) {
+            try {
+              const t = HumanTensionAnalyzer.analyze({
+                challenge,
+                audience: mc?.target_audience || "",
+                product: request.concept || "",
+                objective: mc?.objective,
+              });
+              const deepest = t.ladder[t.ladder.length - 1] as any;
+              if (deepest?.statement) {
+                tension = {
+                  statement: String(deepest.statement),
+                  step: String(deepest.step || "unknown"),
+                  matched: t.matched,
+                  archetype: t.archetype_label || t.archetype,
+                };
+              }
+              console.log("[EXPERIMENT][REASONING_TENSION]", {
+                archetype: t.archetype,
+                matched: t.matched,
+                rungs: t.ladder.length,
+                truncated_at: t.truncated_at,
+                warnings: t.warnings.length,
+              });
+            } catch (err: any) {
+              console.warn("[EXPERIMENT][REASONING_TENSION] failed, continuing without it", {
+                error: err?.message || String(err),
+              });
+            }
+          }
           const bp = ProfessionalCreativeBrain.assemble({
+            tension,
+            productTruth: productTruthForBrain,
+            productMeaning,
+            marketingInsight,
+            strategy: earlyStrategy,
+            assetContext: assetCtx,
+            copyItems: request.copyItems,
+            productCount,
+            hasLogo: hasLogoForBrain,
+            visualDNA,
+            decision: dec,
+            judgment: j,
+          });
+          console.log("[EXPERIMENT][CREATIVE_BLUEPRINT]", blueprintTelemetry(bp));
+          // Phase 2-4. Six layers, all deterministic, all reading the blueprint
+          // that already exists. Appended to the same budget as everything else.
+          // Execution layer: geometry first, because typography places against
+          // it and the document is built from both.
+          let executionText = "";
+          if (executionOn) {
+            const roles = (dec?.copy_roles || []).map((r: any) => String(r?.role || "")).filter(Boolean);
+            const geometry = buildGeometry({
+              ratio: request.aspectRatio, assetContext: assetCtx, blueprint: bp,
+              copyRoles: roles, productCount, hasLogo: hasLogoForBrain,
+            });
+            const typography = buildTypographySystem({
+              blueprint: bp, productMeaning, marketingInsight,
+              assetContext: assetCtx, geometry, copyRoles: roles,
+            });
+            const composition = buildComposition({ blueprint: bp, decision: dec, visualDNA });
+            const doc = buildCreativeDocument({ geometry, typography, composition, blueprint: bp });
+            const critique = critiqueRender({ blueprint: bp, geometry, typography, prompt: composedPrompt });
+            executionText = [renderGeometry(geometry), renderTypography(typography)]
+              .filter(Boolean)
+              .join("\n\n");
+            // Phase 1: one context, validated before a render is paid for.
+            if (productionPipelineOn) {
+              const ctx = buildProductionContext({
+                creativeBlueprint: bp, layoutGeometry: geometry, typographySystem: typography,
+                composition, creativeDocument: doc, criticResult: critique,
+                ratio: request.aspectRatio, assetType: assetCtx?.asset_type,
+                productCount, startedAt: 0,
+              });
+              const valid = validateContext(ctx);
+              console.log("[PRODUCTION_PIPELINE]", productionTelemetry(ctx, valid));
+              if (!valid.ok) console.warn("[PRODUCTION_PIPELINE] " + valid.explanation);
+            }
+            // Phase 3: our type, not the model's. The picture is rendered
+            // without words and the type is composited by the caller.
+            if (realTypographyOn) {
+              const copy = (dec?.copy_roles || []).map((r: any) => ({ role: String(r?.role || ""), text: String(r?.text || "") }));
+              const textLayers = buildTextLayers({ geometry, typography, copy });
+              console.log("[EXPERIMENT][REAL_TYPOGRAPHY]", {
+                ...typographyRenderTelemetry({ layers: textLayers, svg: "" }),
+                no_text_directive_added: textLayers.length > 0,
+              });
+              if (textLayers.length) executionText = [executionText, NO_TEXT_DIRECTIVE].filter(Boolean).join("\n\n");
+              if (exportOn) {
+                console.log("[EXPERIMENT][EXPORT_LAYER]", exportTelemetry({
+                  svg: exportSvg(doc, textLayers),
+                  canva: exportCanva(doc, textLayers),
+                  psd: exportPsdModel(doc, textLayers),
+                }));
+              }
+            }
+            console.log("[EXPERIMENT][EXECUTION_LAYER]", {
+              ...geometryTelemetry(geometry),
+              ...typographyTelemetry(typography),
+              ...documentTelemetry(doc),
+              ...criticTelemetry(critique),
+            });
+          }
+          let productionText = "";
+          if (productionOn) {
+            const ds = buildDesignSystem({ visualDNA, productMeaning, assetContext: assetCtx, decision: dec });
+            const comp = buildComposition({ blueprint: bp, decision: dec, visualDNA });
+            const assets = planAssets({ decision: dec, visualDNA, productMeaning });
+            const structure = chooseStructure({
+              assetContext: assetCtx, marketingInsight, decision: dec,
+              objective: mc?.objective, productCount, copyItems: request.copyItems,
+            });
+            const formats = adaptFormats(bp);
+            const project = buildDesignProject(comp, bp);
+            // Budgeted like everything else. Sections are added whole, in
+            // priority order, while they fit: a half-printed composition is
+            // worse than an absent one, because a renderer reads a truncated
+            // layer list as a complete one.
+            const sections = [renderDesignSystem(ds), renderComposition(comp), renderAssets(assets)]
+              .filter(Boolean) as string[];
+            const kept: string[] = [];
+            let used = 0;
+            for (const section of sections) {
+              if (used + section.length + 2 > headroom - executionText.length) break;
+              kept.push(section);
+              used += section.length + 2;
+            }
+            productionText = kept.join("\n\n");
+            console.log("[EXPERIMENT][DESIGN_PRODUCTION]", {
+              ...designSystemTelemetry(ds),
+              ...compositionTelemetry(comp),
+              ...assetTelemetry(assets),
+              ...structureTelemetry(structure),
+              ...adaptationTelemetry(formats),
+              ...projectTelemetry(project),
+            });
+          }
+          const text = ProfessionalCreativeBrain.render(bp, {
+            maxChars: Math.max(0, headroom - productionText.length - executionText.length),
+          });
+          // The evaluation layer, finally reading something. It was built,
+          // tested and imported by nothing, so every render so far was scored
+          // by no one. Free, deterministic and offline, so it costs the render
+          // nothing to know how much was actually decided.
+          const loop = CreativeRefinementLoop.run({
             productTruth: productTruthForBrain,
             productMeaning,
             marketingInsight,
             visualDNA,
             decision: dec,
             judgment: j,
+            assetContext: assetCtx,
+            productCount,
+            hasLogo: hasLogoForBrain,
+            prompt: `${composedPrompt}
+
+${text || ""}`,
           });
-          console.log("[EXPERIMENT][CREATIVE_BLUEPRINT]", blueprintTelemetry(bp));
-          return ProfessionalCreativeBrain.render(bp);
+          console.log("[EXPERIMENT][CREATIVE_QUALITY]", {
+            // Both numbers. Logging only `before` made the loop invisible: the
+            // live log said "copy hierarchy MISSING" on a run where the
+            // correction had already filled it.
+            readiness: loop.after.mean,
+            readiness_before_correction: loop.before.mean,
+            corrections_applied: Object.keys(loop.corrections).length,
+            scores: Object.fromEntries(loop.before.scores.map((x) => [x.dimension, x.score])),
+            undecided: loop.critique.ungrounded.length,
+            director_only: loop.critique.director_only.length,
+            problems: loop.critique.problems.slice(0, 3),
+          });
+          console.log("[EXPERIMENT][BLUEPRINT_BUDGET]", {
+            headroom,
+            emitted: text ? text.length : 0,
+            trimmed: text ? text.length < ProfessionalCreativeBrain.render(bp)!.length : false,
+          });
+          const tail = [productionText, executionText].filter(Boolean).join("\n\n");
+          return tail ? [text, tail].filter(Boolean).join("\n\n") : text;
         }
       : undefined;
 
@@ -752,6 +1002,7 @@ ${blueprintText}` : composed;
         return await StablePipeline.run(request, {
           ...options,
           ...cdAuthorityOptions,
+          ...(earlyStrategy ? { precomputedStrategy: earlyStrategy } : {}),
           generationProvider: this.wrapProvider(
             innerConcurrent,
             judgmentPromise,
@@ -879,6 +1130,7 @@ ${blueprintText}` : composed;
       return await StablePipeline.run(effectiveRequest, {
         ...options,
         ...cdAuthorityOptions,
+        ...(earlyStrategy ? { precomputedStrategy: earlyStrategy } : {}),
         generationProvider: this.wrapProvider(
           inner,
           judgment,

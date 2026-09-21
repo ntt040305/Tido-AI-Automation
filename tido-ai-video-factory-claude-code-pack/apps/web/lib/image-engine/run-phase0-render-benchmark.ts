@@ -195,6 +195,14 @@ function armFlags(s: Scenario, arm: "OFF" | "ON") {
       // setting them without it is a no-op rather than an error.
       marketing_insight_v1: process.env.PHASE_MARKETING_INSIGHT === "1",
       professional_creative_brain_v1: process.env.PHASE_CREATIVE_BRAIN === "1",
+      strategy_first_v1: process.env.PHASE_STRATEGY_FIRST === "1",
+      reasoning_tension_v1: process.env.PHASE_TENSION === "1",
+      design_production_v1: process.env.PHASE_PRODUCTION === "1",
+      execution_layer_v1: process.env.PHASE_EXECUTION === "1",
+      production_pipeline_v2: process.env.PHASE_PRODUCTION_PIPELINE === "1",
+      real_typography_v1: process.env.PHASE_REAL_TYPO === "1",
+      export_layer_v1: process.env.PHASE_EXPORT === "1",
+      typography_roles_v1: process.env.PHASE_TYPO_ROLES === "1",
     },
     components: { prompt_compiler: false, creative_engine: false, knowledge_base: false, evaluation: false },
   };
@@ -510,6 +518,10 @@ async function main() {
     "  product_truth_v1=" + (process.env.PHASE11_PRODUCT_TRUTH === "1") +
     "  marketing_insight_v1=" + (process.env.PHASE_MARKETING_INSIGHT === "1") +
     "  professional_creative_brain_v1=" + (process.env.PHASE_CREATIVE_BRAIN === "1") +
+    "  strategy_first_v1=" + (process.env.PHASE_STRATEGY_FIRST === "1") +
+    "  design_production_v1=" + (process.env.PHASE_PRODUCTION === "1") +
+    "  execution_layer_v1=" + (process.env.PHASE_EXECUTION === "1") +
+    "  typography_roles_v1=" + (process.env.PHASE_TYPO_ROLES === "1") +
     "  format_challenge_v1=" + (process.env.PHASE11A_CHALLENGE === "1")
   );
   L("               arm flags are per scenario; production feature-flags.json is untouched");

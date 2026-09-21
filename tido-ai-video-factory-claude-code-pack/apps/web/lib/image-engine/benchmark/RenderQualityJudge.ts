@@ -42,7 +42,10 @@ export type QualityDimension =
   | "concept_strength"
   | "visual_quality"
   | "commercial_quality"
-  | "brand_consistency";
+  | "brand_consistency"
+  | "layout_quality"
+  | "typography_quality"
+  | "professional_advertising_similarity";
 
 export const QUALITY_DIMENSIONS: readonly QualityDimension[] = [
   "product_accuracy",
@@ -50,6 +53,9 @@ export const QUALITY_DIMENSIONS: readonly QualityDimension[] = [
   "visual_quality",
   "commercial_quality",
   "brand_consistency",
+  "layout_quality",
+  "typography_quality",
+  "professional_advertising_similarity",
 ];
 
 export interface DimensionScore {
@@ -181,6 +187,59 @@ export class RenderQualityJudge {
         share >= 0.25
           ? ""
           : "almost nothing rests on the product or the attached image; the director is reasoning from itself, which regresses to the category default",
+    });
+
+    // ── layout quality ────────────────────────────────────────────────────
+    // Structure, as distinct from whether the layout is pretty. The four
+    // fields below are the ones a poster fails on when it reads as a
+    // photograph with words dropped on it.
+    const layoutRows = b ? allDecisions(b).filter((d) => d.section === "layout" && d.decision) : [];
+    const structural = ["text_area", "attention_flow", "product_position", "negative_space"];
+    const decided = layoutRows.filter((d) => structural.includes(d.field)).length;
+    scores.push({
+      dimension: "layout_quality",
+      score: clamp(1 + (decided / structural.length) * 9),
+      because: `${decided}/${structural.length} structural decisions made (${structural.filter((f) => !layoutRows.some((r) => r.field === f)).join(", ") || "none missing"})`,
+      suggestion:
+        decided === structural.length
+          ? ""
+          : "the poster's structure is partly undecided — where the copy sits and where the eye goes are being left to the renderer",
+    });
+
+    // ── typography quality ────────────────────────────────────────────────
+    // Typography is judged on whether it RESTS on something, not on whether a
+    // typeface was named. A voice with no source is a house default.
+    const typoRows = b ? allDecisions(b).filter((d) => d.section === "design" && d.decision) : [];
+    const typoGrounded = typoRows.filter(
+      (d) => d.decision!.derived_from === "product_truth" || d.decision!.derived_from === "visual_dna"
+    ).length;
+    scores.push({
+      dimension: "typography_quality",
+      score: clamp(1 + (typoRows.length / 6) * 6 + (typoGrounded ? 3 : 0)),
+      because: `${typoRows.length}/6 typographic decisions made, ${typoGrounded} of them resting on the product rather than the director`,
+      suggestion:
+        typoRows.length >= 5 && typoGrounded
+          ? ""
+          : typoGrounded
+            ? "typography is partly undecided; the unfilled fields fall back to a house default"
+            : "no typographic decision rests on the product or the brand, so the voice is a default rather than a choice",
+    });
+
+    // ── professional advertising similarity ───────────────────────────────
+    // Deliberately a COMPOSITE of the seven above rather than a new judgement.
+    // Nothing here can compare a render to a brand campaign; what it can say is
+    // whether the same things a professional job decides were decided. Naming
+    // it anything stronger would be the lie this file exists to avoid.
+    const so_far = scores.reduce((n, s) => n + s.score, 0) / scores.length;
+    const sections = b ? new Set(allDecisions(b).filter((d) => d.decision).map((d) => d.section)).size : 0;
+    scores.push({
+      dimension: "professional_advertising_similarity",
+      score: clamp(so_far * 0.7 + (sections / 6) * 3),
+      because: `composite of the seven dimensions above (${Math.round(so_far * 10) / 10}) weighted with ${sections}/6 creative sections deciding anything`,
+      suggestion:
+        sections === 6 && so_far >= 8
+          ? ""
+          : "at least one creative discipline is not contributing; a professional job decides all six before the render",
     });
 
     const mean = Math.round((scores.reduce((n, s) => n + s.score, 0) / scores.length) * 100) / 100;

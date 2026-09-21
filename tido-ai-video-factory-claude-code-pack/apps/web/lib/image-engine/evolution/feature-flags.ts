@@ -362,6 +362,61 @@ export interface FeatureFlags {
      * a question for a render benchmark rather than an assumption.
      */
     professional_creative_brain_v1: boolean;
+    /**
+     * Phase 5. Runs the marketing brain BEFORE the Creative Director instead of
+     * after it.
+     *
+     * The strategy was produced inside the stable orchestrator, which runs
+     * downstream of the director: the director chose a direction and only then
+     * did anything reason about the customer. Measured consequence,
+     * `grounded_in_strategy_score` was 0 on 12/12 renders of every live run,
+     * because the insight layer ran before its only source existed.
+     *
+     * Adds no LLM call. The same single marketing-brain call happens earlier and
+     * its result is handed down, so the stable pipeline does not repeat it.
+     */
+    strategy_first_v1: boolean;
+    /**
+     * Phase 1.5. The first use of `reasoning/` from the render path.
+     *
+     * `HumanTensionAnalyzer` is pure, static and covered by the registered
+     * suites; it was simply never imported by anything that renders. It builds
+     * an insight ladder from the brief's own stated challenge and refuses to
+     * pass the rung its evidence supports -- which is why it is the one module
+     * worth wiring first, and why wiring it adds intelligence rather than
+     * prompt length.
+     *
+     * It grounds `concept.creative_tension`, which until now had exactly one
+     * source: the route the director rejected.
+     */
+    reasoning_tension_v1: boolean;
+    /**
+     * Phase 2-4. The commercial design production layer: design system, layer
+     * composition, asset admission, campaign structure, format adaptation and
+     * the design-project record.
+     *
+     * One flag for six modules because they are one decision -- each reads the
+     * blueprint and none is useful alone. Six flags would be six ways to get a
+     * half-configured frame.
+     */
+    design_production_v1: boolean;
+    /**
+     * Execution layer: layout geometry, render-ready typography, the commercial
+     * critic and the creative document.
+     *
+     * One flag because they are one chain -- typography places against the
+     * geometry, the document is built from both, and the critic scores all
+     * three. Enabling a subset produces a half-placed frame.
+     */
+    execution_layer_v1: boolean;
+    /** Phase 1. One validated context per render; nothing bypasses the chain. */
+    production_pipeline_v2: boolean;
+    /** Phase 2. Vision reading of the render. Costs one model call per render. */
+    vision_iteration_v1: boolean;
+    /** Phase 3. We set the type ourselves instead of asking the image model. */
+    real_typography_v1: boolean;
+    /** Phase 4. SVG, Canva and PSD-model export from the creative document. */
+    export_layer_v1: boolean;
   };
   /** Which component builds an experiment run may use. */
   components: Record<ComponentName, boolean>;
@@ -407,6 +462,14 @@ export const DEFAULT_FLAGS: FeatureFlags = {
     creative_brief_v1: false,
     marketing_insight_v1: false,
     professional_creative_brain_v1: false,
+    strategy_first_v1: false,
+    reasoning_tension_v1: false,
+    design_production_v1: false,
+    execution_layer_v1: false,
+    production_pipeline_v2: false,
+    vision_iteration_v1: false,
+    real_typography_v1: false,
+    export_layer_v1: false,
   },
   components: {
     prompt_compiler: false,

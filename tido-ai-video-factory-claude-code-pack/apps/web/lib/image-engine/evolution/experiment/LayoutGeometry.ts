@@ -1,0 +1,303 @@
+import type { AssetContext } from "./AssetContext";
+import type { CreativeBlueprint } from "./CreativeBlueprint";
+
+/**
+ * Layout Geometry — where things actually sit.
+ *
+ * Every layout decision in this engine has so far been prose: "the cup
+ * off-centre left, negative space carrying the queue". A renderer can act on
+ * that, but nothing downstream can MEASURE it, lay a text object at it, or
+ * export it. This is the first module that produces coordinates.
+ *
+ * Deterministic, pure, no model call.
+ *
+ * Why the geometry is derived and not templated
+ * ---------------------------------------------
+ * Positions come from three things the brief already fixes: the aspect ratio
+ * (which decides where space exists at all), the copy roles the client supplied
+ * (which decide how many zones are needed), and the product count (which
+ * decides whether there is a hero or a row). A luxury serum poster and a coffee
+ * poster with the same ratio, the same three copy roles and one product get the
+ * same grid, because their layout problem is the same one. Nothing here keys on
+ * what the product is.
+ *
+ * Coordinates are percentages of the frame, origin top-left, so they survive
+ * any output size.
+ */
+
+export type ZoneName = "product" | "headline" | "subheadline" | "cta" | "supporting" | "logo";
+
+export interface Zone {
+  name: ZoneName;
+  /** Centre of the zone, as a percentage of frame width/height. */
+  x: number;
+  y: number;
+  /** Zone extent as a percentage of the frame. */
+  width: number;
+  height: number;
+  /** 1–10. Higher wins when two zones contend for the same area. */
+  priority: number;
+  /** What this zone is doing, and why it is here rather than elsewhere. */
+  because: string;
+}
+
+export interface Grid {
+  /** Columns the frame is reasoned in. Wider frames get more. */
+  columns: number;
+  rows: number;
+  /** Margin as a percentage of the shorter edge. */
+  margin: number;
+  /** Safe area inset, inside which nothing critical may fall. */
+  safe_inset: number;
+}
+
+export interface EyePath {
+  /** Zone the eye enters at. */
+  enter: ZoneName;
+  /** Zones it travels through, in order. */
+  through: ZoneName[];
+  /** Where it stops — the conversion point when there is one. */
+  exit: ZoneName;
+  because: string;
+}
+
+export interface LayoutScore {
+  balance: number;
+  hierarchy: number;
+  readability: number;
+  conversion: number;
+  premium_perception: number;
+  overall: number;
+  notes: string[];
+}
+
+export interface LayoutGeometry {
+  ratio: string;
+  grid: Grid;
+  zones: Zone[];
+  eye_path: EyePath | null;
+  score: LayoutScore;
+}
+
+const clean = (s: unknown): string => (typeof s === "string" ? s.trim() : "");
+const round = (n: number) => Math.round(n * 100) / 100;
+
+/** Orientation drives everything: it is where space exists. */
+function gridFor(ratio: string): Grid {
+  if (ratio === "16:9") return { columns: 12, rows: 6, margin: 6, safe_inset: 4 };
+  if (ratio === "9:16") return { columns: 6, rows: 12, margin: 7, safe_inset: 5 };
+  return { columns: 8, rows: 8, margin: 8, safe_inset: 5 };
+}
+
+export interface GeometryInput {
+  ratio?: string;
+  assetContext?: AssetContext | null;
+  blueprint?: CreativeBlueprint | null;
+  /** Roles the client labelled, uppercased. Decides how many zones exist. */
+  copyRoles?: string[];
+  productCount?: number;
+  hasLogo?: boolean;
+}
+
+/**
+ * Lays out the frame. Pure and total.
+ *
+ * The product is placed first because everything else is placed relative to it:
+ * copy goes where the product is not. That ordering is the whole reason the
+ * result reads as a composition rather than a list of coordinates.
+ */
+export function buildGeometry(input: GeometryInput): LayoutGeometry {
+  const ratio = clean(input.ratio) || "1:1";
+  const grid = gridFor(ratio);
+  const roles = (input.copyRoles || []).map((r) => clean(r).toUpperCase()).filter(Boolean);
+  const count = Math.max(1, input.productCount || 1);
+  const wide = ratio === "16:9";
+  const tall = ratio === "9:16";
+
+  const zones: Zone[] = [];
+
+  // ── the product, first ─────────────────────────────────────────────────
+  // A wide frame splits left/right because width is what it has; a tall frame
+  // stacks because height is what it has. A square centres because neither
+  // edge leads.
+  const productX = wide ? 70 : 50;
+  const productY = tall ? 50 : 50;
+  zones.push({
+    name: "product",
+    x: productX,
+    y: productY,
+    width: count > 1 ? 80 : wide ? 45 : 60,
+    height: count > 1 ? 45 : 60,
+    priority: 10,
+    because:
+      count > 1
+        ? `${count} products share the frame, so they occupy one band evenly rather than one leading`
+        : wide
+          ? "a wide frame is read across, so the product takes one side and leaves the other for copy"
+          : "neither edge of this frame leads, so the product holds the optical centre",
+  });
+
+  // ── copy zones, placed where the product is not ────────────────────────
+  const copyX = wide ? 25 : 50;
+  const hasHeadline = roles.includes("HEADLINE");
+  const hasCta = roles.includes("CTA") || roles.includes("OFFER");
+  const hasSub = roles.includes("SUBHEADLINE") || roles.includes("SUPPORTING_TEXT");
+
+  if (hasHeadline) {
+    zones.push({
+      name: "headline",
+      x: copyX,
+      y: wide ? 38 : 15,
+      width: wide ? 40 : 80,
+      height: 18,
+      priority: 9,
+      because: wide
+        ? "the empty side becomes the information zone, balancing the product's visual weight without crossing it"
+        : "the headline takes the band above the product so it is read before the eye reaches the subject",
+    });
+  }
+  if (hasSub) {
+    zones.push({
+      name: "subheadline",
+      x: copyX,
+      y: wide ? 55 : 30,
+      width: wide ? 40 : 70,
+      height: 10,
+      priority: 6,
+      because: "sits directly under the headline so the two read as one statement rather than two",
+    });
+  }
+  if (hasCta) {
+    zones.push({
+      name: "cta",
+      x: copyX,
+      y: wide ? 72 : 88,
+      width: wide ? 25 : 40,
+      height: 8,
+      priority: 7,
+      because: "placed at the end of the reading path, so the eye arrives at it having already passed the product",
+    });
+  }
+  const supporting = roles.filter((r) => !["HEADLINE", "CTA", "OFFER", "SUBHEADLINE", "SUPPORTING_TEXT"].includes(r));
+  if (supporting.length) {
+    zones.push({
+      name: "supporting",
+      x: copyX,
+      y: wide ? 85 : 78,
+      width: wide ? 40 : 70,
+      height: 6,
+      priority: 3,
+      because: "the remaining strings sit below the main statement, subordinate by position as well as by size",
+    });
+  }
+  // Only when a logo was actually attached. A zone reserved for a mark nobody
+  // supplied is an instruction to draw one.
+  if (input.hasLogo) {
+    zones.push({
+      name: "logo",
+      x: grid.margin + 4,
+      y: grid.margin + 3,
+      width: 12,
+      height: 6,
+      priority: 4,
+      because: "a corner clear of both the product and the copy bands, at the smallest size that stays legible",
+    });
+  }
+
+  // ── eye path ───────────────────────────────────────────────────────────
+  const byPriority = [...zones].sort((a, b) => b.priority - a.priority);
+  const eye_path: EyePath | null = zones.length > 1
+    ? {
+        enter: byPriority[0].name,
+        through: byPriority.slice(1, -1).map((z) => z.name),
+        exit: hasCta ? "cta" : byPriority[byPriority.length - 1].name,
+        because: hasCta
+          ? "the eye enters on the heaviest element and exits on the action, crossing the product on the way"
+          : "with no closing line, the path ends on the lightest element rather than on an action",
+      }
+    : null;
+
+  return { ratio, grid, zones, eye_path, score: scoreLayout({ ratio, grid, zones, eye_path } as LayoutGeometry) };
+}
+
+/**
+ * Scores a layout on five commercial properties. Pure.
+ *
+ * These are geometric measures, not aesthetic ones: overlap, distribution,
+ * whether a conversion zone exists. Nothing here claims the layout is beautiful.
+ */
+export function scoreLayout(g: Omit<LayoutGeometry, "score">): LayoutScore {
+  const notes: string[] = [];
+  const zones = g.zones;
+  const product = zones.find((z) => z.name === "product");
+
+  // ── balance: is visual weight distributed, or piled on one side ────────
+  const leftWeight = zones.filter((z) => z.x < 50).reduce((n, z) => n + z.priority, 0);
+  const rightWeight = zones.filter((z) => z.x >= 50).reduce((n, z) => n + z.priority, 0);
+  const total = leftWeight + rightWeight || 1;
+  const skew = Math.abs(leftWeight - rightWeight) / total;
+  const balance = round(Math.max(1, 10 - skew * 12));
+  if (skew > 0.5) notes.push(`Visual weight is ${Math.round(skew * 100)}% skewed to one side.`);
+
+  // ── hierarchy: are priorities distinct, or is everything equally loud ──
+  const priorities = new Set(zones.map((z) => z.priority));
+  const hierarchy = round(Math.min(10, 2 + priorities.size * 2));
+  if (priorities.size < 3) notes.push("Fewer than three priority levels: little separates one element from another.");
+
+  // ── readability: does anything critical overlap the product ────────────
+  let overlaps = 0;
+  if (product) {
+    for (const z of zones) {
+      if (z.name === "product") continue;
+      const dx = Math.abs(z.x - product.x) * 2;
+      const dy = Math.abs(z.y - product.y) * 2;
+      if (dx < z.width + product.width && dy < z.height + product.height) overlaps++;
+    }
+  }
+  const readability = round(Math.max(1, 10 - overlaps * 3));
+  if (overlaps) notes.push(`${overlaps} copy zone(s) overlap the product.`);
+
+  // ── conversion: is there an exit, and is it reachable ──────────────────
+  const hasCta = zones.some((z) => z.name === "cta");
+  const conversion = hasCta ? (g.eye_path?.exit === "cta" ? 10 : 6) : 3;
+  if (!hasCta) notes.push("No closing zone: the layout has nowhere for the eye to act.");
+
+  // ── premium perception: how much of the frame is left empty ────────────
+  const occupied = zones.reduce((n, z) => n + (z.width * z.height) / 100, 0);
+  const empty = Math.max(0, 100 - occupied);
+  // Rewards emptiness up to a point; a frame that is 90% empty is not premium,
+  // it is unfinished.
+  const premium_perception = round(Math.max(1, Math.min(10, empty / 5)));
+  if (empty < 20) notes.push(`Only ${Math.round(empty)}% of the frame is empty; nothing has room.`);
+
+  const overall = round((balance + hierarchy + readability + conversion + premium_perception) / 5);
+  return { balance, hierarchy, readability, conversion, premium_perception, overall, notes };
+}
+
+/** Counts and coordinates only. */
+export function geometryTelemetry(g: LayoutGeometry | null | undefined) {
+  if (!g) return { geometry: false };
+  return {
+    geometry: true,
+    ratio: g.ratio,
+    zones: g.zones.length,
+    zone_names: g.zones.map((z) => z.name),
+    eye_path: g.eye_path ? [g.eye_path.enter, ...g.eye_path.through, g.eye_path.exit] : null,
+    score: g.score.overall,
+    issues: g.score.notes.length,
+  };
+}
+
+/** The geometry as the prompt carries it. Percentages, so any size works. */
+export function renderGeometry(g: LayoutGeometry | null | undefined): string | undefined {
+  if (!g?.zones.length) return undefined;
+  return [
+    `LAYOUT GEOMETRY (${g.ratio}) — positions are percentages of the frame, origin top-left.`,
+    ...g.zones.map(
+      (z) => `- ${z.name}: centred at ${z.x}% across, ${z.y}% down, occupying ~${z.width}%×${z.height}%. ${z.because}`
+    ),
+    ...(g.eye_path
+      ? [`- reading path: ${[g.eye_path.enter, ...g.eye_path.through, g.eye_path.exit].join(" → ")}. ${g.eye_path.because}`]
+      : []),
+  ].join("\n");
+}

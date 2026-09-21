@@ -195,7 +195,11 @@ function strategyJudgment(args: {
       justification: "replaced by a real surface from the brand's own premises",
       revised: true,
     },
-  } as CreativeJudgment;
+  // The fixture supplies simplified assessment values on purpose: these
+  // scenarios exercise the composer, not the director's verdict schema.
+  // Asserted through `unknown` so the narrowing is explicit rather than
+  // silently accepted.
+  } as unknown as CreativeJudgment;
 }
 
 /** An exploration-branch judgment. Two scenarios use it, to cover both arms of the director. */
