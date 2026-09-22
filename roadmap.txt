@@ -1,527 +1,574 @@
-MASTER ROADMAP — AI CREATIVE PRODUCTION SYSTEM 10/10
+PHASE 0
+System Audit & Architecture Foundation
 
-Mục tiêu cuối:
-
-Một hệ thống có thể nhận một yêu cầu đơn giản từ user bình thường, tự suy nghĩ như Creative Director + Designer + Photographer + Production Team, tạo ra Poster/Banner/Social Ads/Product Hero/UGC ở cấp độ thương mại, có thể chỉnh sửa, tái sử dụng và cá nhân hóa.
-
-PHASE 0 — SYSTEM FOUNDATION AUDIT (ĐÃ GẦN HOÀN THÀNH)
-Mục tiêu:
-
-Đảm bảo hệ thống hiện tại có nền móng đúng.
-
-Đã có:
-
-✅ Product Understanding
-✅ Visual DNA
-✅ Product Truth
-✅ Marketing Insight
-✅ Creative Brief
-✅ Creative Director
-✅ Professional Creative Brain
-✅ Creative Blueprint
-✅ Quality Judge
-
-Kiểm tra:
-data flow
-feature flags
-runtime path
-prompt transmission
-benchmark
-PHASE 1 — CREATIVE INTELLIGENCE FINALIZATION
-Mục tiêu:
-
-Biến hệ thống từ:
-
-biết phân tích thiết kế
-
-thành:
-
-biết sáng tạo và tự cải thiện thiết kế.
-
-1. Creative Evolution Loop 2.0
-Hiện tại:
-Render
- ↓
-Judge
- ↓
-Fix lỗi
-Mục tiêu:
-Generate
- ↓
-Creative Judge
- ↓
-Creative Diagnosis
- ↓
-Creative Improvement Strategy
- ↓
-Creative Director Revision
- ↓
-New Blueprint
- ↓
-Render V2
- ↓
-Compare
- ↓
-Winner
-
-Nâng cấp:
-
-không chỉ sửa lỗi kỹ thuật
-sửa cả ý tưởng
-sửa visual direction
-sửa emotional impact
-2. Advanced Creative Decision Engine
-
-Nâng Creative Director.
-
-Mỗi quyết định phải có:
-
-{
-decision:"",
-reason:"",
-derived_from:"",
-confidence:"",
-commercial_effect:"",
-alternative_rejected:""
-}
-
-Ví dụ:
-
-Không:
-
-Use dark background
-
-Mà:
-
-Dark background selected because the product positioning requires premium perception. Bright alternatives were rejected because they reduce exclusivity.
-
-3. Typography Art Direction Engine
-
-Hiện tại:
-
-Typography reasoning.
-
-Cần nâng thành:
-
-Typography system.
-
-Bao gồm:
-
-font psychology
-font pairing
-hierarchy
-headline rhythm
-spacing
-tracking
-contrast
-text density
-brand voice
+✅ ĐÃ HOÀN THÀNH
 
 Mục tiêu:
 
-Chữ không còn là phần thêm vào.
+Hiểu toàn bộ hệ thống trước khi mở rộng.
 
-Chữ trở thành một phần của concept.
+Đã làm:
 
+Audit codebase
+Audit AI pipeline
+Audit modules
+Database planning
+Architecture boundary
 
-5. Reasoning Engine Integration
+Kết quả:
 
-Audit toàn bộ:
+Có:
 
-reasoning/
+Application Layer
 
-Phân loại:
+Infrastructure Layer
 
-Giữ:
-creative reasoning
-photography reasoning
-design reasoning
-commercial reasoning
-Loại:
-duplicate
-outdated
-conflicting
+Shared Layer
+PHASE 1
+Identity + Database Foundation
 
-Sau đó nối vào:
-
-Professional Creative Brain.
-
-PHASE 2 — COMMERCIAL DESIGN PRODUCTION LAYER
+✅ GẦN HOÀN THÀNH
 
 Mục tiêu:
 
-Biến suy nghĩ thành sản phẩm giống designer làm.
+Xây nền tảng người dùng và dữ liệu.
 
-6. Design System Generator
+Firebase Authentication
 
-(Module mới)
+Firebase chịu trách nhiệm:
 
-Tạo bộ quy tắc thiết kế trước khi render.
-
-Output:
-
-{
-color_system:"",
-typography_system:"",
-graphic_language:"",
-material_language:"",
-spacing_system:"",
-visual_style:""
-}
-
-Ví dụ:
-
-Skincare luxury:
-
-ivory
-gold accent
-serif headline
-soft glass
-clean negative space
-7. Visual Composition Engine
-
-(Module mới)
-
-Quản lý cấu trúc hình ảnh.
-
-Tạo:
-
-Layer System
-
-Background
-
-Atmosphere
-
-Product
-
-Supporting Object
-
-Graphic Element
-
-Typography
-
-CTA
-
-Finishing
-
-Giúp tránh:
-
-"AI ghép đồ vào ảnh".
-
-8. Product Hero Studio System
-
-Nâng cấp riêng cho sản phẩm thương mại.
-
-Bao gồm:
-
-camera logic
-lens
-lighting
-material
-reflection
-shadow
-packaging protection
-
-Mục tiêu:
-
-Giống:
-
-Apple product shot
-Dior campaign
-Samsung advertising
-PHASE 3 — CAPCUT / CANVA STYLE CREATIVE SYSTEM
-
-Đây là 4 module mới bạn yêu cầu.
-
-9. User Kit Memory
-
-(Thay Brand Kit Memory)
-
-Mục tiêu:
-
-AI nhớ phong cách của từng user.
+Sign up
+Login
+Google Login
+Session
+Identity
+Supabase Database
 
 Lưu:
 
-Visual Preference
-
-Ví dụ:
-
-cinematic
-luxury
-minimal
-realistic
-Design Preference
-font style
-layout style
-color taste
-Workflow Preference
-thường làm poster
-thường làm ecommerce
-thường làm YouTube
-Quality Preference
-
-Ví dụ:
-
-User thích:
-
-realistic
-premium
-
-Ghét:
-
-AI plastic
-excessive effects
-
-Luồng:
-
 User
- ↓
-User Kit Memory
- ↓
-Creative Decision
- ↓
-Personalized Output
-10. Template Intelligence Engine
+user_profiles
+Organization
+organizations
+Team
+workspace_members
+Project
+projects
+Creative History
+creative_runs
+Infrastructure Layer
 
-(Module mới)
+ĐÃ CÓ:
 
-Không phải template cứng.
+@tido/infrastructure
 
-Là khả năng hiểu:
+@tido/shared
+PHASE 1.5
+Infrastructure Hardening
 
-"loại quảng cáo nào phù hợp."
+✅ HOÀN THÀNH
 
-Ví dụ:
+Mục tiêu:
 
-User đưa serum:
+Không để AI engine bị phụ thuộc database.
+
+Đã đạt:
+
+App
+
+↓
+
+Infrastructure
+
+↓
+
+Firebase/Supabase
+
+Đã kiểm tra:
+
+dependency boundary
+build
+regression
+auth migration
+PHASE 2
+AI Intelligence Persistence
+
+🚧 TIẾP THEO
+
+Đây là phase chúng ta đang chuẩn bị.
+
+Mục tiêu:
+
+Lưu toàn bộ "suy nghĩ" của AI.
+
+Hiện tại:
+
+AI suy nghĩ → mất.
+
+Sau phase này:
+
+AI Decision
+
+        ↓
+
+Database
+
+        ↓
+
+Future Learning
+Cần làm:
+2.1 Creative Intelligence Database
+
+Lưu:
+
+product understanding
+audience analysis
+marketing angle
+creative reasoning
+
+Table:
+
+creative_intelligence
+2.2 Creative Blueprint Memory
+
+Lưu:
+
+visual world
+composition
+lighting
+typography
+layout
+
+Table:
+
+creative_blueprints
+2.3 Design Decision History
+
+Lưu:
 
 AI chọn:
 
-Luxury Campaign
+Why this layout?
 
-hoặc
+Why this color?
 
-Conversion Ad
+Why this typography?
 
-hoặc
+Table:
 
-UGC Review
+design_decisions
+2.4 Vision Loop Memory
 
-Tùy:
+Lưu:
 
-mục tiêu
-audience
-channel
+Render V1
 
-Template types:
+↓
 
-Product Hero
-Sale Banner
-Launch Campaign
-Social Hook
-Storytelling
-Comparison
-Testimonial
-11. Asset Intelligence Engine
+Vision Analysis
 
-(Module mới)
+↓
 
-AI biết chọn:
+Problems
 
-background
-texture
-decorative object
-icon
-shape
-effect
+↓
 
-Không random.
+Correction
 
-Mỗi asset phải có:
+↓
 
-{
-asset:"",
-purpose:"",
-relationship:"",
-placement:""
-}
+Render V2
+
+Tables:
+
+vision_reviews
+
+render_iterations
+2.5 Prompt Evolution
+
+Lưu:
+
+prompt version
+changes
+improvement
+
+Table:
+
+prompt_versions
+PHASE 3
+AI Memory & Learning System
+
+Sau khi Phase 2 có dữ liệu.
+
+Mục tiêu:
+
+AI bắt đầu học.
+
+3.1 User Kit Memory
+
+AI nhớ từng user.
 
 Ví dụ:
 
-Coffee:
+User A:
 
-Không:
+Luxury
+Minimal
+Dark background
+Large product
+Few words
 
-"thêm lá cây"
+User B:
 
-Mà:
+Bright
+Colorful
+Social style
 
-"coffee bean texture reinforces artisan perception."
+Database:
 
-PHASE 4 — EDITABLE DESIGN SYSTEM
+user_creative_profiles
+3.2 Asset Intelligence
 
-Đây là phần biến nó thành công cụ như Canva/Photoshop AI.
+AI hiểu asset.
 
-12. Editable Output Architecture
+Upload:
 
-(Mục bạn yêu cầu)
+chai nước
 
-Hiện:
+AI biết:
+
+shape
+material
+color
+texture
+lighting requirement
+
+Database:
+
+assets
+
+asset_dna
+3.3 Template Intelligence
+
+Không phải template.
+
+Là:
+
+Creative Pattern Learning.
+
+Ví dụ:
+
+AI học:
+
+Beauty:
+
+Macro product
+
+Soft shadow
+
+Minimal typography
+
+Luxury spacing
+
+Database:
+
+creative_patterns
+3.4 Vector Memory
+
+Dùng Supabase pgvector.
+
+AI tìm:
+
+concept giống nhau
+layout giống nhau
+sản phẩm tương tự
+PHASE 4
+Creative Director AI Platform
+
+Mục tiêu:
+
+Tăng độ sáng tạo.
+
+Hiện tại:
+
+User nhập:
+
+Concept
+
+Text
 
 Image
 
-Sau:
+Sau phase này:
 
-Design Project
+AI tự:
 
-Bao gồm:
-
-Layers
-background
-product
-shadow
-effect
-text
-graphic
-Editable elements
-text
-position
-size
-color
-image assets
-
-Export:
-
-Photoshop compatible
-Canva compatible
-SVG
-layered project format
-13. Multi-format Adaptation Engine
-
-Một thiết kế → nhiều nền tảng.
-
-Ví dụ:
-
-Poster:
-
-16:9
+Generate 10 concepts
 
 ↓
 
-Instagram:
-
-1:1
+Evaluate
 
 ↓
 
-Story:
-
-9:16
+Choose best
 
 ↓
 
-Banner:
+Explain why
 
-3:1
+Cần hoàn thiện:
 
-Giữ:
+Creative Concept Evolution Engine
+concept generation
+scoring
+selection
+Creative Critic
 
+AI tự đánh giá:
+
+visual quality
+conversion potential
+brand consistency
+Advanced Vision Loop
+
+Không chỉ score.
+
+Mà:
+
+Look
+
+↓
+
+Understand
+
+↓
+
+Find problems
+
+↓
+
+Fix
+PHASE 5
+Professional Design Output
+
+Mục tiêu:
+
+Biến AI output thành file thiết kế.
+
+5.1 Typography Engine
+
+Hoàn thiện:
+
+font database
+font pairing
+multilingual
 hierarchy
-product
-message
-PHASE 5 — COMMERCIAL VALIDATION
+5.2 Editable Output
 
-Không đánh giá bằng cảm giác.
+Làm:
 
-Benchmark:
+SVG
+Text
 
-Industry:
+Logo
 
-Beauty
+Shape
+Canva JSON
 
-Drink
+Layer:
 
-Food
+Image
 
-Fashion
+Text
 
-Technology
+Position
 
-Asset:
-Poster
-Banner
-Social Ad
-Product Hero
-UGC
+Font
 
-Chấm:
+Color
+PSD Preparation
 
-Creative
-originality
-concept
-Design
-layout
-typography
-Commercial
-conversion
-brand perception
-Technical
-product accuracy
-realism
-PHASE 6 — PRODUCTION READINESS
+Layer:
 
-Cuối cùng:
+Background
 
-System phải đạt:
-Creative
+Product
 
-10/10
+Shadow
 
-concept
-art direction
-storytelling
-Design
+Reflection
 
-10/10
+Effect
 
-layout
-typography
-composition
-Production
+Text
 
-10/10
+Logo
+PHASE 6
+Production SaaS Platform
 
-editable
-reusable
-scalable
+Mục tiêu:
+
+Bán được.
+
 User Experience
 
-10/10
+One screen.
 
-User chỉ cần:
+User:
 
-"Tôi muốn làm poster serum cao cấp cho nữ 25-35 tuổi"
+Upload
 
-Hệ thống tự làm phần còn lại.
++
 
-Thứ tự ưu tiên triển khai thực tế
+Concept
 
-Nếu tối ưu thời gian:
++
 
-Bắt buộc trước:
-Creative Evolution Loop 2.0
-Advanced Creative Decision
-Typography Art Direction
-Campaign Layout Intelligence
-Reasoning Integration
-Sau đó:
-Design System Generator
-Composition Engine
-Product Hero Studio
-Cuối cùng:
-User Kit Memory
-Template Intelligence
-Asset Intelligence
+Text
+
+AI làm phần còn lại.
+
+Enterprise
+
+Thêm:
+
+Team workspace
+Brand workspace
+Approval flow
+Version history
+Scaling
+
+Infrastructure:
+
+Queue
+Worker
+Cache
+CDN
+Storage optimization
+FINAL ARCHITECTURE
+                 Firebase Auth
+
+                      |
+
+                      ↓
+
+              Identity Layer
+
+                      |
+
+                      ↓
+
+          TIDO Infrastructure
+
+                      |
+
+          ----------------------
+
+          |                    |
+
+     Supabase DB          Storage
+
+          |
+
+          |
+
+  --------------------------
+
+  |            |            |
+
+Memory     Creative     Patterns
+
+Layer      History      Learning
+
+
+          |
+
+          ↓
+
+
+      Creative Director AI
+
+
+          |
+
+          ↓
+
+
+ Creative Blueprint
+
+
+          |
+
+          ↓
+
+
+Typography + Layout Engine
+
+
+          |
+
+          ↓
+
+
+Render Engine
+
+
+          |
+
+          ↓
+
+
+Vision Improvement Loop
+
+
+          |
+
+          ↓
+
+
 Editable Output
-Multi-format Adaptation
+
+
+          |
+
+          ↓
+
+
+Enterprise SaaS
+Trạng thái hiện tại
+
+Tôi đánh giá:
+
+Phần	Trạng thái
+AI Creative Engine	8.5-9/10
+Architecture	9.5/10
+Auth	9.5/10
+Database Foundation	8/10
+Memory	0-1/10 (chưa làm)
+Learning	0/10
+Editable Output	7/10
+Enterprise	4/10
+Việc tiếp theo hợp lý nhất
+
+Không nên code ngay Phase 2.
+
+Thứ tự chuẩn:
+
+1. Chốt Supabase schema cho Phase 2
+
+↓
+
+2. Tạo migration
+
+↓
+
+3. Connect AI pipeline
+
+↓
+
+4. Verify dữ liệu được lưu
+
+↓
+
+5. Sang Phase 3 Memory

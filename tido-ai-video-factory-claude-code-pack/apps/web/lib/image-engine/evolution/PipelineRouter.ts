@@ -8,6 +8,7 @@ import { PIPELINE_VERSIONS, PipelineId, resolveComponentVersions } from "./pipel
 import { StablePipeline } from "./StablePipeline";
 import { ExperimentPipeline } from "./ExperimentPipeline";
 import { logGeneration } from "./ExperimentLogger";
+import { reviewRender, correctedRequest } from "./VisionReviewLayer";
 
 /**
  * Chooses which pipeline serves a request, and never makes that choice
@@ -45,10 +46,26 @@ export interface RoutingContext {
    * experiment run with no features on is still stable behaviour.
    */
   forcePipeline?: PipelineId;
+  /**
+   * Standing creative preferences to apply where the brief is silent.
+   *
+   * Plain sentences, and deliberately nothing more. Whoever these belong to,
+   * and where they were looked up, is resolved entirely outside this layer --
+   * which is why the name says nothing about a person. This engine takes a
+   * request and returns a picture; it has no identifier for anyone and no path
+   * to an account, and a mistake here therefore cannot reach anyone's data.
+   *
+   * Everything that arrives has already passed the caller's own threshold, so
+   * none of it is a single render mistaken for a taste. None of it outranks
+   * the current brief.
+   */
+  standingPreferences?: string[];
 }
 
 export interface RoutingDecision {
   pipeline: PipelineId;
+  /** Carried from the context so the experiment path can consult it. */
+  standingPreferences?: string[];
   pipeline_version: string;
   reason: string;
   flags: FeatureFlags;
@@ -136,6 +153,7 @@ export class PipelineRouter {
 
     return {
       pipeline,
+      ...(context.standingPreferences?.length ? { standingPreferences: context.standingPreferences } : {}),
       pipeline_version: PIPELINE_VERSIONS[pipeline],
       reason,
       flags,
@@ -173,7 +191,23 @@ export class PipelineRouter {
       result = await StablePipeline.run(request, options);
     }
 
-    logGeneration(decision, result, Date.now() - startedAt);
-    return result;
+    // The image now exists. Everything past this line is review, and review is
+    // not allowed to change whether the render succeeded.
+    //
+    // This is the right altitude for it. The loop was first wired inside
+    // ExperimentPipeline, at each of its render sites, and that was wrong twice
+    // over: a branch was missed immediately -- leaving the feature enabled and
+    // silently unreachable -- and stable users could never have received it at
+    // all. Here there is one insertion point, it sits above both pipelines, and
+    // `evolution/` is where reading a flag is allowed, so nothing in `service/`
+    // or `compiler/` learns that this feature exists.
+    const reviewed = await reviewRender(result, request, decision, (instruction) =>
+      decision.pipeline === "experiment"
+        ? ExperimentPipeline.run(correctedRequest(request, instruction), options, decision)
+        : StablePipeline.run(correctedRequest(request, instruction), options),
+    );
+
+    logGeneration(decision, reviewed, Date.now() - startedAt);
+    return reviewed;
   }
 }

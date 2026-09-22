@@ -2105,7 +2105,11 @@ check("CONCURRENCY: control mode stays sequential, because the dependency is rea
   // the bridge parameter made it fail when Phase 0.3 set that argument to false
   // and moved the bridged reasoning to the composer, with the ordering intact.
   const apply = PIPELINE_SRC.indexOf("applyCreativeDecision(request, decision,");
-  const stable = PIPELINE_SRC.indexOf("return await StablePipeline.run(effectiveRequest");
+  // Matched on the CALL rather than on `return await`: the control path now
+  // binds the result so the captured creative intelligence can be attached
+  // before returning. The ordering this test exists to pin -- director,
+  // rewrite, pipeline -- is unchanged.
+  const stable = PIPELINE_SRC.indexOf("await StablePipeline.run(effectiveRequest");
   assert.ok(seqAwait > 0 && apply > 0 && stable > 0, "the control path was restructured");
   assert.ok(seqAwait < apply, "the decision is applied before the judgment exists");
   assert.ok(apply < stable, "the pipeline starts before the request is rewritten");

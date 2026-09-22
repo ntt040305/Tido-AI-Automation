@@ -11,6 +11,8 @@
     "typecheck": "npx tsc --noEmit"
   },
   "dependencies": {
+    "@tido/shared": "workspace:*",
+    "@tido/infrastructure": "workspace:*",
     "@anthropic-ai/sdk": "^0.115.0",
     "@elevenlabs/elevenlabs-js": "^2.60.0",
     "@google/genai": "^2.17.0",

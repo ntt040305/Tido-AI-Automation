@@ -45,6 +45,9 @@ export async function POST(req: NextRequest) {
       originalConcept: result.originalConcept,
       professionalConcept: result.professionalConcept,
       wasOptimized: result.wasOptimized ?? false,
+      // Only present when the model actually returned structured thinking.
+      // Older clients read the paragraph and are unaffected.
+      ...(result.brief ? { brief: result.brief } : {}),
     });
   } catch (err: any) {
     console.error("[POST /api/image/concept-professionalize] Unexpected error:", err);

@@ -7,6 +7,9 @@ import {
   GeneratedAsset,
   PictureEngineError,
   UIState,
+  CreativeIntelligence,
+  VisionAnalysis,
+  DesignDecisionResult,
 } from "../types/picture-engine.types";
 import {
   mockCreativeSession,
@@ -21,6 +24,9 @@ export interface PictureEngineStoreState {
   creativeSession: CreativeSession;
   creativeBrief: CreativeBrief;
   aiStrategy: AIStrategy | null;
+  creativeIntelligence: CreativeIntelligence | null;
+  visionAnalysis: VisionAnalysis | null;
+  designDecisions: DesignDecisionResult | null;
   generationJob: GenerationJobState;
   currentAsset: GeneratedAsset | null;
   history: GeneratedAsset[];
@@ -50,6 +56,9 @@ export interface PictureEngineStoreState {
     updates: Partial<CreativeBrief["brand_identity"]>
   ) => void;
   setAIStrategy: (strategy: AIStrategy | null) => void;
+  setCreativeIntelligence: (intelligence: CreativeIntelligence | null) => void;
+  setVisionAnalysis: (analysis: VisionAnalysis | null) => void;
+  setDesignDecisions: (decisions: DesignDecisionResult | null) => void;
   setGenerationJob: (job: Partial<GenerationJobState>) => void;
   setCurrentAsset: (asset: GeneratedAsset | null) => void;
   setError: (error: PictureEngineError | null) => void;
@@ -121,6 +130,9 @@ export const usePictureEngineStore = create<PictureEngineStoreState>((set, get) 
   },
   creativeBrief: defaultCreativeBrief,
   aiStrategy: null,
+  creativeIntelligence: null,
+  visionAnalysis: null,
+  designDecisions: null,
   generationJob: {
     job_id: null,
     status: "idle",
@@ -229,6 +241,10 @@ export const usePictureEngineStore = create<PictureEngineStoreState>((set, get) 
       },
     })),
 
+  setCreativeIntelligence: (intelligence) => set({ creativeIntelligence: intelligence }),
+  setVisionAnalysis: (analysis) => set({ visionAnalysis: analysis }),
+  setDesignDecisions: (decisions) => set({ designDecisions: decisions }),
+
   setAIStrategy: (strategy) => set({ aiStrategy: strategy }),
 
   setGenerationJob: (updates) =>
@@ -267,6 +283,9 @@ export const usePictureEngineStore = create<PictureEngineStoreState>((set, get) 
       },
       creativeBrief: mockCreativeBrief,
       aiStrategy: null,
+      creativeIntelligence: null,
+      visionAnalysis: null,
+  designDecisions: null,
       currentAsset: null,
       history: [],
       error: null,

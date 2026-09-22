@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Compiled output from the type-verification pass. Linting emitted
+    // JavaScript reports on the compiler's choices, not anyone's code: every
+    // finding here was a `require()` that tsc generated for CommonJS.
+    ".verify-build/**",
   ]),
 ]);
 

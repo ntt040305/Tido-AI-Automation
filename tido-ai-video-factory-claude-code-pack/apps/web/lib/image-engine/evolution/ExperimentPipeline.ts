@@ -22,6 +22,7 @@ import { HumanTensionAnalyzer } from "../reasoning/HumanTensionAnalyzer";
 import { buildDesignSystem, designSystemTelemetry, renderDesignSystem } from "./experiment/DesignSystem";
 import { buildComposition, compositionTelemetry, renderComposition } from "./experiment/VisualComposition";
 import { planAssets, assetTelemetry, renderAssets } from "./experiment/AssetIntelligence";
+import { buildAssetDNA, renderAssetDNA, assetDNATelemetry } from "./experiment/AssetDNA";
 import { chooseStructure, structureTelemetry } from "./experiment/CampaignStructure";
 import { adaptFormats, adaptationTelemetry } from "./experiment/FormatAdaptation";
 import { buildDesignProject, projectTelemetry } from "./experiment/DesignProject";
@@ -29,6 +30,10 @@ import { buildGeometry, geometryTelemetry, renderGeometry } from "./experiment/L
 import { buildTypographySystem, typographyTelemetry, renderTypography } from "./experiment/TypographySystem";
 import { buildCreativeDocument, documentTelemetry } from "./experiment/CreativeDocument";
 import { critiqueRender, criticTelemetry } from "../benchmark/CommercialRenderCritic";
+import { buildCreativeIntelligence, intelligenceTelemetry, CreativeIntelligence } from "./experiment/CreativeIntelligenceView";
+import { diagnose } from "../benchmark/CreativeDiagnosis";
+import { RenderQualityJudge } from "../benchmark/RenderQualityJudge";
+import { compareConcepts } from "../benchmark/ConceptEvaluator";
 import { buildProductionContext, validateContext, productionTelemetry } from "./experiment/ProductionPipeline";
 import { buildTextLayers, NO_TEXT_DIRECTIVE, typographyRenderTelemetry } from "./experiment/TypographyRenderer";
 import { exportSvg, exportCanva, exportPsdModel, exportTelemetry } from "./experiment/ExportLayer";
@@ -350,6 +355,33 @@ ${blueprintText}` : composed;
     };
   }
 
+  /**
+   * Attaches the structures this render was built from, when there were any.
+   *
+   * Non-enumerable on purpose. These are internal design objects, not part of
+   * the API contract: the review layer reads them in-process and they must not
+   * ride along into a JSON response, a log line or a database row. Making them
+   * non-enumerable means `JSON.stringify` and every spread that builds the HTTP
+   * payload skip them without anyone having to remember to strip them.
+   */
+  private static attachDesignContext(
+    result: SimpleImageGenerationResultV1,
+    blueprint: unknown,
+    typography: unknown,
+    geometry: unknown,
+  ): SimpleImageGenerationResultV1 {
+    if (!blueprint && !typography && !geometry) return result;
+    for (const [key, value] of [
+      ["creativeBlueprint", blueprint],
+      ["typographySystem", typography],
+      ["layoutGeometry", geometry],
+    ] as const) {
+      if (!value) continue;
+      Object.defineProperty(result, key, { value, enumerable: false, configurable: true });
+    }
+    return result;
+  }
+
   public static async run(
     request: SimpleInputRequestV1,
     options: Parameters<typeof StablePipeline.run>[1],
@@ -629,6 +661,20 @@ ${blueprintText}` : composed;
     // closure below sits outside the context branch, and a binding declared
     // inside it is not in scope there. That exact mistake cost 12 renders.
     let hasLogoForBrain = false;
+    // Written by the blueprint closure during generation and read after the
+    // render returns. The closure runs deep inside the stable pipeline, so this
+    // is the only place both sides can see.
+    let capturedIntelligence: CreativeIntelligence | null = null;
+    // The design structures this render was actually built from.
+    //
+    // Captured for the same reason the intelligence is: they exist, they
+    // describe what was decided, and nothing downstream could see them. The
+    // vision review needs them specifically -- without the real TextSpec and
+    // Zone it can say "raise the headline" but not "from 2.5 to 3.3", and a
+    // correction with no starting value cannot be checked against the result.
+    let capturedTypography: any = null;
+    let capturedGeometry: any = null;
+    let capturedBlueprint: any = null;
     let productTruthForBrain: import("./experiment/ProductTruth").ProductTruth | null = null;
     if (contextV1) {
       const context = buildContext({
@@ -831,6 +877,31 @@ ${blueprintText}` : composed;
             judgment: j,
           });
           console.log("[EXPERIMENT][CREATIVE_BLUEPRINT]", blueprintTelemetry(bp));
+          // Translate for the interface. Free: every input is already in memory.
+          {
+            const critique = critiqueRender({ blueprint: bp, prompt: composedPrompt });
+            // `diagnose` reads the judge's report; the critic is a different
+            // object with a different shape and is carried separately.
+            const report = RenderQualityJudge.evaluate({ blueprint: bp, prompt: composedPrompt });
+            const concepts = compareConcepts(j?.strategy);
+            // Captured here rather than with the geometry below, because that
+            // block is gated on `execution_layer_v1`. With that flag off the
+            // blueprint was never recorded, so the vision review could not name
+            // a single protected element -- it reported "protected: none" over a
+            // render whose concept and colour story were fully decided.
+            // Protection must not depend on an unrelated feature being on.
+            capturedBlueprint = bp;
+            capturedIntelligence = buildCreativeIntelligence({
+              blueprint: bp,
+              decision: dec,
+              productMeaning,
+              marketingInsight,
+              critic: critique,
+              diagnosis: diagnose(bp, report, concepts),
+              concepts,
+            });
+            console.log("[EXPERIMENT][CREATIVE_INTELLIGENCE]", intelligenceTelemetry(capturedIntelligence));
+          }
           // Phase 2-4. Six layers, all deterministic, all reading the blueprint
           // that already exists. Appended to the same budget as everything else.
           // Execution layer: geometry first, because typography places against
@@ -846,6 +917,8 @@ ${blueprintText}` : composed;
               blueprint: bp, productMeaning, marketingInsight,
               assetContext: assetCtx, geometry, copyRoles: roles,
             });
+            capturedGeometry = geometry;
+            capturedTypography = typography;
             const composition = buildComposition({ blueprint: bp, decision: dec, visualDNA });
             const doc = buildCreativeDocument({ geometry, typography, composition, blueprint: bp });
             const critique = critiqueRender({ blueprint: bp, geometry, typography, prompt: composedPrompt });
@@ -904,8 +977,39 @@ ${blueprintText}` : composed;
             // priority order, while they fit: a half-printed composition is
             // worse than an absent one, because a renderer reads a truncated
             // layer list as a complete one.
-            const sections = [renderDesignSystem(ds), renderComposition(comp), renderAssets(assets)]
-              .filter(Boolean) as string[];
+            // What the uploaded product actually is, read from the analyzer
+            // that already looked at it. First in the list on purpose: these
+            // are OBSERVED facts about the customer's object, and the standing
+            // order of authority in this engine puts what was seen above what
+            // was reasoned. When the budget is tight the derived sections are
+            // the ones that should fall away, not the product's real surface.
+            const assetDna = buildAssetDNA({
+              visualDNA,
+              supportingRoles: assets.assets.map((a) => a.asset),
+            });
+            // Standing preferences, supplied by the caller. This layer does not
+            // know or ask whose they are -- it receives sentences.
+            //
+            // Last in the section list on purpose: a preference assists, so
+            // when the budget is tight it is the first thing to fall away,
+            // never the product's observed surface or the director's decisions
+            // for the brief actually in front of it.
+            const prefs = decision.standingPreferences || [];
+            const prefText = prefs.length
+              ? [
+                  "STANDING CREATIVE PREFERENCES",
+                  "Apply these only where the brief above does not already say otherwise.",
+                  ...prefs.map((p) => `- ${p}`),
+                ].join("\n")
+              : undefined;
+
+            const sections = [
+              renderAssetDNA(assetDna),
+              renderDesignSystem(ds),
+              renderComposition(comp),
+              renderAssets(assets),
+              prefText,
+            ].filter(Boolean) as string[];
             const kept: string[] = [];
             let used = 0;
             for (const section of sections) {
@@ -918,6 +1022,8 @@ ${blueprintText}` : composed;
               ...designSystemTelemetry(ds),
               ...compositionTelemetry(comp),
               ...assetTelemetry(assets),
+              ...assetDNATelemetry(assetDna),
+              standing_preferences: prefs.length,
               ...structureTelemetry(structure),
               ...adaptationTelemetry(formats),
               ...projectTelemetry(project),
@@ -999,7 +1105,7 @@ ${text || ""}`,
 
       const innerConcurrent = options?.generationProvider || new ImgStudioImageGenerationProvider();
       try {
-        return await StablePipeline.run(request, {
+        const generated = await StablePipeline.run(request, {
           ...options,
           ...cdAuthorityOptions,
           ...(earlyStrategy ? { precomputedStrategy: earlyStrategy } : {}),
@@ -1016,6 +1122,22 @@ ${text || ""}`,
             blueprintFor
           ),
         });
+
+        // The intelligence the closure captured during generation, handed to
+        // the interface. Spread conditionally so a run that produced none
+        // returns exactly the object it always returned.
+        //
+        // The vision review deliberately does NOT happen here. It used to, and
+        // wiring it at each render site meant remembering every branch -- which
+        // failed immediately, leaving the loop enabled and unreachable on the
+        // common path. It now runs once in PipelineRouter, above both
+        // pipelines, where there is exactly one place to forget.
+        return ExperimentPipeline.attachDesignContext(
+          capturedIntelligence ? { ...generated, creativeIntelligence: capturedIntelligence } : generated,
+          capturedBlueprint,
+          capturedTypography,
+          capturedGeometry,
+        );
       } catch (err: any) {
         console.error("[EVOLUTION][EXPERIMENT] generation failed", {
           error: err?.message || String(err),
@@ -1127,7 +1249,7 @@ ${text || ""}`,
 
 
     try {
-      return await StablePipeline.run(effectiveRequest, {
+      const generated = await StablePipeline.run(effectiveRequest, {
         ...options,
         ...cdAuthorityOptions,
         ...(earlyStrategy ? { precomputedStrategy: earlyStrategy } : {}),
@@ -1143,6 +1265,19 @@ ${text || ""}`,
           blueprintFor
         ),
       });
+
+      // The intelligence the closure captured during generation, handed to the
+      // interface. Spread conditionally so a run that produced none returns
+      // exactly the object it always returned.
+      //
+      // The vision review runs above this, in PipelineRouter. See the note at
+      // the concurrent branch for why it is not here.
+      return ExperimentPipeline.attachDesignContext(
+        capturedIntelligence ? { ...generated, creativeIntelligence: capturedIntelligence } : generated,
+        capturedBlueprint,
+        capturedTypography,
+        capturedGeometry,
+      );
     } catch (err: any) {
       console.error("[EVOLUTION][EXPERIMENT] generation failed", {
         error: err?.message || String(err),

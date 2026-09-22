@@ -47,3 +47,6 @@ next-env.d.ts
 .benchmark-out/
 .human-benchmark/
 data/evolution/generation-log.jsonl
+
+# Account credentials and sessions. Never commit these.
+data/accounts/

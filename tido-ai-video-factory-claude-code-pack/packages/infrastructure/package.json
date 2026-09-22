@@ -1,0 +1,19 @@
+{
+  "name": "@tido/infrastructure",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@tido/shared": "workspace:*",
+    "@supabase/supabase-js": "^2.116.0",
+    "firebase-admin": "^14.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.0.0"
+  }
+}

@@ -114,6 +114,108 @@ export interface AIStrategy {
   negative_prompt: string;
 }
 
+/** One thing the AI decided, and what made it decide that. */
+export interface CreativeReason {
+  what: string;
+  why?: string;
+  confidence?: "low" | "medium" | "high";
+}
+
+/** One creative direction the AI developed. */
+export interface ConceptOption {
+  name: string;
+  idea: string;
+  reason: string;
+  selected: boolean;
+}
+
+/**
+ * What the creative system decided, in human language.
+ *
+ * Mirrors the backend view contract exactly. Every field is optional because
+ * the backend omits anything nothing decided -- an absent field means the
+ * system did not decide it, and the panel must show that rather than invent
+ * filler. This product has twice had to remove confident-looking placeholders.
+ */
+/**
+ * One change the design reasoning made, with what it was and what it became.
+ *
+ * `applied` is false when confidence was too low to act. Those are still shown
+ * -- a decision the AI considered and declined is worth more to a designer than
+ * silence, and hiding them would make the panel look more certain than the
+ * system is.
+ */
+export interface DesignDecision {
+  role?: string;
+  zone?: string;
+  problem: string;
+  decision: string;
+  reason: string;
+  decision_confidence: "high" | "medium" | "low";
+  from?: number | string;
+  to?: number | string;
+  applied: boolean;
+}
+
+export interface DesignDecisionResult {
+  typography_decisions: DesignDecision[];
+  layout_decisions: DesignDecision[];
+  /** What this pass deliberately left alone, named from the blueprint. */
+  protected_elements: string[];
+  untranslated: string[];
+}
+
+/** The two renders compared in words rather than by a score. */
+export interface DesignQualityComparison {
+  typography_quality: string;
+  layout_quality: string;
+  readability: string;
+  product_focus: string;
+  overall_reasoning: string;
+  recommendation: "first" | "second";
+}
+
+/** One thing a model reported seeing in the finished render. */
+export interface VisionNote {
+  what: string;
+  where?: string;
+  confidence?: "low" | "medium" | "high";
+}
+
+/**
+ * What a model saw when it looked at the render.
+ *
+ * `analyzed_image` is the field that matters. It is false whenever nothing
+ * actually looked -- the provider was down, the loop was off, the reply did not
+ * parse -- and the interface must never present an unseen verdict as an
+ * observation.
+ */
+export interface VisionAnalysis {
+  analyzed_image: boolean;
+  strengths: VisionNote[];
+  issues: VisionNote[];
+  typography_problems: VisionNote[];
+  layout_problems: VisionNote[];
+  product_accuracy: VisionNote[];
+  improvement_actions: { action: string; because?: string; area?: string; scope: string }[];
+  unavailable_reason?: string;
+}
+
+export interface CreativeIntelligence {
+  creative_summary?: string;
+  selected_direction?: string;
+  reasoning?: string;
+  audience_insight?: CreativeReason;
+  visual_strategy?: CreativeReason;
+  typography_reasoning?: CreativeReason;
+  composition_reasoning?: CreativeReason;
+  layout_reasoning?: CreativeReason;
+  critic_feedback?: string[];
+  improvement_suggestions?: string[];
+  concepts?: ConceptOption[];
+  undecided?: string[];
+}
+
 export interface PictureEngineError {
   code: string;
   message: string;

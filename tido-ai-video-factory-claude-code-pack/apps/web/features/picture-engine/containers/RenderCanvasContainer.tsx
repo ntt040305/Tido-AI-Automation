@@ -3,7 +3,11 @@
 import React, { useState } from "react";
 import { usePictureEngineStore } from "../stores/picture-engine.store";
 import { RenderCanvas } from "../components/canvas/RenderCanvas";
-import { createPictureAsset, downloadPictureAsset } from "../services/picture-engine.api";
+import {
+  createPictureAsset,
+  downloadPictureAsset,
+  recordApprovalSignal,
+} from "../services/picture-engine.api";
 import { TimelineStepItem } from "../components/generation/AIReasoningTimeline";
 
 export function RenderCanvasContainer() {
@@ -70,6 +74,9 @@ export function RenderCanvasContainer() {
         brief.brand_identity?.brand_name,
         brief.sales_context?.product_name
       );
+      // A download is the strongest signal this product gets that a render was
+      // good. It was previously recorded nowhere.
+      void recordApprovalSignal("download", currentAsset.asset_id);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Tải ảnh thất bại.";
       usePictureEngineStore.getState().setError({

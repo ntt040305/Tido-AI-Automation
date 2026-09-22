@@ -54,6 +54,11 @@ const SUITES = [
   "run-content-message-tests",
   "run-asset-reasoning-tests",
   "run-creative-quality-tests",
+  "run-creative-intelligence-tests",
+  "run-vision-loop-tests",
+  "run-asset-dna-tests",
+  "run-user-kit-tests",
+  "run-foundation-tests",
   "run-evolution-tests",
 ];
 

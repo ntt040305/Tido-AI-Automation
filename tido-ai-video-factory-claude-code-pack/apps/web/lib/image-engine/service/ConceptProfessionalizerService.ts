@@ -3,6 +3,7 @@ import {
   ConceptProfessionalizationRequest,
   ConceptProfessionalizationResult,
   ProductIdentityContext,
+  ProfessionalCreativeBrief,
 } from "../types";
 
 /**
@@ -129,6 +130,57 @@ export class ConceptProfessionalizerService {
   }
 
   /**
+   * Separates the paragraph from the thinking behind it.
+   *
+   * Returns a brief only when the model genuinely produced one. A field that
+   * came back empty, or as a placeholder the model filled just to satisfy the
+   * schema, is dropped rather than shown: this product has already had to
+   * remove placeholder brief text once, after it was silently locked in as the
+   * user's own stated intent.
+   */
+  private parseBrief(raw: string): { brief?: ProfessionalCreativeBrief; concept: string } {
+    const text = raw.trim();
+    const start = text.indexOf("{");
+    const end = text.lastIndexOf("}");
+    if (start === -1 || end <= start) return { concept: text };
+
+    let parsed: any;
+    try {
+      parsed = JSON.parse(text.slice(start, end + 1));
+    } catch {
+      // Not JSON after all. The paragraph is still worth returning.
+      return { concept: text };
+    }
+    if (!parsed || typeof parsed !== "object") return { concept: text };
+
+    const take = (v: unknown): string | undefined => {
+      if (typeof v !== "string") return undefined;
+      const t = v.trim();
+      if (!t || t.length < 3) return undefined;
+      // A model short on context reaches for these rather than omitting the
+      // field, which is the failure this guards against.
+      if (/^(n\/?a|none|unknown|tbd|null|undefined|-+)$/i.test(t)) return undefined;
+      return t.length > 400 ? t.slice(0, 397) + "..." : t;
+    };
+
+    const brief: ProfessionalCreativeBrief = {};
+    for (const k of [
+      "audience",
+      "emotion",
+      "creative_angle",
+      "visual_story",
+      "visual_direction",
+      "execution_reasoning",
+    ] as const) {
+      const v = take(parsed[k]);
+      if (v) brief[k] = v;
+    }
+
+    const concept = take(parsed.concept) || text;
+    return { ...(Object.keys(brief).length > 0 ? { brief } : {}), concept };
+  }
+
+  /**
    * Expands a simple user concept into a professional commercial advertising concept,
    * automatically integrating product identity context when reference images exist.
    */
@@ -189,8 +241,20 @@ export class ConceptProfessionalizerService {
             identityRulesSection +
             `\nREQUIREMENTS:\n` +
             `- Do NOT use technical AI prompt jargon (such as "35mm", "unreal engine", "8k", "octane render").\n` +
-            `- Do NOT write intros, commentary, or markdown formatting.\n` +
-            `- Output MUST be a single cohesive text paragraph under 1000 characters.`,
+            `- Do NOT write intros, commentary, or markdown code fences.\n\n` +
+            `OUTPUT FORMAT — a single JSON object, nothing around it:\n` +
+            `{\n` +
+            `  "concept": "one cohesive paragraph under 1000 characters",\n` +
+            `  "audience": "who this speaks to",\n` +
+            `  "emotion": "what it should make them feel",\n` +
+            `  "creative_angle": "the angle taken, and what it passes over",\n` +
+            `  "visual_story": "the story the picture tells",\n` +
+            `  "visual_direction": "how it should look",\n` +
+            `  "execution_reasoning": "why these choices"\n` +
+            `}\n\n` +
+            `Omit any field the user's idea gives you no basis for. An absent ` +
+            `field is correct; a guessed one is not. Never invent a brand, a ` +
+            `market, a price or a demographic the user did not imply.`,
         },
         {
           role: "user" as const,
@@ -205,11 +269,17 @@ export class ConceptProfessionalizerService {
       const rawResponse = await this.llmProvider.generateChatCompletion(
         messages,
         "concept_professionalizer",
-        { temperature: 0.7, max_tokens: 400 }
+        { temperature: 0.7, max_tokens: 900 }
       );
 
+      // The model is asked for JSON, but this path has to survive it answering
+      // in prose anyway -- an older gateway, a truncated response, a model that
+      // ignores the instruction. When structure does not parse, the service
+      // degrades to exactly what it returned before: a paragraph.
+      const { brief, concept } = this.parseBrief(rawResponse || "");
+
       // Clean up response: remove quotes, markdown headers, and trim
-      let cleaned = (rawResponse || "")
+      let cleaned = (concept || "")
         .replace(/^["'`]+|["'`]+$/g, "")
         .replace(/^[#*-\s]+/g, "")
         .trim();
@@ -227,12 +297,17 @@ export class ConceptProfessionalizerService {
         inputLength: rawConcept.length,
         outputLength: finalOutput.length,
         referenceAvailable: identityContext.referenceAvailable,
+        // Counts only. The brief is the user's creative thinking and never
+        // belongs in a log line.
+        structured: Boolean(brief),
+        briefFields: brief ? Object.keys(brief).length : 0,
       });
 
       return {
         originalConcept: rawConcept,
         professionalConcept: finalOutput,
         wasOptimized,
+        ...(brief ? { brief } : {}),
       };
     } catch (err: any) {
       console.warn(`[ConceptProfessionalizerService] Falling back to original concept due to error: ${err?.message}`);

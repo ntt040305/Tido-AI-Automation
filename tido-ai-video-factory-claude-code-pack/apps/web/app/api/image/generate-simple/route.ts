@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PipelineRouter } from "@/lib/image-engine/evolution/PipelineRouter";
+import { getIdentityProvider } from "@tido/infrastructure";
+import { fileKitStore } from "@/lib/user-kit/kit-store";
+import { preferenceDecisions } from "@/lib/image-engine/evolution/experiment/UserKit";
 import { SimpleInputRequestV1, AssetRoleV1 } from "@/lib/image-engine/types";
 
 export const runtime = "nodejs";
@@ -208,8 +211,35 @@ export async function POST(req: NextRequest) {
       // internal routing must not depend on who a user is, and the value is
       // written to the comparison log where personal identifiers do not belong.
       const testerId = req.headers.get("x-tido-tester-id") || undefined;
+
+      // What this person keeps asking for, resolved here rather than in the
+      // engine. The lookup needs an account; the engine must never have one,
+      // so it is done on this side of the boundary and only the resulting
+      // sentences cross it.
+      //
+      // Only preferences that already passed the kit's own threshold are
+      // included, so nothing here is a single render being mistaken for a
+      // taste. Signing out simply yields none.
+      let standingPreferences: string[] | undefined;
+      try {
+        // Firebase is the only thing that decides who this is. A verified
+        // token or nobody -- an id in a header or a body is a claim, not an
+        // identity.
+        const identity = await getIdentityProvider().identify(req);
+        if (identity) {
+          const kit = fileKitStore.load(identity.firebaseUid);
+          const active = preferenceDecisions(kit);
+          if (active.length) standingPreferences = active.map((p) => p.decision.value);
+        }
+      } catch (e) {
+        // Memory is an assist. A failure to read it is never a failure to render.
+        console.warn(
+          "[USER_KIT] preferences unavailable:",
+          e instanceof Error ? e.message : String(e),
+        );
+      }
       result = await Promise.race([
-        PipelineRouter.run(simpleRequest, undefined, { testerId }),
+        PipelineRouter.run(simpleRequest, undefined, { testerId, standingPreferences }),
         timeoutPromise,
       ]);
     } finally {
@@ -244,6 +274,15 @@ export async function POST(req: NextRequest) {
           aspectRatio: result.aspectRatio,
           error: result.error,
           diagnostics: result.diagnostics,
+      // What the creative system decided, in human language. Absent when the
+      // experiment pipeline did not run or the brain produced nothing, so a
+      // consumer that ignores it sees exactly the response it always saw.
+      ...(result.creativeIntelligence ? { creativeIntelligence: result.creativeIntelligence } : {}),
+      ...(result.visionAnalysis ? { visionAnalysis: result.visionAnalysis } : {}),
+      ...(result.visionReview ? { visionReview: result.visionReview } : {}),
+      ...(result.designDecisions ? { designDecisions: result.designDecisions } : {}),
+      ...(result.designComparison ? { designComparison: result.designComparison } : {}),
+      ...(result.renderComparison ? { renderComparison: result.renderComparison } : {}),
         },
         { status: httpStatus }
       );
@@ -261,6 +300,15 @@ export async function POST(req: NextRequest) {
       contractAsset: result.contractAsset,
       strategy: result.strategy,
       diagnostics: result.diagnostics,
+      // What the creative system decided, in human language. Absent when the
+      // experiment pipeline did not run or the brain produced nothing, so a
+      // consumer that ignores it sees exactly the response it always saw.
+      ...(result.creativeIntelligence ? { creativeIntelligence: result.creativeIntelligence } : {}),
+      ...(result.visionAnalysis ? { visionAnalysis: result.visionAnalysis } : {}),
+      ...(result.visionReview ? { visionReview: result.visionReview } : {}),
+      ...(result.designDecisions ? { designDecisions: result.designDecisions } : {}),
+      ...(result.designComparison ? { designComparison: result.designComparison } : {}),
+      ...(result.renderComparison ? { renderComparison: result.renderComparison } : {}),
     });
     const tSent = Date.now();
 

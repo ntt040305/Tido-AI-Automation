@@ -596,7 +596,16 @@ export interface RetrievalResult {
 
 export interface CopyItemInput {
   text: string;
-  type?: "headline" | "subheadline" | "product_name" | "price" | "cta" | "other";
+  /**
+   * What job this string does in the frame.
+   *
+   * Read at USER tier by the creative blueprint: a role the client assigned
+   * outranks the director's reading of the same strings. "offer" was missing
+   * from this union although `TypographySystem` and the hierarchy ladder have
+   * always handled OFFER, so an offer supplied by the client could not be
+   * typed and arrived as an unlabelled string.
+   */
+  type?: "headline" | "subheadline" | "product_name" | "price" | "offer" | "cta" | "other";
 }
 
 export interface ProductReferenceInput {
@@ -1329,6 +1338,32 @@ export interface PictureStrategyDiagnostics {
 
 export interface SimpleImageGenerationResultV1 {
   success: boolean;
+  /**
+   * What the creative system decided, translated for a person.
+   *
+   * Optional and additive: every existing consumer ignores it and behaves
+   * exactly as before. Present only on the experiment pipeline with the
+   * creative brain on, and populated only from decisions that were actually
+   * made -- an absent field means nothing decided it, never that the view was
+   * too lazy to look.
+   */
+  creativeIntelligence?: import("./evolution/experiment/CreativeIntelligenceView").CreativeIntelligence;
+  /**
+   * What a vision model saw in the finished render.
+   *
+   * Present only when the vision loop ran. `analyzed_image` inside it is the
+   * field that matters: it is false whenever nothing actually looked, and no
+   * consumer should treat a finding as observed without checking it.
+   */
+  visionAnalysis?: import("./evolution/experiment/VisionAnalysisResult").VisionAnalysisResult;
+  /** What the design reasoning decided, and what it refused to touch. */
+  designDecisions?: import("./evolution/experiment/VisionDesignDecisionEngine").DesignDecisionResult;
+  /** The two renders compared as a designer would compare them. */
+  designComparison?: import("./evolution/experiment/VisionDesignDecisionEngine").DesignQualityComparison;
+  /** Counts describing what the review did. No finding text. */
+  visionReview?: import("./evolution/VisionReviewLayer").VisionReviewTelemetry;
+  /** Which of two renders was kept, and why. Present only when a second ran. */
+  renderComparison?: import("./evolution/experiment/RenderIterationService").RenderComparisonResult;
   generationId: string;
   status:
   | "COMPLETED"
@@ -1406,10 +1441,44 @@ export interface ConceptProfessionalizationRequest {
   productManifest?: ProductManifest;
 }
 
+/**
+ * The thinking behind a professionalised idea, broken out.
+ *
+ * "Chuyen nghiep hoa y tuong" used to return one polished paragraph, which
+ * read well and taught nothing: a user could see their idea had improved but
+ * not what had been decided or why, so they could not accept part of it and
+ * reject the rest.
+ *
+ * Every field is optional and absent rather than empty. The model fills what
+ * the idea actually supports; a one-line idea with no audience in it yields no
+ * audience, because inventing one would put a stranger's assumption in front of
+ * the user as their own insight.
+ */
+export interface ProfessionalCreativeBrief {
+  /** Who this speaks to. */
+  audience?: string;
+  /** What it should make them feel. */
+  emotion?: string;
+  /** The angle taken, and what was passed over. */
+  creative_angle?: string;
+  /** The story the picture tells. */
+  visual_story?: string;
+  /** How it should look. */
+  visual_direction?: string;
+  /** Why these choices, in the director's words. */
+  execution_reasoning?: string;
+}
+
 export interface ConceptProfessionalizationResult {
   originalConcept: string;
   professionalConcept: string;
   wasOptimized?: boolean;
+  /**
+   * Present when the model returned structured thinking and it parsed.
+   * Absent on the prose fallback -- the paragraph is still returned, so
+   * nothing that consumed this before is affected.
+   */
+  brief?: ProfessionalCreativeBrief;
 }
 
 

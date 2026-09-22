@@ -20,7 +20,9 @@
     ],
     "paths": {
       "@/*": ["./*"],
-      "@tido/contracts": ["../../packages/contracts/src/index.ts"]
+      "@tido/contracts": ["../../packages/contracts/src/index.ts"],
+      "@tido/shared": ["../../packages/shared/src/index.ts"],
+      "@tido/infrastructure": ["../../packages/infrastructure/src/index.ts"]
     }
   },
   "include": [

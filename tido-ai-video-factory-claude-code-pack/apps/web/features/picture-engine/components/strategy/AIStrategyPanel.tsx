@@ -1,18 +1,35 @@
 "use client";
 
 import React from "react";
-import { AIStrategy, CreativeBrief } from "../../types/picture-engine.types";
+import {
+  AIStrategy,
+  CreativeBrief,
+  CreativeIntelligence,
+  VisionAnalysis,
+  DesignDecisionResult,
+} from "../../types/picture-engine.types";
 import { KnowledgeInsightPanel } from "./KnowledgeInsightPanel";
-import { Brain, Target, ShieldCheck, TrendingUp, Sparkles } from "lucide-react";
+import { CreativeDirectionPanel } from "./CreativeDirectionPanel";
+import { Brain, Target, ShieldCheck, Sparkles } from "lucide-react";
 
 export interface AIStrategyPanelProps {
   strategy: AIStrategy | null;
+  /** What the creative system decided. Null until a run produces one. */
+  intelligence?: CreativeIntelligence | null;
+  vision?: VisionAnalysis | null;
+  decisions?: DesignDecisionResult | null;
+  /** Folds the AI's own suggestions back into the brief the user can see. */
+  onApplySuggestions?: (suggestions: string[]) => void;
   brief: CreativeBrief;
   isGenerating?: boolean;
 }
 
 export function AIStrategyPanel({
   strategy,
+  intelligence,
+  vision,
+  decisions,
+  onApplySuggestions,
   brief,
   isGenerating,
 }: AIStrategyPanelProps) {
@@ -34,6 +51,15 @@ export function AIStrategyPanel({
           </div>
         </div>
       </div>
+
+      {/* The AI's own account of what it decided. Renders nothing until a run
+          produces real decisions, so an empty state stays empty. */}
+      <CreativeDirectionPanel
+        intelligence={intelligence ?? null}
+        vision={vision ?? null}
+        decisions={decisions ?? null}
+        onApplySuggestions={onApplySuggestions}
+      />
 
       {/* 1. CAMPAIGN UNDERSTANDING */}
       <div className="space-y-2">
@@ -96,21 +122,23 @@ export function AIStrategyPanel({
         </div>
       </div>
 
-      {/* 5. COMMERCIAL PREDICTION / ESTIMATE */}
-      <div className="p-3.5 bg-gradient-to-r from-accent/15 to-aiGlow/15 border border-accent/30 rounded-xl space-y-1">
-        <div className="flex items-center justify-between text-[12px] font-semibold text-text">
-          <span className="flex items-center gap-1.5">
-            <TrendingUp size={14} className="text-emerald-400" />
-            <span>AI Creative Score Estimate</span>
-          </span>
-          <span className="font-mono text-emerald-400 font-bold text-[13px]">
-            94 / 100
-          </span>
-        </div>
-        <p className="text-[11px] text-text3 leading-relaxed">
-          Đánh giá điểm thương mại cao dựa trên khả năng thu hút góc nhìn F&B và khoảng trống an toàn chữ cho thiết bị di động.
-        </p>
-      </div>
+      {/* There was a "94 / 100 AI Creative Score Estimate" here, with a
+          paragraph about F&B appeal and mobile safe areas. Both were constants
+          in the source. They did not vary by product, by brief, by render or by
+          anything the engine computed — the same 94 appeared under every image
+          this product has ever made, including the ones the vision review later
+          found to have misspelled text.
+
+          A fabricated number is worse than no number, because it is the one
+          element of the panel a user will quote back. Everything else here is
+          read from a real decision; this was the single exception, and the rest
+          of the panel was lending it credibility.
+
+          Nothing replaces it. The system genuinely does not score a render
+          numerically, and `DesignQualityComparison` states in words what
+          changed between two versions precisely because a soft judgement
+          rendered as a number invites a threshold. When there is a real score
+          to show, it can go here. */}
     </div>
   );
 }

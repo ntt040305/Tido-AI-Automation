@@ -54,6 +54,22 @@ export function CreativeBriefPanel({
   const [professionalResult, setProfessionalResult] = useState<{
     originalConcept: string;
     professionalConcept: string;
+    /**
+     * The thinking behind the polished paragraph, when the model produced it.
+     *
+     * A single improved paragraph reads well and teaches nothing — the user
+     * sees that their idea got better but not what was decided, so they cannot
+     * keep the angle and drop the styling. Fields the model had no basis for
+     * are absent, never blank rows.
+     */
+    brief?: {
+      audience?: string;
+      emotion?: string;
+      creative_angle?: string;
+      visual_story?: string;
+      visual_direction?: string;
+      execution_reasoning?: string;
+    };
   } | null>(null);
 
   const PRODUCT_COUNT_OPTIONS: Array<{ label: string; value: number | "multiple" }> = [
@@ -117,6 +133,7 @@ export function CreativeBriefPanel({
         setProfessionalResult({
           originalConcept: data.originalConcept || currentConcept,
           professionalConcept: data.professionalConcept,
+          ...(data.brief ? { brief: data.brief } : {}),
         });
       }
     } catch (err) {
@@ -295,6 +312,39 @@ export function CreativeBriefPanel({
                   {professionalResult.professionalConcept}
                 </p>
               </div>
+
+              {/* The reasoning, when there is any.
+                  Rendered row by row so an absent field simply does not
+                  appear — a labelled empty row would read as a system that
+                  decided nothing, which is worse than saying less. */}
+              {professionalResult.brief &&
+                Object.keys(professionalResult.brief).length > 0 && (
+                  <div className="pt-1 space-y-2">
+                    {(
+                      [
+                        ["audience", "Người xem"],
+                        ["emotion", "Cảm xúc"],
+                        ["creative_angle", "Góc sáng tạo"],
+                        ["visual_story", "Câu chuyện hình ảnh"],
+                        ["visual_direction", "Hướng hình ảnh"],
+                        ["execution_reasoning", "Vì sao chọn cách này"],
+                      ] as const
+                    ).map(([key, label]) => {
+                      const value = professionalResult.brief?.[key];
+                      if (!value) return null;
+                      return (
+                        <div key={key} className="flex gap-2.5">
+                          <span className="text-[10.5px] font-mono text-text3 uppercase tracking-wider shrink-0 w-[92px] pt-[2px]">
+                            {label}
+                          </span>
+                          <p className="text-[12px] text-text2 leading-relaxed flex-1">
+                            {value}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
             </div>
 
             <div className="flex items-center gap-2 pt-1">
@@ -310,14 +360,14 @@ export function CreativeBriefPanel({
                 }}
                 className="flex-1 py-2 px-3 bg-amber-500 hover:bg-amber-400 text-black font-bold text-[12px] rounded-lg transition-all shadow-md cursor-pointer"
               >
-                [ Dùng ý tưởng này ]
+                [ Áp dụng ý tưởng ]
               </button>
               <button
                 type="button"
                 onClick={() => setProfessionalResult(null)}
                 className="py-2 px-3 bg-surface2 hover:bg-surface2/80 text-text2 font-semibold text-[12px] rounded-lg transition-all border border-border cursor-pointer"
               >
-                [ Chỉnh sửa ]
+                [ Giữ ý tưởng ban đầu ]
               </button>
             </div>
           </div>

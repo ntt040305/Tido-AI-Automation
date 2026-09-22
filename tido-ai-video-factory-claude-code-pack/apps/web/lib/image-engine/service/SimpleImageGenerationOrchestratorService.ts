@@ -19,6 +19,10 @@ import {
 } from "../types";
 import { SimpleInputValidatorV1 } from "../validation/SimpleInputValidatorV1";
 import { KnowledgeRouterService, isReferenceImageRequired } from "./KnowledgeRouterService";
+import {
+  buildCreativeIntelligence,
+  type CreativeIntelligence,
+} from "../evolution/experiment/CreativeIntelligenceView";
 import { SimpleInputAdapterService } from "./SimpleInputAdapterService";
 import { LocalGeneratedImageStorage } from "../storage/LocalGeneratedImageStorage";
 import { MarketingBrainService } from "../llm/marketing-brain.service";
@@ -961,10 +965,35 @@ export class SimpleImageGenerationOrchestratorService {
 
       console.log("[PIPELINE_TIMING]", pipeline_timing);
 
+      // The reasoning behind the picture, for the person who asked for it.
+      //
+      // This is ADDITIVE and runs after the image exists. It reads the
+      // marketing strategy computed back at stage 01.5 and already fed to the
+      // compiler -- no new model call, no new input to the renderer, nothing
+      // above this line changed. The image returned is byte-identical to what
+      // this pipeline returned before.
+      //
+      // Why here rather than in the director: the richer, blueprint-backed
+      // intelligence needs a Creative Director, and the director does not run
+      // on this path. Running it would add a call and change the prompt, which
+      // is the one thing this must not do. So stable shows what stable
+      // genuinely knows -- the angle, the audience, the craft intent -- and the
+      // fields only a director can fill (the routes considered, the critic's
+      // findings) stay absent instead of being faked.
+      let creativeIntelligence: CreativeIntelligence | undefined;
+      try {
+        const view = buildCreativeIntelligence({ strategy: groqStrategy });
+        if (Object.keys(view).length > 0) creativeIntelligence = view;
+      } catch (e: any) {
+        // A view is never worth a failed render.
+        console.warn("[SIMPLE][INTELLIGENCE] skipped:", e?.message || String(e));
+      }
+
       return {
         success: true,
         generationId,
         status: "COMPLETED",
+        ...(creativeIntelligence ? { creativeIntelligence } : {}),
         imageUrl: resolvedImageUrl,
         imageBuffer: providerRes.imageBuffer,
         useCase: adapted.useCase || "Poster",
