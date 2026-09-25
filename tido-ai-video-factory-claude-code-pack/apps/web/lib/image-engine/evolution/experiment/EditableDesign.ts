@@ -3,6 +3,7 @@ import type { CreativeDocument, DocumentElement } from "./CreativeDocument";
 import type { BrandKit } from "./BrandKit";
 import type { TypographyPlan } from "./TypographyPlan";
 import { colorFor, contrastRatio, normalizeHex } from "./BrandKit";
+import { fontStack as stackFor, needsVietnamese, selectPairing, type FontChoice } from "./FontIntelligence";
 import { buildCompositionMap, compositionMapTelemetry, type Box, type CompositionMap } from "./CompositionMap";
 import { layoutText, type BlockInput, type Role } from "./TextLayoutEngine";
 
@@ -158,19 +159,25 @@ export interface PlanInput {
    * separately.
    */
   plan?: TypographyPlan | null;
+  /**
+   * The commercial category, when the brief states one. Only the typeface
+   * selector reads it: a food headline and a luxury headline want different
+   * letterforms even at the same typographic personality.
+   */
+  category?: string | null;
 }
 
 const ROLES = new Set(["headline", "subheadline", "body", "cta"]);
 const round = (n: number) => Math.round(n * 100) / 100;
 
-/** A serviceable face per class, used only when the brand names none. */
-const DEFAULT_FAMILY: Record<string, { family: string; fallback: "serif" | "sans-serif" }> = {
-  serif: { family: "Georgia", fallback: "serif" },
-  "slab-serif": { family: "Rockwell", fallback: "serif" },
-  script: { family: "Georgia", fallback: "serif" },
-  "display-sans": { family: "Arial", fallback: "sans-serif" },
-  "sans-serif": { family: "Arial", fallback: "sans-serif" },
-};
+/**
+ * Phase 5.6.6 — faces come from `FontIntelligence`, not from a table here.
+ *
+ * This used to name Georgia for serif and Arial for everything else. Georgia
+ * has no `ả ặ ư ơ ễ ỹ ụ` on this platform, so Vietnamese serif headlines were
+ * drawn PER CHARACTER from two different typefaces. The selector verifies
+ * coverage before it names a face.
+ */
 
 function weightOf(role: string, prose: string | undefined): number {
   const p = String(prose || "").toLowerCase();
@@ -290,13 +297,25 @@ export function planEditableDesign(input: PlanInput): EditableDesign {
   // ── text: one layer per exact line, set by the layout engine ────────
   const plan = input.plan ?? doc.typography_plan ?? null;
   const textEls = doc.elements.filter((e) => e.type === "text" && e.content);
+  // One pairing for the whole design: hierarchy should come from two faces
+  // used consistently, not from a different decision per line.
+  const copyLines = doc.elements.filter((e) => e.type === "text" && e.content).map((e) => String(e.content));
+  const viCopy = needsVietnamese(copyLines);
+  const pairing = selectPairing({
+    personality: input.plan?.style?.personality ?? null,
+    category: input.category ?? null,
+    brandFamily: kit?.fonts?.heading ?? null,
+    lines: copyLines,
+  });
+
   const planned = new Map((plan?.blocks || []).map((b) => [b.content, b]));
 
   const blockInputs: BlockInput[] = textEls.map((el) => {
     const role = (ROLES.has(String(el.role)) ? el.role : "body") as Role;
     const st = el.style || {};
     const cls = String(st.font_class || "sans-serif");
-    const def = DEFAULT_FAMILY[cls] || DEFAULT_FAMILY["sans-serif"];
+    const wantsSerif = /serif/.test(cls) && cls !== "sans-serif" && cls !== "display-sans";
+    const def = wantsSerif ? pairing.heading : role === "headline" ? pairing.heading : pairing.body;
     const p = planned.get(el.content);
     const align = st.text_align === "left" ? "left" : st.text_align === "right" ? "right" : "center";
     return {
@@ -307,8 +326,10 @@ export function planEditableDesign(input: PlanInput): EditableDesign {
       max_lines: p?.max_lines ?? DEFAULT_MAX_LINES[role],
       scale: p?.scale ?? el.text?.scale ?? 1,
       alignment: (p?.alignment ?? align) as BlockInput["alignment"],
-      font_family: st.font_family || def.family,
-      font_fallback: def.fallback,
+      // The brand's face when the kit named one the selector accepted;
+      // otherwise the chosen face. Never a family that cannot draw the copy.
+      font_family: def.brand_font ? def.family : st.font_family && !viCopy ? st.font_family : def.family,
+      font_fallback: def.fallback === "monospace" ? "sans-serif" : def.fallback,
       font_weight: weightOf(role, st.font_weight),
       line_height: st.line_height || 1.2,
       letter_spacing: trackingOf(st.letter_spacing),
@@ -436,6 +457,8 @@ export function editableSvg(
       // The brand's face first; then faces that exist on common systems, so a
       // missing brand font degrades to the right CLASS rather than to whatever
       // the rasteriser picks.
+      // Kept in sync with FontIntelligence.fontStack: the fallbacks named here
+      // must themselves carry Vietnamese, or the fallback reintroduces the bug.
       const stack = l.font_fallback === "serif"
         ? "Georgia, 'Times New Roman', 'DejaVu Serif', serif"
         : "Arial, Helvetica, 'Liberation Sans', 'DejaVu Sans', sans-serif";
