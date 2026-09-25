@@ -15,3 +15,7 @@ data/
 tmp/
 renders/
 .verify-build/
+# Benchmark runs: images and reports are large and machine-specific. The
+# dataset and harness are code and ARE tracked; a stored run is evidence,
+# kept locally and shared deliberately.
+apps/web/data/benchmarks/creative-quality/
