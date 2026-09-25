@@ -401,15 +401,23 @@ async function main() {
     );
   });
 
-  await check("The loop is gated on vision_iteration_v1 and that flag is off", () => {
+  await check("The loop is core architecture, and the kill switch still turns it off", () => {
+    // Phase 5.5.5 made the review part of the one pipeline: every render gets
+    // it, which is a model call per render by design. The gate is kept, because
+    // the kill switch is how that spend is stopped in an outage.
     const src = fs.readFileSync(path.join(__dirname, "evolution/VisionReviewLayer.ts"), "utf8");
     assert.ok(/vision_iteration_v1/.test(src), "the review is not gated on the flag");
-    const { DEFAULT_FLAGS } = require("./evolution/feature-flags");
-    assert.strictEqual(
-      DEFAULT_FLAGS.features.vision_iteration_v1,
-      false,
-      "the vision loop is on by default, which spends a model call on every render",
-    );
+    const { DEFAULT_FLAGS, CORE_FEATURES, readFlags } = require("./evolution/feature-flags");
+    assert.ok(CORE_FEATURES.includes("vision_iteration_v1"), "the review is not core");
+    assert.strictEqual(DEFAULT_FLAGS.features.vision_iteration_v1, true, "the review is off by default");
+    const prev = process.env.TIDO_PIPELINE_KILL_SWITCH;
+    process.env.TIDO_PIPELINE_KILL_SWITCH = "true";
+    try {
+      assert.strictEqual(readFlags().features.vision_iteration_v1, false, "the kill switch cannot stop the review");
+    } finally {
+      if (prev === undefined) delete process.env.TIDO_PIPELINE_KILL_SWITCH;
+      else process.env.TIDO_PIPELINE_KILL_SWITCH = prev;
+    }
   });
 
   await check("The review happens once, above both pipelines", () => {
@@ -432,7 +440,7 @@ async function main() {
 
   await check("The review runs after generation, never before", () => {
     const router = fs.readFileSync(path.join(__dirname, "evolution/PipelineRouter.ts"), "utf8");
-    const ran = router.indexOf("await StablePipeline.run(request, options)");
+    const ran = router.indexOf("await ExperimentPipeline.run(request, options, decision)");
     const reviewed = router.indexOf("await reviewRender(");
     assert.ok(ran > 0 && reviewed > ran, "the review is positioned before the render completes");
   });
@@ -446,12 +454,13 @@ async function main() {
     assert.ok(gate > 0 && firstImport > gate, "vision modules are imported before the flag is checked");
   });
 
-  await check("Both pipelines are reachable by the correction re-render", () => {
+  await check("The correction re-renders through the one pipeline, never a second one", () => {
+    // Phase 5.5.5: there is no stable pipeline to re-render through.
     const router = fs.readFileSync(path.join(__dirname, "evolution/PipelineRouter.ts"), "utf8");
     const i = router.indexOf("await reviewRender(");
-    const block = router.slice(i, i + 500);
-    assert.ok(/ExperimentPipeline\.run\(correctedRequest/.test(block), "experiment cannot re-render");
-    assert.ok(/StablePipeline\.run\(correctedRequest/.test(block), "stable cannot re-render");
+    const block = router.slice(i, i + 1500);
+    assert.ok(/ExperimentPipeline\.run\(correctedRequest/.test(block), "the pipeline cannot re-render");
+    assert.ok(!/StablePipeline/.test(router), "the router still reaches a second pipeline");
   });
 
   await check("It cannot turn a finished render into a failed request", () => {

@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PipelineRouter } from "@/lib/image-engine/evolution/PipelineRouter";
-import { getIdentityProvider } from "@tido/infrastructure";
-import { fileKitStore } from "@/lib/user-kit/kit-store";
+import { getIdentityProvider, getInfrastructure } from "@tido/infrastructure";
+import { loadKitForIdentity } from "@/lib/user-kit/kit-memory";
+import { recallForBrief } from "@/lib/persistence/recall-memory";
 import { preferenceDecisions } from "@/lib/image-engine/evolution/experiment/UserKit";
+import { recordGeneration } from "@/lib/persistence/record-generation";
+import { loadBrandKitForRender, type LoadedBrandKit } from "@/lib/brand-kit/brand-kit-store";
 import { SimpleInputRequestV1, AssetRoleV1 } from "@/lib/image-engine/types";
 
 export const runtime = "nodejs";
@@ -20,6 +23,12 @@ export const runtime = "nodejs";
  */
 export async function POST(req: NextRequest) {
   const T_received = Date.now();
+  // Phase 5.4. The Brand Kit the client asked for. An id, not a kit: what it
+  // resolves to is decided below, against the verified person's workspaces.
+  let brandKitId: string | null = null;
+  // Phase 5.5. Editable mode was asked for. Honoured only for a verified
+  // person, below: the layered files it produces are account-scoped exports.
+  let editableRequested = false;
   let tFormDone = T_received;
   let tExtractDone = T_received;
   let tBuffersDone = T_received;
@@ -36,6 +45,8 @@ export async function POST(req: NextRequest) {
 
     if (contentType.includes("application/json")) {
       const body = await req.json();
+      brandKitId = typeof body.brandKitId === "string" && body.brandKitId ? body.brandKitId : null;
+      editableRequested = body.editableExport === true;
       simpleRequest = {
         images: body.images || body.references || [],
         concept: body.concept || "",
@@ -59,6 +70,8 @@ export async function POST(req: NextRequest) {
       const useCase = (formData.get("useCase") as string) || "Poster";
       const aspectRatio = (formData.get("aspectRatio") as string) || "1:1";
       const brandName = (formData.get("brandName") as string) || undefined;
+      brandKitId = (formData.get("brandKitId") as string) || null;
+      editableRequested = formData.get("editableExport") === "1";
 
       let marketingContext: any;
       let creativeDirection: any;
@@ -100,6 +113,9 @@ export async function POST(req: NextRequest) {
 
       const rawImages = formData.getAll("images");
       const rawInspirationImages = formData.getAll("inspirationImages");
+      // Phase 5.4: a logo arrives under its own key with an explicit role. In
+      // "images" it defaulted to PRODUCT and could be read as the product.
+      const rawLogoImages = formData.getAll("logoImages");
       tExtractDone = Date.now();
       const parsedImages: {
         reference_id: string;
@@ -145,6 +161,20 @@ export async function POST(req: NextRequest) {
             mimeType: item.type || "image/png",
             filename: item.name || `inspiration_${i + 1}.png`,
             role: "INSPIRATION_REFERENCE",
+          });
+        }
+      }
+
+      for (const item of rawLogoImages) {
+        if (item instanceof File) {
+          const arrayBuffer = await item.arrayBuffer();
+          attachmentBytes += arrayBuffer.byteLength;
+          parsedImages.push({
+            reference_id: `REF_${String(parsedImages.length + 1).padStart(2, "0")}`,
+            buffer: Buffer.from(arrayBuffer),
+            mimeType: item.type || "image/png",
+            filename: item.name || "logo.png",
+            role: "LOGO",
           });
         }
       }
@@ -200,17 +230,9 @@ export async function POST(req: NextRequest) {
     try {
       // The only line this phase changes in the stable request path.
       //
-      // `PipelineRouter.run` has the same signature as the orchestrator call it
-      // replaces and, with default flags, does exactly one extra thing: it reads
-      // a small JSON file, finds active_pipeline is "stable", and calls the same
-      // orchestrator with the same argument. Routing failures fall back to
-      // stable rather than propagating, so the worst case of this indirection is
-      // the behaviour that existed before it.
-      //
-      // The tester id comes from a header rather than from any account field:
-      // internal routing must not depend on who a user is, and the value is
-      // written to the comparison log where personal identifiers do not belong.
-      const testerId = req.headers.get("x-tido-tester-id") || undefined;
+      // Phase 5.5.5: every request is served by the one creative pipeline.
+      // There is no tester id and no rollout mode to consult; the old
+      // `x-tido-tester-id` header is ignored if a client still sends it.
 
       // What this person keeps asking for, resolved here rather than in the
       // engine. The lookup needs an account; the engine must never have one,
@@ -220,16 +242,72 @@ export async function POST(req: NextRequest) {
       // Only preferences that already passed the kit's own threshold are
       // included, so nothing here is a single render being mistaken for a
       // taste. Signing out simply yields none.
+      // Held for the persistence step below. Resolved from a verified token
+      // or null -- never from anything the client asserted.
+      let verifiedIdentity: Awaited<ReturnType<ReturnType<typeof getIdentityProvider>["identify"]>> = null;
       let standingPreferences: string[] | undefined;
+      // Phase 3.5. What this workspace's own kept work suggests, resolved on
+      // this side of the engine boundary like the preferences above it.
+      let creativeMemory: string[] | undefined;
+      // Phase 4.2. How each creative route has gone for this account, for the
+      // Creative Director's selection and the evaluator. Numbers only.
+      let routeEvidence: import("@/lib/image-engine/evolution/experiment/DirectionEvaluator").RouteEvidence[] | undefined;
+      // Phase 5.4: the Brand Kit, resolved for a verified person only, through
+      // the projects repository's membership check. Anonymous renders and ids
+      // the person cannot see resolve to nothing, silently: a kit is an
+      // assist, never a reason to fail a render.
+      let brandKit: LoadedBrandKit | null = null;
       try {
         // Firebase is the only thing that decides who this is. A verified
         // token or nobody -- an id in a header or a body is a claim, not an
         // identity.
         const identity = await getIdentityProvider().identify(req);
+        verifiedIdentity = identity;
         if (identity) {
-          const kit = fileKitStore.load(identity.firebaseUid);
+          // Phase 3.1 moved where this is stored, not what it does. The read
+          // was already here and is preserved exactly: the same threshold, the
+          // same sentences, the same `standingPreferences` field. Leaving it
+          // pointed at the JSON files after the migration would have made every
+          // migrated profile invisible to generation, which is a silent
+          // regression of a shipped feature rather than a deferral of a new one.
+          const kit = await loadKitForIdentity(identity);
           const active = preferenceDecisions(kit);
           if (active.length) standingPreferences = active.map((p) => p.decision.value);
+
+          // Assets already seen, and patterns this workspace's kept work shows.
+          // Capped and diversified before it crosses the boundary; an empty
+          // result means "render from the brief alone", which is what the
+          // system did for its whole life before it had a memory.
+          const recalled = await recallForBrief({
+            identity,
+            brief: simpleRequest.concept,
+            attachments: (simpleRequest.images || []) as { buffer?: Buffer }[],
+            kit,
+          });
+          if (recalled.sentences.length) creativeMemory = recalled.sentences;
+          if (recalled.routeEvidence.length) routeEvidence = recalled.routeEvidence;
+
+          if (brandKitId) {
+            const actor = await getInfrastructure().identity.resolveActor(identity);
+            brandKit = actor.ok ? await loadBrandKitForRender(actor.data, brandKitId) : null;
+            // The kit's logo goes to the renderer as the real mark, with an
+            // explicit role -- unless the person attached a logo themselves.
+            const images = (simpleRequest.images || []) as { role?: string }[];
+            if (brandKit?.logo && !images.some((i) => i.role === "LOGO")) {
+              simpleRequest.images = [
+                ...(simpleRequest.images || []),
+                {
+                  reference_id: `REF_${String(images.length + 1).padStart(2, "0")}`,
+                  buffer: brandKit.logo.buffer,
+                  mimeType: brandKit.logo.mimeType,
+                  filename: "brand-logo.png",
+                  role: "LOGO",
+                } as never,
+              ];
+            }
+            console.log("[BRAND_KIT]", { requested: true, resolved: Boolean(brandKit), logo_attached: Boolean(brandKit?.logo) });
+          }
+          console.log("[RECALL]", recalled.telemetry);
         }
       } catch (e) {
         // Memory is an assist. A failure to read it is never a failure to render.
@@ -238,10 +316,35 @@ export async function POST(req: NextRequest) {
           e instanceof Error ? e.message : String(e),
         );
       }
+      const startedAt = Date.now();
       result = await Promise.race([
-        PipelineRouter.run(simpleRequest, undefined, { testerId, standingPreferences }),
+        PipelineRouter.run(simpleRequest, undefined, {
+          standingPreferences,
+          creativeMemory,
+          routeEvidence,
+          brand: brandKit?.summary.kit ?? null,
+          editable: editableRequested && Boolean(verifiedIdentity),
+          // The same deadline this route enforces below. Handing it down lets
+          // the vision review decline a correction it cannot finish, instead
+          // of the race timing out and discarding a picture that already
+          // succeeded.
+          deadlineAt: Date.now() + timeoutMs,
+        }),
         timeoutPromise,
       ]);
+
+      // The picture exists by now. Everything past this line is a record of
+      // how it was made, and is not permitted to affect whether it is
+      // returned -- hence no await on a value and no branch on the outcome.
+      void recordGeneration({
+        request: simpleRequest,
+        result,
+        // The whole verified identity, so the profile keeps its email and name.
+        identity: verifiedIdentity,
+        // Phase 5.4: the run belongs to the brand it was made for.
+        ...(brandKit ? { projectId: brandKit.summary.id, orgId: brandKit.summary.org_id } : {}),
+        durationMs: Date.now() - startedAt,
+      });
     } finally {
       clearTimeout(timeoutId);
       tPipelineDone = Date.now();
@@ -309,6 +412,12 @@ export async function POST(req: NextRequest) {
       ...(result.designDecisions ? { designDecisions: result.designDecisions } : {}),
       ...(result.designComparison ? { designComparison: result.designComparison } : {}),
       ...(result.renderComparison ? { renderComparison: result.renderComparison } : {}),
+      // Phase 5.5. Whether this render has separate layers to export. False
+      // whenever Editable mode was not used or could not run (no director, no
+      // design document) -- the client then offers the PNG only.
+      editableExport: Boolean(
+        ((result as unknown as Record<string, unknown>).designDocument as { editable?: unknown } | undefined)?.editable,
+      ),
     });
     const tSent = Date.now();
 

@@ -268,19 +268,22 @@ export class SimpleInputAdapterService {
     }
 
     // 7. Map Exact Copy Items
-    const copyItems: CopyItemInput[] = (structuredIntent.extracted_copy_items || []).map((item) => {
-      let type: CopyItemInput["type"] = "other";
-      if (item.role === "HEADLINE") type = "headline";
-      else if (item.role === "SUBHEADLINE") type = "subheadline";
-      else if (item.role === "PRODUCT_NAME") type = "product_name";
-      else if (item.role === "PRICE") type = "price";
-      else if (item.role === "CTA") type = "cta";
-
-      return {
-        text: item.text,
-        type,
-      };
-    });
+    //
+    // Authorized copy comes ONLY from what the person typed as text: the
+    // content field (7b) and copy an API caller passed explicitly. Copy the
+    // router EXTRACTED from the concept is no longer rendered: it is a model's
+    // reading of the brief, it can paraphrase, and treating it as copy is how a
+    // render came to carry words nobody supplied -- or text at all when the
+    // content field was left empty. The extraction is still logged, so a brief
+    // that clearly wanted words is visible rather than silently ignored.
+    const extractedCopy = (structuredIntent.extracted_copy_items || []).filter((i) => i?.text);
+    if (extractedCopy.length) {
+      console.log("[SIMPLE][COPY_NOT_AUTHORIZED]", {
+        extracted_from_concept: extractedCopy.length,
+        reason: "only the content field and explicit copyItems are rendered as text",
+      });
+    }
+    const copyItems: CopyItemInput[] = [];
 
     // Also include any raw copyItems from request if not already present
     if (request.copyItems && request.copyItems.length > 0) {

@@ -3,6 +3,22 @@ import fs from "fs";
 import path from "path";
 import { detectDuplicates, RenderHashRow } from "./benchmark/render-run-integrity";
 
+// Phase 5.5.5 — this benchmark is retired. It compared OFF and ON arms of
+// `creative_director_control_v1`, `creative_bridge_v1`, strategy selection and
+// staging; its result is why those are now CORE features, which no flag file
+// can switch off. Run today, both arms would be the same pipeline and the
+// report would read "no difference" -- a false answer. It stops instead. The
+// quality benchmark that replaces it is part of Phase 5.6 step 0.
+// A function returning void, so the compiler does not treat the rest of this
+// file as unreachable and stop checking it.
+const retire = (): void => {
+  console.error(
+    "run-phase0-render-benchmark is retired (Phase 5.5.5): its OFF arms are core features that can no longer be switched off.",
+  );
+  process.exit(2);
+};
+retire();
+
 /**
  * Phase 0.4 stage 2 — render validation against the real pipeline.
  *

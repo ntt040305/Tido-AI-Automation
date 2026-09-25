@@ -5,6 +5,10 @@ import type {
   ProjectRepository,
   RunRepository,
   StorageProvider,
+  UserMemoryRepository,
+  AssetMemoryRepository,
+  AssetSemanticsRepository,
+  CreativeMemoryRepository,
 } from "@tido/shared";
 
 import { isFirebaseConfigured } from "./firebase/admin";
@@ -13,6 +17,11 @@ import { isDatabaseConfigured } from "./supabase/client";
 import { resolveActor, listOrganizations } from "./supabase/identity.repository";
 import * as projects from "./supabase/projects.repository";
 import * as runs from "./supabase/runs.repository";
+import { intelligenceRepository } from "./supabase/intelligence.repository";
+import { userMemoryRepository } from "./supabase/memory.repository";
+import { assetMemoryRepository } from "./supabase/asset-memory.repository";
+import { assetSemanticsRepository } from "./supabase/asset-semantics.repository";
+import { creativeMemoryRepository } from "./supabase/creative-memory.repository";
 import { supabaseStorage } from "./storage/supabase-storage";
 
 /**
@@ -59,10 +68,23 @@ export function getInfrastructure(): InfrastructureContext {
     get: runs.getRun,
   };
 
+  // Named through the interface rather than used directly, so a route that
+  // holds an InfrastructureContext cannot reach past it into a Supabase-
+  // specific helper even by accident.
+  const memoryRepo: UserMemoryRepository = userMemoryRepository;
+  const assetRepo: AssetMemoryRepository = assetMemoryRepository;
+  const semanticsRepo: AssetSemanticsRepository = assetSemanticsRepository;
+  const creativeRepo: CreativeMemoryRepository = creativeMemoryRepository;
+
   return {
     identity,
     projects: projectRepo,
     runs: runRepo,
+    intelligence: intelligenceRepository,
+    memory: memoryRepo,
+    assets: assetRepo,
+    assetSemantics: semanticsRepo,
+    creativeMemory: creativeRepo,
     isConfigured: isDatabaseConfigured,
   };
 }
@@ -89,3 +111,17 @@ export { bearerToken } from "./firebase/verify";
 
 /** Whether persistence is available. Callers skip work that needs it. */
 export { isDatabaseConfigured } from "./supabase/client";
+
+/**
+ * The RLS-scoped path.
+ *
+ * A request made with one of these clients arrives at Postgres as the user,
+ * so the policies in migration 0002 apply to it. Everything else in this
+ * package uses the service-role connection, which bypasses them by design --
+ * so this is the only way the second line of defence is actually exercised.
+ */
+export {
+  getUserScopedDb,
+  isUserScopedDbConfigured,
+  userScopedDbRequirements,
+} from "./supabase/user-client";

@@ -1,7 +1,9 @@
 import type { LayoutGeometry } from "./LayoutGeometry";
 import type { TypographySystem } from "./TypographySystem";
+import type { TypographyPlan } from "./TypographyPlan";
 import type { VisualComposition } from "./VisualComposition";
 import type { CreativeBlueprint } from "./CreativeBlueprint";
+import { colorFor, type BrandKit } from "./BrandKit";
 
 /**
  * The Creative Document — a real intermediate representation.
@@ -65,6 +67,45 @@ export interface DocumentElement {
     tracking: string;
     alignment: "left" | "centre" | "right";
   };
+  // ── Phase 5.1: the AI-readable editable structure. Optional so documents
+  // built before it existed stay valid. ─────────────────────────────────────
+  /** The coarse layer kind an editor works in. */
+  layer_type?: LayerType;
+  /** Text layers: the job the line does. `content` holds the line itself. */
+  role?: string;
+  /** Pixel geometry at the canvas size. `position` is the centre. */
+  position_px?: { x: number; y: number };
+  size_px?: { width: number; height: number };
+  style?: LayerStyle;
+}
+
+export type LayerType = "image" | "text" | "background" | "effect";
+
+export interface LayerStyle {
+  /** Where an image layer's pixels come from. */
+  source?: "rendered_raster" | "brand_logo";
+  fit?: "cover" | "contain";
+  font_family?: string | null;
+  font_class?: string;
+  font_weight?: string;
+  font_size_px?: number;
+  line_height?: number;
+  letter_spacing?: string;
+  text_align?: "left" | "centre" | "right";
+  color?: string | null;
+  /** The treatment the line gets -- a CTA's plate, a headline's dominance. */
+  treatment?: string;
+  contrast?: { minimum: number; against: string; ratio?: number };
+  background_color?: string | null;
+  description?: string;
+}
+
+/** The frame, in pixels, at the size the document is authored for. */
+export interface Canvas {
+  width: number;
+  height: number;
+  aspect_ratio: string;
+  unit: "px";
 }
 
 export interface ExportMapping {
@@ -76,7 +117,28 @@ export interface ExportMapping {
 }
 
 export interface CreativeDocument {
+  /** 2 for documents carrying the Phase 5.1 structure. */
+  version?: number;
+  canvas?: Canvas;
+  /** "exact" when the client supplied text, "none" when the image carries none. */
+  text_mode?: "exact" | "none";
+  brand?: { name: string; colors: string[]; fonts: { heading?: string; body?: string } } | null;
+  /**
+   * Phase 5.5. Set when the render was made in Editable mode: the scene was
+   * rendered without text or logo and every other layer placed from this
+   * document. `editable` is then the export-grade representation (v3).
+   */
+  editable_mode?: boolean;
+  editable?: import("./EditableDesign").EditableDesign;
   ratio: string;
+  /**
+   * The typography plan this document was laid out from. Carried on the
+   * document because the document is the single source of truth: the
+   * compositor reads the plan's reserved area and per-block line allowance
+   * from here rather than being handed them separately, so what the image
+   * prompt was written for and what the type is set into are one structure.
+   */
+  typography_plan?: TypographyPlan | null;
   elements: DocumentElement[];
   raster_is_flat: boolean;
   exports: ExportMapping[];
@@ -147,7 +209,38 @@ export interface DocumentInput {
   typography?: TypographySystem | null;
   composition?: VisualComposition | null;
   blueprint?: CreativeBlueprint | null;
+  /** Phase 5.4. The brand's colours, fonts and logo. */
+  brandKit?: BrandKit | null;
+  /** Phase 5.1. The long edge, in pixels, the document is authored at. */
+  canvasLongEdge?: number;
+  /**
+   * The typography plan the prompt was written from. Stored on the document
+   * so the compositor sets type into the area the picture was composed to
+   * leave, rather than into the area the pre-render grid guessed at.
+   */
+  plan?: TypographyPlan | null;
 }
+
+/** The canvas for a ratio at a long-edge size. */
+export function canvasFor(ratio: string, longEdge = 2048): Canvas {
+  const [w, h] = String(ratio || "1:1").split(":").map(Number);
+  const rw = w > 0 ? w : 1;
+  const rh = h > 0 ? h : 1;
+  return rw >= rh
+    ? { width: longEdge, height: Math.round((longEdge * rh) / rw), aspect_ratio: ratio || "1:1", unit: "px" }
+    : { width: Math.round((longEdge * rw) / rh), height: longEdge, aspect_ratio: ratio || "1:1", unit: "px" };
+}
+
+const LAYER_OF: Record<ElementType, LayerType> = {
+  background: "background",
+  product: "image",
+  shadow: "image",
+  reflection: "image",
+  graphic: "image",
+  effect: "effect",
+  shape: "effect",
+  text: "text",
+};
 
 /**
  * Builds the document. Pure and total.
@@ -218,7 +311,51 @@ export function buildCreativeDocument(input: DocumentInput): CreativeDocument {
   if (effect) push("finishing", "effect", effect.content, 50, 50, 100, 100, false, []);
 
   // ── text: the one genuinely editable class ─────────────────────────────
-  for (const spec of t?.specs || []) {
+  // Phase 5.1: text layers from the client's own lines, one layer per line,
+  // each carrying the line verbatim. Lines that share a zone are stacked
+  // inside it in the order they were written.
+  const lineSpecs = (t?.specs || []).filter((s) => s.text);
+  const byZone = new Map<string, typeof lineSpecs>();
+  for (const spec of lineSpecs) byZone.set(spec.zone, [...(byZone.get(spec.zone) || []), spec]);
+  // A line is never dropped: the words are the client's, and a document that
+  // loses one no longer describes the render. Without its zone it takes the
+  // lower-middle band, where it can still be moved.
+  const FALLBACK_ZONE = { x: 50, y: 78, width: 80, height: 12 };
+  lineSpecs.forEach((spec, i) => {
+    const zone = g?.zones.find((z) => z.name === spec.zone) ?? FALLBACK_ZONE;
+    const peers = byZone.get(spec.zone)!;
+    const k = peers.indexOf(spec);
+    const h = zone.height / peers.length;
+    push(
+      `text_${i + 1}_${spec.role}`,
+      "text",
+      spec.text!,
+      zone.x,
+      zone.y - zone.height / 2 + h * (k + 0.5),
+      zone.width,
+      h,
+      true,
+      // Content is editable by the PERSON -- these are their words. The AI never
+      // edits it; that rule lives in the text requirement, not here.
+      ["content", "position", "size", "rotation", "opacity", "color", "font"],
+      { scale: spec.scale, weight: spec.weight, tracking: spec.tracking, alignment: spec.alignment },
+    );
+    const el = elements[elements.length - 1];
+    el.role = spec.role;
+    el.style = {
+      font_family: spec.font_family ?? null,
+      font_class: spec.font_class,
+      font_weight: spec.weight,
+      line_height: spec.line_height,
+      letter_spacing: spec.tracking,
+      text_align: spec.alignment,
+      color: spec.color ?? null,
+      treatment: spec.treatment,
+      contrast: spec.contrast,
+    };
+  });
+
+  for (const spec of lineSpecs.length ? [] : t?.specs || []) {
     const zone = g?.zones.find((z) => z.name === spec.zone);
     if (!zone) continue;
     push(
@@ -236,11 +373,50 @@ export function buildCreativeDocument(input: DocumentInput): CreativeDocument {
   }
 
   const logo = g?.zones.find((z) => z.name === "logo");
-  if (logo) push("logo", "graphic", "the attached logo", logo.x, logo.y, logo.width, logo.height, false, []);
+  if (logo) push("logo", "graphic", input.brandKit?.has_logo ? `${input.brandKit.name} logo` : "the attached logo", logo.x, logo.y, logo.width, logo.height, false, []);
+
+  // Phase 5.1: the structure an editor reads -- canvas, layer kinds, pixels,
+  // styling. Only when a Phase 5 input was given, so older callers get the
+  // document they always got.
+  const phase5 = Boolean(input.canvasLongEdge || input.brandKit || lineSpecs.length || t?.disabled);
+  const ratio = g?.ratio || "1:1";
+  const canvas = phase5 ? canvasFor(ratio, input.canvasLongEdge || 2048) : undefined;
+  if (canvas) {
+    const bgColor = colorFor(input.brandKit, "background");
+    for (const e of elements) {
+      e.layer_type = LAYER_OF[e.type];
+      e.position_px = { x: Math.round((e.position.x / 100) * canvas.width), y: Math.round((e.position.y / 100) * canvas.height) };
+      e.size_px = { width: Math.round((e.size.width / 100) * canvas.width), height: Math.round((e.size.height / 100) * canvas.height) };
+      if (e.type === "text" && e.style) {
+        // The size a line of this role reaches in its box: the box height
+        // divided across its line height, capped by its relative scale.
+        e.style.font_size_px = Math.round(Math.min(e.size_px.height / (e.style.line_height || 1.2), (canvas.height / 40) * (e.text?.scale || 1)));
+      } else if (e.type === "background") {
+        e.style = { background_color: bgColor, description: e.content };
+      } else if (e.id === "logo") {
+        e.style = { source: "brand_logo", fit: "contain" };
+      } else if (e.layer_type === "image") {
+        e.style = { source: "rendered_raster", fit: "contain", description: e.content };
+      } else {
+        e.style = { description: e.content };
+      }
+    }
+  }
 
   const editable = elements.filter((e) => e.editable).length;
   return {
-    ratio: g?.ratio || "1:1",
+    ...(input.plan ? { typography_plan: input.plan } : {}),
+    ...(canvas
+      ? {
+          version: 2,
+          canvas,
+          text_mode: lineSpecs.length ? ("exact" as const) : ("none" as const),
+          brand: input.brandKit
+            ? { name: input.brandKit.name, colors: input.brandKit.colors.map((c) => c.hex), fonts: input.brandKit.fonts }
+            : null,
+        }
+      : {}),
+    ratio,
     elements: elements.sort((a, b) => a.z_index - b.z_index),
     raster_is_flat: true,
     exports: mappings(),

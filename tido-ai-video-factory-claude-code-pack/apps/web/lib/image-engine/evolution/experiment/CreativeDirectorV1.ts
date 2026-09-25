@@ -1,4 +1,10 @@
 import { defaultLLMProviderService, LLMProviderService } from "../../llm/llm-provider.service";
+import {
+  NO_TEXT_TYPOGRAPHY,
+  stripUnauthorizedText,
+  unauthorizedText,
+  type TextRequirement,
+} from "../../compiler/ExactCopyIntegrityValidator";
 
 /**
  * Creative Judgment V1 — exploration, reasoning, and the generic check.
@@ -109,6 +115,16 @@ export interface StrategyCandidate {
    * a valid judgment and the resolver must not start throwing on them.
    */
   visual_language?: string;
+  /**
+   * Phase 4.1. The three craft decisions, per candidate rather than only for
+   * the winner, so every direction on the table is a complete concept a person
+   * can compare -- and so the evaluator can switch to one without borrowing the
+   * set-aside route's composition, type or light. Optional: judgments produced
+   * before this existed remain valid.
+   */
+  composition?: string;
+  typography?: string;
+  lighting?: string;
   why_this_route: string;
   assessment: {
     product: StrategyVerdict;
@@ -263,6 +279,12 @@ export interface CreativeJudgment {
    * products and the flag is on.
    */
   staging?: MultiProductStaging;
+  /**
+   * Phase 4.2 / 4.3. The evaluation of every developed direction and the
+   * selection rule's outcome. Attached by the pipeline after the call, never
+   * produced by the model.
+   */
+  evaluation?: import("./DirectionEvaluator").DirectionEvaluation;
 }
 
 /** One authorized string, the job it does here, and why that is the job. */
@@ -331,6 +353,38 @@ export interface DirectorBriefInput {
    * invented.
    */
   productCount?: number;
+  /**
+   * What this account's own history suggests: standing preferences and
+   * patterns from kept work, already thresholded, capped and diversified by the
+   * caller. Built by `memoryContextBrief`.
+   *
+   * Context, never direction. It is the LAST thing in the brief and says so in
+   * its own header: the brief in front of the director outranks every line of
+   * it. The engine has no account and no store -- these arrive as sentences,
+   * resolved above the engine boundary.
+   */
+  memoryContext?: string;
+  /**
+   * Phase 4.2. How each OFFERED route has gone for this account before, from
+   * `renderRouteEvidence`: renders, keeps, rejections, vision problems. Read
+   * before the director chooses, so memory informs the selection itself rather
+   * than arriving only as a correction afterwards.
+   */
+  routeEvidence?: string;
+  /**
+   * What words may appear in this image, resolved once from what the person
+   * typed (`resolveTextRequirement`). "exact": these lines, verbatim, and no
+   * others -- the director decides how they look, never what they say. "none":
+   * the image carries no text, and the director decides composition and visual
+   * direction only. Supersedes `contentMessage` when present.
+   */
+  textRequirement?: TextRequirement;
+  /**
+   * Phase 5.4. The Brand Kit as a brief block (`brandKitBrief`): palette,
+   * fonts, preferred and forbidden styles. The client's standing identity --
+   * above the director's taste, below the brief in front of it.
+   */
+  brandKit?: string;
   concept: string;
   contentMessage?: string;
   brandName?: string;
@@ -339,6 +393,120 @@ export interface DirectorBriefInput {
   industry?: string;
   objective?: string;
   audience?: string;
+}
+
+/**
+ * Renders recalled memory as a director brief block, or undefined when there is
+ * none -- in which case the brief is byte-identical to what it was before.
+ *
+ * Preferences and workspace patterns stay in separate lists because they carry
+ * different authority: a preference is something a person stated or repeated; a
+ * pattern is a statistical observation over a body of work. Merging them would
+ * let a pattern seen three times read like something the client asked for.
+ */
+export function memoryContextBrief(
+  standingPreferences?: string[] | null,
+  creativeMemory?: string[] | null,
+): string | undefined {
+  const prefs = (standingPreferences || []).map((s) => String(s).trim()).filter(Boolean);
+  const memory = (creativeMemory || []).map((s) => String(s).trim()).filter(Boolean);
+  if (!prefs.length && !memory.length) return undefined;
+  return [
+    "CONTEXT FROM THIS ACCOUNT'S PREVIOUS WORK — observations, not instructions.",
+    "Everything above outranks every line below. Use a line only where the brief is silent,",
+    "ignore any line the brief contradicts, and do not let these make this concept resemble the last one.",
+    ...(prefs.length ? ["Standing preferences this person stated or repeatedly kept:", ...prefs.map((p) => `  - ${p}`)] : []),
+    ...(memory.length ? ["Observed in this workspace's previous renders:", ...memory.map((m) => `  - ${m}`)] : []),
+  ].join("\n");
+}
+
+/** The director's brief block for the text requirement. */
+export function textRequirementBrief(req: TextRequirement): string {
+  if (req.mode === "exact") {
+    return [
+      "TEXT THAT MUST APPEAR — exactly these lines, verbatim, and no other words:",
+      ...req.lines.map((l, i) => `  ${i + 1}. "${l}"`),
+      "You decide how this text LOOKS: style, font direction, size, placement, hierarchy and visual treatment. You never decide what it SAYS. Do not rewrite, replace, summarize, translate or add to it, and do not propose any other headline, slogan, CTA or lettering. Wherever you quote on-image text, quote only these lines.",
+    ].join("\n");
+  }
+  return [
+    "TEXT: NONE. The client supplied no text, so this image carries no text at all.",
+    "Decide composition and visual direction only. Do not propose, write or imply any headline, slogan, tagline, CTA, price, caption or decorative lettering.",
+    `Wherever you are asked about typography, answer exactly: "${NO_TEXT_TYPOGRAPHY}".`,
+  ].join("\n");
+}
+
+/**
+ * Holds a judgment to the text requirement, after the model has answered.
+ *
+ * The brief already says it; this makes it true. A director that writes a
+ * headline for an image that must carry none, or quotes a slogan the client
+ * never typed, has that sentence removed -- whole, so what remains still reads
+ * as the director wrote it -- and every craft field that decides type is set to
+ * the requirement's answer. Returns what was removed, so the violation is
+ * recorded rather than silently absorbed.
+ */
+export function enforceTextRequirement(
+  judgment: CreativeJudgment,
+  req: TextRequirement | undefined,
+): { judgment: CreativeJudgment; removed: string[] } {
+  if (!req || !judgment) return { judgment, removed: [] };
+  const removed: string[] = [];
+  const fix = (v: string | undefined): string | undefined => {
+    if (typeof v !== "string" || !v) return v;
+    const found = unauthorizedText([v], req);
+    if (!found.length) return v;
+    removed.push(...found);
+    return stripUnauthorizedText(v, req);
+  };
+  const noText = req.mode === "none";
+
+  const copyRoles = noText
+    ? []
+    : (judgment.copy_roles || []).filter((r) => {
+        const ok = req.lines.includes(String(r?.text || "").trim());
+        if (!ok && r?.text) removed.push(`copy role for unsupplied text "${r.text}"`);
+        return ok;
+      });
+  if (noText && judgment.copy_roles?.length) removed.push(...judgment.copy_roles.map((r) => `copy role "${r.text}"`));
+
+  const reasoning = judgment.reasoning
+    ? {
+        ...judgment.reasoning,
+        typography: noText
+          ? { choice: NO_TEXT_TYPOGRAPHY, reason: "the client supplied no text, so none is drawn" }
+          : { ...judgment.reasoning.typography, choice: fix(judgment.reasoning.typography?.choice) || "", reason: fix(judgment.reasoning.typography?.reason) || "" },
+        camera: judgment.reasoning.camera && { ...judgment.reasoning.camera, choice: fix(judgment.reasoning.camera.choice) || "" },
+        composition: judgment.reasoning.composition && { ...judgment.reasoning.composition, choice: fix(judgment.reasoning.composition.choice) || "" },
+        lighting: judgment.reasoning.lighting && { ...judgment.reasoning.lighting, choice: fix(judgment.reasoning.lighting.choice) || "" },
+        colour: judgment.reasoning.colour && { ...judgment.reasoning.colour, choice: fix(judgment.reasoning.colour.choice) || "" },
+      }
+    : judgment.reasoning;
+
+  const strategy = judgment.strategy
+    ? {
+        ...judgment.strategy,
+        candidates: (judgment.strategy.candidates || []).map((c) => ({
+          ...c,
+          core_idea: fix(c.core_idea) || "",
+          visual_language: fix(c.visual_language),
+          composition: fix(c.composition),
+          lighting: fix(c.lighting),
+          typography: noText ? NO_TEXT_TYPOGRAPHY : fix(c.typography),
+        })),
+      }
+    : judgment.strategy;
+
+  const directions = (judgment.directions || []).map((d) => ({
+    ...d,
+    core_idea: fix(d.core_idea) || "",
+    visual_language: fix(d.visual_language) || "",
+  }));
+
+  return {
+    judgment: { ...judgment, copy_roles: copyRoles, reasoning, strategy, directions },
+    removed: [...new Set(removed)],
+  };
 }
 
 export interface JudgmentFlags {
@@ -790,7 +958,7 @@ export class CreativeDirectorV1 {
         : "";
       shape.push(`  "strategy": {
     "candidates": [
-      { "route": "<one of the routes offered, copied exactly>", "core_idea": "<what happens in the frame>", "visual_language": "<how it is rendered: light, distance, surface, colour — concretely>", "why_this_route": "<what in THIS brief makes it right>"${depth}${challenge},
+      { "route": "<one of the routes offered, copied exactly>", "core_idea": "<what happens in the frame>", "visual_language": "<how it is rendered: light, distance, surface, colour — concretely>", "composition": "<how the frame is arranged: subject placement, framing, where the eye goes>", "typography": "<how the type is treated and where it sits against the image>", "lighting": "<how light behaves on the product and the scene>", "why_this_route": "<what in THIS brief makes it right>"${depth}${challenge},
         "assessment": { ${["product", "audience", "objective", "brand", "channel", "feasibility"].map(verdict).join(", ")} } }
     ],
     "selected": "<the route you chose, copied exactly>",
@@ -885,7 +1053,9 @@ suitability, originality, commercial effectiveness and production feasibility.`
   }`);
     }
 
-    if (flags.copyRoles) {
+    // Roles are only asked for words that exist. With no text, asking the
+    // director to assign HEADLINE / CTA roles invites it to supply the words.
+    if (flags.copyRoles && brief.textRequirement?.mode !== "none") {
       parts.push(COPY_ROLES_BLOCK);
       // Declared in the contract, not only in the prose. Measured earlier in
       // this system: a field asked for in instructions and omitted from the
@@ -935,7 +1105,11 @@ ${shape.join(",\n")}
 
     const briefLines = [
       `CONCEPT: ${brief.concept}`,
-      brief.contentMessage ? `TEXT THAT MUST APPEAR: ${brief.contentMessage}` : "",
+      brief.textRequirement
+        ? textRequirementBrief(brief.textRequirement)
+        : brief.contentMessage
+          ? `TEXT THAT MUST APPEAR: ${brief.contentMessage}`
+          : "",
       brief.brandName ? `BRAND: ${brief.brandName}` : "",
       brief.industry ? `INDUSTRY: ${brief.industry}` : "",
       brief.objective ? `CAMPAIGN OBJECTIVE: ${brief.objective}` : "",
@@ -960,6 +1134,13 @@ ${brief.creativeBrief}` : "",
             ...brief.routes.map((r) => `  - ${r}`),
           ].join("\n")
         : "",
+      brief.brandKit ? `
+${brief.brandKit}` : "",
+      brief.routeEvidence ? `
+${brief.routeEvidence}` : "",
+      // Last on purpose: memory informs, the brief decides.
+      brief.memoryContext ? `
+${brief.memoryContext}` : "",
     ].filter(Boolean);
 
     const started = Date.now();

@@ -1,12 +1,17 @@
 import { SimpleImageGenerationResultV1, SimpleInputRequestV1 } from "../types";
 import { ImgStudioImageGenerationProvider } from "../provider/ImgStudioImageGenerationProvider";
 import type { ImageGenerationProvider, ProviderImageGenerationInput } from "../provider/ImageGenerationProvider";
-import { StablePipeline } from "./StablePipeline";
+// Phase 5.5.5: the render core, called directly. It was reached through a
+// 29-line `StablePipeline` pass-through that made one pipeline look like two.
+import { SimpleImageGenerationOrchestratorService as RenderCore } from "../service/SimpleImageGenerationOrchestratorService";
 import type { RoutingDecision } from "./PipelineRouter";
 import { PromptBudgetManagerService } from "../service/PromptBudgetManagerService";
 import { PromptBudgetValidator } from "../compiler/PromptBudgetValidator";
 import { ProviderPromptOptimizer } from "../compiler/ProviderPromptOptimizer";
-import { CreativeDirectorV1, CreativeJudgment, DirectorBriefInput } from "./experiment/CreativeDirectorV1";
+import { CreativeDirectorV1, CreativeJudgment, DirectorBriefInput, memoryContextBrief } from "./experiment/CreativeDirectorV1";
+import { applyEvaluation, evaluateDirections, evaluationTelemetry, renderRouteEvidence } from "./experiment/DirectionEvaluator";
+import { enforceTextRequirement } from "./experiment/CreativeDirectorV1";
+import { resolveTextRequirement, textDirective } from "../compiler/ExactCopyIntegrityValidator";
 import {
   buildContext,
   contextTelemetry,
@@ -27,7 +32,8 @@ import { chooseStructure, structureTelemetry } from "./experiment/CampaignStruct
 import { adaptFormats, adaptationTelemetry } from "./experiment/FormatAdaptation";
 import { buildDesignProject, projectTelemetry } from "./experiment/DesignProject";
 import { buildGeometry, geometryTelemetry, renderGeometry } from "./experiment/LayoutGeometry";
-import { buildTypographySystem, typographyTelemetry, renderTypography } from "./experiment/TypographySystem";
+import { buildTypographySystem, typographyTelemetry, renderTypography, assignTextRoles, geometryRolesFor } from "./experiment/TypographySystem";
+import { brandKitBrief, brandKitDirective, brandKitTelemetry } from "./experiment/BrandKit";
 import { buildCreativeDocument, documentTelemetry } from "./experiment/CreativeDocument";
 import { critiqueRender, criticTelemetry } from "../benchmark/CommercialRenderCritic";
 import { buildCreativeIntelligence, intelligenceTelemetry, CreativeIntelligence } from "./experiment/CreativeIntelligenceView";
@@ -36,7 +42,19 @@ import { RenderQualityJudge } from "../benchmark/RenderQualityJudge";
 import { compareConcepts } from "../benchmark/ConceptEvaluator";
 import { buildProductionContext, validateContext, productionTelemetry } from "./experiment/ProductionPipeline";
 import { buildTextLayers, NO_TEXT_DIRECTIVE, typographyRenderTelemetry } from "./experiment/TypographyRenderer";
+import {
+  buildTypographyPlan,
+  renderPlanForImagePrompt,
+  typographyPlanTelemetry,
+  type TypographyPlan,
+} from "./experiment/TypographyPlan";
 import { exportSvg, exportCanva, exportPsdModel, exportTelemetry } from "./experiment/ExportLayer";
+import { composeEditable, editableTelemetry, type ComposeResult } from "./experiment/EditableDesign";
+import type { CreativeDocument } from "./experiment/CreativeDocument";
+import type { BrandKit } from "./experiment/BrandKit";
+import fs from "fs";
+import path from "path";
+import { IMAGE_ENGINE_CONFIG } from "../config";
 import { blueprintTelemetry } from "./experiment/CreativeBlueprint";
 import { CreativeRefinementLoop } from "./experiment/CreativeRefinementLoop";
 import { MarketingBrainService } from "../llm/marketing-brain.service";
@@ -290,7 +308,28 @@ export class ExperimentPipeline {
       judgment: CreativeJudgment | null,
       headroom: number,
       composedPrompt: string
-    ) => string | undefined
+    ) => string | undefined,
+    /**
+     * The render prompt's last word on text: "use exactly the provided text"
+     * or "do not add any typography or text". Appended after everything else,
+     * because every earlier section may mention type and recency is how a
+     * renderer resolves a conflict.
+     */
+    textDirectiveText?: string | (() => string),
+    /**
+     * Phase 5.5. Editable mode. The provider renders the scene only; the
+     * layers the design document places -- exact text, CTA plate, the brand's
+     * own logo -- are composited over it here, their assets stored beside the
+     * render, and the composite returned as the image. Absent, nothing changes.
+     */
+    editable?: {
+      document: () => CreativeDocument | null;
+      brandKit: BrandKit | null;
+      logo: Buffer | null;
+      /** The typography plan, resolved at composition time. */
+      plan?: () => TypographyPlan | null;
+      onComposed: (result: ComposeResult) => void;
+    }
   ): ImageGenerationProvider {
     return {
       async generateImage(input: ProviderImageGenerationInput) {
@@ -313,11 +352,20 @@ export class ExperimentPipeline {
         // blueprint is appended after compilation, so without this it escapes
         // the discipline every other section is held to: measured live, the
         // prompt reached 30,402 characters against a 24,000 hard maximum.
-        const headroom = PromptBudgetManagerService.HARD_MAXIMUM - composed.length - 2;
+        // Resolved here rather than at the call site: in Editable mode the
+        // directive carries the typography plan, which does not exist until the
+        // execution block has run -- which happens while this provider is being
+        // awaited, not before it was wrapped.
+        const directive = typeof textDirectiveText === "function" ? textDirectiveText() : textDirectiveText;
+        const headroom =
+          PromptBudgetManagerService.HARD_MAXIMUM - composed.length - 2 - (directive ? directive.length + 2 : 0);
         const blueprintText = blueprintFor ? blueprintFor(judgment, headroom, composed) : undefined;
-        const finalPrompt = blueprintText ? `${composed}
+        const withBlueprint = blueprintText ? `${composed}
 
 ${blueprintText}` : composed;
+        const finalPrompt = directive ? `${withBlueprint}
+
+${directive}` : withBlueprint;
         if (blueprintText) {
           console.log("[EXPERIMENT][CREATIVE_BLUEPRINT_TRANSMITTED]", {
             blueprint_chars: blueprintText.length,
@@ -350,9 +398,46 @@ ${blueprintText}` : composed;
               input.prompt.length > PromptBudgetManagerService.EMERGENCY_TARGET,
           });
         }
-        return inner.generateImage({ ...input, prompt: finalPrompt });
+        const out = await inner.generateImage({ ...input, prompt: finalPrompt });
+        if (!editable || !out.success || !out.imageBuffer) return out;
+        const doc = editable.document();
+        if (!doc) {
+          console.warn("[EXPERIMENT][EDITABLE] no design document was built; serving the scene as rendered");
+          return out;
+        }
+        try {
+          const composed = await composeEditable({ document: doc, brandKit: editable.brandKit, scene: out.imageBuffer, logo: editable.logo, plan: editable.plan?.() ?? null });
+          ExperimentPipeline.storeLayerFiles(input.generationId, composed.files);
+          editable.onComposed(composed);
+          console.log("[EXPERIMENT][EDITABLE]", editableTelemetry(composed.design));
+          return { ...out, imageBuffer: composed.composite, mimeType: "image/png" };
+        } catch (err: any) {
+          // The scene alone carries none of the client's words, so this is
+          // said loudly; the vision review's text check will see it too.
+          console.error("[EXPERIMENT][EDITABLE] compositing failed; serving the scene without its layers", {
+            error: err?.message || String(err),
+          });
+          return out;
+        }
       },
     };
+  }
+
+  /**
+   * Phase 5.5. Layer assets beside the render they belong to, under the same
+   * traversal guard the image storage uses.
+   */
+  private static storeLayerFiles(generationId: string | undefined, files: Record<string, Buffer>): void {
+    if (!generationId || /[\\/]|\.\./.test(generationId)) throw new Error("no safe generation id for layer assets");
+    const base = path.resolve(IMAGE_ENGINE_CONFIG.GENERATED_DIR);
+    const dir = path.resolve(base, generationId);
+    if (!dir.startsWith(base + path.sep)) throw new Error("layer asset path escapes the generated directory");
+    for (const [rel, buf] of Object.entries(files)) {
+      const target = path.resolve(dir, rel);
+      if (!target.startsWith(dir + path.sep)) throw new Error(`layer asset path escapes its directory: ${rel}`);
+      fs.mkdirSync(path.dirname(target), { recursive: true });
+      fs.writeFileSync(target, buf);
+    }
   }
 
   /**
@@ -363,18 +448,41 @@ ${blueprintText}` : composed;
    * ride along into a JSON response, a log line or a database row. Making them
    * non-enumerable means `JSON.stringify` and every spread that builds the HTTP
    * payload skip them without anyone having to remember to strip them.
+   *
+   * `visualDna` is the last of them and the one that leaves the process: it is
+   * what a model actually SAW in the uploaded images, as opposed to what was
+   * reasoned from it, and asset memory is keyed by those bytes. The engine has
+   * no account and no database and must keep it that way, so the observation
+   * travels out to the caller rather than the store travelling in here.
    */
   private static attachDesignContext(
     result: SimpleImageGenerationResultV1,
     blueprint: unknown,
     typography: unknown,
     geometry: unknown,
+    composition?: unknown,
+    assetDna?: unknown,
+    prompt?: string | null,
+    strategy?: unknown,
+    visualDna?: unknown,
+    judgment?: unknown,
+    designDocument?: unknown,
   ): SimpleImageGenerationResultV1 {
-    if (!blueprint && !typography && !geometry) return result;
+    if (!blueprint && !typography && !geometry && !composition && !assetDna && !prompt && !strategy && !visualDna && !judgment && !designDocument) {
+      return result;
+    }
     for (const [key, value] of [
       ["creativeBlueprint", blueprint],
       ["typographySystem", typography],
       ["layoutGeometry", geometry],
+      ["visualComposition", composition],
+      ["assetDna", assetDna],
+      ["compiledPrompt", prompt],
+      ["marketingStrategy", strategy],
+      ["visualDna", visualDna],
+      ["creativeJudgment", judgment],
+      // Phase 5.1: the editable design document the render was made from.
+      ["designDocument", designDocument],
     ] as const) {
       if (!value) continue;
       Object.defineProperty(result, key, { value, enumerable: false, configurable: true });
@@ -384,10 +492,14 @@ ${blueprintText}` : composed;
 
   public static async run(
     request: SimpleInputRequestV1,
-    options: Parameters<typeof StablePipeline.run>[1],
+    options: Parameters<typeof RenderCore.generateSimpleImage>[1],
     decision: RoutingDecision
   ): Promise<SimpleImageGenerationResultV1> {
     const f = decision.flags.features;
+    // Which words may appear in this image: exactly the lines the person typed,
+    // or none. Resolved once here and read by the director, the blueprint and
+    // the final prompt, so no layer can hold a different answer.
+    const textRequirement = resolveTextRequirement(request);
 
     // Resolved before the judgment flags are assembled, because it is one of
     // them.
@@ -476,6 +588,12 @@ ${blueprintText}` : composed;
     const productionPipelineOn = executionOn && Boolean(f.production_pipeline_v2);
     const realTypographyOn = executionOn && Boolean(f.real_typography_v1);
     const exportOn = executionOn && Boolean(f.export_layer_v1);
+    // Typography Composition Hardening V1. Rides on the execution layer: the
+    // plan reads the geometry and the typography system, which are built there.
+    const typographyPlanOn = executionOn && Boolean(f.typography_plan_v1);
+    // Phase 5.5: Editable mode needs the design document, so it rides on the
+    // execution layer. Without it the render is an ordinary one.
+    const editableOn = executionOn && Boolean(decision.editableLayers);
 
     // Phase 1.1D — Creative Director authority over inferred art direction.
     //
@@ -552,9 +670,10 @@ ${blueprintText}` : composed;
     const anyJudgment = Object.values(judgmentFlags).some(Boolean);
 
     if (!anyJudgment) {
-      // Identical to stable, on purpose. Routing a request here is one decision;
-      // changing what happens to it is another, and keeping them separate is
-      // what makes the pipeline switch itself safe to verify in production.
+      // Reached only under the kill switch: core features cannot otherwise be
+      // turned off (Phase 5.5.5). The render goes through the core without the
+      // director -- a degraded render, so an outage in the LLM layer degrades
+      // quality instead of failing the request.
       const IMPLEMENTED = [
         "creative_exploration_v1", "creative_reasoning_v1", "anti_generic_check_v1",
         "creative_strategy_intelligence_v1", "consumer_psychology_v1",
@@ -570,13 +689,13 @@ ${blueprintText}` : composed;
       ];
       const otherFlags = decision.features_enabled.filter((n) => !IMPLEMENTED.includes(n));
       if (otherFlags.length) {
-        console.warn("[EVOLUTION][EXPERIMENT] flags enabled with no implementation yet — running stable behaviour", {
+        console.warn("[EVOLUTION][EXPERIMENT] flags enabled with no implementation yet — rendering without the director", {
           flags: otherFlags,
         });
       } else {
-        console.log("[EVOLUTION][EXPERIMENT] no features enabled — running stable behaviour");
+        console.warn("[EVOLUTION][EXPERIMENT] kill switch: no features enabled — rendering without the director");
       }
-      return StablePipeline.run(request, options);
+      return RenderCore.generateSimpleImage(request, options);
     }
 
     const mc = request.marketingContext;
@@ -665,6 +784,16 @@ ${blueprintText}` : composed;
     // render returns. The closure runs deep inside the stable pipeline, so this
     // is the only place both sides can see.
     let capturedIntelligence: CreativeIntelligence | null = null;
+    /**
+     * The director's own judgment: every direction it considered, the one it
+     * chose, why, and the strongest one it turned down.
+     *
+     * Captured for the same reason the intelligence is -- it already exists and
+     * is otherwise discarded when the response is written. Only
+     * `selected_direction` survived before, which records what was decided
+     * while losing what it was decided OVER.
+     */
+    let capturedJudgment: CreativeJudgment | null = null;
     // The design structures this render was actually built from.
     //
     // Captured for the same reason the intelligence is: they exist, they
@@ -675,6 +804,62 @@ ${blueprintText}` : composed;
     let capturedTypography: any = null;
     let capturedGeometry: any = null;
     let capturedBlueprint: any = null;
+    // The rest of what a render decides. Captured for the same reason as the
+    // three above: each already exists, each is thrown away when the response
+    // is written, and none of them can be recovered afterwards.
+    let capturedComposition: any = null;
+    let capturedAssetDna: any = null;
+    let capturedPrompt: string | null = null;
+    // Phase 5.1: the editable design document, when the execution layer built one.
+    let capturedDocument: any = null;
+    // The typography plan. Captured for the same reason the geometry is: the
+    // compositor reads it, the vision critic checks the render against it, and
+    // neither could see it if it lived only inside the execution block.
+    let capturedPlan: TypographyPlan | null = null;
+    // Phase 5.5: Editable mode. The render request carries no words and no
+    // logo -- the scene only -- while `textRequirement` above keeps the
+    // client's lines for the director, the typography and the document. The
+    // logo is held back to be placed as its own layer, unaltered.
+    const editableLogo = editableOn
+      ? ((request.images || []).find((i) => (i as { role?: string }).role === "LOGO") as { buffer?: Buffer } | undefined)?.buffer ?? null
+      : null;
+    const renderSource = (r: SimpleInputRequestV1): SimpleInputRequestV1 =>
+      editableOn
+        ? {
+            ...r,
+            contentMessage: "",
+            copyItems: [],
+            images: (r.images || []).filter((i) => (i as { role?: string }).role !== "LOGO"),
+          }
+        : r;
+    // Editable mode: the model is told what SPACE the type needs and that it
+    // renders none of it. The plan is resolved lazily because it is built
+    // inside the execution block below, after the blueprint exists, and this
+    // string is assembled before the provider is wrapped.
+    const finalDirective = editableOn
+      ? () =>
+          [
+            brandKitDirective(decision.brandKit, "none", { logo: false }),
+            typographyPlanOn ? renderPlanForImagePrompt(capturedPlan) : undefined,
+            NO_TEXT_DIRECTIVE,
+          ]
+            .filter(Boolean)
+            .join("\n\n")
+      : [brandKitDirective(decision.brandKit, textRequirement.mode), textDirective(textRequirement)].filter(Boolean).join("\n\n");
+    const editableHooks = editableOn
+      ? {
+          document: () => capturedDocument as CreativeDocument | null,
+          brandKit: decision.brandKit ?? null,
+          logo: editableLogo,
+          plan: () => capturedPlan,
+          onComposed: (r: ComposeResult) => {
+            capturedDocument = { ...(capturedDocument || {}), version: 3, editable_mode: true, editable: r.design };
+          },
+        }
+      : undefined;
+    if (editableOn) {
+      console.log("[EXPERIMENT][EDITABLE] mode on", { text_lines: textRequirement.lines.length, logo_layer: Boolean(editableLogo) });
+    }
     let productTruthForBrain: import("./experiment/ProductTruth").ProductTruth | null = null;
     if (contextV1) {
       const context = buildContext({
@@ -740,6 +925,45 @@ ${blueprintText}` : composed;
         ...(routes ? { routes } : {}),
         ...(stagingOn ? { productCount } : {}),
       };
+    }
+
+    // Memory reaches the DIRECTOR, for every experiment render.
+    //
+    // It used to be read only inside `if (productionOn)` -- gated on
+    // `design_production_v1`, which is off -- and even then only appended to
+    // the renderer's prompt, after the creative decision had already been made.
+    // So recall ran, cost its database reads, and changed nothing. Here it is
+    // context for the one component that decides the direction, added after
+    // both brief paths so the context/literal equivalence above still holds.
+    // Absent memory leaves the brief byte-identical.
+    // The text requirement, explicit in the director's brief: exactly these
+    // lines, or no text at all. Added after both brief paths, like memory.
+    brief = { ...brief, textRequirement };
+    // Phase 5.4: the brand's standing identity, for the director.
+    const brandBrief = brandKitBrief(decision.brandKit, textRequirement.mode);
+    if (brandBrief) {
+      brief = { ...brief, brandKit: brandBrief };
+      console.log("[EXPERIMENT][BRAND_KIT]", brandKitTelemetry(decision.brandKit));
+    }
+    console.log("[EXPERIMENT][TEXT_REQUIREMENT]", { mode: textRequirement.mode, lines: textRequirement.lines.length });
+
+    const memoryContext = memoryContextBrief(decision.standingPreferences, decision.creativeMemory);
+    // Phase 4.2. How each offered route has gone for this account, read by the
+    // director BEFORE it chooses. Absent history leaves the brief unchanged.
+    const routeEvidence = renderRouteEvidence(routes, decision.routeEvidence);
+    if (routeEvidence) {
+      brief = { ...brief, routeEvidence };
+      console.log("[EXPERIMENT][ROUTE_EVIDENCE]", {
+        routes_with_history: routeEvidence.split(/\r?\n/).filter((l) => l.startsWith("  - ")).length,
+      });
+    }
+    if (memoryContext) {
+      brief = { ...brief, memoryContext };
+      console.log("[EXPERIMENT][MEMORY_CONTEXT]", {
+        preferences: decision.standingPreferences?.length ?? 0,
+        observations: decision.creativeMemory?.length ?? 0,
+        chars: memoryContext.length,
+      });
     }
 
     // What the user pinned themselves. A click outranks a decision —
@@ -869,13 +1093,25 @@ ${blueprintText}` : composed;
             marketingInsight,
             strategy: earlyStrategy,
             assetContext: assetCtx,
-            copyItems: request.copyItems,
+            // The authorized text only -- the content field and explicit copy --
+            // so the blueprint can never plan type for words nobody supplied.
+            //
+            // Phase 5.5: in Editable mode the blueprint is written for the SCENE,
+            // which carries neither. The words and the mark are composited as
+            // their own layers afterwards, and a blueprint that named them would
+            // reach the renderer as copy to draw -- directly contradicting the
+            // "render no text" instruction in the same prompt. The design
+            // document still gets both, from the text requirement and the kit.
+            copyItems: editableOn ? [] : textRequirement.lines,
             productCount,
-            hasLogo: hasLogoForBrain,
+            hasLogo: editableOn ? false : hasLogoForBrain,
             visualDNA,
             decision: dec,
             judgment: j,
           });
+          // The explicit text state, on the blueprint itself, so the record of
+          // what was planned says whether text was required and which.
+          Object.assign(bp as object, { text_requirement: textRequirement });
           console.log("[EXPERIMENT][CREATIVE_BLUEPRINT]", blueprintTelemetry(bp));
           // Translate for the interface. Free: every input is already in memory.
           {
@@ -891,6 +1127,9 @@ ${blueprintText}` : composed;
             // render whose concept and colour story were fully decided.
             // Protection must not depend on an unrelated feature being on.
             capturedBlueprint = bp;
+            // The compiled prompt, as sent. Without it no render is
+            // reproducible and no regression is attributable to anything.
+            capturedPrompt = composedPrompt;
             capturedIntelligence = buildCreativeIntelligence({
               blueprint: bp,
               decision: dec,
@@ -908,21 +1147,68 @@ ${blueprintText}` : composed;
           // it and the document is built from both.
           let executionText = "";
           if (executionOn) {
-            const roles = (dec?.copy_roles || []).map((r: any) => String(r?.role || "")).filter(Boolean);
+            // Phase 5.2: the client's exact lines, each with the role it plays.
+            // Roles come from the director where it labelled a line as given;
+            // the words themselves are never produced here. No text supplied,
+            // no lines: the layout plans no text zone and typography is off.
+            const textLines = assignTextRoles(textRequirement.lines, dec?.copy_roles);
+            const roles = geometryRolesFor(textLines);
             const geometry = buildGeometry({
               ratio: request.aspectRatio, assetContext: assetCtx, blueprint: bp,
-              copyRoles: roles, productCount, hasLogo: hasLogoForBrain,
+              copyRoles: roles, productCount, hasLogo: hasLogoForBrain || Boolean(decision.brandKit?.has_logo),
+              // Phase 5.3: the layout follows the director's composition.
+              compositionHint: dec?.composition_decision,
+              brandKit: decision.brandKit,
             });
             const typography = buildTypographySystem({
               blueprint: bp, productMeaning, marketingInsight,
               assetContext: assetCtx, geometry, copyRoles: roles,
+              lines: textLines,
+              brandKit: decision.brandKit,
             });
             capturedGeometry = geometry;
             capturedTypography = typography;
+            // The typography plan. Built AFTER the typography system so it can
+            // reuse the personality that system already resolved, and BEFORE
+            // the document so the document carries it -- the compositor reads
+            // the plan's reserved area from the document, not from a second
+            // channel that could disagree with it.
+            const plan = typographyPlanOn
+              ? buildTypographyPlan({
+                  mode: textRequirement.mode,
+                  lines: textLines,
+                  blueprint: bp,
+                  assetContext: assetCtx,
+                  brandKit: decision.brandKit,
+                  geometry,
+                  typography,
+                  ratio: request.aspectRatio,
+                })
+              : null;
+            capturedPlan = plan;
+            if (plan) console.log("[EXPERIMENT][TYPOGRAPHY_PLAN]", typographyPlanTelemetry(plan));
             const composition = buildComposition({ blueprint: bp, decision: dec, visualDNA });
-            const doc = buildCreativeDocument({ geometry, typography, composition, blueprint: bp });
+            // Phase 5.1: the editable design document. Built from the same
+            // geometry and typography the prompt below is written from, so what
+            // the renderer is told and what is stored are one structure.
+            const doc = buildCreativeDocument({
+              geometry, typography, composition, blueprint: bp,
+              brandKit: decision.brandKit, canvasLongEdge: 2048, plan,
+            });
+            capturedDocument = doc;
             const critique = critiqueRender({ blueprint: bp, geometry, typography, prompt: composedPrompt });
-            executionText = [renderGeometry(geometry), renderTypography(typography)]
+            // Editable mode: the renderer is told where the copy WILL go, so it
+            // composes around it, but never given the words to draw.
+            // Editable mode: the renderer is told what the frame must LEAVE,
+            // never what the words are. With the plan on, the copy zones are
+            // transmitted as areas to keep clear rather than under typographic
+            // names -- a block headed "headline" is typography vocabulary
+            // handed to a model told in the same prompt to render none.
+            executionText = (
+              editableOn
+                ? [renderGeometry(geometry, { sceneOnly: typographyPlanOn }), NO_TEXT_DIRECTIVE]
+                : [renderGeometry(geometry), renderTypography(typography)]
+            )
               .filter(Boolean)
               .join("\n\n");
             // Phase 1: one context, validated before a render is paid for.
@@ -966,10 +1252,11 @@ ${blueprintText}` : composed;
           if (productionOn) {
             const ds = buildDesignSystem({ visualDNA, productMeaning, assetContext: assetCtx, decision: dec });
             const comp = buildComposition({ blueprint: bp, decision: dec, visualDNA });
+            capturedComposition = comp;
             const assets = planAssets({ decision: dec, visualDNA, productMeaning });
             const structure = chooseStructure({
               assetContext: assetCtx, marketingInsight, decision: dec,
-              objective: mc?.objective, productCount, copyItems: request.copyItems,
+              objective: mc?.objective, productCount, copyItems: textRequirement.lines,
             });
             const formats = adaptFormats(bp);
             const project = buildDesignProject(comp, bp);
@@ -987,6 +1274,7 @@ ${blueprintText}` : composed;
               visualDNA,
               supportingRoles: assets.assets.map((a) => a.asset),
             });
+            capturedAssetDna = assetDna;
             // Standing preferences, supplied by the caller. This layer does not
             // know or ask whose they are -- it receives sentences.
             //
@@ -994,12 +1282,37 @@ ${blueprintText}` : composed;
             // when the budget is tight it is the first thing to fall away,
             // never the product's observed surface or the director's decisions
             // for the brief actually in front of it.
-            const prefs = decision.standingPreferences || [];
+            // Not repeated when the director already received them as context:
+            // one observation stated in two places is the duplicate-carrier
+            // defect, and the director's decisions already carry its use of it.
+            const prefs = memoryContext ? [] : decision.standingPreferences || [];
             const prefText = prefs.length
               ? [
                   "STANDING CREATIVE PREFERENCES",
                   "Apply these only where the brief above does not already say otherwise.",
                   ...prefs.map((p) => `- ${p}`),
+                ].join("\n")
+              : undefined;
+
+            // Phase 3.5. What this workspace's own kept work suggests.
+            //
+            // Its own block rather than folded into the preferences, and worded
+            // as evidence rather than as direction: these are statistical
+            // observations over a body of work, and a pattern seen three times
+            // must not read like something the client asked for.
+            //
+            // Last in the list, below even the preferences, so it is the first
+            // thing dropped when the budget is tight. Memory assists; the
+            // product's observed surface and the director's decisions for THIS
+            // brief do not yield to it.
+            const recalled = memoryContext ? [] : decision.creativeMemory || [];
+            const memoryText = recalled.length
+              ? [
+                  "WHAT THIS WORKSPACE'S OWN WORK SUGGESTS",
+                  "Observations from previous kept renders, not instructions.",
+                  "Ignore any of these that the brief above contradicts, and do not let them",
+                  "make this render resemble the last one.",
+                  ...recalled.map((m) => `- ${m}`),
                 ].join("\n")
               : undefined;
 
@@ -1009,6 +1322,7 @@ ${blueprintText}` : composed;
               renderComposition(comp),
               renderAssets(assets),
               prefText,
+              memoryText,
             ].filter(Boolean) as string[];
             const kept: string[] = [];
             let used = 0;
@@ -1024,6 +1338,7 @@ ${blueprintText}` : composed;
               ...assetTelemetry(assets),
               ...assetDNATelemetry(assetDna),
               standing_preferences: prefs.length,
+              recalled_memory: recalled.length,
               ...structureTelemetry(structure),
               ...adaptationTelemetry(formats),
               ...projectTelemetry(project),
@@ -1072,9 +1387,51 @@ ${text || ""}`,
         }
       : undefined;
 
+    // Phase 4.2 / 4.3. Every developed direction evaluated, and the selection
+    // rule applied, before the judgment reaches anything that renders. A
+    // pinned judgment (the vision correction pass) was evaluated when it was
+    // first made, and is reused exactly.
+    const productObserved = Boolean(
+      visualDNA && Object.keys(((visualDNA as unknown as { observed?: { product?: object } }).observed?.product) || {}).length,
+    );
+    const direct = (j: CreativeJudgment | null, directorMs?: number): CreativeJudgment | null => {
+      if (!j || decision.pinnedJudgment) return j;
+      try {
+        // Evaluated on what the director actually wrote, so a route that
+        // invented text is marked down and the record says so; then held to
+        // the requirement before anything renders.
+        const evaluation = evaluateDirections(j, { evidence: decision.routeEvidence, productObserved, directorMs, textRequirement, brandKit: decision.brandKit });
+        console.log("[EXPERIMENT][DIRECTOR_EVALUATION]", evaluationTelemetry(evaluation));
+        const enforced = enforceTextRequirement(applyEvaluation(j, evaluation), textRequirement);
+        if (enforced.removed.length) {
+          console.warn("[EXPERIMENT][TEXT_REQUIREMENT] director text removed", {
+            mode: textRequirement.mode,
+            removed: enforced.removed.length,
+          });
+        }
+        return enforced.judgment;
+      } catch (err: any) {
+        // An evaluation is an assist to the director, never a reason to lose its judgment.
+        console.warn("[EXPERIMENT][DIRECTOR_EVALUATION] skipped", { error: err?.message || String(err) });
+        return j;
+      }
+    };
+    if (decision.pinnedJudgment) {
+      console.log("[EXPERIMENT][DIRECTOR_PINNED]", {
+        reason: "vision correction pass: refining the chosen direction, not choosing again",
+        selected: decision.pinnedJudgment.strategy?.selected || decision.pinnedJudgment.selected || null,
+      });
+    }
+
     if (!controlled) {
-      const judgmentPromise = new CreativeDirectorV1()
-        .judge(brief, judgmentFlags)
+      const judgmentPromise = (
+        decision.pinnedJudgment
+          ? Promise.resolve(decision.pinnedJudgment)
+          : new CreativeDirectorV1().judge(brief, judgmentFlags)
+      )
+        // Concurrent path: the director ran alongside the stable stages, so its
+        // time is not saved by pinning -- no `directorMs` is claimed for it.
+        .then((raw) => direct(raw))
         .then((j) => {
           console.log("[EXPERIMENT][JUDGMENT_LATENCY]", {
             elapsed_ms: Date.now() - judgeStart,
@@ -1083,6 +1440,7 @@ ${text || ""}`,
             concurrent: true,
           });
           recordRoutesOffered(j, routes);
+          capturedJudgment = j;
           logCreativeStrategyTrace({
             judgment: j,
             assetCtx,
@@ -1105,7 +1463,7 @@ ${text || ""}`,
 
       const innerConcurrent = options?.generationProvider || new ImgStudioImageGenerationProvider();
       try {
-        const generated = await StablePipeline.run(request, {
+        const generated = await RenderCore.generateSimpleImage(renderSource(request), {
           ...options,
           ...cdAuthorityOptions,
           ...(earlyStrategy ? { precomputedStrategy: earlyStrategy } : {}),
@@ -1119,7 +1477,9 @@ ${text || ""}`,
             creativeConstraint,
             // Uncontrolled: the whole judgment is appended anyway.
             false,
-            blueprintFor
+            blueprintFor,
+            finalDirective,
+            editableHooks
           ),
         });
 
@@ -1137,6 +1497,13 @@ ${text || ""}`,
           capturedBlueprint,
           capturedTypography,
           capturedGeometry,
+          capturedComposition,
+          capturedAssetDna,
+          capturedPrompt,
+          earlyStrategy,
+          visualDNA,
+          capturedJudgment,
+          capturedDocument,
         );
       } catch (err: any) {
         console.error("[EVOLUTION][EXPERIMENT] generation failed", {
@@ -1146,8 +1513,11 @@ ${text || ""}`,
       }
     }
 
-    const judgment = await new CreativeDirectorV1().judge(brief, judgmentFlags);
+    const judgment = decision.pinnedJudgment
+      ? decision.pinnedJudgment
+      : direct(await new CreativeDirectorV1().judge(brief, judgmentFlags), Date.now() - judgeStart);
     recordRoutesOffered(judgment, routes);
+    capturedJudgment = judgment;
     logCreativeStrategyTrace({
       judgment,
       assetCtx,
@@ -1162,11 +1532,12 @@ ${text || ""}`,
     });
 
     if (!judgment) {
-      // The director declined or failed. Running stable is the honest response:
-      // a reordered prompt with nothing new in it is a change with no upside,
-      // and pretending the experiment ran would poison the comparison log.
-      console.warn("[EVOLUTION][EXPERIMENT] no judgment produced — running stable behaviour");
-      return StablePipeline.run(request, options);
+      // The director declined or failed. Rendering through the core without it
+      // is the honest response: a reordered prompt with nothing new in it is a
+      // change with no upside, and pretending the direction ran would poison
+      // the record. Degraded, not failed.
+      console.warn("[EVOLUTION][EXPERIMENT] no judgment produced — degraded render without the director");
+      return RenderCore.generateSimpleImage(request, options);
     }
 
     // The orchestrator would construct this itself if options carried no
@@ -1249,7 +1620,7 @@ ${text || ""}`,
 
 
     try {
-      const generated = await StablePipeline.run(effectiveRequest, {
+      const generated = await RenderCore.generateSimpleImage(renderSource(effectiveRequest), {
         ...options,
         ...cdAuthorityOptions,
         ...(earlyStrategy ? { precomputedStrategy: earlyStrategy } : {}),
@@ -1262,7 +1633,9 @@ ${text || ""}`,
           layoutPriorityOn,
           creativeConstraint,
           bridge,
-          blueprintFor
+          blueprintFor,
+          finalDirective,
+          editableHooks
         ),
       });
 
@@ -1277,6 +1650,13 @@ ${text || ""}`,
         capturedBlueprint,
         capturedTypography,
         capturedGeometry,
+        capturedComposition,
+        capturedAssetDna,
+        capturedPrompt,
+        earlyStrategy,
+        visualDNA,
+        capturedJudgment,
+        capturedDocument,
       );
     } catch (err: any) {
       console.error("[EVOLUTION][EXPERIMENT] generation failed", {

@@ -1,45 +1,34 @@
 import fs from "fs";
 import path from "path";
-import { ComponentName, PipelineId } from "./pipeline-versions";
+import { ComponentName } from "./pipeline-versions";
 
 /**
- * The flag store.
+ * The feature store.
  *
- * Three rules decide everything in this file:
+ * Phase 5.5.5 — Experience consolidation. There is ONE creative pipeline, and
+ * its architecture lives in code, not in a file. That changes what a flag is:
  *
- *   1. The safe value is the default. An absent file, a corrupt file, a key
- *      nobody has heard of, a disk that will not read — every one of those
- *      resolves to stable with all features off. A flag system that fails into
- *      the experiment is worse than no flag system.
+ *   1. CORE features are the architecture. They are always on and no file can
+ *      turn them off. Before consolidation every one of them defaulted to off
+ *      and the whole design ran only because of a gitignored JSON file on one
+ *      machine -- so any fresh deployment silently served the bare render core.
  *
- *   2. Rollback beats rollout. `TIDO_PIPELINE_KILL_SWITCH` overrides the file,
- *      the mode and every individual flag, so a bad experiment can be stopped
- *      from the environment without waiting for a write to succeed.
+ *   2. EXPERIMENTS are the only switches left: built, not validated, off by
+ *      default, opt-in one at a time through the file or the admin surface.
  *
- *   3. Turning the experiment ON is not itself a change. The experiment pipeline
- *      runs the stable components until a specific feature flag is set, so
- *      `active_pipeline: "experiment"` with no features enabled produces the
- *      same output as stable. The routing decision and the behaviour change are
- *      deliberately separate switches.
+ *   3. The kill switch still beats everything. `TIDO_PIPELINE_KILL_SWITCH`
+ *      turns every feature off, core included, and the pipeline then renders
+ *      through the core without the director -- the degraded path it already
+ *      takes when the director fails. That is a reliability escape hatch for
+ *      an outage (the LLM proxy down), not a second pipeline.
  */
 
-export type RolloutMode = "production" | "internal_only" | "ab_testing";
-
 export interface FeatureFlags {
-  /** Which pipeline handles traffic when the mode allows it. */
-  active_pipeline: PipelineId;
-  /** Who the experiment is allowed to reach. */
-  rollout_mode: RolloutMode;
-  /** Share of traffic on the experiment when `rollout_mode` is "ab_testing", 0-100. */
-  ab_percentage: number;
-  /** Opaque tester ids allowed through in "internal_only". Never personal data. */
-  internal_testers: string[];
-  /** Behaviour switches. Every one is false by default and opt-in individually. */
+  /**
+   * Behaviour switches. CORE_FEATURES are always true (unless the kill switch
+   * is set); every other key is an experiment, false unless opted in.
+   */
   features: {
-    creative_judgment_v2: boolean;
-    adaptive_prompt_length: boolean;
-    creative_exploration: boolean;
-    visual_self_review: boolean;
     /**
      * Creative Judgment V1, experiment-only.
      *
@@ -323,22 +312,6 @@ export interface FeatureFlags {
      */
     creative_director_authority_v1: boolean;
     /**
-     * Creative Blueprint V1 — Phase 2.0, schema only.
-     *
-     * Nothing constructs a blueprint and nothing reads one. The flag exists so
-     * the schema can land, be tested and be reviewed before any behaviour
-     * depends on it, and so that turning it on later is one switch rather than
-     * a merge.
-     *
-     * Deliberately inert until E2 reports. E2 measures whether render quality
-     * moves when the Creative Director stops being outranked by inferred art
-     * direction. If it does not move, then this system is not limited by what
-     * the director is permitted to decide, and sixteen more decision fields
-     * would be the wrong response — the same conclusion `format_challenge_v1`
-     * reached the expensive way.
-     */
-    creative_blueprint_v1: boolean;
-    /**
      * Phase 1.1B. Assembles ProductTruth + VisualDNA + Marketing Strategy into
      * a Creative Brief and puts it in front of the director.
      *
@@ -417,23 +390,70 @@ export interface FeatureFlags {
     real_typography_v1: boolean;
     /** Phase 4. SVG, Canva and PSD-model export from the creative document. */
     export_layer_v1: boolean;
+    /**
+     * Typography Composition Hardening V1.
+     *
+     * The typography plan -- how many lines each string runs to, how much of
+     * the frame the copy needs, which area the picture must leave quiet --
+     * built before the image prompt is written, transmitted to the renderer as
+     * SPACE rather than as words, and read back by the compositor when it sets
+     * the type.
+     *
+     * One flag for the chain because it is one decision: the plan is what the
+     * prompt reserves space for AND what the layout engine sets into. Enabling
+     * half of it would reserve an area nothing uses, or set type into an area
+     * nothing reserved -- which is the defect this phase exists to remove.
+     *
+     * Rides on the execution layer, where the geometry and the typography
+     * system it reads are built. Off, the prompt and the document are exactly
+     * what they were before the plan existed.
+     *
+     * The compositor's own hardening -- line breaking, one base size so
+     * hierarchy cannot invert, contrast measured against the render -- is NOT
+     * behind this flag. It is a correctness fix to code that was producing a
+     * headline smaller than its own subheadline, and a correctness fix does
+     * not get an off switch.
+     */
+    typography_plan_v1: boolean;
   };
   /** Which component builds an experiment run may use. */
   components: Record<ComponentName, boolean>;
 }
 
-export const DEFAULT_FLAGS: FeatureFlags = {
-  active_pipeline: "stable",
-  // Internal-only by default so that enabling the experiment reaches nobody
-  // until a tester is explicitly added. "Default: Stable + Internal Only".
-  rollout_mode: "internal_only",
-  ab_percentage: 0,
-  internal_testers: [],
+/**
+ * The architecture. Each was built, validated live and has been running as the
+ * Experience pipeline; consolidation makes them the product rather than a
+ * setting. Removing one is a code change, reviewed like any other.
+ */
+export const CORE_FEATURES = [
+  "creative_reasoning_v1",
+  "creative_strategy_intelligence_v1",
+  "consumer_psychology_v1",
+  "brand_positioning_v1",
+  "creative_director_control_v1",
+  "asset_type_intelligence_v1",
+  "creative_bridge_v1",
+  "typography_roles_v1",
+  "asset_intent_v2",
+  "creative_decision_context_v1",
+  "visual_dna_v1",
+  "creative_strategy_selection_v1",
+  "multi_product_staging_v1",
+  "product_truth_v1",
+  "creative_director_authority_v1",
+  "creative_brief_v1",
+  "marketing_insight_v1",
+  "professional_creative_brain_v1",
+  "execution_layer_v1",
+  "vision_iteration_v1",
+  "typography_plan_v1",
+] as const satisfies readonly (keyof FeatureFlags["features"])[];
+
+export type CoreFeature = (typeof CORE_FEATURES)[number];
+
+/** Everything off: what the kill switch serves. */
+const ALL_OFF: FeatureFlags = {
   features: {
-    creative_judgment_v2: false,
-    adaptive_prompt_length: false,
-    creative_exploration: false,
-    visual_self_review: false,
     creative_exploration_v1: false,
     creative_reasoning_v1: false,
     anti_generic_check_v1: false,
@@ -458,7 +478,6 @@ export const DEFAULT_FLAGS: FeatureFlags = {
     format_challenge_v1: false,
     product_truth_v1: false,
     creative_director_authority_v1: false,
-    creative_blueprint_v1: false,
     creative_brief_v1: false,
     marketing_insight_v1: false,
     professional_creative_brain_v1: false,
@@ -470,6 +489,7 @@ export const DEFAULT_FLAGS: FeatureFlags = {
     vision_iteration_v1: false,
     real_typography_v1: false,
     export_layer_v1: false,
+    typography_plan_v1: false,
   },
   components: {
     prompt_compiler: false,
@@ -479,7 +499,17 @@ export const DEFAULT_FLAGS: FeatureFlags = {
   },
 };
 
-export const FEATURE_NAMES = Object.keys(DEFAULT_FLAGS.features) as (keyof FeatureFlags["features"])[];
+export const FEATURE_NAMES = Object.keys(ALL_OFF.features) as (keyof FeatureFlags["features"])[];
+
+/** The features that can still be switched: everything that is not core. */
+export const EXPERIMENT_FEATURES = FEATURE_NAMES.filter((f) => !(CORE_FEATURES as readonly string[]).includes(f));
+
+/** The architecture with every experiment off: what a missing file resolves to. */
+export const DEFAULT_FLAGS: FeatureFlags = (() => {
+  const d: FeatureFlags = JSON.parse(JSON.stringify(ALL_OFF));
+  for (const f of CORE_FEATURES) d.features[f] = true;
+  return d;
+})();
 
 const FLAGS_PATH = process.env.TIDO_FLAGS_PATH
   ? path.resolve(process.env.TIDO_FLAGS_PATH)
@@ -498,26 +528,20 @@ function baseline(): FeatureFlags {
  * that reads `flags.features.x`. Every value is also type-checked, because this
  * file is hand-editable and an operator typing `"true"` should not silently
  * enable anything.
+ *
+ * Only EXPERIMENTS are read from the file. A core feature set to false there
+ * is ignored: the file cannot switch the architecture off. Keys from before
+ * consolidation (`active_pipeline`, `rollout_mode`, `ab_percentage`,
+ * `internal_testers`) and flags that no longer exist are ignored too, so an
+ * old file keeps working.
  */
 export function normalize(stored: unknown): FeatureFlags {
   const out = baseline();
   if (!stored || typeof stored !== "object") return out;
   const s = stored as Record<string, any>;
 
-  if (s.active_pipeline === "experiment" || s.active_pipeline === "stable") {
-    out.active_pipeline = s.active_pipeline;
-  }
-  if (s.rollout_mode === "production" || s.rollout_mode === "internal_only" || s.rollout_mode === "ab_testing") {
-    out.rollout_mode = s.rollout_mode;
-  }
-  if (typeof s.ab_percentage === "number" && Number.isFinite(s.ab_percentage)) {
-    out.ab_percentage = Math.max(0, Math.min(100, Math.round(s.ab_percentage)));
-  }
-  if (Array.isArray(s.internal_testers)) {
-    out.internal_testers = s.internal_testers.filter((t: unknown) => typeof t === "string" && t.trim()).map(String);
-  }
   if (s.features && typeof s.features === "object") {
-    for (const k of FEATURE_NAMES) {
+    for (const k of EXPERIMENT_FEATURES) {
       if (s.features[k] === true) out.features[k] = true;
     }
   }
@@ -538,9 +562,10 @@ export function normalize(stored: unknown): FeatureFlags {
  */
 export function readFlags(): FeatureFlags {
   // The kill switch is checked first and needs no file at all, so it still works
-  // when the file is missing, unreadable, or being written.
+  // when the file is missing, unreadable, or being written. It turns EVERYTHING
+  // off, core included: the pipeline then renders without the director.
   if (String(process.env.TIDO_PIPELINE_KILL_SWITCH || "").toLowerCase() === "true") {
-    return baseline();
+    return JSON.parse(JSON.stringify(ALL_OFF));
   }
   try {
     if (!fs.existsSync(FLAGS_PATH)) return baseline();
@@ -548,7 +573,7 @@ export function readFlags(): FeatureFlags {
   } catch (err: any) {
     // Loud, because silently serving defaults while an operator believes an
     // experiment is running is its own kind of outage.
-    console.warn("[EVOLUTION][FLAGS] unreadable, using stable defaults", {
+    console.warn("[EVOLUTION][FLAGS] unreadable, using the core architecture with experiments off", {
       path: FLAGS_PATH,
       error: err?.message || String(err),
     });
@@ -564,10 +589,7 @@ export function writeFlags(next: unknown): FeatureFlags {
   fs.writeFileSync(tmp, JSON.stringify(normalized, null, 2), "utf-8");
   fs.renameSync(tmp, FLAGS_PATH);
   console.log("[EVOLUTION][FLAGS] updated", {
-    active_pipeline: normalized.active_pipeline,
-    rollout_mode: normalized.rollout_mode,
-    ab_percentage: normalized.ab_percentage,
-    features_on: FEATURE_NAMES.filter((f) => normalized.features[f]),
+    experiments_on: EXPERIMENT_FEATURES.filter((f) => normalized.features[f]),
   });
   return normalized;
 }

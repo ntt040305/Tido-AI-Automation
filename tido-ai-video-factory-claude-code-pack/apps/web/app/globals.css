@@ -17,6 +17,18 @@
   --color-warn: #E8A33D;
   --color-warnDim: #3A2C10;
 
+  /* The AI accent.
+     Referenced by six components already -- the Creative Brain panel, the
+     strategy panel, the direction panel -- and never defined, so every
+     `text-aiGlow` and `bg-aiGlow/10` in the product has been rendering with
+     no colour at all. Defining it completes an intent that was already in the
+     code rather than introducing a new one.
+     Gold rather than the red `accent` or the amber `warn`, so "the AI decided
+     this" stays visually distinct from "this is the primary action" and from
+     "this needs attention". */
+  --color-aiGlow: #E3B341;
+  --color-aiGlowDim: #2E2413;
+
   --radius-DEFAULT: 14px;
   --radius-lg: 20px;
   --radius-pill: 999px;

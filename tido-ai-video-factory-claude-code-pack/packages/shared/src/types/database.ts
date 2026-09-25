@@ -52,8 +52,10 @@ export interface Project {
 }
 
 export interface CreativeRun {
-  /** The engine's own generation id, reused as the primary key. */
+  /** UUID primary key, derived from the engine id rather than equal to it. */
   id: string;
+  /** The engine's own id (`gen_...`). */
+  engine_generation_id: string | null;
   /**
    * Null for an anonymous render.
    *

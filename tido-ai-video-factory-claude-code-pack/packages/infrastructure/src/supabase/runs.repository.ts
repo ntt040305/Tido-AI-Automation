@@ -38,6 +38,7 @@ export async function recordRun(input: RecordRunInput): Promise<DbResult<Creativ
       .from("creative_runs")
       .insert({
         id: input.id,
+        engine_generation_id: input.engineGenerationId ?? null,
         org_id: input.orgId ?? null,
         project_id: input.projectId ?? null,
         user_id: input.userId ?? null,

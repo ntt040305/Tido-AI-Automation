@@ -98,7 +98,9 @@ export function logGeneration(
     routing_reason: decision.reason,
     component_versions: decision.component_versions,
     features_enabled: decision.features_enabled,
-    rollout_mode: decision.flags.rollout_mode,
+    // Phase 5.5.5: one pipeline, no rollout modes. The key stays so log lines
+    // from before and after consolidation parse the same way.
+    rollout_mode: "single_pipeline",
     status: String(result.status),
     success: Boolean(result.success),
     duration_ms: durationMs,

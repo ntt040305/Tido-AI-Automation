@@ -86,6 +86,17 @@ export interface BrandIdentity {
   product_assets: BrandAsset[];
   logo_asset?: BrandAsset;
   reference_assets?: BrandAsset[];
+  /**
+   * Phase 5.4. A saved Brand Kit (signed-in only). Sent as an id: the server
+   * resolves it against the person's own workspaces, never trusting the client.
+   */
+  brand_kit_id?: string;
+  /**
+   * Phase 5.5. Render in Editable mode: the scene without text or logo, the
+   * words and the mark composited as separate layers, so the result can be
+   * downloaded as a real editable file. Signed-in only.
+   */
+  editable_export?: boolean;
 }
 
 export interface CreativeBrief {
@@ -288,7 +299,20 @@ export interface GenerationDiagnostics {
 
 export interface GeneratedAsset {
   asset_id: string;
+  /**
+   * The engine's generation id -- the key the server recorded the render
+   * under. Distinct from `asset_id` (`ast_img_<generationId>`), which is what
+   * the approval signal used to send, so no download ever linked to its run.
+   * Optional because older persisted state and the mock do not carry it.
+   */
+  generation_id?: string;
   image_url: string;
+  /**
+   * Phase 5.5. True when this render was made in Editable mode and has
+   * separate layers stored: text, logo and scene, exportable as PSD, Canva,
+   * SVG or Figma. False for an ordinary render, which downloads as PNG only.
+   */
+  editable_export?: boolean;
   aspect_ratio: AspectRatioType;
   diagnostics: GenerationDiagnostics;
   /** The campaign angle the strategy layer decided on. Empty when unavailable. */

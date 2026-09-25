@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { DEFAULT_FLAGS, readFlags, writeFlags, flagsPath } from "@/lib/image-engine/evolution/feature-flags";
+import { CORE_FEATURES, DEFAULT_FLAGS, EXPERIMENT_FEATURES, readFlags, writeFlags, flagsPath } from "@/lib/image-engine/evolution/feature-flags";
 import { comparePipelines, readLog } from "@/lib/image-engine/evolution/ExperimentLogger";
 import { COMPONENT_VERSIONS, PIPELINE_VERSIONS } from "@/lib/image-engine/evolution/pipeline-versions";
 
@@ -42,6 +42,9 @@ export async function GET() {
   return NextResponse.json({
     flags,
     defaults: DEFAULT_FLAGS,
+    // Phase 5.5.5: the architecture is not switchable; only experiments are.
+    core_features: CORE_FEATURES,
+    experiment_features: EXPERIMENT_FEATURES,
     flags_path: flagsPath(),
     pipeline_versions: PIPELINE_VERSIONS,
     component_versions: COMPONENT_VERSIONS,
@@ -75,6 +78,6 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ success: false, error: auth.reason }, { status: 403 });
   }
   const flags = writeFlags(DEFAULT_FLAGS);
-  console.warn("[EVOLUTION][ROLLBACK] flags reset to stable defaults");
+  console.warn("[EVOLUTION][ROLLBACK] experiments reset: the core architecture only");
   return NextResponse.json({ success: true, flags, rolled_back: true });
 }

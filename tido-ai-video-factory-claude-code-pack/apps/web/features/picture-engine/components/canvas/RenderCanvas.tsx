@@ -7,6 +7,7 @@ import {
   AspectRatioType,
 } from "../../types/picture-engine.types";
 import { EmptyCanvasState } from "./EmptyCanvasState";
+import { EditableExportPanel } from "./EditableExportPanel";
 import { AIReasoningTimeline, TimelineStepItem } from "../generation/AIReasoningTimeline";
 import {
   Sparkles,
@@ -16,6 +17,8 @@ import {
   ZoomIn,
   CheckCircle,
   Loader2,
+  ThumbsUp,
+  ThumbsDown,
 } from "lucide-react";
 
 export interface RenderCanvasProps {
@@ -30,6 +33,11 @@ export interface RenderCanvasProps {
   isDownloading?: boolean;
   onGenerate: () => void;
   onDownloadAsset?: () => void;
+  /** Phase 4.6. The person's verdict on this render: it fits, or it does not. */
+  onApproveAsset?: () => void;
+  onRejectAsset?: () => void;
+  /** Which verdict has already been given for the current render, if any. */
+  feedback?: "approve" | "reject" | null;
 }
 
 export function RenderCanvas({
@@ -44,6 +52,9 @@ export function RenderCanvas({
   isDownloading = false,
   onGenerate,
   onDownloadAsset,
+  onApproveAsset,
+  onRejectAsset,
+  feedback = null,
 }: RenderCanvasProps) {
   // ASPECT RATIO CLASS HELPER
   function getAspectRatioClass(ratio: AspectRatioType) {
@@ -184,6 +195,37 @@ export function RenderCanvas({
           <span>Tạo Biến thể Mới</span>
         </button>
 
+        {currentAsset && (onApproveAsset || onRejectAsset) && (
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              title="Hướng sáng tạo này phù hợp"
+              aria-label="Hướng sáng tạo này phù hợp"
+              aria-pressed={feedback === "approve"}
+              disabled={Boolean(feedback)}
+              onClick={onApproveAsset}
+              className={`p-3 rounded-xl border transition-colors cursor-pointer outline-none disabled:cursor-default ${
+                feedback === "approve" ? "bg-accent/15 border-accent text-accent" : "bg-surface2 hover:bg-surface3 border-borderStrong text-text disabled:opacity-40"
+              }`}
+            >
+              <ThumbsUp size={15} />
+            </button>
+            <button
+              type="button"
+              title="Hướng sáng tạo này không phù hợp"
+              aria-label="Hướng sáng tạo này không phù hợp"
+              aria-pressed={feedback === "reject"}
+              disabled={Boolean(feedback)}
+              onClick={onRejectAsset}
+              className={`p-3 rounded-xl border transition-colors cursor-pointer outline-none disabled:cursor-default ${
+                feedback === "reject" ? "bg-red-500/15 border-red-500 text-red-500" : "bg-surface2 hover:bg-surface3 border-borderStrong text-text disabled:opacity-40"
+              }`}
+            >
+              <ThumbsDown size={15} />
+            </button>
+          </div>
+        )}
+
         {currentAsset && (
           <button
             type="button"
@@ -196,8 +238,16 @@ export function RenderCanvas({
             ) : (
               <Download size={15} />
             )}
-            <span>{isDownloading ? "Đang tải..." : "Tải Ảnh 2K"}</span>
+            <span>{isDownloading ? "Đang tải..." : "Tải Ảnh PNG"}</span>
           </button>
+        )}
+
+        {/* Phase 5.5: the design itself, as files other tools can edit. */}
+        {currentAsset && (
+          <EditableExportPanel
+            generationId={currentAsset.generation_id}
+            editable={currentAsset.editable_export}
+          />
         )}
       </div>
     </div>

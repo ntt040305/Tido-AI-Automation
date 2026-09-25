@@ -49,6 +49,8 @@ export const BrandIdentitySchema = z.object({
   primary_colors: z.array(z.string()).default([]),
   product_assets: z.array(BrandAssetSchema).default([]),
   logo_asset: BrandAssetSchema.optional(),
+  brand_kit_id: z.string().optional(),
+  editable_export: z.boolean().optional(),
 });
 
 export const CreativeBriefSchema = z.object({

@@ -53,15 +53,25 @@ export async function upsertProfile(identity: VerifiedIdentity): Promise<DbResul
       // Email and display name are mirrored from Firebase, which owns them.
       // Refreshed on sight so a rename in Firebase does not leave a stale
       // name here forever.
-      const changed =
-        existing.data.email !== (identity.email ?? null) ||
-        existing.data.display_name !== (identity.displayName ?? null);
+      //
+      // Only fields the caller actually KNOWS are compared. `undefined` means
+      // "not supplied", not "cleared": a caller holding only a UID used to
+      // read as an account with no email and no name, and every signed-in
+      // render wiped both. The cost of the rule: a name removed in Firebase
+      // stays mirrored here, which is the harmless direction for a mirror.
+      const patch: { email?: string | null; display_name?: string | null } = {};
+      if (identity.email !== undefined && existing.data.email !== identity.email) {
+        patch.email = identity.email;
+      }
+      if (identity.displayName !== undefined && existing.data.display_name !== identity.displayName) {
+        patch.display_name = identity.displayName;
+      }
 
-      if (!changed) return { ok: true, data: existing.data as UserProfile };
+      if (!Object.keys(patch).length) return { ok: true, data: existing.data as UserProfile };
 
       const updated = await db
         .from("user_profiles")
-        .update({ email: identity.email ?? null, display_name: identity.displayName ?? null })
+        .update(patch)
         .eq("id", existing.data.id)
         .select("*")
         .single();
@@ -80,7 +90,21 @@ export async function upsertProfile(identity: VerifiedIdentity): Promise<DbResul
       .select("*")
       .single();
 
-    if (created.error) return failed(created.error);
+    if (created.error) {
+      // Two first requests from a brand-new account (the page load and the
+      // render) can both find no row and both insert. The loser's unique
+      // violation means the profile now exists -- read it rather than treating
+      // this person as anonymous for the render that lost.
+      if ((created.error as { code?: string }).code === "23505") {
+        const winner = await db
+          .from("user_profiles")
+          .select("*")
+          .eq("firebase_uid", identity.firebaseUid)
+          .maybeSingle();
+        if (!winner.error && winner.data) return { ok: true, data: winner.data as UserProfile };
+      }
+      return failed(created.error);
+    }
     const profile = created.data as UserProfile;
 
     const org = await db

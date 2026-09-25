@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Be_Vietnam_Pro, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import Sidebar from "@/components/Sidebar";
+import { AuthProvider } from "@/features/auth/AuthProvider";
 
 const beVietnam = Be_Vietnam_Pro({
   subsets: ["vietnamese", "latin"],
@@ -24,10 +25,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="vi" className={`${beVietnam.variable} ${plexMono.variable}`} suppressHydrationWarning>
       <body className="font-sans" suppressHydrationWarning>
-        <Sidebar />
-        <main className="flex-1 min-w-0">
-          {children}
-        </main>
+        {/* Wraps everything so any page can ask who is signed in. The provider
+            renders no markup of its own and adds no layout. */}
+        <AuthProvider>
+          <Sidebar />
+          <main className="flex-1 min-w-0">
+            {children}
+          </main>
+        </AuthProvider>
       </body>
     </html>
   );

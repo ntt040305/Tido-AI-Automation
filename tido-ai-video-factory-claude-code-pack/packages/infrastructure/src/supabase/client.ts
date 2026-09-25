@@ -84,7 +84,43 @@ export function unavailable<T>(): DbResult<T> {
   return { ok: false, error: "database not configured", unavailable: true };
 }
 
+/**
+ * Turns whatever went wrong into a message a person can act on.
+ *
+ * The `String(e)` fallback alone was a real bug, not a rough edge. Supabase
+ * reports failures as a `PostgrestError` — a plain object, not an `Error` —
+ * so every database failure in this application rendered as the string
+ * `[object Object]`. A caller logging that learns nothing: not which table,
+ * not which constraint, not whether it was a permission problem or a missing
+ * relation. It was found by making one real call against a live project and
+ * reading the output, which is why probes are worth running against the real
+ * thing rather than a mock.
+ *
+ * The Postgres error code is kept alongside the message because it is the part
+ * that is stable enough to branch on — `42P01` (undefined table) and `42501`
+ * (insufficient privilege) mean very different things to an operator.
+ */
 export function failed<T>(e: unknown): DbResult<T> {
-  const message = e instanceof Error ? e.message : String(e);
-  return { ok: false, error: message };
+  if (e instanceof Error) return { ok: false, error: e.message };
+
+  if (e && typeof e === "object") {
+    const err = e as { message?: unknown; code?: unknown; details?: unknown; hint?: unknown };
+    const parts = [
+      typeof err.message === "string" ? err.message : null,
+      typeof err.details === "string" && err.details ? `(${err.details})` : null,
+      typeof err.hint === "string" && err.hint ? `hint: ${err.hint}` : null,
+    ].filter(Boolean);
+    if (parts.length) {
+      const code = typeof err.code === "string" ? `[${err.code}] ` : "";
+      return { ok: false, error: `${code}${parts.join(" ")}` };
+    }
+    // Nothing recognisable on it. JSON beats "[object Object]".
+    try {
+      return { ok: false, error: JSON.stringify(e) };
+    } catch {
+      /* fall through to String() */
+    }
+  }
+
+  return { ok: false, error: String(e) };
 }

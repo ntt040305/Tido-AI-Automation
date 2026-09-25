@@ -22,9 +22,28 @@ process.env.TIDO_EVOLUTION_LOG_PATH = path.join(TMP, "log.jsonl");
 delete process.env.TIDO_PIPELINE_KILL_SWITCH;
 
 /* eslint-disable @typescript-eslint/no-var-requires */
-const { DEFAULT_FLAGS, normalize, readFlags, writeFlags } = require("./evolution/feature-flags");
+const { DEFAULT_FLAGS, CORE_FEATURES, EXPERIMENT_FEATURES, normalize, readFlags, writeFlags } = require("./evolution/feature-flags");
 const { PipelineRouter } = require("./evolution/PipelineRouter");
-const { StablePipeline } = require("./evolution/StablePipeline");
+
+/**
+ * Phase 5.5.5: the contract every flag now meets. A CORE feature is the
+ * architecture -- on by default, and no file can turn it off. An EXPERIMENT is
+ * off by default, opt-in, and switching it on switches on nothing else.
+ */
+function assertFlagContract(f: string) {
+  if ((CORE_FEATURES as readonly string[]).includes(f)) {
+    assert.strictEqual((DEFAULT_FLAGS.features as any)[f], true, `${f} is core but off by default`);
+    assert.strictEqual((normalize({ features: { [f]: false } }).features as any)[f], true, `the file switched core ${f} off`);
+    return;
+  }
+  assert.ok((EXPERIMENT_FEATURES as string[]).includes(f), `${f} is neither core nor an experiment`);
+  assert.strictEqual((DEFAULT_FLAGS.features as any)[f], false, `experiment ${f} is on by default`);
+  const on = normalize({ features: { [f]: true } });
+  assert.strictEqual((on.features as any)[f], true, `experiment ${f} cannot be enabled`);
+  for (const other of (EXPERIMENT_FEATURES as string[]).filter((x) => x !== f)) {
+    assert.strictEqual((on.features as any)[other], false, `enabling ${f} also enabled ${other}`);
+  }
+}
 const { resolveComponentVersions, PIPELINE_VERSIONS } = require("./evolution/pipeline-versions");
 const { logGeneration, readLog, comparePipelines } = require("./evolution/ExperimentLogger");
 
@@ -71,148 +90,134 @@ function check(name: string, fn: () => void | Promise<void>) {
   }
 }
 
-console.log("\nSafe evolution architecture\n");
+console.log("\nSafe evolution architecture (one pipeline since Phase 5.5.5)\n");
 
-// ── Defaults are the safe values ──────────────────────────────────────────
+// ── Defaults are the architecture ─────────────────────────────────────────
 
-check("With no flag file at all, everything resolves to stable", () => {
+const coreAllOn = (flags: any) => (CORE_FEATURES as readonly string[]).every((f) => flags.features[f] === true);
+const experimentsAllOff = (flags: any) => (EXPERIMENT_FEATURES as string[]).every((f) => flags.features[f] === false);
+
+check("With no flag file at all, the core architecture runs and every experiment is off", () => {
+  // Before consolidation this resolved to stable with everything off, so any
+  // deployment without the gitignored flag file served the bare render core.
   if (fs.existsSync(process.env.TIDO_FLAGS_PATH!)) fs.unlinkSync(process.env.TIDO_FLAGS_PATH!);
   const flags = readFlags();
-  assert.strictEqual(flags.active_pipeline, "stable");
-  assert.strictEqual(flags.rollout_mode, "internal_only");
-  assert.ok(Object.values(flags.features).every((v) => v === false), "a feature defaulted to on");
+  assert.ok(coreAllOn(flags), "a core feature is off without a file");
+  assert.ok(experimentsAllOff(flags), "an experiment defaulted to on");
   assert.ok(Object.values(flags.components).every((v) => v === false), "a component defaulted to experiment");
-  assert.strictEqual(PipelineRouter.decide({ requestId: "r1" }).pipeline, "stable");
+  const d = PipelineRouter.decide({ requestId: "r1" });
+  assert.strictEqual(d.pipeline, "experiment");
+  assert.strictEqual(d.reason, "experience pipeline");
 });
 
-check("A corrupt flag file fails closed, not open", () => {
+check("A corrupt flag file fails to the core, never to an experiment", () => {
   fs.writeFileSync(process.env.TIDO_FLAGS_PATH!, "{ this is not json", "utf-8");
   const flags = readFlags();
-  assert.strictEqual(flags.active_pipeline, "stable", "corrupt file did not fall back to stable");
-  assert.strictEqual(PipelineRouter.decide({ requestId: "r2" }).pipeline, "stable");
+  assert.ok(coreAllOn(flags), "a corrupt file switched the architecture off");
+  assert.ok(experimentsAllOff(flags), "a corrupt file enabled an experiment");
+  assert.strictEqual(PipelineRouter.decide({ requestId: "r2" }).pipeline, "experiment");
   fs.unlinkSync(process.env.TIDO_FLAGS_PATH!);
 });
 
-check("Unknown keys and wrong types cannot enable anything", () => {
-  const flags = normalize({
-    active_pipeline: "EXPERIMENT",        // wrong case — not the literal
-    rollout_mode: "everyone",             // not a valid mode
-    ab_percentage: "50",                  // string, not number
-    features: { creative_exploration: "true", invented_feature: true },
+check("Unknown keys and wrong types cannot enable anything, and the file cannot disable the core", () => {
+  const flags: any = normalize({
+    active_pipeline: "stable",            // pre-consolidation key: ignored
+    rollout_mode: "internal_only",        // pre-consolidation key: ignored
+    features: { creative_exploration_v1: "true", invented_feature: true, creative_reasoning_v1: false },
     components: { prompt_compiler: 1 },
     something_else: { nested: true },
   });
-  assert.strictEqual(flags.active_pipeline, "stable");
-  assert.strictEqual(flags.rollout_mode, "internal_only");
-  assert.strictEqual(flags.ab_percentage, 0);
-  assert.strictEqual(flags.features.creative_exploration, false, '"true" as a string enabled a feature');
-  assert.strictEqual((flags.features as any).invented_feature, undefined, "an unknown feature was accepted");
+  assert.strictEqual(flags.features.creative_exploration_v1, false, '"true" as a string enabled an experiment');
+  assert.strictEqual(flags.features.invented_feature, undefined, "an unknown feature was accepted");
+  assert.strictEqual(flags.features.creative_reasoning_v1, true, "the file switched a core feature off");
   assert.strictEqual(flags.components.prompt_compiler, false, "1 enabled a component");
+  for (const k of ["active_pipeline", "rollout_mode", "ab_percentage", "internal_testers"]) {
+    assert.ok(!(k in flags), `the obsolete key ${k} survived normalisation`);
+  }
 });
 
-check("A partial features object keeps every other flag off, not undefined", () => {
-  // `{...defaults, ...stored}` would replace the whole features object and leave
-  // the unlisted keys undefined, which is falsy but not false — and a call site
-  // reading `flags.features.x` would get undefined rather than a decision.
-  const flags = normalize({ features: { creative_exploration: true } });
-  assert.strictEqual(flags.features.creative_exploration, true);
-  assert.strictEqual(flags.features.visual_self_review, false, "an unlisted feature became undefined");
-  assert.strictEqual(typeof flags.features.adaptive_prompt_length, "boolean");
+check("A partial features object keeps every other experiment off, not undefined", () => {
+  const flags: any = normalize({ features: { creative_exploration_v1: true } });
+  assert.strictEqual(flags.features.creative_exploration_v1, true);
+  assert.strictEqual(flags.features.visual_semantics_v1, false, "an unlisted experiment became undefined");
+  assert.strictEqual(typeof flags.features.reasoning_tension_v1, "boolean");
+});
+
+check("Every flag is either core or an experiment, and the two never overlap", () => {
+  const all = Object.keys(DEFAULT_FLAGS.features);
+  for (const f of all) assertFlagContract(f);
+  const overlap = (CORE_FEATURES as readonly string[]).filter((f) => (EXPERIMENT_FEATURES as string[]).includes(f));
+  assert.deepStrictEqual(overlap, []);
+  assert.strictEqual((CORE_FEATURES as readonly string[]).length + EXPERIMENT_FEATURES.length, all.length);
 });
 
 // ── Rollback ──────────────────────────────────────────────────────────────
 
-check("The kill switch overrides the file, the mode and every flag", () => {
-  writeFlags({
-    active_pipeline: "experiment",
-    rollout_mode: "production",
-    features: { creative_exploration: true, visual_self_review: true },
-  });
-  assert.strictEqual(readFlags().active_pipeline, "experiment", "setup failed");
+check("The kill switch turns every feature off, core included", () => {
+  writeFlags({ features: { creative_exploration_v1: true } });
+  assert.strictEqual(readFlags().features.creative_exploration_v1, true, "setup failed");
 
   process.env.TIDO_PIPELINE_KILL_SWITCH = "true";
-  const killed = readFlags();
-  assert.strictEqual(killed.active_pipeline, "stable", "kill switch did not force stable");
-  assert.ok(Object.values(killed.features).every((v) => v === false), "kill switch left a feature on");
-  assert.strictEqual(PipelineRouter.decide({ requestId: "r3" }).pipeline, "stable");
-  delete process.env.TIDO_PIPELINE_KILL_SWITCH;
+  try {
+    const killed = readFlags();
+    assert.ok(Object.values(killed.features).every((v) => v === false), "kill switch left a feature on");
+    const d = PipelineRouter.decide({ requestId: "r3" });
+    assert.strictEqual(d.pipeline, "experiment", "there is no second pipeline to fall back to");
+    assert.deepStrictEqual(d.features_enabled, []);
+    assert.ok(/kill switch/.test(d.reason), "the decision does not say it is degraded");
+  } finally {
+    delete process.env.TIDO_PIPELINE_KILL_SWITCH;
+  }
 });
 
-check("Rollback needs one write and no deploy", () => {
-  writeFlags({ active_pipeline: "experiment", rollout_mode: "production" });
-  assert.strictEqual(PipelineRouter.decide({ requestId: "r4" }).pipeline, "experiment");
+check("Resetting experiments needs one write and no deploy", () => {
+  writeFlags({ features: { creative_exploration_v1: true } });
+  assert.ok(PipelineRouter.decide({ requestId: "r4" }).features_enabled.includes("creative_exploration_v1"));
   writeFlags(DEFAULT_FLAGS);
-  assert.strictEqual(PipelineRouter.decide({ requestId: "r4" }).pipeline, "stable", "rollback did not take effect");
+  assert.ok(!PipelineRouter.decide({ requestId: "r4" }).features_enabled.includes("creative_exploration_v1"), "the reset did not take effect");
 });
 
-check("Flags are re-read per request, so rollback is immediate", () => {
+check("Flags are re-read per request, so a reset is immediate", () => {
   // A cache here would make "instant rollback" mean "instant once the TTL
   // expires", which is not the same promise.
-  writeFlags({ active_pipeline: "experiment", rollout_mode: "production" });
-  const a = PipelineRouter.decide({ requestId: "r5" }).pipeline;
+  writeFlags({ features: { creative_exploration_v1: true } });
+  const a = PipelineRouter.decide({ requestId: "r5" }).features_enabled.includes("creative_exploration_v1");
   writeFlags(DEFAULT_FLAGS);
-  const b = PipelineRouter.decide({ requestId: "r5" }).pipeline;
-  assert.strictEqual(a, "experiment");
-  assert.strictEqual(b, "stable", "a second decision in the same process used a cached value");
+  const b = PipelineRouter.decide({ requestId: "r5" }).features_enabled.includes("creative_exploration_v1");
+  assert.strictEqual(a, true);
+  assert.strictEqual(b, false, "a second decision in the same process used a cached value");
 });
 
-// ── Routing modes ─────────────────────────────────────────────────────────
+// ── One pipeline ──────────────────────────────────────────────────────────
 
-check("Internal-only reaches testers and nobody else", () => {
-  writeFlags({
-    active_pipeline: "experiment",
-    rollout_mode: "internal_only",
-    internal_testers: ["tester-alpha"],
-  });
-  assert.strictEqual(PipelineRouter.decide({ requestId: "x" }, { testerId: "tester-alpha" }).pipeline, "experiment");
-  assert.strictEqual(PipelineRouter.decide({ requestId: "x" }, { testerId: "someone-else" }).pipeline, "stable");
-  assert.strictEqual(PipelineRouter.decide({ requestId: "x" }).pipeline, "stable", "a request with no tester id got the experiment");
-});
-
-check("A/B splits by request id and is stable across retries", () => {
-  writeFlags({ active_pipeline: "experiment", rollout_mode: "ab_testing", ab_percentage: 50 });
-  const first = PipelineRouter.decide({ requestId: "gen_abc" }).pipeline;
-  for (let i = 0; i < 20; i++) {
-    assert.strictEqual(
-      PipelineRouter.decide({ requestId: "gen_abc" }).pipeline,
-      first,
-      "the same request id resolved differently on a retry"
-    );
+check("Every request is served by the one pipeline, whatever it carries", () => {
+  for (const req of [{ requestId: "a" }, { requestId: undefined as any }, { requestId: "gen_abc" }]) {
+    assert.strictEqual(PipelineRouter.decide(req).pipeline, "experiment");
+    assert.strictEqual(PipelineRouter.decide(req, { testerId: "anyone" } as any).pipeline, "experiment");
   }
-  // And the split is actually a split rather than a constant.
-  const sample = Array.from({ length: 400 }, (_, i) => PipelineRouter.decide({ requestId: `gen_${i}` }).pipeline);
-  const share = sample.filter((p) => p === "experiment").length / sample.length;
-  assert.ok(share > 0.3 && share < 0.7, `50% split produced ${(share * 100).toFixed(0)}% on experiment`);
+  const src = fs.readFileSync(path.join(process.cwd(), "lib", "image-engine", "evolution", "PipelineRouter.ts"), "utf-8");
+  assert.ok(!/rollout_mode|ab_percentage|internal_testers|bucketOf|testerId/.test(src), "rollout routing survived in the router");
 });
 
-check("A/B with no request id goes to stable rather than guessing", () => {
-  writeFlags({ active_pipeline: "experiment", rollout_mode: "ab_testing", ab_percentage: 100 });
-  assert.strictEqual(PipelineRouter.decide({ requestId: undefined as any }).pipeline, "stable");
-});
-
-check("0% and 100% are honoured exactly", () => {
-  writeFlags({ active_pipeline: "experiment", rollout_mode: "ab_testing", ab_percentage: 0 });
-  const none = Array.from({ length: 200 }, (_, i) => PipelineRouter.decide({ requestId: `z${i}` }).pipeline);
-  assert.ok(none.every((p) => p === "stable"), "0% still routed some traffic to the experiment");
-
-  writeFlags({ active_pipeline: "experiment", rollout_mode: "ab_testing", ab_percentage: 100 });
-  const all = Array.from({ length: 200 }, (_, i) => PipelineRouter.decide({ requestId: `z${i}` }).pipeline);
-  assert.ok(all.every((p) => p === "experiment"), "100% left traffic on stable");
-  writeFlags(DEFAULT_FLAGS);
-});
-
-// ── The stable path is untouched ──────────────────────────────────────────
-
-check("StablePipeline is a pass-through with no logic of its own", () => {
-  const src = fs.readFileSync(path.join(process.cwd(), "lib", "image-engine", "evolution", "StablePipeline.ts"), "utf-8");
-  const body = src.slice(src.indexOf("export class StablePipeline"));
-  // One statement: return the orchestrator call. Anything else here runs in
-  // production and is therefore a change to production.
-  assert.ok(
-    /return SimpleImageGenerationOrchestratorService\.generateSimpleImage\(request, options\);/.test(body),
-    "the stable adapter no longer forwards its arguments unchanged"
-  );
-  assert.ok(!/\bif\b|\btry\b|\bawait\b|console\./.test(body), "the stable adapter grew logic of its own");
+check("The render core is called directly, never through a second pipeline", () => {
+  const dir = path.join(process.cwd(), "lib", "image-engine", "evolution");
+  const exp = fs.readFileSync(path.join(dir, "ExperimentPipeline.ts"), "utf-8");
+  const router = fs.readFileSync(path.join(dir, "PipelineRouter.ts"), "utf-8");
+  assert.ok(/RenderCore\.generateSimpleImage\(/.test(exp), "the pipeline does not reach the render core");
+  assert.ok(!/StablePipeline/.test(exp.replace(/\/\/[^\n]*/g, "")), "the pipeline still calls StablePipeline");
+  assert.ok(!/StablePipeline/.test(router), "the router still calls StablePipeline");
+  // Nothing in the app imports it any more (the file itself awaits deletion).
+  const importers: string[] = [];
+  const walk = (d: string) => {
+    for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+      const p = path.join(d, e.name);
+      if (e.isDirectory()) { if (!/node_modules|\.next/.test(e.name)) walk(p); continue; }
+      if (!/\.(ts|tsx)$/.test(e.name) || /run-evolution-tests/.test(e.name)) continue;
+      if (/from ["'][^"']*StablePipeline["']|require\(["'][^"']*StablePipeline["']\)/.test(fs.readFileSync(p, "utf-8"))) importers.push(p);
+    }
+  };
+  for (const root of ["lib", "app", "features"]) walk(path.join(process.cwd(), root));
+  assert.deepStrictEqual(importers, [], "something still imports StablePipeline");
 });
 
 check("The API route delegates and does not reimplement", () => {
@@ -225,30 +230,25 @@ check("The API route delegates and does not reimplement", () => {
     !/SimpleImageGenerationOrchestratorService/.test(src),
     "the route still calls the orchestrator directly as well"
   );
-  assert.ok(/x-tido-tester-id/.test(src), "the tester id is not read from a header");
+  assert.ok(!/req\.headers\.get\("x-tido-tester-id"\)/.test(src), "the route still routes on a tester header");
 });
 
-check("Experiment with no features enabled is stable behaviour", () => {
+check("Without the director the pipeline degrades instead of failing", () => {
   const src = fs.readFileSync(
     path.join(process.cwd(), "lib", "image-engine", "evolution", "ExperimentPipeline.ts"),
     "utf-8"
   );
-  // Asserted as a property rather than as a literal expression: what matters is
-  // that the no-feature path returns the stable call, not how the condition is
-  // spelled. An earlier version of this test pinned `enabled.length === 0` and
-  // failed the moment the condition was renamed, which is a test measuring
-  // syntax rather than behaviour.
-  assert.ok(/if \(!anyJudgment\)/.test(src), "the no-features case is not handled");
-  assert.ok(/return StablePipeline\.run\(request, options\);/.test(src), "it does not fall through to stable");
-  // And a failed or declined judgment must also fall back rather than reorder
-  // the prompt for no reason.
-  assert.ok(/if \(!judgment\)/.test(src), "a missing judgment does not fall back to stable");
-  // Switching the pipeline over must be verifiable without output moving.
-  writeFlags({ active_pipeline: "experiment", rollout_mode: "production" });
-  const d = PipelineRouter.decide({ requestId: "n1" });
-  assert.strictEqual(d.pipeline, "experiment");
-  assert.deepStrictEqual(d.features_enabled, [], "a feature was on by default on the experiment pipeline");
-  writeFlags(DEFAULT_FLAGS);
+  // Both exits render through the core without the director: the kill switch
+  // (nothing enabled) and a director that produced no judgment. Degraded
+  // output, never a failed request -- this is the reliability the old
+  // stable pipeline stood for, kept inside the one pipeline.
+  assert.ok(/if \(!anyJudgment\)/.test(src), "the kill-switch case is not handled");
+  assert.ok(/if \(!judgment\)/.test(src), "a missing judgment is not handled");
+  assert.strictEqual(
+    (src.match(/return RenderCore\.generateSimpleImage\(request, options\);/g) || []).length,
+    2,
+    "a degraded exit does not render through the core"
+  );
 });
 
 // ── Versions and logging ──────────────────────────────────────────────────
@@ -277,7 +277,7 @@ check("Every generation records pipeline, versions, flags and outcome", () => {
   for (const field of ["pipeline", "pipeline_version", "component_versions", "features_enabled", "status", "duration_ms"]) {
     assert.ok(field in rows[0], `the log has no ${field}`);
   }
-  assert.strictEqual(rows[0].pipeline_version, PIPELINE_VERSIONS.stable);
+  assert.strictEqual(rows[0].pipeline_version, PIPELINE_VERSIONS.experiment);
 });
 
 check("The log carries no brief, prompt or uploaded content", () => {
@@ -344,46 +344,31 @@ check("The evolution layer touches nothing but generation", () => {
   }
 });
 
-check("Routing failure falls back to stable instead of failing the request", () => {
-  const src = fs.readFileSync(path.join(process.cwd(), "lib", "image-engine", "evolution", "PipelineRouter.ts"), "utf-8");
-  assert.ok(/catch \(err: any\) \{[\s\S]{0,400}pipeline = "stable"/.test(src), "a router error does not fall back to stable");
+check("Routing cannot fail a request, whatever the flag file holds", () => {
+  // The only input that can go wrong is the file, and readFlags() never
+  // throws: every bad shape resolves to the core with experiments off.
+  for (const junk of ["", "null", "[]", "{", '{"features": 7}', '{"features": {"creative_reasoning_v1": "no"}}']) {
+    fs.writeFileSync(process.env.TIDO_FLAGS_PATH!, junk, "utf-8");
+    const d = PipelineRouter.decide({ requestId: "junk" });
+    assert.strictEqual(d.pipeline, "experiment");
+    assert.ok(coreAllOn(d.flags), `the file ${JSON.stringify(junk)} switched the core off`);
+  }
+  fs.unlinkSync(process.env.TIDO_FLAGS_PATH!);
 });
 
-// ── Internal tester access, and why it cannot reach production ─────────
+// ── No tester routing ─────────────────────────────────────────────────────
 
-check("The tester header is dev-only by construction, not by convention", () => {
-  const src = fs.readFileSync(
-    path.join(process.cwd(), "features", "picture-engine", "services", "picture-engine.api.ts"),
-    "utf-8"
-  );
-
-  // NODE_ENV is inlined by the bundler, so this comparison becomes a constant
-  // false in a production build and the whole branch is eliminated. Production
-  // safety should not depend on an operator remembering not to set a variable.
-  assert.ok(
-    /process\.env\.NODE_ENV === "production"\) return \{\}/.test(src),
-    "the tester header is not gated on NODE_ENV"
-  );
-
-  // This file runs in the browser. Next.js only exposes NEXT_PUBLIC_-prefixed
-  // variables to the client bundle, so a bare TIDO_TESTER_ID would read as
-  // undefined here and the header would silently never be sent.
-  assert.ok(/NEXT_PUBLIC_TIDO_TESTER_ID/.test(src), "the env var is not client-readable");
-  assert.ok(
-    !/process\.env\.TIDO_TESTER_ID\b/.test(src),
-    "a server-only env var is being read from client code"
-  );
-
-  // An absent value must produce no header at all rather than the string
-  // "undefined", which the router would treat as a tester id that is simply not
-  // on the allow-list — harmless today, but it would put a junk value in logs.
-  assert.ok(
-    /testerId \? \{ "x-tido-tester-id": testerId \} : \{\}/.test(src),
-    "an unset tester id does not omit the header cleanly"
-  );
+check("No request is routed by a tester id, a header or an account", () => {
+  const client = fs.readFileSync(path.join(process.cwd(), "features", "picture-engine", "services", "picture-engine.api.ts"), "utf-8");
+  const route = fs.readFileSync(path.join(process.cwd(), "app", "api", "image", "generate-simple", "route.ts"), "utf-8");
+  const router = fs.readFileSync(path.join(process.cwd(), "lib", "image-engine", "evolution", "PipelineRouter.ts"), "utf-8");
+  assert.ok(!/internalTesterHeaders|x-tido-tester-id|NEXT_PUBLIC_TIDO_TESTER_ID/.test(client), "the client still sends a tester header");
+  assert.ok(!/req\.headers\.get\("x-tido-tester-id"\)/.test(route), "the route still reads the tester header");
+  assert.ok(!/testerId/.test(router), "the router still accepts a tester id");
+  assert.ok(!/getUser|currentUser|session\./i.test(router), "the router resolves identity from somewhere other than the request");
 });
 
-check("Both generation calls carry the header, and multipart keeps its boundary", () => {
+check("Both generation calls send auth, and multipart keeps its boundary", () => {
   const src = fs.readFileSync(
     path.join(process.cwd(), "features", "picture-engine", "services", "picture-engine.api.ts"),
     "utf-8"
@@ -391,10 +376,7 @@ check("Both generation calls carry the header, and multipart keeps its boundary"
   const calls = src.split('fetch("/api/image/generate-simple"').slice(1);
   assert.strictEqual(calls.length, 2, `expected 2 generation calls, found ${calls.length}`);
   for (const [i, call] of calls.entries()) {
-    assert.ok(
-      /internalTesterHeaders\(\)/.test(call.slice(0, 400)),
-      `generation call ${i + 1} does not send the tester header`
-    );
+    assert.ok(/authHeaders\(\)/.test(call.slice(0, 500)), `generation call ${i + 1} does not send auth`);
   }
   // The multipart call must not set Content-Type by hand: the browser generates
   // the boundary, and overriding it corrupts the upload.
@@ -403,26 +385,6 @@ check("Both generation calls carry the header, and multipart keeps its boundary"
   assert.ok(
     !/"Content-Type"/.test(multipart.slice(0, 400)),
     "the multipart call now sets Content-Type and will break uploads"
-  );
-});
-
-check("Routing is decided by the header, never by an account", () => {
-  // The tester identity is caller-supplied and opaque on purpose. Reading it
-  // from a user record would give the evolution layer a reason to touch account
-  // data, which the data-safety rule forbids.
-  const router = fs.readFileSync(
-    path.join(process.cwd(), "lib", "image-engine", "evolution", "PipelineRouter.ts"),
-    "utf-8"
-  );
-  const route = fs.readFileSync(
-    path.join(process.cwd(), "app", "api", "image", "generate-simple", "route.ts"),
-    "utf-8"
-  );
-  assert.ok(/req\.headers\.get\("x-tido-tester-id"\)/.test(route), "the route no longer reads the header");
-  assert.ok(/testerId\?: string/.test(router), "the router no longer accepts a tester id");
-  assert.ok(
-    !/getUser|currentUser|session\./i.test(router),
-    "the router resolves identity from somewhere other than the request"
   );
 });
 
@@ -449,18 +411,11 @@ const JUDGMENT = {
   generic_check: { flagged: ["steam"], justification: "cropped out at this framing", revised: false },
 };
 
-check("The three V1 flags exist and default to off", () => {
-  for (const f of ["creative_exploration_v1", "creative_reasoning_v1", "anti_generic_check_v1"]) {
-    assert.strictEqual((DEFAULT_FLAGS.features as any)[f], false, `${f} is not off by default`);
-    const flags = normalize({ features: { [f]: true } });
-    assert.strictEqual((flags.features as any)[f], true, `${f} cannot be enabled`);
-    // And enabling one must not enable the others: they fail differently and
-    // have to be diagnosable apart.
-    const others = ["creative_exploration_v1", "creative_reasoning_v1", "anti_generic_check_v1"].filter((x) => x !== f);
-    for (const o of others) {
-      assert.strictEqual((flags.features as any)[o], false, `enabling ${f} also enabled ${o}`);
-    }
-  }
+check("The three V1 flags: reasoning is core, exploration and anti-generic stay experiments", () => {
+  // Phase 5.5.5: reasoning was validated and is the architecture; the other two
+  // were never switched on and remain opt-in, each independently.
+  for (const f of ["creative_exploration_v1", "creative_reasoning_v1", "anti_generic_check_v1"]) assertFlagContract(f);
+  assert.ok((CORE_FEATURES as readonly string[]).includes("creative_reasoning_v1"));
 });
 
 check("The three directions are described neutrally enough to all be winnable", () => {
@@ -597,16 +552,8 @@ check("The five V2 flags exist, default off, and switch independently", () => {
     "visual_semantics_v1",
     "creative_review_v1",
   ];
-  for (const f of V2) {
-    assert.strictEqual((DEFAULT_FLAGS.features as any)[f], false, `${f} is not off by default`);
-    const flags = normalize({ features: { [f]: true } });
-    assert.strictEqual((flags.features as any)[f], true, `${f} cannot be enabled`);
-    for (const other of V2.filter((x) => x !== f)) {
-      assert.strictEqual((flags.features as any)[other], false, `enabling ${f} also enabled ${other}`);
-    }
-    // And independent of the V1 three, so strategy can run without exploration.
-    assert.strictEqual(flags.features.creative_exploration_v1, false, `${f} switched on a V1 flag`);
-  }
+  // Phase 5.5.5: three are core, review and semantics remain experiments.
+  for (const f of V2) assertFlagContract(f);
 });
 
 check("Brand and audience are emitted before the visual decisions", () => {
@@ -696,13 +643,8 @@ check("Industry is explicitly not allowed to determine style", () => {
 const { toCreativeDecision, applyCreativeDecision, decisionTelemetry } = require("./evolution/experiment/CreativeDecision");
 
 check("The control flag exists, defaults off, and is separate from the judgment flags", () => {
-  assert.strictEqual(DEFAULT_FLAGS.features.creative_director_control_v1, false);
-  const on = normalize({ features: { creative_director_control_v1: true } });
-  assert.strictEqual(on.features.creative_director_control_v1, true);
-  // Taking authority is a different risk from adding reasoning, so it must not
-  // ride along with the judgment flags.
-  assert.strictEqual(on.features.creative_exploration_v1, false, "control switched on a judgment flag");
-  assert.strictEqual(on.features.creative_review_v1, false, "control switched on a judgment flag");
+  // Phase 5.5.5: core architecture -- always on, not switchable by the file.
+  assertFlagContract("creative_director_control_v1");
 });
 
 check("A judgment becomes a decision, and a judgment without a scene does not", () => {
@@ -788,7 +730,10 @@ check("Control is wired so the rewritten request reaches the pipeline", () => {
   // gained a bridge parameter, and a test that pins an argument count fails on
   // every future parameter without anything having broken.
   assert.ok(/effectiveRequest = applyCreativeDecision\(request, decision/.test(src), "the decision is not applied");
-  assert.ok(/StablePipeline\.run\(effectiveRequest,/.test(src), "the rewritten request never reaches the pipeline");
+  // Phase 5.5 passes the request through `renderSource`, which is the identity
+  // outside Editable mode; what is pinned here is that the REWRITTEN request is
+  // what reaches the pipeline, not the original.
+  assert.ok(/RenderCore\.generateSimpleImage\(renderSource\(effectiveRequest\),/.test(src), "the rewritten request never reaches the pipeline");
   // Matched on the prefix for the reason the comment above already gives: this
   // assertion pinned the closing paren and duly failed when a fourth parameter
   // was added, with nothing broken.
@@ -812,11 +757,8 @@ const { assetContextFor, assetContextBrief } = require("./evolution/experiment/A
 const ASSET_TYPES = ["poster", "social_ad", "product_hero", "banner", "ugc_thumbnail"];
 
 check("The asset flag exists, defaults off, and switches independently", () => {
-  assert.strictEqual(DEFAULT_FLAGS.features.asset_type_intelligence_v1, false);
-  const on = normalize({ features: { asset_type_intelligence_v1: true } });
-  assert.strictEqual(on.features.asset_type_intelligence_v1, true);
-  assert.strictEqual(on.features.creative_director_control_v1, false, "it switched on control");
-  assert.strictEqual(on.features.creative_exploration_v1, false, "it switched on a judgment flag");
+  // Phase 5.5.5: core architecture -- always on, not switchable by the file.
+  assertFlagContract("asset_type_intelligence_v1");
 });
 
 check("Every asset type has its own communication problem", () => {
@@ -913,11 +855,8 @@ check("The context states a problem, never a subject", () => {
 // ── AssetIntent V2 ───────────────────────────────────────────
 
 check("The V2 flag exists, defaults off, and switches independently", () => {
-  assert.strictEqual(DEFAULT_FLAGS.features.asset_intent_v2, false);
-  const on = normalize({ features: { asset_intent_v2: true } });
-  assert.strictEqual(on.features.asset_intent_v2, true);
-  assert.strictEqual(on.features.asset_type_intelligence_v1, false, "it switched on the asset flag");
-  assert.strictEqual(on.features.creative_exploration_v1, false, "it switched on a judgment flag");
+  // Phase 5.5.5: core architecture -- always on, not switchable by the file.
+  assertFlagContract("asset_intent_v2");
 });
 
 check("V2 OFF returns exactly what it returned before the flag existed", () => {
@@ -1113,11 +1052,8 @@ const CONTEXT_REQUESTS: any[] = [
 ];
 
 check("The context flag exists, defaults off, and switches independently", () => {
-  assert.strictEqual(DEFAULT_FLAGS.features.creative_decision_context_v1, false);
-  const on = normalize({ features: { creative_decision_context_v1: true } });
-  assert.strictEqual(on.features.creative_decision_context_v1, true);
-  assert.strictEqual(on.features.asset_intent_v2, false, "it switched on AssetIntent V2");
-  assert.strictEqual(on.features.asset_type_intelligence_v1, false, "it switched on the asset flag");
+  // Phase 5.5.5: core architecture -- always on, not switchable by the file.
+  assertFlagContract("creative_decision_context_v1");
 });
 
 check("EQUIVALENCE: the context produces the brief the inline literal produced", () => {
@@ -1367,10 +1303,8 @@ const GOOD_REPLY = JSON.stringify({
 });
 
 check("The Visual DNA flag exists, defaults off, and requires the context flag", () => {
-  assert.strictEqual(DEFAULT_FLAGS.features.visual_dna_v1, false);
-  const on = normalize({ features: { visual_dna_v1: true } });
-  assert.strictEqual(on.features.visual_dna_v1, true);
-  assert.strictEqual(on.features.creative_decision_context_v1, false, "it switched on the context flag");
+  // Phase 5.5.5: core architecture -- always on, not switchable by the file.
+  assertFlagContract("visual_dna_v1");
   const src = fs.readFileSync(
     path.join(process.cwd(), "lib", "image-engine", "evolution", "ExperimentPipeline.ts"),
     "utf-8"
@@ -1419,8 +1353,19 @@ check("No image means no call and no result", async () => {
   const a = new VisualDNAAnalyzer(m.provider);
   assert.strictEqual(await a.analyze({ images: [] }), null);
   assert.strictEqual(await a.analyze({ images: [{ role: "PRODUCT" }] }), null, "a roled image with no buffer was analysed");
-  assert.strictEqual(await a.analyze({ images: [{ buffer: PNG, mimeType: "image/png" }] }), null, "an unroled image was analysed");
   assert.strictEqual(m.calls.length, 0, "the model was called with nothing to look at");
+});
+
+check("An unroled upload is the product, as the upload route defines it", async () => {
+  // The multipart route tags inspiration and logos explicitly and leaves the
+  // product photograph bare (`role: p.role || "PRODUCT (default)"`). This used
+  // to assert the opposite, and on live data it meant the product photograph
+  // was never read: the director never saw it and asset memory never stored it.
+  const m = mockLLM(GOOD_REPLY);
+  const dna = await new VisualDNAAnalyzer(m.provider).analyze({ images: [{ buffer: PNG, mimeType: "image/png" }] });
+  assert.ok(dna, "an unroled product photograph was not analysed");
+  assert.deepStrictEqual(dna!.provenance.analyzed_roles, ["PRODUCT"]);
+  assert.strictEqual(m.calls.length, 1);
 });
 
 check("The analyzer holds no style table and no industry vocabulary", () => {
@@ -1886,10 +1831,8 @@ function strategyReply(route: string, opts: { evidence?: string; reason?: string
 }
 
 check("The strategy flag exists, defaults off, and requires AssetIntent V2", () => {
-  assert.strictEqual(DEFAULT_FLAGS.features.creative_strategy_selection_v1, false);
-  const on = normalize({ features: { creative_strategy_selection_v1: true } });
-  assert.strictEqual(on.features.creative_strategy_selection_v1, true);
-  assert.strictEqual(on.features.asset_intent_v2, false, "it switched on AssetIntent V2");
+  // Phase 5.5.5: core architecture -- always on, not switchable by the file.
+  assertFlagContract("creative_strategy_selection_v1");
   const src = fs.readFileSync(
     path.join(process.cwd(), "lib", "image-engine", "evolution", "ExperimentPipeline.ts"),
     "utf-8"
@@ -2064,9 +2007,8 @@ const STAGING_REPLY = JSON.stringify({
 });
 
 check("The staging flag exists, defaults off, and needs two products", () => {
-  assert.strictEqual(DEFAULT_FLAGS.features.multi_product_staging_v1, false);
-  const on = normalize({ features: { multi_product_staging_v1: true } });
-  assert.strictEqual(on.features.multi_product_staging_v1, true);
+  // Phase 5.5.5: core architecture -- always on, not switchable by the file.
+  assertFlagContract("multi_product_staging_v1");
   const src = fs.readFileSync(
     path.join(process.cwd(), "lib", "image-engine", "evolution", "ExperimentPipeline.ts"),
     "utf-8"
@@ -2087,19 +2029,26 @@ check("CONCURRENCY: outside control mode the director is not awaited first", () 
   // after the compiler has finished. Awaiting it before starting the pipeline
   // bought nothing and cost the whole call.
   const branch = PIPELINE_SRC.indexOf("if (!controlled) {");
-  const seqAwait = PIPELINE_SRC.indexOf("const judgment = await new CreativeDirectorV1()");
+  // Located on the awaited CALL: Phase 4 wraps the result in the evaluator
+  // (`direct(...)`) and lets the vision correction pass reuse a pinned judgment,
+  // so the statement no longer begins `const judgment = await`. The ordering
+  // this pins is unchanged.
+  const seqAwait = PIPELINE_SRC.indexOf("await new CreativeDirectorV1().judge(brief, judgmentFlags)");
   assert.ok(branch > 0, "the concurrent branch is gone");
   assert.ok(branch < seqAwait, "the sequential await now runs before the branch that avoids it");
   const concurrent = PIPELINE_SRC.slice(branch, seqAwait);
-  assert.ok(/\.judge\(brief, judgmentFlags\)\s*\n\s*\.then\(/.test(concurrent), "the judgment is not started as a promise");
+  assert.ok(
+    /\.judge\(brief, judgmentFlags\)[\s\S]{0,400}?\.then\(/.test(concurrent),
+    "the judgment is not started as a promise",
+  );
   assert.ok(!/await new CreativeDirectorV1\(\)/.test(concurrent), "the concurrent path still awaits the director");
-  assert.ok(/StablePipeline\.run\(request, \{/.test(concurrent), "the pipeline is not started on the concurrent path");
+  assert.ok(/RenderCore\.generateSimpleImage\(renderSource\(request\), \{/.test(concurrent), "the pipeline is not started on the concurrent path");
 });
 
 check("CONCURRENCY: control mode stays sequential, because the dependency is real", () => {
   // In control mode the judgment rewrites the concept and the hard requirements
   // before the Marketing Brain reads them. That ordering is the feature.
-  const seqAwait = PIPELINE_SRC.indexOf("const judgment = await new CreativeDirectorV1()");
+  const seqAwait = PIPELINE_SRC.indexOf("await new CreativeDirectorV1().judge(brief, judgmentFlags)");
   // Matched without the third argument. What this test asserts is the ORDERING —
   // await the director, rewrite the request, then run the pipeline — and pinning
   // the bridge parameter made it fail when Phase 0.3 set that argument to false
@@ -2109,7 +2058,7 @@ check("CONCURRENCY: control mode stays sequential, because the dependency is rea
   // binds the result so the captured creative intelligence can be attached
   // before returning. The ordering this test exists to pin -- director,
   // rewrite, pipeline -- is unchanged.
-  const stable = PIPELINE_SRC.indexOf("await StablePipeline.run(effectiveRequest");
+  const stable = PIPELINE_SRC.indexOf("await RenderCore.generateSimpleImage(renderSource(effectiveRequest)");
   assert.ok(seqAwait > 0 && apply > 0 && stable > 0, "the control path was restructured");
   assert.ok(seqAwait < apply, "the decision is applied before the judgment exists");
   assert.ok(apply < stable, "the pipeline starts before the request is rewritten");
@@ -2267,7 +2216,7 @@ check("ACTIVATION: the staging flag alone reaches the director", () => {
   const resolved = src.indexOf("const stagingOn =");
   const assembled = src.indexOf("multiProductStaging: stagingOn");
   const evaluated = src.indexOf("const anyJudgment =");
-  const earlyReturn = src.indexOf("return StablePipeline.run(request, options);");
+  const earlyReturn = src.indexOf("return RenderCore.generateSimpleImage(request, options);");
   assert.ok(resolved > 0 && assembled > 0 && evaluated > 0 && earlyReturn > 0, "the wiring moved or was renamed");
   assert.ok(resolved < assembled, "staging is resolved after the flags are assembled");
   assert.ok(assembled < evaluated, "anyJudgment is evaluated before staging joins it");
@@ -2288,8 +2237,8 @@ check("ACTIVATION: the single-product notice is reachable", () => {
   );
   assert.ok(
     src.indexOf("single-product brief — staging not applied") <
-      src.indexOf("return StablePipeline.run(request, options);"),
-    "the notice is unreachable on a stable exit"
+      src.indexOf("return RenderCore.generateSimpleImage(request, options);"),
+    "the notice is unreachable on a degraded exit"
   );
 });
 
@@ -2312,7 +2261,7 @@ check("ACTIVATION: strategy selection joins anyJudgment before it is read", () =
   const resolved = src.indexOf("const strategyOn =");
   const assigned = src.indexOf("judgmentFlags.strategySelection = strategyOn");
   const evaluated = src.indexOf("const anyJudgment =");
-  const earlyReturn = src.indexOf("return StablePipeline.run(request, options);");
+  const earlyReturn = src.indexOf("return RenderCore.generateSimpleImage(request, options);");
   assert.ok(
     assetCtx > 0 && resolved > 0 && assigned > 0 && evaluated > 0 && earlyReturn > 0,
     "the wiring moved or was renamed"
@@ -2338,8 +2287,8 @@ check("ACTIVATION: the no-routes notice is reachable", () => {
   );
   assert.ok(
     src.indexOf("no routes for this format — selection not applied") <
-      src.indexOf("return StablePipeline.run(request, options);"),
-    "the notice is unreachable on a stable exit"
+      src.indexOf("return RenderCore.generateSimpleImage(request, options);"),
+    "the notice is unreachable on a degraded exit"
   );
 });
 
@@ -2651,12 +2600,8 @@ check("The concept still fits the validator's ceiling with four decisions", () =
 // ── Creative Decision Bridge ─────────────────────────────────
 
 check("The bridge flag exists, defaults off, and is separate from control", () => {
-  assert.strictEqual(DEFAULT_FLAGS.features.creative_bridge_v1, false);
-  const on = normalize({ features: { creative_bridge_v1: true } });
-  assert.strictEqual(on.features.creative_bridge_v1, true);
-  // Control decides WHICH scene is rendered; the bridge decides how much of the
-  // reasoning behind it the renderer sees. They fail independently.
-  assert.strictEqual(on.features.creative_director_control_v1, false, "the bridge switched on control");
+  // Phase 5.5.5: core architecture -- always on, not switchable by the file.
+  assertFlagContract("creative_bridge_v1");
 });
 
 check("Intelligence the director already produced now reaches the request", () => {
@@ -2796,9 +2741,9 @@ const tfFixes = (over: any = {}) => ({
 const tfHeadings = (p: string) =>
   p.split("\n").filter((l) => l.startsWith("## ")).map((l) => l.trim());
 
-check("Both typography cleanup flags default to off", () => {
-  assert.strictEqual(DEFAULT_FLAGS.features.typography_roles_v1, false);
-  assert.strictEqual(DEFAULT_FLAGS.features.typography_control_priority_v1, false);
+check("Typography roles is core; control priority stays an experiment", () => {
+  assertFlagContract("typography_roles_v1");
+  assertFlagContract("typography_control_priority_v1");
 });
 
 check("With no fixes supplied the composer output is byte-identical to before", () => {

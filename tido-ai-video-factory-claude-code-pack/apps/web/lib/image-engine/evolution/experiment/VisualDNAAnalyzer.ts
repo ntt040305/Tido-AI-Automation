@@ -147,6 +147,19 @@ const ROLE_BRANCH: Record<string, "product" | "logo" | "reference"> = {
   INSPIRATION_REFERENCE: "reference",
 };
 
+/**
+ * Which branch an uploaded role is looked at under, or null when it is not
+ * looked at at all.
+ *
+ * Exported so the persistence layer can align a stored asset with the branch
+ * that observed it WITHOUT keeping a second copy of this map. Two copies would
+ * disagree the first time a role was added, and the failure would be silent:
+ * an asset filed under the wrong branch still stores cleanly.
+ */
+export function branchForRole(role: string | null | undefined): "product" | "logo" | "reference" | null {
+  return ROLE_BRANCH[String(role || "").toUpperCase()] ?? null;
+}
+
 /** At most one image per branch. Three photographs is a description, not an album. */
 const MAX_IMAGES = 3;
 
@@ -373,7 +386,13 @@ export class VisualDNAAnalyzer {
         if (out.length >= MAX_IMAGES) break;
         if (taken.has(branch)) break;
         if (!img?.buffer || !img.buffer.length) continue;
-        const role = String(img.role || "").toUpperCase();
+        // An absent role means PRODUCT: the upload route's own convention
+        // (`role: p.role || "PRODUCT (default)"`) tags inspiration and logos
+        // explicitly and leaves product photographs bare. Reading it as "no
+        // role" meant the product photograph -- the one image this analyzer
+        // exists to read -- was never selected on a real upload, so the
+        // director never saw it and asset memory never stored it.
+        const role = String(img.role || "PRODUCT").toUpperCase();
         if (ROLE_BRANCH[role] !== branch) continue;
         taken.add(branch);
         out.push({ branch, buffer: img.buffer, mimeType: img.mimeType || "image/jpeg", role });

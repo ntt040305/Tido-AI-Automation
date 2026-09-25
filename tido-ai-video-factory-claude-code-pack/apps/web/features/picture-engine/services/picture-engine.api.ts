@@ -1,33 +1,7 @@
+import { authHeaders } from "@/features/auth/firebase-client";
 import { CreativeBrief, GeneratedAsset, AIStrategy } from "../types/picture-engine.types";
 import { usePictureEngineStore } from "../stores/picture-engine.store";
 import { IMAGE_ENGINE_CONFIG } from "../../../lib/image-engine/config";
-
-/**
- * Internal tester identity, for routing to the experiment pipeline.
- *
- * Two guards, and the second is the one that matters:
- *
- *   1. The value comes from `NEXT_PUBLIC_TIDO_TESTER_ID`. This file runs in the
- *      browser, and Next.js only puts `NEXT_PUBLIC_`-prefixed variables into the
- *      client bundle — a plain `TIDO_TESTER_ID` would read as `undefined` here
- *      and the header would silently never be sent.
- *
- *   2. It is read only when `NODE_ENV !== "production"`. Next.js inlines
- *      NODE_ENV at build time, so in a production build this whole branch is a
- *      constant `false` and the bundler removes it — the variable cannot ship to
- *      real users even if someone sets it in a production environment by
- *      mistake. That is the property worth having: production safety should not
- *      depend on an operator remembering not to set a variable.
- *
- * Returns an empty object rather than a header with an undefined value, so a
- * developer who has not set the variable sends no header at all and is routed to
- * stable like any other user.
- */
-function internalTesterHeaders(): Record<string, string> {
-  if (process.env.NODE_ENV === "production") return {};
-  const testerId = (process.env.NEXT_PUBLIC_TIDO_TESTER_ID || "").trim();
-  return testerId ? { "x-tido-tester-id": testerId } : {};
-}
 
 /**
  * Service Layer Abstraction for Picture Engine API
@@ -80,6 +54,10 @@ export async function createPictureAsset(
     const useCase = brief.asset_type || "Poster";
     const aspectRatio = brief.creative_direction.aspect_ratio || "1:1";
     const brandName = brief.brand_identity?.brand_name?.trim() || undefined;
+    // Phase 5.4. Only an id; the server decides whether this person may use it.
+    const brandKitId = brief.brand_identity?.brand_kit_id || undefined;
+    // Phase 5.5. The server honours this only for a signed-in person.
+    const editableExport = brief.brand_identity?.editable_export === true;
 
     // Only text the user explicitly authored may become visible typography.
     //
@@ -174,6 +152,8 @@ export async function createPictureAsset(
         formData.append("useCase", useCase);
         formData.append("aspectRatio", aspectRatio);
         if (brandName) formData.append("brandName", brandName);
+        if (brandKitId) formData.append("brandKitId", brandKitId);
+        if (editableExport) formData.append("editableExport", "1");
         formData.append("requestId", jobId);
         // Authorized visible copy was previously appended only on the JSON branch,
         // so uploading any image silently dropped every copy item and the compiler
@@ -199,14 +179,16 @@ export async function createPictureAsset(
           }
         }
 
+        // The logo travels under its own key with an explicit LOGO role. Under
+        // "images" it defaulted to PRODUCT and could be rendered as the product.
         if (logoAsset) {
           if (logoAsset.file) {
-            formData.append("images", logoAsset.file, logoAsset.filename || "logo.png");
+            formData.append("logoImages", logoAsset.file, logoAsset.filename || "logo.png");
           } else if (logoAsset.file_url && logoAsset.file_url.startsWith("blob:")) {
             try {
               const blobRes = await fetch(logoAsset.file_url);
               const blob = await blobRes.blob();
-              formData.append("images", blob, logoAsset.filename || "logo.png");
+              formData.append("logoImages", blob, logoAsset.filename || "logo.png");
             } catch (e) { }
           }
         }
@@ -239,10 +221,9 @@ export async function createPictureAsset(
 
         res = await fetch("/api/image/generate-simple", {
           method: "POST",
-          // Only the tester header. Content-Type is deliberately left unset so
-          // the browser generates the multipart boundary; setting it by hand
-          // here would corrupt the upload.
-          headers: internalTesterHeaders(),
+          // Content-Type stays unset so the browser generates the multipart
+          // boundary; setting it by hand corrupts the upload.
+          headers: { ...(await authHeaders()) },
           body: formData,
           signal: controller.signal,
         });
@@ -251,13 +232,21 @@ export async function createPictureAsset(
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            ...internalTesterHeaders(),
+            // Signed out this adds nothing and the render proceeds
+            // anonymously, exactly as it did before accounts existed.
+            ...(await authHeaders()),
           },
           body: JSON.stringify({
             concept,
+            // The text the person wants on the image. It travelled only on the
+            // multipart branch, so a render with no upload silently dropped it
+            // and came back with no text -- or with text nobody asked for.
+            ...(brief.content_message?.trim() ? { contentMessage: brief.content_message.trim() } : {}),
             useCase,
             aspectRatio,
             brandName,
+            ...(brandKitId ? { brandKitId } : {}),
+            ...(editableExport ? { editableExport: true } : {}),
             copyItems,
             requestId: jobId,
             marketingContext,
@@ -362,6 +351,9 @@ export async function createPictureAsset(
     const backendDiagnostics = data.strategy?.run_diagnostics;
     const resultAsset: GeneratedAsset = {
       asset_id: assetId,
+      // What the approval signal must send: the id the run was recorded under.
+      ...(data.generationId ? { generation_id: String(data.generationId) } : {}),
+      ...(data.editableExport ? { editable_export: true } : {}),
       image_url: imageUrl,
       aspect_ratio: brief.creative_direction.aspect_ratio,
       diagnostics: backendDiagnostics || {
@@ -524,14 +516,14 @@ export async function downloadPictureAsset(
  * exactly as they did before any of this existed.
  */
 export async function recordApprovalSignal(
-  kind: "download" | "save" | "favorite" | "approve" | "repeat_edit",
+  kind: "download" | "save" | "favorite" | "approve" | "repeat_edit" | "reject",
   generationId: string | undefined,
 ): Promise<void> {
   try {
     const store = usePictureEngineStore.getState();
     await fetch("/api/user-kit/signal", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...(await authHeaders()) },
       body: JSON.stringify({
         kind,
         generationId: generationId || "",

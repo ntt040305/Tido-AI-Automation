@@ -68,6 +68,13 @@ function isRecurrable(value: string): boolean {
   return true;
 }
 
+/** A route name without its gloss: "editorial advertising — a photograph…" -> "editorial advertising". */
+export function routeLabel(direction: unknown): string {
+  const value = clean(direction);
+  const dash = value.search(/\s[—–-]\s/);
+  return dash > 0 ? value.slice(0, dash).trim() : value;
+}
+
 export interface ExtractionResult {
   preferences: Preference[];
   /** Values that were real but too long to ever recur. Recorded, not stored. */
@@ -96,8 +103,11 @@ export function extractPreferences(intelligence: CreativeIntelligence | null | u
   };
 
   // The direction is the one field that is reliably short: it is a route name
-  // the director chose, not a description it wrote.
-  consider("visual", intelligence.selected_direction);
+  // the director chose, not a description it wrote. Route names now carry a
+  // gloss -- "editorial advertising — a photograph with a point of view" -- which
+  // pushed every one past the length rule, so no approval ever taught anything.
+  // The label before the dash is the route itself, and the part that recurs.
+  consider("visual", routeLabel(intelligence.selected_direction));
   consider("visual", intelligence.visual_strategy?.what);
   consider("design", intelligence.typography_reasoning?.what);
   consider("design", intelligence.layout_reasoning?.what);
@@ -124,6 +134,40 @@ export function learnFromSignal(kit: UserKit, signal: ApprovalSignal): { kit: Us
   let updated = next;
   for (const p of preferences) updated = recordPreference(updated, p);
   return { kit: updated, learned: preferences.length, unextracted };
+}
+
+/**
+ * Signals that say a render was NOT what the person wanted (Phase 4.6).
+ *
+ * `reject` is explicit. `repeat_edit` is recorded when a person regenerates a
+ * render they never kept. Both count against the render's patterns; only an
+ * explicit rejection teaches a preference.
+ */
+export const NEGATIVE_KINDS = ["reject", "repeat_edit"] as const;
+
+/** Signals that a person kept a render. `repeat_edit` is deliberately absent. */
+export const POSITIVE_KINDS = ["download", "save", "favorite", "approve"] as const;
+
+/**
+ * Folds one explicit rejection into the kit, as "avoid" for the ROUTE only.
+ *
+ * Narrow on purpose. A rejection says the render missed; it does not say which
+ * of its choices missed, and reading "avoid this lighting" out of it would be a
+ * guess. The route is the one choice that is the render's whole premise, so it
+ * is the one a rejection can fairly be charged to.
+ *
+ * Still subject to the kit's threshold: `preferenceDecisions` ignores an
+ * observed preference until it recurs three times, so one rejection moves
+ * nothing -- three rejections of the same route become "Avoid: <route>".
+ */
+export function learnFromRejection(
+  kit: UserKit,
+  intelligence: CreativeIntelligence | null | undefined,
+): { kit: UserKit; learned: number } {
+  const route = routeLabel(intelligence?.selected_direction);
+  if (!route || !isRecurrable(route)) return { kit, learned: 0 };
+  const updated = recordPreference(kit, { area: "visual", value: route, stated: false, occurrences: 1, negative: true });
+  return { kit: updated, learned: 1 };
 }
 
 /** Counts and areas only -- never the values, which identify a person's taste. */

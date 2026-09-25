@@ -1,30 +1,37 @@
-import crypto from "crypto";
 import {
   SimpleImageGenerationResultV1,
   SimpleInputRequestV1,
 } from "../types";
-import { FeatureFlags, readFlags } from "./feature-flags";
+import type { SimpleImageGenerationOrchestratorService } from "../service/SimpleImageGenerationOrchestratorService";
+import { CORE_FEATURES, FeatureFlags, readFlags } from "./feature-flags";
 import { PIPELINE_VERSIONS, PipelineId, resolveComponentVersions } from "./pipeline-versions";
-import { StablePipeline } from "./StablePipeline";
 import { ExperimentPipeline } from "./ExperimentPipeline";
 import { logGeneration } from "./ExperimentLogger";
 import { reviewRender, correctedRequest } from "./VisionReviewLayer";
+import type { RouteEvidence } from "./experiment/DirectionEvaluator";
+import type { CreativeJudgment } from "./experiment/CreativeDirectorV1";
+// Aliased: the context below is guarded against anything that identifies a
+// PERSON, and brand identity is data about a brand, never about who is asking.
+import type { BrandKit as BrandIdentity } from "./experiment/BrandKit";
 
 /**
- * Chooses which pipeline serves a request, and never makes that choice
- * interesting.
+ * The entry point of the one creative pipeline.
  *
- * Everything here is arranged so that the default path is the shortest one. A
- * request with no flags set, no tester id and no overrides reaches
- * `StablePipeline.run` having been through one boolean check and a version
- * lookup. The routing layer is not allowed to be the thing that breaks
- * generation, so:
+ * Phase 5.5.5 — Experience consolidation. This used to choose between two
+ * pipelines by rollout mode, tester id and A/B bucket, which meant everybody
+ * outside one tester id was served the bare render core with every creative
+ * layer off. There is now one pipeline and nothing to choose: every request
+ * gets the Experience architecture. What remains here is the part that was
+ * always worth keeping --
  *
- *   - any throw inside routing falls through to stable rather than propagating
- *   - the experiment pipeline runs the stable components until a feature flag
- *     says otherwise, so a routing mistake is not a behaviour change
- *   - the decision is computed before generation starts and logged with the
- *     result, so a surprising output can be attributed rather than guessed at
+ *   - the decision (flags in force, versions, why) computed before generation
+ *     and logged with the result, so an output can be attributed
+ *   - the vision review, run once above the pipeline
+ *   - routing metadata attached for persistence
+ *
+ * Reliability did not live in the old stable/experiment choice, and does not
+ * need it: when the director fails or the kill switch is set, the pipeline
+ * itself renders through the core without it.
  *
  * What it deliberately does NOT do: touch accounts, uploads, products, billing,
  * history or permissions. It receives a generation request and returns a
@@ -34,18 +41,13 @@ import { reviewRender, correctedRequest } from "./VisionReviewLayer";
 
 export interface RoutingContext {
   /**
-   * Opaque tester identifier, when the caller supplied one.
+   * When the caller will give up on this request, as a wall-clock timestamp.
    *
-   * Never an email or any other personal identifier: this value is written to
-   * logs, and a log is the wrong home for one. The admin surface issues these.
+   * Supplied so the vision review can tell whether there is time for a
+   * correction render before the route aborts. Absent means unbounded, which
+   * is right for a benchmark and wrong for a web request.
    */
-  testerId?: string;
-  /**
-   * Forces a pipeline for this request alone. Used by benchmarks that need to
-   * compare the two directly. It cannot enable any feature flag, so a forced
-   * experiment run with no features on is still stable behaviour.
-   */
-  forcePipeline?: PipelineId;
+  deadlineAt?: number;
   /**
    * Standing creative preferences to apply where the brief is silent.
    *
@@ -60,12 +62,63 @@ export interface RoutingContext {
    * the current brief.
    */
   standingPreferences?: string[];
+  /**
+   * What this workspace's own work suggests, where the brief is silent.
+   *
+   * Phase 3.5. Plain sentences again, and resolved entirely outside this layer
+   * for the same reason preferences are: the engine has no account, no store
+   * and no way to look anything up, so a mistake here cannot reach anyone's
+   * data.
+   *
+   * Separate from `standingPreferences` because the two have different
+   * authority and different failure modes. A preference is about a PERSON and
+   * they stated or repeated it; this is about a body of WORK and is a
+   * statistical observation over it. Merging them would let a pattern seen
+   * three times present itself with the weight of something a customer asked
+   * for.
+   *
+   * Everything here has already passed the caller's own support threshold, and
+   * none of it outranks the brief.
+   */
+  creativeMemory?: string[];
+  /**
+   * Phase 4.2. How each route has gone for this account: renders, keeps,
+   * rejections, vision problems, thresholded preference. Numbers and route
+   * names only -- resolved above the boundary like the two fields above, and
+   * read by the evaluator and the director's brief.
+   */
+  routeEvidence?: RouteEvidence[];
+  /**
+   * Phase 5.4. The brand identity the caller resolved for this render:
+   * colours, fonts, style rules, whether a logo is attached. Plain data about
+   * a brand -- loaded and authorised above the boundary, like every other
+   * memory input -- and nothing about who asked for it.
+   */
+  brand?: BrandIdentity | null;
+  /**
+   * Phase 5.5. Render in Editable mode: the scene without text or logo, every
+   * other layer placed from the design document. A property of the request,
+   * never of a person.
+   */
+  editable?: boolean;
 }
 
 export interface RoutingDecision {
   pipeline: PipelineId;
   /** Carried from the context so the experiment path can consult it. */
   standingPreferences?: string[];
+  creativeMemory?: string[];
+  routeEvidence?: RouteEvidence[];
+  brandKit?: BrandIdentity | null;
+  /** Phase 5.5. See `RoutingContext.editable`. */
+  editableLayers?: boolean;
+  /**
+   * Phase 4.5. Set only on the vision correction pass: the judgment the first
+   * render was made from. The correction improves the CHOSEN direction; it does
+   * not send the director back to choose a new one, which is what re-running
+   * the whole pipeline used to do.
+   */
+  pinnedJudgment?: CreativeJudgment | null;
   pipeline_version: string;
   reason: string;
   flags: FeatureFlags;
@@ -73,105 +126,45 @@ export interface RoutingDecision {
   features_enabled: string[];
 }
 
-/**
- * Deterministic 0-99 bucket for A/B.
- *
- * Hashed rather than random so a retried request lands in the same bucket as its
- * first attempt. A coin flip per attempt would split one user's two tries across
- * both pipelines and make the comparison meaningless.
- */
-function bucketOf(key: string): number {
-  const digest = crypto.createHash("sha1").update(key).digest();
-  return digest.readUInt16BE(0) % 100;
-}
-
 export class PipelineRouter {
-  /** Resolves which pipeline should serve this request, and why. */
+  /** The decision for this request: flags in force, versions, and why. */
   public static decide(
-    request: Pick<SimpleInputRequestV1, "requestId">,
+    _request: Pick<SimpleInputRequestV1, "requestId">,
     context: RoutingContext = {}
   ): RoutingDecision {
-    let flags = readFlags();
-    let pipeline: PipelineId = "stable";
-    let reason = "default";
+    const flags = readFlags();
+    // One pipeline. The id stays "experiment" so every run recorded before and
+    // after consolidation is comparable in the same column.
+    const pipeline: PipelineId = "experiment";
+    const coreOn = CORE_FEATURES.every((f) => flags.features[f]);
+    const reason = coreOn ? "experience pipeline" : "kill switch: core features off, rendering without the director";
 
-    try {
-      if (context.forcePipeline) {
-        pipeline = context.forcePipeline;
-        reason = "forced by caller";
-      } else if (flags.active_pipeline !== "experiment") {
-        pipeline = "stable";
-        reason = "active_pipeline is stable";
-      } else {
-        switch (flags.rollout_mode) {
-          case "production":
-            pipeline = "experiment";
-            reason = "experiment active for all traffic";
-            break;
-          case "internal_only": {
-            const allowed = Boolean(context.testerId) && flags.internal_testers.includes(context.testerId!);
-            pipeline = allowed ? "experiment" : "stable";
-            reason = allowed ? "internal tester" : "not an internal tester";
-            break;
-          }
-          case "ab_testing": {
-            // Bucketed on the request id so the same request always resolves the
-            // same way. Absent an id there is nothing stable to hash, and an
-            // unattributable sample is worse than a smaller one, so it goes to
-            // stable rather than to a coin flip.
-            const key = request.requestId || "";
-            if (!key) {
-              pipeline = "stable";
-              reason = "ab_testing without a request id";
-            } else {
-              const bucket = bucketOf(key);
-              pipeline = bucket < flags.ab_percentage ? "experiment" : "stable";
-              reason = `ab_testing bucket ${bucket} of ${flags.ab_percentage}%`;
-            }
-            break;
-          }
-          default:
-            pipeline = "stable";
-            reason = "unrecognised rollout mode";
-        }
-      }
-    } catch (err: any) {
-      // Routing is not permitted to fail a generation. Falling back here rather
-      // than rethrowing means the worst case of a broken flag file is that
-      // production behaves exactly as it did before this layer existed.
-      console.warn("[EVOLUTION][ROUTER] decision failed, falling back to stable", {
-        error: err?.message || String(err),
-      });
-      pipeline = "stable";
-      reason = "router error, fell back to stable";
-    }
-
-    const features_enabled =
-      pipeline === "experiment"
-        ? (Object.keys(flags.features) as (keyof FeatureFlags["features"])[]).filter((f) => flags.features[f])
-        : [];
+    const features_enabled = (Object.keys(flags.features) as (keyof FeatureFlags["features"])[]).filter((f) => flags.features[f]);
 
     return {
       pipeline,
       ...(context.standingPreferences?.length ? { standingPreferences: context.standingPreferences } : {}),
+      ...(context.creativeMemory?.length ? { creativeMemory: context.creativeMemory } : {}),
+      ...(context.routeEvidence?.length ? { routeEvidence: context.routeEvidence } : {}),
+      ...(context.brand ? { brandKit: context.brand } : {}),
+      ...(context.editable ? { editableLayers: true } : {}),
       pipeline_version: PIPELINE_VERSIONS[pipeline],
       reason,
       flags,
-      component_versions: resolveComponentVersions(pipeline, pipeline === "experiment" ? flags.components : {}),
+      component_versions: resolveComponentVersions(pipeline, flags.components),
       features_enabled: features_enabled as string[],
     };
   }
 
   /**
-   * Routes and runs.
+   * Decides, runs, reviews.
    *
    * The single entry point the API route calls. Its contract is identical to
-   * `SimpleImageGenerationOrchestratorService.generateSimpleImage`, so the call
-   * site changes by one identifier and nothing else.
+   * `SimpleImageGenerationOrchestratorService.generateSimpleImage`.
    */
   public static async run(
     request: SimpleInputRequestV1,
-    options?: Parameters<typeof StablePipeline.run>[1],
+    options?: Parameters<typeof SimpleImageGenerationOrchestratorService.generateSimpleImage>[1],
     context: RoutingContext = {}
   ): Promise<SimpleImageGenerationResultV1> {
     const decision = this.decide(request, context);
@@ -184,30 +177,61 @@ export class PipelineRouter {
       features: decision.features_enabled,
     });
 
-    let result: SimpleImageGenerationResultV1;
-    if (decision.pipeline === "experiment") {
-      result = await ExperimentPipeline.run(request, options, decision);
-    } else {
-      result = await StablePipeline.run(request, options);
-    }
+    const result: SimpleImageGenerationResultV1 = await ExperimentPipeline.run(request, options, decision);
 
     // The image now exists. Everything past this line is review, and review is
     // not allowed to change whether the render succeeded.
     //
-    // This is the right altitude for it. The loop was first wired inside
-    // ExperimentPipeline, at each of its render sites, and that was wrong twice
-    // over: a branch was missed immediately -- leaving the feature enabled and
-    // silently unreachable -- and stable users could never have received it at
-    // all. Here there is one insertion point, it sits above both pipelines, and
-    // `evolution/` is where reading a flag is allowed, so nothing in `service/`
-    // or `compiler/` learns that this feature exists.
-    const reviewed = await reviewRender(result, request, decision, (instruction) =>
-      decision.pipeline === "experiment"
-        ? ExperimentPipeline.run(correctedRequest(request, instruction), options, decision)
-        : StablePipeline.run(correctedRequest(request, instruction), options),
+    // This is the right altitude for it: one insertion point, above the
+    // pipeline, and `evolution/` is where reading a flag is allowed, so nothing
+    // in `service/` or `compiler/` learns that this feature exists.
+    // How long the render actually took, measured rather than assumed. The
+    // review uses it to estimate a second one, since that is the same pipeline
+    // doing the same work under the same provider load.
+    const firstRenderMs = Date.now() - startedAt;
+
+    const reviewed = await reviewRender(
+      result,
+      request,
+      decision,
+      (instruction) =>
+        ExperimentPipeline.run(correctedRequest(request, instruction), options, {
+          ...decision,
+          // The direction the first render was made from. Pinned so the
+          // correction refines it instead of the director starting over.
+          pinnedJudgment: ((result as unknown as Record<string, unknown>).creativeJudgment as CreativeJudgment) ?? null,
+        }),
+      context.deadlineAt
+        ? {
+            firstRenderMs,
+            deadlineAt: context.deadlineAt,
+            // Time the correction pass will NOT spend, because its judgment is
+            // pinned. Without this the estimate charged the second render for a
+            // director call it never makes, and refused nearly every correction.
+            directorMs:
+              ((result as unknown as Record<string, unknown>).creativeJudgment as CreativeJudgment | undefined)
+                ?.evaluation?.director_ms ?? 0,
+          }
+        : undefined,
     );
 
     logGeneration(decision, reviewed, Date.now() - startedAt);
+
+    // Which pipeline actually served this, attached for the persistence layer
+    // above. Non-enumerable for the same reason the design context is: it is
+    // routing metadata, not part of the API contract, and must not ride into a
+    // JSON response. Without it a recorded run cannot say which path produced
+    // it, which is the one thing attribution needs.
+    Object.defineProperty(reviewed, "routingDecision", {
+      value: {
+        pipeline: decision.pipeline,
+        pipeline_version: decision.pipeline_version,
+        features_enabled: decision.features_enabled,
+      },
+      enumerable: false,
+      configurable: true,
+    });
+
     return reviewed;
   }
 }

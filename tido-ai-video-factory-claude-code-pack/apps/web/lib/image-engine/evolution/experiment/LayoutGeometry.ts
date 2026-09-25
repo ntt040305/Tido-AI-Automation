@@ -1,5 +1,6 @@
 import type { AssetContext } from "./AssetContext";
 import type { CreativeBlueprint } from "./CreativeBlueprint";
+import { wantsGenerousSpace, type BrandKit } from "./BrandKit";
 
 /**
  * Layout Geometry — where things actually sit.
@@ -71,12 +72,61 @@ export interface LayoutScore {
   notes: string[];
 }
 
+/**
+ * Phase 5.3. The layout stated as decisions a designer would write down, each
+ * derived from the zones above -- never chosen separately from them, so the
+ * statement and the coordinates cannot disagree.
+ */
+export interface LayoutDecisions {
+  /** e.g. "center-right" -- where the product sits, in words. */
+  product_placement: string;
+  headline_placement: string | null;
+  cta_placement: string | null;
+  /** How the copy lines up: along one edge, or on the centre axis. */
+  alignment: "left" | "centre" | "right" | "none";
+  /** Share of the frame left empty, and what that reads as. */
+  whitespace: { share: number; label: string };
+  balance: "symmetric" | "asymmetric";
+  /** The grid in words. */
+  grid: string;
+  /** Elements in the order the eye meets them. */
+  hierarchy: ZoneName[];
+  /** Why the frame is arranged this way. */
+  because: string;
+}
+
 export interface LayoutGeometry {
   ratio: string;
   grid: Grid;
   zones: Zone[];
   eye_path: EyePath | null;
   score: LayoutScore;
+  decisions?: LayoutDecisions;
+}
+
+/** A position in words. Thirds of the frame, the way a designer describes it. */
+export function placementLabel(x: number, y: number): string {
+  const v = y < 34 ? "top" : y > 66 ? "bottom" : "center";
+  const h = x < 40 ? "left" : x > 60 ? "right" : "center";
+  if (v === "center" && h === "center") return "center";
+  if (h === "center") return `${v}-center`;
+  if (v === "center") return `center-${h}`;
+  return `${v}-${h}`;
+}
+
+/** Which side the director's composition put the subject on, if it said. */
+export function sideFromComposition(hint: string | null | undefined): "left" | "right" | null {
+  const h = String(hint || "").toLowerCase();
+  if (!h) return null;
+  const right = /\b(right|phải)\b/.test(h);
+  const left = /\b(left|trái)\b/.test(h);
+  // Only a statement about where the SUBJECT sits counts; "light from the
+  // left" is about lighting, so a side word must come with a placement word.
+  const placed = /third|side|off-?cent(re|er)|weight|frame|placed|sits|positioned|lower|upper/.test(h);
+  if (placed && right && !left) return "right";
+  if (placed && left && !right) return "left";
+  if (/off-?cent(re|er)|asymmetric|rule of thirds/.test(h)) return "right";
+  return null;
 }
 
 const clean = (s: unknown): string => (typeof s === "string" ? s.trim() : "");
@@ -97,6 +147,15 @@ export interface GeometryInput {
   copyRoles?: string[];
   productCount?: number;
   hasLogo?: boolean;
+  /**
+   * Phase 5.3. The director's composition decision, in its words. When it puts
+   * the subject to one side, the frame is laid out asymmetrically to match --
+   * the geometry follows the creative decision rather than overriding it.
+   * Absent, the layout is exactly what it was before this existed.
+   */
+  compositionHint?: string | null;
+  /** Phase 5.4. A brand that wants premium or minimal space gets more of it. */
+  brandKit?: BrandKit | null;
 }
 
 /**
@@ -120,14 +179,21 @@ export function buildGeometry(input: GeometryInput): LayoutGeometry {
   // A wide frame splits left/right because width is what it has; a tall frame
   // stacks because height is what it has. A square centres because neither
   // edge leads.
-  const productX = wide ? 70 : 50;
-  const productY = tall ? 50 : 50;
+  // Phase 5.3: the director's composition may put the subject to one side on a
+  // frame that is not already wide. Only for a single product with copy to
+  // balance it -- a row of several has no side to lean to, and an image with no
+  // text has nothing to put on the other side.
+  const side = !wide && count === 1 && roles.length ? sideFromComposition(input.compositionHint) : null;
+  const generous = wantsGenerousSpace(input.brandKit);
+  const productX = wide ? 70 : side === "right" ? 64 : side === "left" ? 36 : 50;
+  const productY = tall ? 50 : side ? 56 : 50;
+  const soloSize = generous ? (wide ? 38 : 50) : wide ? 45 : 60;
   zones.push({
     name: "product",
     x: productX,
     y: productY,
-    width: count > 1 ? 80 : wide ? 45 : 60,
-    height: count > 1 ? 45 : 60,
+    width: count > 1 ? 80 : side ? Math.min(soloSize, 52) : soloSize,
+    height: count > 1 ? 45 : side ? Math.min(soloSize + 4, 60) : soloSize,
     priority: 10,
     because:
       count > 1
@@ -138,7 +204,9 @@ export function buildGeometry(input: GeometryInput): LayoutGeometry {
   });
 
   // ── copy zones, placed where the product is not ────────────────────────
-  const copyX = wide ? 25 : 50;
+  // With the product to one side, the copy takes the other, aligned to its edge.
+  const copyX = wide ? 25 : side === "right" ? 30 : side === "left" ? 70 : 50;
+  const copyWidth = (full: number) => (side ? Math.min(full, 50) : full);
   const hasHeadline = roles.includes("HEADLINE");
   const hasCta = roles.includes("CTA") || roles.includes("OFFER");
   const hasSub = roles.includes("SUBHEADLINE") || roles.includes("SUPPORTING_TEXT");
@@ -148,7 +216,7 @@ export function buildGeometry(input: GeometryInput): LayoutGeometry {
       name: "headline",
       x: copyX,
       y: wide ? 38 : 15,
-      width: wide ? 40 : 80,
+      width: wide ? 40 : copyWidth(generous ? 70 : 80),
       height: 18,
       priority: 9,
       because: wide
@@ -161,7 +229,7 @@ export function buildGeometry(input: GeometryInput): LayoutGeometry {
       name: "subheadline",
       x: copyX,
       y: wide ? 55 : 30,
-      width: wide ? 40 : 70,
+      width: wide ? 40 : copyWidth(70),
       height: 10,
       priority: 6,
       because: "sits directly under the headline so the two read as one statement rather than two",
@@ -172,7 +240,7 @@ export function buildGeometry(input: GeometryInput): LayoutGeometry {
       name: "cta",
       x: copyX,
       y: wide ? 72 : 88,
-      width: wide ? 25 : 40,
+      width: wide ? 25 : copyWidth(40),
       height: 8,
       priority: 7,
       because: "placed at the end of the reading path, so the eye arrives at it having already passed the product",
@@ -184,7 +252,7 @@ export function buildGeometry(input: GeometryInput): LayoutGeometry {
       name: "supporting",
       x: copyX,
       y: wide ? 85 : 78,
-      width: wide ? 40 : 70,
+      width: wide ? 40 : copyWidth(70),
       height: 6,
       priority: 3,
       because: "the remaining strings sit below the main statement, subordinate by position as well as by size",
@@ -217,7 +285,46 @@ export function buildGeometry(input: GeometryInput): LayoutGeometry {
       }
     : null;
 
-  return { ratio, grid, zones, eye_path, score: scoreLayout({ ratio, grid, zones, eye_path } as LayoutGeometry) };
+  const score = scoreLayout({ ratio, grid, zones, eye_path } as LayoutGeometry);
+  return { ratio, grid, zones, eye_path, score, decisions: layoutDecisions({ ratio, grid, zones, eye_path, score }, side, generous) };
+}
+
+/** States the layout as decisions, read off the zones. */
+export function layoutDecisions(
+  g: Omit<LayoutGeometry, "decisions">,
+  side: "left" | "right" | null = null,
+  generous = false,
+): LayoutDecisions {
+  const at = (name: ZoneName) => g.zones.find((z) => z.name === name) || null;
+  const product = at("product");
+  const headline = at("headline");
+  const cta = at("cta");
+  const copy = g.zones.filter((z) => z.name !== "product" && z.name !== "logo");
+  const meanX = copy.length ? copy.reduce((n, z) => n + z.x, 0) / copy.length : 50;
+  const alignment: LayoutDecisions["alignment"] = !copy.length ? "none" : meanX < 45 ? "left" : meanX > 55 ? "right" : "centre";
+  const occupied = g.zones.reduce((n, z) => n + (z.width * z.height) / 100, 0);
+  const share = Math.max(0, Math.round(100 - occupied));
+  const label = share >= 45 ? "large premium spacing" : share >= 25 ? "balanced spacing" : "dense, information-first";
+  const asymmetric = Boolean(product && Math.abs(product.x - 50) > 8);
+  return {
+    product_placement: product ? placementLabel(product.x, product.y) : "none",
+    headline_placement: headline ? placementLabel(headline.x, headline.y) : null,
+    cta_placement: cta ? (cta.y > 66 ? "bottom area" : placementLabel(cta.x, cta.y)) : null,
+    alignment,
+    whitespace: { share, label },
+    balance: asymmetric ? "asymmetric" : "symmetric",
+    grid: `${g.grid.columns}×${g.grid.rows} grid, ${g.grid.margin}% margin, ${g.grid.safe_inset}% safe inset`,
+    hierarchy: [...g.zones].sort((a, b) => b.priority - a.priority).map((z) => z.name),
+    because: [
+      side
+        ? `the director set the subject ${side} of centre, so the copy takes the opposite side and lines up along one edge`
+        : g.ratio === "16:9"
+          ? "a wide frame is read across: product on one side, copy on the other"
+          : "neither edge of this frame leads, so the product holds the optical centre and any copy stacks on its axis",
+      generous ? "the brand asks for a premium, uncluttered feel, so the elements are smaller and the space around them larger" : "",
+      !copy.length ? "no text was supplied, so the frame is composed for the image alone" : "",
+    ].filter(Boolean).join("; "),
+  };
 }
 
 /**
@@ -288,11 +395,54 @@ export function geometryTelemetry(g: LayoutGeometry | null | undefined) {
   };
 }
 
+/** Zones that exist only because copy exists. Named for what they hold. */
+const COPY_ZONES: ZoneName[] = ["headline", "subheadline", "cta", "supporting"];
+
+export interface RenderGeometryOptions {
+  /**
+   * The renderer is drawing the SCENE only -- the type is set separately and
+   * composited afterwards.
+   *
+   * With this on, the copy zones are still transmitted, because the picture has
+   * to be composed around them, but they are transmitted as AREAS TO KEEP
+   * CLEAR rather than under typographic names. A block that says "headline:
+   * centred at 50% across" is typography vocabulary handed to a model that is
+   * being told in the same prompt to render no typography, and a model given
+   * both has a contradiction to resolve. This removes it.
+   */
+  sceneOnly?: boolean;
+}
+
 /** The geometry as the prompt carries it. Percentages, so any size works. */
-export function renderGeometry(g: LayoutGeometry | null | undefined): string | undefined {
+export function renderGeometry(
+  g: LayoutGeometry | null | undefined,
+  opts: RenderGeometryOptions = {},
+): string | undefined {
   if (!g?.zones.length) return undefined;
+  if (opts.sceneOnly) {
+    const d0 = g.decisions;
+    const copy = g.zones.filter((z) => COPY_ZONES.includes(z.name));
+    const rest = g.zones.filter((z) => !COPY_ZONES.includes(z.name));
+    return [
+      `SCENE GEOMETRY (${g.ratio}) \u2014 positions are percentages of the frame, origin top-left. This frame carries no text; these are areas, not elements.`,
+      ...(d0
+        ? [`- composition: product ${d0.product_placement}; ${d0.balance} balance; ${d0.whitespace.label} (~${d0.whitespace.share}% of the frame left empty).`]
+        : []),
+      ...rest.map((z) => `- ${z.name}: centred at ${z.x}% across, ${z.y}% down, occupying ~${z.width}%\u00d7${z.height}%. ${z.because}`),
+      ...copy.map(
+        (z, i) =>
+          `- clear area ${i + 1}: centred at ${z.x}% across, ${z.y}% down, occupying ~${z.width}%\u00d7${z.height}%. Keep it quiet: even tone, low detail, no product edge, no hard highlight, no busy pattern. Leave it genuinely empty.`,
+      ),
+    ].join("\n");
+  }
+  const d = g.decisions;
   return [
     `LAYOUT GEOMETRY (${g.ratio}) — positions are percentages of the frame, origin top-left.`,
+    ...(d
+      ? [
+          `- layout: product ${d.product_placement}${d.headline_placement ? `, headline ${d.headline_placement}` : ""}${d.cta_placement ? `, CTA ${d.cta_placement}` : ""}; ${d.alignment === "none" ? "no text" : `${d.alignment}-aligned copy`}; ${d.balance} balance; ${d.whitespace.label} (~${d.whitespace.share}% of the frame left empty).`,
+        ]
+      : []),
     ...g.zones.map(
       (z) => `- ${z.name}: centred at ${z.x}% across, ${z.y}% down, occupying ~${z.width}%×${z.height}%. ${z.because}`
     ),

@@ -1,574 +1,737 @@
-PHASE 0
-System Audit & Architecture Foundation
+PHASE 5.6
+Prompt + Typography + Composition Foundation
 
-✅ ĐÃ HOÀN THÀNH
+Đây là phase nền móng.
 
 Mục tiêu:
 
-Hiểu toàn bộ hệ thống trước khi mở rộng.
+Làm cho pipeline hiện tại sạch và ổn định trước khi tăng trí thông minh.
 
-Đã làm:
+Hiện tại hệ thống có vấn đề:
 
-Audit codebase
-Audit AI pipeline
-Audit modules
-Database planning
-Architecture boundary
-
-Kết quả:
+prompt quá dài
+typography bị trùng
+chữ bị dán vào ảnh
+layout chưa thống nhất
+nhiều module nói chuyện với image model cùng lúc
+5.6.1 Bỏ Editable UI
+Hiện trạng:
 
 Có:
 
-Application Layer
+Editable mode
+Export PSD
+Canva
+SVG
 
-Infrastructure Layer
+Nhưng nó làm hệ thống lệch hướng.
 
-Shared Layer
-PHASE 1
-Identity + Database Foundation
+Vấn đề:
 
-✅ GẦN HOÀN THÀNH
+Thay vì tập trung:
 
-Mục tiêu:
+Tạo quảng cáo đẹp
 
-Xây nền tảng người dùng và dữ liệu.
+lại phải xử lý:
 
-Firebase Authentication
+File format
+Layer
+Export
+Editor
+Việc làm:
 
-Firebase chịu trách nhiệm:
+Claude sẽ:
 
-Sign up
-Login
-Google Login
-Session
-Identity
-Supabase Database
-
-Lưu:
-
-User
-user_profiles
-Organization
-organizations
-Team
-workspace_members
-Project
-projects
-Creative History
-creative_runs
-Infrastructure Layer
-
-ĐÃ CÓ:
-
-@tido/infrastructure
-
-@tido/shared
-PHASE 1.5
-Infrastructure Hardening
-
-✅ HOÀN THÀNH
-
-Mục tiêu:
-
-Không để AI engine bị phụ thuộc database.
-
-Đã đạt:
-
-App
-
-↓
-
-Infrastructure
-
-↓
-
-Firebase/Supabase
-
-Đã kiểm tra:
-
-dependency boundary
-build
-regression
-auth migration
-PHASE 2
-AI Intelligence Persistence
-
-🚧 TIẾP THEO
-
-Đây là phase chúng ta đang chuẩn bị.
-
-Mục tiêu:
-
-Lưu toàn bộ "suy nghĩ" của AI.
-
-Hiện tại:
-
-AI suy nghĩ → mất.
-
-Sau phase này:
-
-AI Decision
-
-        ↓
-
-Database
-
-        ↓
-
-Future Learning
-Cần làm:
-2.1 Creative Intelligence Database
-
-Lưu:
-
-product understanding
-audience analysis
-marketing angle
-creative reasoning
-
-Table:
-
-creative_intelligence
-2.2 Creative Blueprint Memory
-
-Lưu:
-
-visual world
-composition
-lighting
-typography
-layout
-
-Table:
-
-creative_blueprints
-2.3 Design Decision History
-
-Lưu:
-
-AI chọn:
-
-Why this layout?
-
-Why this color?
-
-Why this typography?
-
-Table:
-
-design_decisions
-2.4 Vision Loop Memory
-
-Lưu:
-
-Render V1
-
-↓
-
-Vision Analysis
-
-↓
-
-Problems
-
-↓
-
-Correction
-
-↓
-
-Render V2
-
-Tables:
-
-vision_reviews
-
-render_iterations
-2.5 Prompt Evolution
-
-Lưu:
-
-prompt version
-changes
-improvement
-
-Table:
-
-prompt_versions
-PHASE 3
-AI Memory & Learning System
-
-Sau khi Phase 2 có dữ liệu.
-
-Mục tiêu:
-
-AI bắt đầu học.
-
-3.1 User Kit Memory
-
-AI nhớ từng user.
+bỏ checkbox Editable
+bỏ UI export
+bỏ flow người dùng chọn editable
+giữ lại những phần hữu ích:
 
 Ví dụ:
 
-User A:
+Giữ:
 
-Luxury
-Minimal
-Dark background
-Large product
-Few words
+Typography Engine
+Composition Map
+Text Layout Engine
 
-User B:
+Bỏ:
 
-Bright
-Colorful
-Social style
+PSD exporter
+PPTX exporter
+Figma exporter
+5.6.2 Hybrid Typography
 
-Database:
+Đây là phần quan trọng nhất.
 
-user_creative_profiles
-3.2 Asset Intelligence
+Hiện tại có 2 cực:
 
-AI hiểu asset.
+Cách cũ:
 
-Upload:
+AI tự vẽ chữ:
 
-chai nước
+Prompt
+ ↓
+Image AI
+ ↓
+Ảnh có chữ
 
-AI biết:
+Ưu:
 
-shape
-material
-color
-texture
-lighting requirement
+chữ hòa vào ảnh
 
-Database:
+Nhược:
 
-assets
+sai text
+sai tiếng Việt
+sai giá tiền
+sai logo
+Cách khác:
 
-asset_dna
-3.3 Template Intelligence
+Render ảnh trước:
 
-Không phải template.
+Ảnh sạch
 
-Là:
++
 
-Creative Pattern Learning.
+Text dán sau
+
+Ưu:
+
+chính xác
+
+Nhược:
+
+nhìn như Canva
+Hybrid:
+
+Kiến trúc:
+
+Creative Director
+
+↓
+
+Typography Direction
+
+↓
+
+Composition Planner
+
+↓
+
+Image AI tạo khoảng trống phù hợp
+
+↓
+
+Typography Engine đặt chữ
 
 Ví dụ:
-
-AI học:
-
-Beauty:
-
-Macro product
-
-Soft shadow
-
-Minimal typography
-
-Luxury spacing
-
-Database:
-
-creative_patterns
-3.4 Vector Memory
-
-Dùng Supabase pgvector.
-
-AI tìm:
-
-concept giống nhau
-layout giống nhau
-sản phẩm tương tự
-PHASE 4
-Creative Director AI Platform
-
-Mục tiêu:
-
-Tăng độ sáng tạo.
-
-Hiện tại:
 
 User nhập:
 
-Concept
+TƯƠNG ỚT VIFON
+CAY ĐIỆU KHAI TƯƠNG THẬT NHA!
 
-Text
+AI không gửi chữ này vào image model.
 
-Image
+Nó gửi:
 
-Sau phase này:
+Create playful food advertisement.
+Reserve upper-left dynamic space for bold rounded typography.
+The composition should support energetic Vietnamese food branding.
 
-AI tự:
+Sau đó:
 
-Generate 10 concepts
+Typography Engine đặt chữ thật.
 
-↓
+Kết quả:
 
-Evaluate
+ảnh đẹp
+chữ đúng
+bố cục hợp
+5.6.3 Prompt Reduction
 
-↓
+Đây là việc rất quan trọng.
 
-Choose best
+Hiện:
 
-↓
+31.989/32.000 ký tự.
 
-Explain why
+Gần giới hạn.
 
-Cần hoàn thiện:
+Mục tiêu:
 
-Creative Concept Evolution Engine
-concept generation
-scoring
-selection
-Creative Critic
-
-AI tự đánh giá:
-
-visual quality
-conversion potential
-brand consistency
-Advanced Vision Loop
-
-Không chỉ score.
-
-Mà:
-
-Look
+32k
 
 ↓
 
-Understand
+18-20k
+
+Không phải giảm trí thông minh.
+
+Mà là:
+
+bỏ phần thừa.
+
+Hiện tại:
+
+Có nhiều đoạn:
+
+vì vậy...
+bởi vì...
+hãy nhớ rằng...
+
+Image model không cần.
+
+Prompt mới chỉ giữ:
+
+visual requirement
+composition
+lighting
+product truth
+typography intention
+5.6.4 Font Pipeline
+
+Hiện lỗi:
+
+Typography nhìn giả.
+
+Nguyên nhân:
+
+font fallback.
+
+Ví dụ:
+
+Brand muốn:
+
+Montserrat
+
+nhưng server không có.
+
+Nó dùng:
+
+Arial/Georgia.
+
+Việc làm:
+
+Tạo:
+
+Font Library
+
+Ví dụ:
+
+10 font:
+
+modern sans
+premium serif
+playful
+luxury
+food packaging
+
+Có hỗ trợ:
+
+tiếng Việt
+dấu
+commercial usage
+5.6.5 Composition Plan
+
+Đây là cầu nối giữa:
+
+Creative Brain
+
+và
+
+Image Generation.
+
+Trước khi tạo ảnh:
+
+AI tạo:
+
+Composition Plan
+
+{
+hero_product:
+right_center
+
+text_area:
+upper_left
+
+camera:
+45_degree
+
+lighting:
+soft_directional
+
+negative_space:
+30%
+
+support_elements:
+ingredients
+}
+PHASE 7
+Composition Intelligence
+
+Tôi xếp phase này sau 5.6 vì:
+
+Typography cần chỗ để đặt.
+
+Muốn chữ đẹp:
+
+phải biết bố cục trước.
+
+Mục tiêu:
+
+AI phải biết thiết kế layout như designer.
+
+7.1 Master Composition Planner
+
+Hiện tại:
+
+AI chủ yếu nghĩ:
+
+"tạo ảnh đẹp"
+
+Cần:
+
+"tạo bố cục có chủ đích"
+
+Planner quyết định:
+
+Hero
+
+Sản phẩm chính ở đâu?
+
+Ví dụ:
+
+chai nước:
+
+right side
+large scale
+45 degree angle
+Typography zone
+
+Chỗ nào dành cho chữ?
+
+Supporting objects
+
+Ví dụ:
+
+Cafe:
+
+hạt cafe
+hơi nước
+lá
+
+Nước ép:
+
+trái cây
+splash
+Camera
+
+Ví dụ:
+
+Food:
+
+macro close-up
+
+Beauty:
+
+studio
+
+Lighting
+
+Premium:
+
+soft shadow
+
+Energy:
+
+high contrast
+
+7.2 Asset Intelligence
+
+AI phải hiểu asset.
+
+Ví dụ upload:
+
+chai nước.
+
+AI phải biết:
+
+Đây là:
+
+bottle
+logo
+label
+product identity
+
+Không được:
+
+bóp méo logo
+đổi màu chai
+tạo thêm phiên bản khác
+
+Asset Intelligence giúp:
+
+AI biết cái gì được phép sáng tạo
+
+và
+
+cái gì phải giữ nguyên
+7.3 Negative Space Intelligence
+
+Đây là phần giải quyết lỗi typography.
+
+Designer giỏi không chỉ đặt chữ.
+
+Họ tạo khoảng trống cho chữ.
+
+Ví dụ:
+
+Poster đẹp:
+
+50% là sản phẩm
+
+30% là khoảng thở
+
+20% là text
+
+AI phải biết:
+
+"đừng nhét mọi thứ vào"
+
+7.4 Visual Storytelling
+
+Đây là điểm tạo khác biệt.
+
+Ví dụ:
+
+AI yếu:
+
+chai tương ớt
++
+background đỏ
+
+AI mạnh:
+
+chai tương ớt
+
++
+ớt bay
+
++
+splash
+
++
+mascot
+
++
+vùng nguyên liệu
+
++
+cảm giác cay vui nhộn
+
+Nó tạo:
+
+"một thế giới thương hiệu"
+
+không phải ảnh sản phẩm.
+
+PHASE 6
+Creative Intelligence Upgrade
+
+Đây là phần làm AI "biết nghĩ".
+
+6.1 Creative Opportunity
+
+Hiện tại:
+
+User:
+
+"làm quảng cáo cafe"
+
+AI:
+
+"ảnh cafe đẹp"
+
+Senior designer:
+
+nghĩ:
+
+khách hàng là ai?
+muốn cảm giác gì?
+điểm khác biệt?
+câu chuyện?
+
+Creative Opportunity biến:
+
+Input:
+
+Coffee advertisement
+
+thành:
+
+Opportunity:
+
+Create a relaxing premium morning ritual.
+Target young professionals.
+Mood:
+calm, warm, sophisticated.
+Visual:
+floating coffee world.
+6.2 Category Intelligence
+
+AI phải hiểu ngành.
+
+Beauty
+
+Không giống Food.
+
+Cần:
+
+clean
+luxury
+skin
+soft light
+Food
+
+Cần:
+
+appetite
+texture
+ingredients
+Beverage
+
+Cần:
+
+freshness
+motion
+splash
+FMCG
+
+Cần:
+
+product trust
+packaging clarity
+6.3 Direction Scoring
+
+Không chọn ý tưởng đầu tiên.
+
+AI tạo:
+
+Ví dụ:
+
+3 hướng:
+
+A Premium Minimal
+
+B Dynamic Explosion
+
+C Lifestyle Story
+
+Chấm:
+
+originality
+commercial impact
+brand fit
+feasibility
+
+Chọn hướng mạnh nhất.
+
+PHASE 8
+Senior Designer Vision Loop
+
+Đây là phần giúp hệ thống tự nâng chất lượng.
+
+Hiện tại:
+
+AI:
+
+Generate
 
 ↓
 
-Find problems
+Done
+
+Sau này:
+
+Generate
+
+↓
+
+Review
 
 ↓
 
 Fix
-PHASE 5
-Professional Design Output
 
-Mục tiêu:
+↓
 
-Biến AI output thành file thiết kế.
+Generate again
+Vision Critique kiểm tra:
+Creative
 
-5.1 Typography Engine
+Ý tưởng có mạnh không?
 
-Hoàn thiện:
+Composition
 
-font database
-font pairing
-multilingual
-hierarchy
-5.2 Editable Output
-
-Làm:
-
-SVG
-Text
-
-Logo
-
-Shape
-Canva JSON
-
-Layer:
-
-Image
-
-Text
-
-Position
-
-Font
-
-Color
-PSD Preparation
-
-Layer:
-
-Background
+Bố cục có cân không?
 
 Product
 
-Shadow
+Sản phẩm có nổi bật không?
 
-Reflection
+Typography
 
-Effect
+Có đẹp không?
 
-Text
+Commercial
 
-Logo
+Có giống quảng cáo thật không?
+
+Correction
+
+AI quyết định:
+
+Nếu lỗi nhỏ:
+
+chỉnh layout
+
+Nếu lỗi lớn:
+
+render lại
+PHASE 9
+Memory & Learning
+
+Không phải làm AI tự train.
+
+Mà là tạo trí nhớ.
+
+9.1 User Preference
+
+Ví dụ:
+
+User thường thích:
+
+premium
+ít chữ
+màu tối
+cinematic
+
+Lần sau AI hiểu.
+
+9.2 Creative Pattern
+
+Lưu:
+
+Những gì hiệu quả.
+
+Ví dụ:
+
+Coffee
++
+floating object
++
+blue sky
+
+đạt điểm cao.
+
+9.3 Brand Memory
+
+Nếu một shop dùng lâu:
+
+AI nhớ:
+
+Logo:
+
+✓
+
+Màu:
+
+✓
+
+Phong cách:
+
+✓
+
+Không phải nhập lại.
+
+PHASE 10
+Production Hardening
+
+Đây là giai đoạn biến demo thành sản phẩm thật.
+
+Speed
+
+Giảm:
+
+70-230s
+
+Tối ưu:
+
+cache
+parallel processing
+Cost
+
+Kiểm soát:
+
+số lần render
+vision calls
+token
+Security
+
+Kiểm tra:
+
+auth
+API
+storage
+permissions
+Monitoring
+
+Theo dõi:
+
+lỗi
+latency
+chi phí
+chất lượng output
+Kết luận thứ tự thực hiện tôi khuyên:
+
+Không nên làm đúng số phase cũ.
+
+Nên:
+
+1.
+PHASE 5.6
+Typography + Prompt + Foundation
+
+↓
+
+2.
+PHASE 7
+Composition Intelligence
+
+↓
+
+3.
 PHASE 6
-Production SaaS Platform
-
-Mục tiêu:
-
-Bán được.
-
-User Experience
-
-One screen.
-
-User:
-
-Upload
-
-+
-
-Concept
-
-+
-
-Text
-
-AI làm phần còn lại.
-
-Enterprise
-
-Thêm:
-
-Team workspace
-Brand workspace
-Approval flow
-Version history
-Scaling
-
-Infrastructure:
-
-Queue
-Worker
-Cache
-CDN
-Storage optimization
-FINAL ARCHITECTURE
-                 Firebase Auth
-
-                      |
-
-                      ↓
-
-              Identity Layer
-
-                      |
-
-                      ↓
-
-          TIDO Infrastructure
-
-                      |
-
-          ----------------------
-
-          |                    |
-
-     Supabase DB          Storage
-
-          |
-
-          |
-
-  --------------------------
-
-  |            |            |
-
-Memory     Creative     Patterns
-
-Layer      History      Learning
-
-
-          |
-
-          ↓
-
-
-      Creative Director AI
-
-
-          |
-
-          ↓
-
-
- Creative Blueprint
-
-
-          |
-
-          ↓
-
-
-Typography + Layout Engine
-
-
-          |
-
-          ↓
-
-
-Render Engine
-
-
-          |
-
-          ↓
-
-
-Vision Improvement Loop
-
-
-          |
-
-          ↓
-
-
-Editable Output
-
-
-          |
-
-          ↓
-
-
-Enterprise SaaS
-Trạng thái hiện tại
-
-Tôi đánh giá:
-
-Phần	Trạng thái
-AI Creative Engine	8.5-9/10
-Architecture	9.5/10
-Auth	9.5/10
-Database Foundation	8/10
-Memory	0-1/10 (chưa làm)
-Learning	0/10
-Editable Output	7/10
-Enterprise	4/10
-Việc tiếp theo hợp lý nhất
-
-Không nên code ngay Phase 2.
-
-Thứ tự chuẩn:
-
-1. Chốt Supabase schema cho Phase 2
+Creative Intelligence
 
 ↓
 
-2. Tạo migration
+4.
+PHASE 8
+Vision Loop
 
 ↓
 
-3. Connect AI pipeline
+5.
+PHASE 9
+Memory
 
 ↓
 
-4. Verify dữ liệu được lưu
+6.
+PHASE 10
+Production
 
-↓
-
-5. Sang Phase 3 Memory
+Lý do:

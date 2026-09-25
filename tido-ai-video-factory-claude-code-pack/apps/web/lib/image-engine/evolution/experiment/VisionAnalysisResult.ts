@@ -103,6 +103,28 @@ export interface VisionAnalysisResult {
   image_hash?: string;
   /** Present when nothing looked, saying why. */
   unavailable_reason?: string;
+  /**
+   * Every piece of text the model could read, and whether it is printed on the
+   * product itself. Present when the model reported it.
+   */
+  visible_text?: import("../../compiler/ExactCopyIntegrityValidator").VisibleText[];
+  /**
+   * The text requirement, checked deterministically against `visible_text`:
+   * exact text present, missing, misspelled, or unwanted. Present when a
+   * requirement was supplied and the image was actually seen.
+   */
+  text_check?: import("../../compiler/ExactCopyIntegrityValidator").TextCheck;
+  /**
+   * The typographic critique: duplicate text, collision, hierarchy,
+   * readability and balance, each finding labelled `measured` or `observed`.
+   *
+   * Computed after the model has answered, from what it read plus the design
+   * the render was composed from. It is not asked of the model, because most
+   * of it is arithmetic over values this system already holds -- and a model
+   * asked whether two boxes intersect will sometimes say no about boxes it
+   * just described.
+   */
+  typography_critique?: import("./TypographyCritique").TypographyCritique;
 }
 
 /** Nothing was seen. The only shape allowed to exist without a model call. */

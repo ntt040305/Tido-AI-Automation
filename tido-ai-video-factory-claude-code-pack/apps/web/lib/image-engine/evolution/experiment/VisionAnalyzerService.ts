@@ -2,6 +2,12 @@ import crypto from "crypto";
 import { LLMProviderService } from "../../llm/llm-provider.service";
 import { sniffImageMime } from "./VisualDNAAnalyzer";
 import {
+  checkRenderedText,
+  type TextCheck,
+  type TextRequirement,
+  type VisibleText,
+} from "../../compiler/ExactCopyIntegrityValidator";
+import {
   VisionAnalysisResult,
   VisionNote,
   VisionAction,
@@ -106,10 +112,17 @@ You are looking at the RENDER, not a brief. Report only what you can actually se
 
 What to examine, in order of how often it ruins a commercial render:
 1. TEXT. Is every word spelled correctly and fully formed? AI renderers produce letter-shaped noise, dropped diacritics and invented words. Quote any text you can read, exactly as it appears.
-2. READABILITY. Does any text sit on a background that swallows it, collide with an object edge, or run off the frame?
-3. PRODUCT. Does the product look like a real manufactured object -- consistent shape, plausible label, no melted or duplicated parts?
-4. LAYOUT. Is anything tangent, cropped awkwardly, or crowded against an edge?
-5. ARTIFACTS. Extra fingers, impossible reflections, repeated patterns, warped geometry.
+2. DUPLICATION. Does the same line appear more than once anywhere in the frame -- repeated at another size, echoed in a corner, printed again on the product, or set twice in the same block? List every occurrence separately in "visible_text" so a repeat is visible as two entries rather than one.
+3. COLLISION. Does any line of type cross the product, another line, a hard edge, a highlight, or the edge of the frame? Say which two things touch.
+4. HIERARCHY. Is it obvious which line is meant to be read first? Report when every line is set at roughly the same size and weight, or when a supporting line is louder than the line above it.
+5. READABILITY. Does any text sit on a background that swallows it, on busy detail, or at a size too small to read at a glance?
+6. BALANCE. Is the type massed on one side with nothing answering it, or piled on the same axis as the product?
+7. PRODUCT. Does the product look like a real manufactured object -- consistent shape, plausible label, no melted or duplicated parts?
+8. LAYOUT. Is anything tangent, cropped awkwardly, or crowded against an edge?
+9. ARTIFACTS. Extra fingers, impossible reflections, repeated patterns, warped geometry.
+
+On typography, say what a senior art director would say to another designer:
+"The headline overlaps the product silhouette." "The subtitle is too close to the CTA." "The typography block lacks visual hierarchy." Name the elements and what is wrong between them -- not an adjective.
 
 Rules:
 - Report ONLY what is visible. If you cannot read the text, say that rather than guessing what it says.
@@ -121,9 +134,10 @@ const INSTRUCTION = `Review this rendered commercial image and reply with a sing
 {
   "strengths": [{ "what": "...", "where": "..." }],
   "issues": [{ "what": "...", "where": "...", "confidence": "low|medium|high" }],
-  "typography_problems": [{ "what": "...", "where": "..." }],
+  "typography_problems": [{ "what": "...", "where": "...", "kind": "duplicate|collision|hierarchy|readability|balance|malformed" }],
   "layout_problems": [{ "what": "...", "where": "..." }],
   "product_accuracy": [{ "what": "...", "where": "..." }],
+  "visible_text": [{ "text": "exactly as rendered, one entry per separate block of text", "where": "...", "on_product": true, "on_logo": false }],
   "improvement_actions": [
     { "action": "specific, executable instruction",
       "because": "what it fixes",
@@ -134,7 +148,9 @@ const INSTRUCTION = `Review this rendered commercial image and reply with a sing
 
 Every action must be specific enough to execute. "Improve the typography" is not an instruction; "set the closing line at half the headline weight and move it clear of the cup's edge" is.
 
-Omit any list you have nothing real to put in.`;
+Report a duplicate as a typography_problem with "kind": "duplicate" AND as two separate "visible_text" entries. A line set once is not a duplicate; a line set twice is, however different the two treatments are.
+
+Omit any list you have nothing real to put in -- except "visible_text": list every piece of legible text in the image, exactly as it is rendered, with "on_product": true when it is printed on the product itself (its label, cap or packaging) and false when it is set in the image around the product; "on_logo": true when the words are part of a brand logo mark. An image with no text at all has "visible_text": [].`;
 
 const clean = (s: unknown): string => (typeof s === "string" ? s.trim() : "");
 
@@ -166,6 +182,19 @@ const AREAS: VisionArea[] = [
   "artifact",
 ];
 
+/** The text the model read. Null when it did not report the list at all. */
+function toVisibleText(raw: unknown): VisibleText[] | null {
+  if (!Array.isArray(raw)) return null;
+  const out: VisibleText[] = [];
+  for (const r of raw) {
+    const text = typeof r === "string" ? clean(r) : clean(r?.text);
+    if (!text) continue;
+    const o = typeof r === "object" && r ? (r as { on_product?: unknown; on_logo?: unknown }) : null;
+    out.push({ text, on_product: o?.on_product === true, ...(o?.on_logo === true ? { on_logo: true } : {}) });
+  }
+  return out;
+}
+
 function toActions(raw: unknown): VisionAction[] {
   if (!Array.isArray(raw)) return [];
   const out: VisionAction[] = [];
@@ -195,6 +224,12 @@ export interface VisionAnalyzerInput {
   expectedCopy?: string[];
   /** What the product is, for the accuracy check. */
   productDescription?: string;
+  /**
+   * The text requirement: exactly these lines, or no text at all. When given,
+   * the review checks it -- missing, incorrect and unwanted text -- and the
+   * verdict is computed, not asked for. Supersedes `expectedCopy`.
+   */
+  textRequirement?: TextRequirement;
 }
 
 export class VisionAnalyzerService {
@@ -225,8 +260,13 @@ export class VisionAnalyzerService {
     if (!mimeType) return emptyVisionAnalysis("the rendered bytes were not a recognisable image");
 
     let instruction = INSTRUCTION;
-    const copy = (input.expectedCopy || []).map(clean).filter(Boolean);
-    if (copy.length) {
+    const req = input.textRequirement;
+    const copy = req ? req.lines : (input.expectedCopy || []).map(clean).filter(Boolean);
+    if (req?.mode === "none") {
+      instruction += `
+
+This image was required to carry NO text at all. Any headline, slogan, caption, price, CTA or decorative lettering set in the image is a defect: report each one in typography_problems. Text printed on the product itself (its label or packaging) is part of the product and is not a defect.`;
+    } else if (copy.length) {
       // Giving the model the intended words is what turns "the text looks odd"
       // into "it reads GHE THU, it should read Ghé thử" -- the difference
       // between a finding and an actionable one.
@@ -262,18 +302,41 @@ export class VisionAnalyzerService {
       return emptyVisionAnalysis("the vision provider's analysis was not an object");
     }
 
+    // What the model read, and -- when there is a requirement -- the verdict
+    // on it, computed here rather than asked for, so "is the text exact" does
+    // not depend on the same model grading its own reading.
+    const visible = toVisibleText(parsed.visible_text);
+    const typography = toNotes(parsed.typography_problems);
+    let textCheck: TextCheck | undefined;
+    if (req && visible) {
+      textCheck = checkRenderedText(visible, req);
+      for (const m of textCheck.missing) typography.push({ what: `required text is missing: "${m}"` });
+      for (const i of textCheck.incorrect) {
+        typography.push({ what: `text is incorrect: rendered "${i.rendered}", required "${i.expected}" exactly` });
+      }
+      for (const u of textCheck.unwanted) {
+        typography.push({
+          what: req.mode === "none"
+            ? `unwanted generated text: "${u}" -- this image must carry no text`
+            : `unwanted text that was not supplied: "${u}"`,
+        });
+      }
+    }
+
     // A model looked at these bytes and answered about them. This is the only
     // place in the codebase permitted to set this flag.
     return {
       analyzed_image: true,
       strengths: toNotes(parsed.strengths),
       issues: toNotes(parsed.issues),
-      typography_problems: toNotes(parsed.typography_problems),
+      typography_problems: typography,
       layout_problems: toNotes(parsed.layout_problems),
       product_accuracy: toNotes(parsed.product_accuracy),
       improvement_actions: toActions(parsed.improvement_actions),
       provider: this.provider.name,
       image_hash: VisionAnalyzerService.hash(image),
+      ...(visible ? { visible_text: visible } : {}),
+      ...(textCheck ? { text_check: textCheck } : {}),
     };
   }
 }

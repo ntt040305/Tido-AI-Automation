@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getIdentityProvider } from "@tido/infrastructure";
-import { fileKitStore } from "@/lib/user-kit/kit-store";
+import { loadKitForIdentity } from "@/lib/user-kit/kit-memory";
 import {
   preferenceDecisions,
   summarizeUserKit,
@@ -17,8 +17,14 @@ export async function GET(req: NextRequest) {
   const identity = await getIdentityProvider().identify(req);
   if (!identity) return NextResponse.json({ kit: null });
 
-  const kit = fileKitStore.load(identity.firebaseUid);
-  if (!kit) return NextResponse.json({ kit: null });
+  // Reads the database when there is one and the files when there is not.
+  // A person who has taught the system nothing yet and a person whose memory
+  // could not be read both come back with no active preferences, which is the
+  // same answer either way: render from the brief alone.
+  const kit = await loadKitForIdentity(identity);
+  if (!kit || kit.preferences.length === 0) {
+    return NextResponse.json({ kit: { observed_runs: kit?.observed_runs ?? 0, summary: null, active: [] } });
+  }
 
   return NextResponse.json({
     kit: {

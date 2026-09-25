@@ -203,8 +203,26 @@ export class SimpleImageGenerationOrchestratorService {
           filename: img.filename,
         }));
 
+        // Phase 5.4. When every attachment carries an explicit non-product role
+        // -- a brand logo, an inspiration reference -- there is no product
+        // photo to analyse, and a product-free brief is the text-only case: route
+        // it as one, so the concept stands in as the product. Sent to the image
+        // router instead, those attachments came back with no eligible product
+        // and retrieval failed the render. The adapter still honours their
+        // explicit roles, so the logo reaches the renderer as a LOGO.
+        const NON_PRODUCT_ROLES = new Set(["LOGO", "INSPIRATION_REFERENCE", "SUPPORT_REFERENCE", "STYLE"]);
+        const noProductPhoto =
+          routerInputImages.length > 0 &&
+          (request.images || []).every((img) => NON_PRODUCT_ROLES.has(String((img as { role?: string }).role || ""))) &&
+          !isReferenceImageRequired(request.useCase);
+        if (noProductPhoto) {
+          console.log("[SIMPLE][02 ROUTER] no product photo; routing the brief as the product", {
+            roles: (request.images || []).map((img) => (img as { role?: string }).role),
+          });
+        }
+
         const routerInput: RouterInput = {
-          images: routerInputImages,
+          images: noProductPhoto ? [] : routerInputImages,
           concept: request.concept,
           useCase: request.useCase,
           aspectRatio: request.aspectRatio,

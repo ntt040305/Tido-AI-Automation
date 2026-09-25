@@ -512,7 +512,7 @@ export class MasterPromptCompilerService {
       const anyRole = copyItems.some((i) => roleOf(i));
 
       const lines: string[] = [
-        "The strings below are the only words that may appear in the image. Reproduce them exactly \u2014 spelling, capitalization, punctuation, numbers and accents \u2014 and render no others; every other line in this prompt is a non-visible instruction.",
+        "Use exactly the provided text. The strings below are the only words that may appear in the image. Reproduce them exactly \u2014 spelling, capitalization, punctuation, numbers and accents \u2014 and render no others; every other line in this prompt is a non-visible instruction.",
         "",
         "Decide their treatment rather than applying a default. Which string carries the message, and which merely supports it? Does the emphasis come from size, weight, colour, or the space around it? Does the type sit with the image or on top of it? Type that has to fight the picture behind it is placed wrong, not sized wrong. Let the brand and the way this format is read decide how loud it is \u2014 both are stated above.",
         "",
@@ -552,7 +552,7 @@ export class MasterPromptCompilerService {
       // communicate without words. Previously this line only forbade text and
       // told the renderer to leave a gap for type that is never coming.
       typographyAndReadableCopyText =
-        "No copy is authorized, so this image communicates entirely without words \u2014 the picture carries the whole message. Render no words, letters, invented brand names, prices, labels or decorative lettering anywhere in the frame. Compose for a finished image rather than leaving a blank band for type that will not be added.";
+        "Do not add any typography or text. No copy is authorized, so this image communicates entirely without words \u2014 the picture carries the whole message. Render no words, letters, invented brand names, prices, labels or decorative lettering anywhere in the frame. Compose for a finished image rather than leaving a blank band for type that will not be added. The only exception is lettering physically printed on the uploaded product itself: it is part of the product and stays exactly as the product reference shows it.";
     }
 
     provenance.exact_copy = { source: "user.copyItems", items: copyItems };

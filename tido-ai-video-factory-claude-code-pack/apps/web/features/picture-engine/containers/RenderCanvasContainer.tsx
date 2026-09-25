@@ -12,6 +12,12 @@ import { TimelineStepItem } from "../components/generation/AIReasoningTimeline";
 
 export function RenderCanvasContainer() {
   const [isDownloading, setIsDownloading] = useState(false);
+  // Phase 4.6. What the person has said about each render, by generation id.
+  // "kept" covers a download or an approval; it is what separates a regenerate
+  // after keeping (a request for variety) from a regenerate instead of keeping
+  // (a render that missed).
+  const [feedback, setFeedback] = useState<Record<string, "approve" | "reject">>({});
+  const [kept, setKept] = useState<Record<string, true>>({});
   const brief = usePictureEngineStore((state) => state.creativeBrief);
   const jobState = usePictureEngineStore((state) => state.generationJob);
   const currentAsset = usePictureEngineStore((state) => state.currentAsset);
@@ -50,8 +56,18 @@ export function RenderCanvasContainer() {
     step('7', 'Render', 'Gửi tới provider và lưu ảnh gốc', 100, 88),
   ];
 
+  /** The id the run was recorded under: the generation id, not the asset id. */
+  const signalId = (asset: typeof currentAsset) => (asset ? asset.generation_id || asset.asset_id : "");
+
   async function handleGenerate() {
     if (!canGenerate || jobState.status === "rendering") return;
+    // Regenerating a render that was neither kept nor already rejected says it
+    // missed. Recorded as `repeat_edit` -- counted against that render's
+    // patterns once, never read as a taste on its own.
+    const previous = signalId(currentAsset);
+    if (previous && !kept[previous] && !feedback[previous]) {
+      void recordApprovalSignal("repeat_edit", previous);
+    }
     try {
       await createPictureAsset(brief);
     } catch (err: unknown) {
@@ -76,7 +92,11 @@ export function RenderCanvasContainer() {
       );
       // A download is the strongest signal this product gets that a render was
       // good. It was previously recorded nowhere.
-      void recordApprovalSignal("download", currentAsset.asset_id);
+      // The GENERATION id, which is what the run was recorded under. The asset
+      // id (`ast_img_<generationId>`) was sent before, matched no run, and so
+      // no download could ever reach the pattern it approved.
+      void recordApprovalSignal("download", signalId(currentAsset));
+      setKept((k) => ({ ...k, [signalId(currentAsset)]: true }));
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Tải ảnh thất bại.";
       usePictureEngineStore.getState().setError({
@@ -87,6 +107,14 @@ export function RenderCanvasContainer() {
     } finally {
       setIsDownloading(false);
     }
+  }
+
+  function handleVerdict(kind: "approve" | "reject") {
+    const id = signalId(currentAsset);
+    if (!id || feedback[id]) return;
+    setFeedback((f) => ({ ...f, [id]: kind }));
+    if (kind === "approve") setKept((k) => ({ ...k, [id]: true }));
+    void recordApprovalSignal(kind, id);
   }
 
   let canvasStatus: "idle" | "rendering" | "success" | "error" = "idle";
@@ -119,6 +147,9 @@ export function RenderCanvasContainer() {
       isDownloading={isDownloading}
       onGenerate={handleGenerate}
       onDownloadAsset={handleDownload}
+      onApproveAsset={() => handleVerdict("approve")}
+      onRejectAsset={() => handleVerdict("reject")}
+      feedback={currentAsset ? feedback[signalId(currentAsset)] ?? null : null}
     />
   );
 }

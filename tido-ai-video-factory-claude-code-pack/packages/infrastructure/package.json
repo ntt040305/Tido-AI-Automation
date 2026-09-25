@@ -5,15 +5,31 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "migrate": "node scripts/migrate.mjs",
+    "migrate:dry": "node scripts/migrate.mjs --dry-run",
+    "verify:schema": "node scripts/verify-schema.mjs",
+    "verify:rls": "node scripts/verify-rls.mjs",
+    "verify:auth": "node --env-file=../../apps/web/.env.local scripts/verify-auth-e2e.mjs",
+    "verify:flow": "node --env-file=../../apps/web/.env.local scripts/verify-auth-flow.mjs",
+    "verify:intelligence": "node --env-file=../../apps/web/.env.local scripts/verify-intelligence.mjs",
+    "verify:memory": "node --env-file=../../apps/web/.env.local scripts/verify-memory.mjs",
+    "migrate:kits": "node --env-file=../../apps/web/.env.local scripts/migrate-kits.mjs",
+    "migrate:kits:dry": "node --env-file=../../apps/web/.env.local scripts/migrate-kits.mjs --dry-run",
+    "verify:signal": "node --env-file=../../apps/web/.env.local scripts/verify-signal-e2e.mjs",
+    "verify:assets": "node --env-file=../../apps/web/.env.local scripts/verify-asset-memory.mjs",
+    "verify:assets:e2e": "node --env-file=../../apps/web/.env.local scripts/verify-asset-e2e.mjs",
+    "verify:live-flow": "node --env-file=../../apps/web/.env.local scripts/verify-live-user-flow.mjs"
   },
   "dependencies": {
-    "@tido/shared": "workspace:*",
     "@supabase/supabase-js": "^2.116.0",
+    "@tido/shared": "workspace:*",
     "firebase-admin": "^14.4.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
+    "@types/pg": "^8.23.1",
+    "pg": "^8.23.0",
     "typescript": "^5.0.0"
   }
 }

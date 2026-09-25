@@ -15,10 +15,6 @@ import React, { useCallback, useEffect, useState } from "react";
  */
 
 type Flags = {
-  active_pipeline: "stable" | "experiment";
-  rollout_mode: "production" | "internal_only" | "ab_testing";
-  ab_percentage: number;
-  internal_testers: string[];
   features: Record<string, boolean>;
   components: Record<string, boolean>;
 };
@@ -26,6 +22,7 @@ type Flags = {
 export default function PipelineAdminPage() {
   const [flags, setFlags] = useState<Flags | null>(null);
   const [comparison, setComparison] = useState<any>(null);
+  const [core, setCore] = useState<string[]>([]);
   const [killSwitch, setKillSwitch] = useState(false);
   const [token, setToken] = useState("");
   const [status, setStatus] = useState<string>("");
@@ -36,6 +33,7 @@ export default function PipelineAdminPage() {
     const json = await res.json();
     setFlags(json.flags);
     setComparison(json.comparison);
+    setCore(Array.isArray(json.core_features) ? json.core_features : []);
     setKillSwitch(Boolean(json.kill_switch_active));
   }, []);
 
@@ -75,7 +73,7 @@ export default function PipelineAdminPage() {
       const json = await res.json();
       if (!json.success) throw new Error(json.error || "refused");
       setFlags(json.flags);
-      setStatus("Rolled back to stable. Takes effect on the next generation.");
+      setStatus("Experiments reset. The core pipeline only, from the next generation.");
     } catch (e: any) {
       setStatus(`Rollback failed: ${e.message || e}`);
     } finally {
@@ -85,8 +83,8 @@ export default function PipelineAdminPage() {
 
   if (!flags) return <main style={{ padding: 32, fontFamily: "system-ui" }}>Loading pipeline state…</main>;
 
-  const onExperiment = flags.active_pipeline === "experiment";
-  const featuresOn = Object.keys(flags.features).filter((f) => flags.features[f]);
+  const experiments = Object.keys(flags.features).filter((f) => !core.includes(f));
+  const experimentsOn = experiments.filter((f) => flags.features[f]);
 
   const box: React.CSSProperties = {
     border: "1px solid #d7d7d7",
@@ -106,88 +104,39 @@ export default function PipelineAdminPage() {
       {killSwitch && (
         <div style={{ ...box, background: "#fff4f4", borderColor: "#e0a0a0" }}>
           <strong>Kill switch is on.</strong> <code>TIDO_PIPELINE_KILL_SWITCH=true</code> overrides everything on this
-          page — all traffic is on stable with no features, whatever is saved below.
+          page — every feature is off and renders go through the core without the Creative Director.
         </div>
       )}
 
-      <div style={{ ...box, background: onExperiment ? "#fffaf0" : "#f4fbf4" }}>
+      <div style={{ ...box, background: "#f4fbf4" }}>
         <div style={{ fontSize: 15 }}>
-          Serving: <strong>{onExperiment ? "EXPERIMENT" : "STABLE"}</strong>{" "}
-          <span style={{ color: "#555" }}>({flags.rollout_mode.replace("_", " ")})</span>
+          Serving: <strong>one creative pipeline</strong> <span style={{ color: "#555" }}>(all traffic)</span>
         </div>
         <div style={{ color: "#555", fontSize: 13, marginTop: 6 }}>
-          {featuresOn.length === 0
-            ? "No features enabled, so output is identical to stable even on the experiment pipeline."
-            : `Features changing output: ${featuresOn.join(", ")}`}
+          {experimentsOn.length === 0
+            ? "No experiments enabled: the core architecture only."
+            : `Experiments on top of the core: ${experimentsOn.join(", ")}`}
         </div>
       </div>
 
       <div style={box}>
-        <label style={{ display: "block", marginBottom: 10 }}>
-          <span style={{ display: "block", fontWeight: 600, marginBottom: 4 }}>Pipeline</span>
-          <select
-            value={flags.active_pipeline}
-            onChange={(e) => setFlags({ ...flags, active_pipeline: e.target.value as Flags["active_pipeline"] })}
-          >
-            <option value="stable">Stable</option>
-            <option value="experiment">Experiment</option>
-          </select>
-        </label>
-
-        <label style={{ display: "block", marginBottom: 10 }}>
-          <span style={{ display: "block", fontWeight: 600, marginBottom: 4 }}>Who it reaches</span>
-          <select
-            value={flags.rollout_mode}
-            onChange={(e) => setFlags({ ...flags, rollout_mode: e.target.value as Flags["rollout_mode"] })}
-          >
-            <option value="internal_only">Internal only</option>
-            <option value="ab_testing">A/B testing</option>
-            <option value="production">Production (everyone)</option>
-          </select>
-        </label>
-
-        {flags.rollout_mode === "ab_testing" && (
-          <label style={{ display: "block", marginBottom: 10 }}>
-            <span style={{ display: "block", fontWeight: 600, marginBottom: 4 }}>
-              Experiment share: {flags.ab_percentage}%
-            </span>
-            <input
-              type="range"
-              min={0}
-              max={100}
-              value={flags.ab_percentage}
-              onChange={(e) => setFlags({ ...flags, ab_percentage: Number(e.target.value) })}
-            />
-          </label>
-        )}
-
-        {flags.rollout_mode === "internal_only" && (
-          <label style={{ display: "block", marginBottom: 10 }}>
-            <span style={{ display: "block", fontWeight: 600, marginBottom: 4 }}>
-              Tester ids (comma separated, sent as <code>x-tido-tester-id</code>)
-            </span>
-            <input
-              style={{ width: "100%", padding: 6 }}
-              value={flags.internal_testers.join(", ")}
-              onChange={(e) =>
-                setFlags({
-                  ...flags,
-                  internal_testers: e.target.value.split(",").map((s) => s.trim()).filter(Boolean),
-                })
-              }
-              placeholder="opaque ids only — not emails"
-            />
-          </label>
-        )}
+        <div style={{ fontWeight: 600, marginBottom: 8 }}>Core architecture</div>
+        <p style={{ color: "#555", fontSize: 13, marginTop: 0 }}>
+          Always on. Part of the pipeline, not a setting — changing one is a code change.
+        </p>
+        <div style={{ fontSize: 12, lineHeight: 1.7 }}>
+          {core.map((f) => (
+            <code key={f} style={{ display: "inline-block", marginRight: 8 }}>{f}</code>
+          ))}
+        </div>
       </div>
 
       <div style={box}>
-        <div style={{ fontWeight: 600, marginBottom: 8 }}>Features</div>
+        <div style={{ fontWeight: 600, marginBottom: 8 }}>Experiments</div>
         <p style={{ color: "#555", fontSize: 13, marginTop: 0 }}>
-          Each one changes output independently and only on the experiment pipeline. None is implemented yet, so
-          enabling one currently logs a warning and runs stable behaviour.
+          Built but not validated. Off by default; each changes output independently.
         </p>
-        {Object.keys(flags.features).map((f) => (
+        {experiments.map((f) => (
           <label key={f} style={{ display: "block", marginBottom: 6 }}>
             <input
               type="checkbox"
@@ -232,14 +181,14 @@ export default function PipelineAdminPage() {
           disabled={busy}
           style={{ padding: "8px 14px", background: "#fff0f0", border: "1px solid #d08080" }}
         >
-          Roll back to stable
+          Reset experiments
         </button>
         {status && <div style={{ marginTop: 10, fontSize: 13 }}>{status}</div>}
       </div>
 
       {comparison && (
         <div style={box}>
-          <div style={{ fontWeight: 600, marginBottom: 8 }}>Stable vs experiment</div>
+          <div style={{ fontWeight: 600, marginBottom: 8 }}>Recorded runs by pipeline (history)</div>
           <pre style={{ fontSize: 12, overflowX: "auto", margin: 0 }}>{JSON.stringify(comparison, null, 2)}</pre>
         </div>
       )}

@@ -13,6 +13,7 @@ import {
 import { AssetTypeSelector } from "./AssetTypeSelector";
 import { VisualDirectionControlPanel } from "@/components/VisualDirectionControlPanel";
 import { BrandIdentityUploader } from "./BrandIdentityUploader";
+import { BrandKitPanel } from "./BrandKitPanel";
 import { Sparkles, FileText, Package, Ratio, Lightbulb } from "lucide-react";
 
 export interface CreativeBriefPanelProps {
@@ -233,6 +234,12 @@ export function CreativeBriefPanel({
         onChange={onUpdateBrandIdentity}
       />
 
+      {/* 4b. Brand Kit (Phase 5.4) */}
+      <BrandKitPanel
+        brandIdentity={brief.brand_identity}
+        onChange={onUpdateBrandIdentity}
+      />
+
       {/* 5. Creative Concept (Large Textarea) */}
       <div className="space-y-2.5">
         <label className="text-[13.5px] font-semibold text-text flex items-center justify-between">
@@ -387,8 +394,8 @@ export function CreativeBriefPanel({
           <span className="text-text3 font-normal">(Optional)</span>
         </label>
         <p className="text-[11.5px] text-text3 leading-relaxed">
-          Nhập các thông tin bạn muốn xuất hiện trên ảnh. Nếu để trống, AI có thể tự đề xuất nội
-          dung phù hợp với mục tiêu thiết kế.
+          Nhập chính xác chữ bạn muốn xuất hiện trên ảnh, mỗi dòng một nội dung. AI chỉ quyết định
+          cách trình bày, giữ nguyên từng chữ bạn nhập. Nếu để trống, ảnh sẽ không có chữ.
         </p>
         <textarea
           value={brief.content_message || ""}

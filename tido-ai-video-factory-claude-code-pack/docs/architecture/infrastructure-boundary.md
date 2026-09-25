@@ -132,10 +132,25 @@ identity — so the repository layer supplies the tenancy RLS cannot.
 
 RLS is the second line. The repository is the first.
 
-> **Outstanding configuration.** The policies require Firebase registered as
-> a third-party auth provider in the Supabase project. Until that is done they
-> match nothing for anon/authenticated clients — closed rather than open,
-> which is the right failure direction, but it means they are inert.
+### Verified, and what is still needed
+
+The policies are deployed and **proven to isolate tenants** —
+`pnpm --filter @tido/infrastructure verify:rls` sets `request.jwt.claims` and
+the `authenticated` role exactly as PostgREST does, then checks that one
+tenant cannot read or write another's rows. 13 checks, all passing against the
+live database.
+
+Two things are required before a real request exercises them:
+
+1. **`SUPABASE_PUBLISHABLE_KEY`** — sent as `apikey` on user-scoped requests.
+   Without it there is no user-scoped client and every request arrives as
+   `service_role`, which bypasses RLS.
+2. **Firebase registered as a third-party auth provider** in the Supabase
+   dashboard, so the gateway accepts a Firebase ID token as the bearer.
+
+Until both are in place the policies deny everything for `anon` and
+`authenticated` — closed rather than open, which is the right failure
+direction, but it means tenancy rests entirely on the repository layer.
 
 ---
 
