@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
-import { Palette, Plus, Pencil, X, Layers } from "lucide-react";
+import { Palette, Plus, Pencil, X } from "lucide-react";
 import { useAuth, useAuthedFetch } from "@/features/auth/AuthProvider";
 import { BrandIdentity } from "../../types/picture-engine.types";
 
@@ -245,25 +245,6 @@ export function BrandKitPanel({ brandIdentity, onChange }: BrandKitPanelProps) {
         </>
       )}
 
-      {/* Phase 5.5. Editable export changes how the image is rendered, so it is
-          chosen before generating, not after. */}
-      {user && (
-        <label className="flex items-start gap-2 pt-1 cursor-pointer">
-          <input
-            type="checkbox"
-            className="mt-0.5"
-            checked={brandIdentity.editable_export === true}
-            onChange={(e) => onChange({ editable_export: e.target.checked })}
-          />
-          <span className="text-[12px] text-text2 leading-relaxed">
-            <span className="font-semibold text-text flex items-center gap-1.5">
-              <Layers size={13} className="text-accent" />
-              Xuất file sửa được (PSD, Canva, SVG, Figma)
-            </span>
-            AI vẽ ảnh nền và sản phẩm; chữ, logo và khối CTA được ghép thành các lớp riêng nên tải về sửa được ở Photoshop hay Canva. Chữ do hệ thống dựng nên trông khác một chút so với chữ do AI vẽ.
-          </span>
-        </label>
-      )}
     </div>
   );
 }

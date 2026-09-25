@@ -7,7 +7,6 @@ import {
   AspectRatioType,
 } from "../../types/picture-engine.types";
 import { EmptyCanvasState } from "./EmptyCanvasState";
-import { EditableExportPanel } from "./EditableExportPanel";
 import { AIReasoningTimeline, TimelineStepItem } from "../generation/AIReasoningTimeline";
 import {
   Sparkles,
@@ -240,14 +239,6 @@ export function RenderCanvas({
             )}
             <span>{isDownloading ? "Đang tải..." : "Tải Ảnh PNG"}</span>
           </button>
-        )}
-
-        {/* Phase 5.5: the design itself, as files other tools can edit. */}
-        {currentAsset && (
-          <EditableExportPanel
-            generationId={currentAsset.generation_id}
-            editable={currentAsset.editable_export}
-          />
         )}
       </div>
     </div>

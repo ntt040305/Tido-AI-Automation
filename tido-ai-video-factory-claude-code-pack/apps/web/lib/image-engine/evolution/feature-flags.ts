@@ -388,8 +388,6 @@ export interface FeatureFlags {
     vision_iteration_v1: boolean;
     /** Phase 3. We set the type ourselves instead of asking the image model. */
     real_typography_v1: boolean;
-    /** Phase 4. SVG, Canva and PSD-model export from the creative document. */
-    export_layer_v1: boolean;
     /**
      * Typography Composition Hardening V1.
      *
@@ -488,7 +486,6 @@ const ALL_OFF: FeatureFlags = {
     production_pipeline_v2: false,
     vision_iteration_v1: false,
     real_typography_v1: false,
-    export_layer_v1: false,
     typography_plan_v1: false,
   },
   components: {

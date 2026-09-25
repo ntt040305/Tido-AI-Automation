@@ -65,7 +65,6 @@ const SUITES = [
   "run-data-flow-hardening-tests",
   "run-creative-director-tests",
   "run-design-output-tests",
-  "run-editable-export-tests",
   "run-typography-composition-tests",
   "run-foundation-tests",
   "run-evolution-tests",

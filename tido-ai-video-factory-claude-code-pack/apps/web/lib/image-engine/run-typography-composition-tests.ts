@@ -40,9 +40,8 @@ const { NO_TEXT_DIRECTIVE } = require("./evolution/experiment/TypographyRenderer
 const { buildTypographyPlan, renderPlanForImagePrompt, renderPlanForRecord, typographyPlanTelemetry } = require("./evolution/experiment/TypographyPlan");
 const { buildCompositionMap, placementScore, overlapShare, regionOf, bestPlacements } = require("./evolution/experiment/CompositionMap");
 const { layoutText, breakLines, advanceEms, measure, clampTo } = require("./evolution/experiment/TextLayoutEngine");
-const { planEditableDesign, composeEditable, editableTelemetry } = require("./evolution/experiment/EditableDesign");
+const { planEditableDesign, composeEditable, editableTelemetry, editableSvg } = require("./evolution/experiment/EditableDesign");
 const { critiqueTypography, renderTypographyCritique, typographyCritiqueTelemetry } = require("./evolution/experiment/TypographyCritique");
-const { buildPsd, buildPptx, buildSvg, buildFigma } = require("../design-export/builders");
 
 const WEB = path.join(__dirname, "..", "..");
 const read = (rel: string) => fs.readFileSync(path.join(WEB, rel), "utf-8");
@@ -106,6 +105,12 @@ const oneLine = (t: string) => String(t).replace(/[\r\n]+/g, " ").replace(/\s+/g
 
 const EN = ["Summer Sale 50%", "Up to half price on everything", "Shop now"];
 const VI = ["Giảm giá 50% hôm nay!", "Áp dụng cho toàn bộ sản phẩm cà phê", "Đặt ngay 0901 234 567"];
+
+/** Every `<text>` element's content in an overlay, `<tspan>` children rejoined. */
+const svgTexts = (svg: string): string[] =>
+  [...svg.matchAll(/<text[\s\S]*?<\/text>/g)].map((m) =>
+    oneLine([...m[0].matchAll(/<tspan[^>]*>([^<]*)<\/tspan>/g)].map((t) => t[1]).join(" ") || (/>([^<]*)<\/text>/.exec(m[0])?.[1] ?? "")),
+  );
 
 async function main() {
   // ── 1. the prompt stops carrying the words more than once ────────────────
@@ -433,12 +438,11 @@ async function main() {
     assert.strictEqual(texts(c.design)[0].lines.join(" "), lines[0]);
     assert.strictEqual(c.design.text_mode, "exact");
 
-    // And every export still holds it.
-    const assets = { scene: c.files["layers/scene.png"], logo: null };
-    const svg = (await buildSvg(c.design, assets)).toString("utf-8");
-    assert.ok(/<text[\s\S]*?<\/text>/.test(svg) && oneLine(svg.replace(/<[^>]+>/g, " ")).includes(lines[0]), "the SVG lost the line");
-    const figma = JSON.parse((await buildFigma(c.design, assets)).toString("utf-8"));
-    assert.ok(figma.document.children.some((n: any) => n.exactContent === lines[0]), "the Figma export lost the line");
+    // And the composited overlay -- what is actually drawn onto the scene --
+    // still carries it as live text rather than as a picture of text.
+    const overlay = editableSvg(c.design, {}, { skipScene: true });
+    assert.ok(/<text[\s\S]*?<\/text>/.test(overlay), "the overlay drew no text element");
+    assert.ok(oneLine(overlay.replace(/<[^>]+>/g, " ")).includes(lines[0]), "the overlay lost the line");
   });
 
   await check("CASE 2 — Vietnamese: accents survive, nothing is duplicated, the type is professional", async () => {
@@ -455,11 +459,10 @@ async function main() {
     assert.ok(t[0].x >= inset && t[0].x + t[0].width <= 1024 - inset, "the line crosses the safe margin");
     const box = { x: (t[0].x / 1024) * 100, y: (t[0].y / 1024) * 100, width: (t[0].width / 1024) * 100, height: (t[0].height / 1024) * 100 };
     assert.ok(overlapShare(box, c.design.scene_content.product) < 0.25, "the line crosses the product");
-    // The PSD keeps the accents as text, not as a picture of text.
-    const { readPsd } = require("ag-psd");
-    const psd = readPsd(await buildPsd(c.design, { scene: c.files["layers/scene.png"], logo: null }), { skipLayerImageData: true, skipCompositeImageData: true, skipThumbnail: true });
-    const walk = (ns: any[]): any[] => ns.flatMap((n) => [n, ...(n.children ? walk(n.children) : [])]);
-    assert.ok(walk(psd.children).some((n) => n.text && oneLine(n.text.text) === lines[0]), "the PSD lost the Vietnamese line");
+    // The overlay keeps the accents as text, not as a picture of text, and
+    // keeps them byte-exact: a dropped diacritic is a different word.
+    const overlay = editableSvg(c.design, {}, { skipScene: true });
+    assert.ok(svgTexts(overlay).some((t) => t === lines[0]), `the overlay lost the Vietnamese line: ${JSON.stringify(svgTexts(overlay))}`);
   });
 
   await check("CASE 3 — no text: no typography, no invented slogan, and the prompt says so", async () => {
@@ -478,8 +481,8 @@ async function main() {
     const c = await composeEditable({ document: doc, brandKit: KIT, scene: await scene(), logo: null });
     assert.strictEqual(texts(c.design).length, 0, "a frame with no supplied text was given typography");
     assert.strictEqual(c.design.text_mode, "none");
-    const svg = (await buildSvg(c.design, { scene: c.files["layers/scene.png"], logo: null })).toString("utf-8");
-    assert.ok(!/<text/.test(svg), "the export invented a text layer");
+    const overlay = editableSvg(c.design, {}, { skipScene: true });
+    assert.ok(!/<text/.test(overlay), "the overlay invented a text layer");
   });
 
   await check("CASE 4 — a complex product: the type moves clear of it and the column stays balanced", async () => {
@@ -539,13 +542,52 @@ async function main() {
     assert.strictEqual(critique.shippable, false, "a frame with type across the product was called shippable");
   });
 
-  await check("the design document is the only source: no export reads the composed picture", async () => {
-    const c = await composeEditable({ document: design(EN, "1:1", KIT).doc, brandKit: KIT, scene: await scene(), logo: null });
-    const withPicture = { scene: c.files["layers/scene.png"], logo: null, composite: c.composite };
-    const without = { scene: c.files["layers/scene.png"], logo: null };
-    for (const [name, build] of [["svg", buildSvg], ["figma", buildFigma], ["pptx", buildPptx]] as const) {
-      assert.ok((await build(c.design, withPicture)).equals(await build(c.design, without)), `${name} changed when the picture was withheld`);
+  await check("hybrid typography is the architecture, not a mode or a user choice", () => {
+    // Phase 5.6.2. Before this, setting type ourselves was opt-in: the DEFAULT
+    // render asked the image model to spell, which is what it is measurably
+    // worst at and what locked rule 8 forbids for logo, price, CTA and
+    // subtitle. It must now engage from the work itself -- text supplied, or a
+    // mark to place -- and from no switch at all.
+    const pipeline = read("lib/image-engine/evolution/ExperimentPipeline.ts");
+    const decl = /const editableOn = executionOn && \(hasTextToSet \|\| hasMarkToPlace\);/;
+    assert.ok(decl.test(pipeline), "hybrid typography is no longer derived from the work itself");
+    assert.ok(/const hasTextToSet = textRequirement\.lines\.length > 0;/.test(pipeline), "text presence is not what engages it");
+    assert.ok(!/editableLayers/.test(pipeline), "a routing switch still gates typography");
+
+    // And no switch survives anywhere else in the system.
+    const router = read("lib/image-engine/evolution/PipelineRouter.ts");
+    const route = read("app/api/image/generate-simple/route.ts");
+    const api = read("features/picture-engine/services/picture-engine.api.ts");
+    for (const [name, src] of [["router", router], ["route", route], ["client", api]] as const) {
+      assert.ok(!/editableLayers|editableExport|editable_export/.test(src), `${name} still carries an editable switch`);
     }
+  });
+
+  await check("the words never reach the image model, and the model is told to draw none", () => {
+    // The two halves of the contract, asserted on the pipeline's own wiring:
+    // the render request is stripped of the copy and the mark, and the final
+    // directive carries the typography PLAN (space) plus "render no text".
+    const pipeline = read("lib/image-engine/evolution/ExperimentPipeline.ts");
+    const stripped = pipeline.slice(pipeline.indexOf("const renderSource ="), pipeline.indexOf("const renderSource =") + 700);
+    assert.ok(/contentMessage: ""/.test(stripped), "the copy is not stripped from the render request");
+    assert.ok(/copyItems: \[\]/.test(stripped), "the copy items are not stripped");
+    assert.ok(/role !== "LOGO"/.test(stripped), "the mark is not held back from the renderer");
+
+    const directive = pipeline.slice(pipeline.indexOf("const finalDirective ="), pipeline.indexOf("const finalDirective =") + 700);
+    assert.ok(/renderPlanForImagePrompt\(capturedPlan\)/.test(directive), "the typography intention is not transmitted");
+    assert.ok(/NO_TEXT_DIRECTIVE/.test(directive), "the model is not told to render no text");
+    assert.ok(!/textDirective\(textRequirement\)/.test(directive.split("      : ")[0]), "the exact words are sent on the hybrid path");
+  });
+
+  await check("the design document is the only source: typography never reads the composed picture", async () => {
+    // The layout engine reads the SCENE (to find quiet areas and the product)
+    // and the design document (for the words). It must never read the finished
+    // composite, which already has the type on it -- that would be a feedback
+    // loop, and the first step toward reconstructing layers from pixels.
+    const c = await composeEditable({ document: design(EN, "1:1", KIT).doc, brandKit: KIT, scene: await scene(), logo: null });
+    const a = editableSvg(c.design, {}, { skipScene: true });
+    const b = editableSvg(c.design, {}, { skipScene: true });
+    assert.strictEqual(a, b, "the overlay is not deterministic from the design alone");
     const src = read("lib/image-engine/evolution/experiment/TextLayoutEngine.ts") + read("lib/image-engine/evolution/experiment/CompositionMap.ts");
     assert.ok(!/\b(ocr|tesseract|segment|detectText|reconstructLayers)\b/i.test(src), "the layout path references image reconstruction");
   });

@@ -48,7 +48,6 @@ import {
   typographyPlanTelemetry,
   type TypographyPlan,
 } from "./experiment/TypographyPlan";
-import { exportSvg, exportCanva, exportPsdModel, exportTelemetry } from "./experiment/ExportLayer";
 import { composeEditable, editableTelemetry, type ComposeResult } from "./experiment/EditableDesign";
 import type { CreativeDocument } from "./experiment/CreativeDocument";
 import type { BrandKit } from "./experiment/BrandKit";
@@ -587,13 +586,27 @@ ${directive}` : withBlueprint;
     const executionOn = brainOn && Boolean(f.execution_layer_v1);
     const productionPipelineOn = executionOn && Boolean(f.production_pipeline_v2);
     const realTypographyOn = executionOn && Boolean(f.real_typography_v1);
-    const exportOn = executionOn && Boolean(f.export_layer_v1);
     // Typography Composition Hardening V1. Rides on the execution layer: the
     // plan reads the geometry and the typography system, which are built there.
     const typographyPlanOn = executionOn && Boolean(f.typography_plan_v1);
-    // Phase 5.5: Editable mode needs the design document, so it rides on the
-    // execution layer. Without it the render is an ordinary one.
-    const editableOn = executionOn && Boolean(decision.editableLayers);
+    // Phase 5.6.2 — HYBRID TYPOGRAPHY. Not a mode, and not a user choice:
+    // this is how the system sets type.
+    //
+    //   the image model renders the SCENE -- product, light, atmosphere, and
+    //   the empty space the copy will occupy -- and no words at all;
+    //   the typography engine then sets the client's exact text and places the
+    //   brand's own mark.
+    //
+    // It used to be opt-in through a routing flag, which meant the default
+    // render asked an image model to spell -- the thing it is measurably worst
+    // at, and the thing locked rule 8 forbids for logo, price, CTA and subtitle.
+    // It engages whenever there is something to place; a brief with no text and
+    // no logo has nothing to compose, so the scene IS the finished picture.
+    const hasTextToSet = textRequirement.lines.length > 0;
+    const hasMarkToPlace =
+      (request.images || []).some((i) => (i as { role?: string }).role === "LOGO") ||
+      Boolean(decision.brandKit?.has_logo);
+    const editableOn = executionOn && (hasTextToSet || hasMarkToPlace);
 
     // Phase 1.1D — Creative Director authority over inferred art direction.
     //
@@ -1233,13 +1246,6 @@ ${directive}` : withBlueprint;
                 no_text_directive_added: textLayers.length > 0,
               });
               if (textLayers.length) executionText = [executionText, NO_TEXT_DIRECTIVE].filter(Boolean).join("\n\n");
-              if (exportOn) {
-                console.log("[EXPERIMENT][EXPORT_LAYER]", exportTelemetry({
-                  svg: exportSvg(doc, textLayers),
-                  canva: exportCanva(doc, textLayers),
-                  psd: exportPsdModel(doc, textLayers),
-                }));
-              }
             }
             console.log("[EXPERIMENT][EXECUTION_LAYER]", {
               ...geometryTelemetry(geometry),

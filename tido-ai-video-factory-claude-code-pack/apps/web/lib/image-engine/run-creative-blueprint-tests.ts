@@ -31,7 +31,6 @@ import { buildCreativeDocument } from "./evolution/experiment/CreativeDocument";
 import { critiqueRender } from "./benchmark/CommercialRenderCritic";
 import { buildProductionContext, validateContext } from "./evolution/experiment/ProductionPipeline";
 import { buildTextLayers, buildSvg, NO_TEXT_DIRECTIVE } from "./evolution/experiment/TypographyRenderer";
-import { exportSvg, exportCanva, exportPsdModel } from "./evolution/experiment/ExportLayer";
 import { readVision, improvementPrompt, scoreIteration, RenderIterationEngine } from "./evolution/experiment/RenderIterationEngine";
 import { emptyKit, recordPreference, preferenceDecisions, summarizeUserKit, userKitTelemetry } from "./evolution/experiment/UserKit";
 import { DEFAULT_FLAGS } from "./evolution/feature-flags";
@@ -2416,60 +2415,6 @@ check("RT: no typeface is named; families are generic", () => {
 });
 
 // ── Phase 4: export ────────────────────────────────────────────────────────
-
-const exDoc = () =>
-  buildCreativeDocument({ geometry: rtGeo(), typography: rtTypo(), blueprint: fullBrain() });
-const exLayers = () =>
-  buildTextLayers({
-    geometry: rtGeo(), typography: rtTypo(),
-    copy: [{ role: "HEADLINE", text: "Rang mỗi sáng" }, { role: "CTA", text: "Ghé thử" }],
-  });
-
-check("EX4: the SVG export is real and its text stays text", () => {
-  const e = exportSvg(exDoc(), exLayers());
-  assert.ok(e.svg.startsWith("<svg"), "not an SVG document");
-  assert.ok(e.svg.trim().endsWith("</svg>"));
-  assert.strictEqual(e.live_text, 2, "text was not exported as live text");
-  assert.match(e.svg, /<text[^>]*data-role="headline"/);
-  // Image layers are referenced, not embedded: geometry exact, file openable.
-  assert.match(e.svg, /<image[^>]*data-layer-type=/);
-});
-
-check("EX4: Canva JSON uses Canva's vocabulary and admits it is not a file", () => {
-  const c = exportCanva(exDoc(), exLayers());
-  assert.strictEqual(c.import_ready, false, "an unimplemented import was advertised");
-  assert.ok(c.note.includes("no public import format"), "the limitation is not stated");
-  const text = c.elements.filter((e) => e.type === "TEXT");
-  assert.strictEqual(text.length, 2);
-  for (const t of text) {
-    assert.ok(t.text!.content.trim() && t.text!.fontSize > 0, "a text element is incomplete");
-  }
-});
-
-check("EX4: the PSD model is honest about missing pixels", () => {
-  const p = exportPsdModel(exDoc(), exLayers());
-  assert.strictEqual(p.writable, false, "a fake PSD was claimed writable");
-  assert.match(p.blocked_by, /flat raster/);
-  const text = p.layers.filter((l) => l.type === "text");
-  const images = p.layers.filter((l) => l.type !== "text");
-  assert.ok(text.length >= 2, "text layers missing");
-  for (const t of text) {
-    assert.strictEqual(t.pixels_missing, false, "a vector text record was marked as missing pixels");
-    assert.strictEqual(t.editable, true);
-  }
-  for (const i of images) {
-    assert.strictEqual(i.pixels_missing, true, "an image layer claimed pixels it does not have");
-    assert.strictEqual(i.editable, false);
-  }
-});
-
-check("EX4: every layer carries real bounds in pixels", () => {
-  for (const l of exportPsdModel(exDoc(), exLayers(), 800, 600).layers) {
-    assert.ok(l.bounds.right > l.bounds.left, `${l.name} has no width`);
-    assert.ok(l.bounds.bottom > l.bounds.top, `${l.name} has no height`);
-    assert.ok(l.bounds.right <= 800 + 1, `${l.name} extends past the canvas`);
-  }
-});
 
 // ── Phase 2: vision iteration ──────────────────────────────────────────────
 

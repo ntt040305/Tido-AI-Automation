@@ -26,9 +26,6 @@ export async function POST(req: NextRequest) {
   // Phase 5.4. The Brand Kit the client asked for. An id, not a kit: what it
   // resolves to is decided below, against the verified person's workspaces.
   let brandKitId: string | null = null;
-  // Phase 5.5. Editable mode was asked for. Honoured only for a verified
-  // person, below: the layered files it produces are account-scoped exports.
-  let editableRequested = false;
   let tFormDone = T_received;
   let tExtractDone = T_received;
   let tBuffersDone = T_received;
@@ -46,7 +43,6 @@ export async function POST(req: NextRequest) {
     if (contentType.includes("application/json")) {
       const body = await req.json();
       brandKitId = typeof body.brandKitId === "string" && body.brandKitId ? body.brandKitId : null;
-      editableRequested = body.editableExport === true;
       simpleRequest = {
         images: body.images || body.references || [],
         concept: body.concept || "",
@@ -71,7 +67,6 @@ export async function POST(req: NextRequest) {
       const aspectRatio = (formData.get("aspectRatio") as string) || "1:1";
       const brandName = (formData.get("brandName") as string) || undefined;
       brandKitId = (formData.get("brandKitId") as string) || null;
-      editableRequested = formData.get("editableExport") === "1";
 
       let marketingContext: any;
       let creativeDirection: any;
@@ -323,7 +318,6 @@ export async function POST(req: NextRequest) {
           creativeMemory,
           routeEvidence,
           brand: brandKit?.summary.kit ?? null,
-          editable: editableRequested && Boolean(verifiedIdentity),
           // The same deadline this route enforces below. Handing it down lets
           // the vision review decline a correction it cannot finish, instead
           // of the race timing out and discarding a picture that already
@@ -412,12 +406,6 @@ export async function POST(req: NextRequest) {
       ...(result.designDecisions ? { designDecisions: result.designDecisions } : {}),
       ...(result.designComparison ? { designComparison: result.designComparison } : {}),
       ...(result.renderComparison ? { renderComparison: result.renderComparison } : {}),
-      // Phase 5.5. Whether this render has separate layers to export. False
-      // whenever Editable mode was not used or could not run (no director, no
-      // design document) -- the client then offers the PNG only.
-      editableExport: Boolean(
-        ((result as unknown as Record<string, unknown>).designDocument as { editable?: unknown } | undefined)?.editable,
-      ),
     });
     const tSent = Date.now();
 

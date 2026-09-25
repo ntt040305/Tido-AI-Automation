@@ -95,12 +95,6 @@ export interface RoutingContext {
    * memory input -- and nothing about who asked for it.
    */
   brand?: BrandIdentity | null;
-  /**
-   * Phase 5.5. Render in Editable mode: the scene without text or logo, every
-   * other layer placed from the design document. A property of the request,
-   * never of a person.
-   */
-  editable?: boolean;
 }
 
 export interface RoutingDecision {
@@ -110,8 +104,6 @@ export interface RoutingDecision {
   creativeMemory?: string[];
   routeEvidence?: RouteEvidence[];
   brandKit?: BrandIdentity | null;
-  /** Phase 5.5. See `RoutingContext.editable`. */
-  editableLayers?: boolean;
   /**
    * Phase 4.5. Set only on the vision correction pass: the judgment the first
    * render was made from. The correction improves the CHOSEN direction; it does
@@ -147,7 +139,6 @@ export class PipelineRouter {
       ...(context.creativeMemory?.length ? { creativeMemory: context.creativeMemory } : {}),
       ...(context.routeEvidence?.length ? { routeEvidence: context.routeEvidence } : {}),
       ...(context.brand ? { brandKit: context.brand } : {}),
-      ...(context.editable ? { editableLayers: true } : {}),
       pipeline_version: PIPELINE_VERSIONS[pipeline],
       reason,
       flags,

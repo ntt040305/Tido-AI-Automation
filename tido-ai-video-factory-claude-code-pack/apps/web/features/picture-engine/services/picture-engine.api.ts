@@ -56,8 +56,6 @@ export async function createPictureAsset(
     const brandName = brief.brand_identity?.brand_name?.trim() || undefined;
     // Phase 5.4. Only an id; the server decides whether this person may use it.
     const brandKitId = brief.brand_identity?.brand_kit_id || undefined;
-    // Phase 5.5. The server honours this only for a signed-in person.
-    const editableExport = brief.brand_identity?.editable_export === true;
 
     // Only text the user explicitly authored may become visible typography.
     //
@@ -153,7 +151,6 @@ export async function createPictureAsset(
         formData.append("aspectRatio", aspectRatio);
         if (brandName) formData.append("brandName", brandName);
         if (brandKitId) formData.append("brandKitId", brandKitId);
-        if (editableExport) formData.append("editableExport", "1");
         formData.append("requestId", jobId);
         // Authorized visible copy was previously appended only on the JSON branch,
         // so uploading any image silently dropped every copy item and the compiler
@@ -246,7 +243,6 @@ export async function createPictureAsset(
             aspectRatio,
             brandName,
             ...(brandKitId ? { brandKitId } : {}),
-            ...(editableExport ? { editableExport: true } : {}),
             copyItems,
             requestId: jobId,
             marketingContext,
@@ -353,7 +349,6 @@ export async function createPictureAsset(
       asset_id: assetId,
       // What the approval signal must send: the id the run was recorded under.
       ...(data.generationId ? { generation_id: String(data.generationId) } : {}),
-      ...(data.editableExport ? { editable_export: true } : {}),
       image_url: imageUrl,
       aspect_ratio: brief.creative_direction.aspect_ratio,
       diagnostics: backendDiagnostics || {
