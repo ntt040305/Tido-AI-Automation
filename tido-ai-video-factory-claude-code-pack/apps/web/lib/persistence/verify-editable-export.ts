@@ -68,6 +68,20 @@ const OWNER = probe("owner");
 const OTHER = probe("other");
 const LINES = ["Summer Sale 50%", "Chỉ trong tuần này", "Đặt ngay 0901 234 567"];
 
+/**
+ * A line with the layout engine's breaks collapsed back to spaces.
+ *
+ * Wrapping is a treatment, not an edit: a headline set on two lines is still
+ * the client's one line, and the typography engine wraps to keep the headline
+ * dominant rather than shrinking it. Comparing against this means a changed
+ * WORD still fails while a changed BREAK does not.
+ */
+const oneLine = (t: string) => String(t).replace(/[\r\n]+/g, " ").replace(/\s+/g, " ").trim();
+
+/** One `<text>` element's content, its `<tspan>` children rejoined. */
+const svgTextOf = (el: string) =>
+  oneLine([...el.matchAll(/<tspan[^>]*>([^<]*)<\/tspan>/g)].map((m) => m[1]).join(" ") || (/>([^<]*)<\/text>/.exec(el)?.[1] ?? ""));
+
 async function main() {
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -157,11 +171,16 @@ async function main() {
       const walk = (ns: { name?: string; text?: { text: string }; children?: unknown[] }[]): { name?: string; text?: { text: string } }[] =>
         ns.flatMap((n) => [n, ...(n.children ? walk(n.children as never) : [])]);
       const all = walk(psd.children as never);
+      const psdText = all.filter((n) => n.text).map((n) => oneLine(n.text!.text));
       check("the PSD has separate layers, with the exact lines as live text",
-        all.length >= 7 && LINES.every((l) => all.some((n) => n.text?.text === l)),
-        String(all.length));
+        all.length >= 7 && LINES.every((l) => psdText.includes(l)),
+        `layers=${all.length} text=${JSON.stringify(psdText)}`);
     }
-    if (built.svg) check("the SVG keeps the lines as text", LINES.every((l) => built.svg.toString("utf-8").includes(l)));
+    if (built.svg) {
+      const svg = built.svg.toString("utf-8");
+      const svgText = [...svg.matchAll(/<text[\s\S]*?<\/text>/g)].map((m) => svgTextOf(m[0]));
+      check("the SVG keeps the lines as text", LINES.every((l) => svgText.includes(l)), JSON.stringify(svgText));
+    }
     if (built.pptx) check("the Canva file is a real package", built.pptx.subarray(0, 2).toString("latin1") === "PK");
 
     const cached = await buildExport({ actor: owner.data, generationId: editableGen, format: "psd" });
