@@ -3,9 +3,14 @@ import type { CreativeDocument, DocumentElement } from "./CreativeDocument";
 import type { BrandKit } from "./BrandKit";
 import type { TypographyPlan } from "./TypographyPlan";
 import { colorFor, contrastRatio, normalizeHex } from "./BrandKit";
-import { fontStack as stackFor, needsVietnamese, selectPairing, type FontChoice } from "./FontIntelligence";
+import { fontStack as stackFor, needsVietnamese, selectPairing } from "./FontIntelligence";
 import { buildCompositionMap, compositionMapTelemetry, type Box, type CompositionMap } from "./CompositionMap";
 import { layoutText, type BlockInput, type Role } from "./TextLayoutEngine";
+import type { CreativeBlueprint } from "./CreativeBlueprint";
+import {
+  buildTypographyDNA, categoryHint, materialForContrast, materialPaint,
+  type Material, type TypographyDNA, typographyDnaTelemetry,
+} from "./TypographyDNA";
 
 /**
  * Phase 5.5 — the editable design, in real pixels.
@@ -87,6 +92,15 @@ export interface TextLayer extends LayerBase {
   letter_spacing: number;
   color: string;
   align: "left" | "center" | "right";
+  /**
+   * Phase 5.6.3 — the creative treatment of the letterforms themselves.
+   *
+   * Set from the `TypographyDNA` on the design, then narrowed per layer: a
+   * treatment that would drop THIS line under its contrast floor is refused
+   * here even where the design as a whole asked for it. `plain` is a real
+   * answer, not a missing one.
+   */
+  material?: Material;
 }
 
 export interface EffectLayer extends LayerBase {
@@ -133,10 +147,31 @@ export interface EditableDesign {
    * the measurement that produced it.
    */
   scene_content?: { product: Box | null; focal: { x: number; y: number } | null };
+  /**
+   * Phase 5.6.3 — the art direction of the type: what it should feel like, how
+   * it relates to the picture, and what treatment was refused. Carried on the
+   * design so the record and the critic read the same account of it.
+   */
+  typography_dna?: TypographyDNA;
 }
 
 /** Mean relative luminance (0..1) of a canvas-pixel box of the scene. */
 export type LuminanceProbe = (box: { x: number; y: number; width: number; height: number }) => number;
+
+/**
+ * A measured luminance as a grey of the same lightness.
+ *
+ * `contrastRatio` needs two colours, and what sits under a line is a region of
+ * a photograph rather than a colour. A grey of the region's own luminance gives
+ * the same contrast ratio the real pixels would, which is the only property the
+ * check reads -- it is not a claim about the region's hue.
+ */
+function greyOf(luminance: number): string {
+  const l = Math.max(0, Math.min(1, luminance));
+  const srgb = l <= 0.0031308 ? l * 12.92 : 1.055 * Math.pow(l, 1 / 2.4) - 0.055;
+  const c = Math.round(Math.max(0, Math.min(1, srgb)) * 255).toString(16).padStart(2, "0");
+  return `#${c}${c}${c}`;
+}
 
 export interface PlanInput {
   document: CreativeDocument;
@@ -163,8 +198,18 @@ export interface PlanInput {
    * The commercial category, when the brief states one. Only the typeface
    * selector reads it: a food headline and a luxury headline want different
    * letterforms even at the same typographic personality.
+   *
+   * Nothing upstream produces one -- this engine has no category table on
+   * purpose -- so when it is absent `categoryHint` recognises one from the
+   * director's own vocabulary instead, and no match means no category.
    */
   category?: string | null;
+  /**
+   * Phase 5.6.3 — the director's decisions, which is where the typography's
+   * creative treatment comes from. Absent, the type is set plain: a default
+   * that is honest about knowing nothing rather than decorative by guess.
+   */
+  blueprint?: CreativeBlueprint | null;
 }
 
 const ROLES = new Set(["headline", "subheadline", "body", "cta"]);
@@ -301,11 +346,25 @@ export function planEditableDesign(input: PlanInput): EditableDesign {
   // used consistently, not from a different decision per line.
   const copyLines = doc.elements.filter((e) => e.type === "text" && e.content).map((e) => String(e.content));
   const viCopy = needsVietnamese(copyLines);
+  const personality = plan?.style?.personality ?? null;
+  const category = input.category ?? categoryHint(input.blueprint);
   const pairing = selectPairing({
-    personality: input.plan?.style?.personality ?? null,
-    category: input.category ?? null,
+    personality,
+    category,
     brandFamily: kit?.fonts?.heading ?? null,
     lines: copyLines,
+  });
+
+  // Phase 5.6.3 — the creative treatment, resolved once for the whole design
+  // from decisions the director already made. It needs the rendered scene to
+  // finish the job, which is why it is built here rather than at plan time:
+  // whether a glow reads at all depends on how light the picture came back.
+  const dna = buildTypographyDNA({
+    blueprint: input.blueprint ?? null,
+    personality,
+    category,
+    brandKit: kit,
+    map: input.map ?? null,
   });
 
   const planned = new Map((plan?.blocks || []).map((b) => [b.content, b]));
@@ -330,9 +389,22 @@ export function planEditableDesign(input: PlanInput): EditableDesign {
       // otherwise the chosen face. Never a family that cannot draw the copy.
       font_family: def.brand_font ? def.family : st.font_family && !viCopy ? st.font_family : def.family,
       font_fallback: def.fallback === "monospace" ? "sans-serif" : def.fallback,
-      font_weight: weightOf(role, st.font_weight),
+      // The DNA owns the HEADLINE's weight and tracking, because the headline
+      // is what carries the voice. It does not own the other roles: a
+      // light-and-airy weight applied to a CTA would make the least important
+      // line the hardest to read, and a role's weight relative to the headline
+      // is what hierarchy is made of.
+      //
+      // There was a check here for what the document "asked for" first. It was
+      // dead: `style.font_weight` holds the typography system's BEHAVIOURAL
+      // prose ("solid and unmodulated, heavy enough to be read at a glance"),
+      // derived from the same personality the DNA reads, so it matched /heavy/
+      // on almost every brief and pinned every headline to 800 whatever the
+      // direction said. The DNA reads that personality AND the mood AND the
+      // render, so it is the better-informed of the two.
+      font_weight: role === "headline" ? dna.weight : weightOf(role, st.font_weight),
       line_height: st.line_height || 1.2,
-      letter_spacing: trackingOf(st.letter_spacing),
+      letter_spacing: role === "headline" ? dna.spacing || trackingOf(st.letter_spacing) : trackingOf(st.letter_spacing),
       color: normalizeHex(st.color || "") || null,
       plate: plateOf(el),
     };
@@ -353,7 +425,25 @@ export function planEditableDesign(input: PlanInput): EditableDesign {
   const plates: EffectLayer[] = [];
   for (const b of laid.blocks) {
     const el = textEls.find((e) => e.id === b.id);
+    // What this line is actually read against: its own plate or scrim where the
+    // layout engine added one, otherwise the picture underneath it, measured.
+    const under = b.scrim?.fill
+      ?? (input.luminance ? greyOf(input.luminance({ x: b.x, y: b.y, width: b.width, height: b.height })) : background);
+    // Only the HEADLINE wears the treatment.
+    //
+    // Rendered with every line wearing it, a glow direction produced a glowing
+    // headline, a mushy subheadline and a glowing CTA on a solid button plate:
+    // the treatment stopped being art direction and became a filter over the
+    // whole frame. A designer gives the voice to the line that carries it and
+    // leaves the rest clean, and a CTA on a plate is a button, not a place for
+    // an effect.
+    const wants = b.role === "headline" ? dna.material : "plain";
+    const checked = materialForContrast(wants, b.color, under, dna.accent);
+    if (checked.refused && !dna.refused.includes(checked.refused)) {
+      dna.refused.push(`${b.role} — ${checked.refused}`);
+    }
     texts.push({
+      material: checked.material,
       kind: "text", id: b.id, name: `Text \u2014 ${b.role}`, role: b.role, content: b.content, lines: b.lines,
       font_family: b.font_family, font_fallback: b.font_fallback,
       font_size: b.font_size, font_weight: b.font_weight, line_height: round(b.line_height), letter_spacing: b.letter_spacing,
@@ -392,6 +482,7 @@ export function planEditableDesign(input: PlanInput): EditableDesign {
     layers,
     scene_is_single_raster: true,
     ...(input.map ? { scene_content: { product: input.map.product, focal: input.map.focal } } : {}),
+    ...(texts.length ? { typography_dna: dna } : {}),
     layout_notes: laid.notes,
     placement_score: laid.placement_score,
     moved_for_product: laid.moved_for_product,
@@ -441,6 +532,28 @@ export function editableSvg(
     `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">`,
     `<desc>TIDO editable design. Text elements are live text; the scene (background + product) is one raster.</desc>`,
   ];
+  // Phase 5.6.3 — the material treatment, as gradients and filters scoped to
+  // the layer that wears them. Built up front so every definition is declared
+  // before it is referenced, which is what a strict SVG reader requires; the
+  // attributes are applied to the `<text>` below. `plain` produces neither.
+  const paints = new Map<string, { defs: string; attrs: Record<string, string> }>();
+  const dna = design.typography_dna;
+  if (dna) {
+    for (const l of design.layers) {
+      if (l.kind !== "text" || !l.material || l.material === "plain") continue;
+      paints.set(l.id, materialPaint({ ...dna, material: l.material }, l.id, l.color, {
+        // The brand's ACCENT, resolved with the design. Reading the brand's
+        // first colour here instead took the PRIMARY, and a dark green primary
+        // made a "metallic" headline dark green on a near-black frame.
+        accent: dna.accent ?? null,
+        // The treatment is scaled from the line's own size: a relief measured
+        // on a 64px probe is invisible on a 240px headline.
+        size: l.font_size,
+      }));
+    }
+  }
+  const defs = [...paints.values()].map((p) => p.defs).filter(Boolean).join("");
+  if (defs) out.push(`<defs>${defs}</defs>`);
   for (const l of design.layers) {
     const common = `id="${esc(l.id)}" data-name="${esc(l.name)}" opacity="${l.opacity}"`;
     if (l.kind === "effect") {
@@ -454,15 +567,12 @@ export function editableSvg(
       out.push(`<image ${common} x="${l.x}" y="${l.y}" width="${l.width}" height="${l.height}" preserveAspectRatio="xMidYMid meet" href="${href}" xlink:href="${href}"/>`);
     } else {
       const anchor = l.align === "left" ? "start" : l.align === "right" ? "end" : "middle";
-      // The brand's face first; then faces that exist on common systems, so a
-      // missing brand font degrades to the right CLASS rather than to whatever
-      // the rasteriser picks.
-      // Kept in sync with FontIntelligence.fontStack: the fallbacks named here
-      // must themselves carry Vietnamese, or the fallback reintroduces the bug.
-      const stack = l.font_fallback === "serif"
-        ? "Georgia, 'Times New Roman', 'DejaVu Serif', serif"
-        : "Arial, Helvetica, 'Liberation Sans', 'DejaVu Sans', sans-serif";
-      const family = `'${l.font_family.replace(/'/g, "")}', ${stack}`;
+      // The layer's own face first, then the fallbacks `FontIntelligence`
+      // measured. It used to name Georgia and Times New Roman as the serif
+      // fallbacks -- the two faces the font work removed for having no
+      // Vietnamese tone marks -- which reintroduced mid-word substitution on
+      // any machine missing the chosen face. One function now owns the stack.
+      const family = stackFor({ family: l.font_family, fallback: l.font_fallback });
       const lines = l.lines && l.lines.length ? l.lines : [l.content];
       const ax = round(anchorXOf(l));
       const ys = baselinesOf(l);
@@ -472,10 +582,17 @@ export function editableSvg(
       const spans = lines
         .map((line, i) => `<tspan x="${ax}" y="${round(ys[i])}">${esc(line)}</tspan>`)
         .join("");
+      // The material's own fill, stroke and filter replace the plain fill. An
+      // editor still opens this as live text: the treatment is attributes on
+      // the text element, never a rasterised or outlined copy of it.
+      const paint = paints.get(l.id);
+      const painted = paint
+        ? Object.entries(paint.attrs).map(([k, v]) => `${k}="${esc(v)}"`).join(" ")
+        : `fill="${esc(l.color)}"`;
       out.push(
-        `<text ${common} data-role="${l.role}" text-anchor="${anchor}"` +
+        `<text ${common} data-role="${l.role}"${l.material && l.material !== "plain" ? ` data-material="${esc(l.material)}"` : ""} text-anchor="${anchor}"` +
           ` font-family="${esc(family)}" font-size="${l.font_size}" font-weight="${l.font_weight}"` +
-          ` letter-spacing="${round(l.letter_spacing * l.font_size)}" fill="${esc(l.color)}">${spans}</text>`,
+          ` letter-spacing="${round(l.letter_spacing * l.font_size)}" ${painted}>${spans}</text>`,
       );
     }
   }
@@ -492,6 +609,10 @@ export interface ComposeInput {
   logo?: Buffer | null;
   /** The plan, when the document did not carry one. */
   plan?: TypographyPlan | null;
+  /** The director's decisions. Without them the type is set plain. */
+  blueprint?: CreativeBlueprint | null;
+  /** The commercial category, when the caller knows one. */
+  category?: string | null;
 }
 
 export interface ComposeResult {
@@ -561,9 +682,17 @@ export async function composeEditable(input: ComposeInput): Promise<ComposeResul
     sceneColor,
     map,
     plan: input.plan ?? null,
+    blueprint: input.blueprint ?? null,
+    category: input.category ?? null,
   });
   console.log("[EDITABLE][COMPOSITION]", compositionMapTelemetry(map));
   for (const note of design.layout_notes || []) console.log("[EDITABLE][LAYOUT]", note);
+  if (design.typography_dna) {
+    console.log("[EDITABLE][TYPOGRAPHY_DNA]", typographyDnaTelemetry(design.typography_dna));
+    // A refused treatment is a design decision someone may query later, so it
+    // is said rather than left implicit in the absence of an effect.
+    for (const r of design.typography_dna.refused) console.log("[EDITABLE][TYPOGRAPHY_DNA] refused", r);
+  }
   const overlay = editableSvg(design, { logo: logoPng ?? undefined }, { skipScene: true });
   const composite = await sharp(scenePng).composite([{ input: Buffer.from(overlay), top: 0, left: 0 }]).png().toBuffer();
 

@@ -148,20 +148,45 @@ async function main() {
     assert.ok(fontTelemetry(p).paired);
   });
 
-  await check("the fallback stack names only faces that carry Vietnamese", async () => {
+  await check("every face named in a fallback stack draws Vietnamese on this machine", async () => {
+    // Not just "is not on the excluded list": the fallback is what a machine
+    // MISSING the chosen face actually uses, so an unmeasured name there is the
+    // original bug with one more step of indirection. Each name is probed.
     const broken = new Set(EXCLUDED_FOR_VIETNAMESE.map((e: { family: string }) => e.family));
+    const names = new Set<string>();
     for (const lines of [VI, EN]) {
-      const p = selectPairing({ personality: "editorial", lines });
-      for (const c of [p.heading, p.body]) {
-        const stack = fontStack(c);
-        const named = [...stack.matchAll(/'([^']+)'|([A-Z][A-Za-z ]+)/g)]
-          .map((m) => (m[1] || m[2] || "").trim())
-          .filter((n) => n && !["serif", "sans-serif", "monospace"].includes(n));
-        for (const n of named) {
-          assert.ok(!broken.has(n), `the fallback stack names ${n}, which breaks Vietnamese`);
+      for (const personality of ["editorial", "technical", "crafted", "direct", "quiet", "assertive"]) {
+        const p = selectPairing({ personality, lines });
+        for (const c of [p.heading, p.body]) {
+          for (const m of fontStack(c).matchAll(/'([^']+)'|([A-Z][A-Za-z ]+)/g)) {
+            const n = (m[1] || m[2] || "").trim();
+            if (n && !["serif", "sans-serif", "monospace"].includes(n)) names.add(n);
+          }
         }
       }
     }
+    assert.ok(names.size > 2, "no fallback faces were found to check");
+    const bad: string[] = [];
+    for (const n of names) {
+      if (broken.has(n)) bad.push(`${n} is on the excluded list`);
+      else {
+        const missing = (await missingGlyphs(n)).join("");
+        if (missing) bad.push(`${n} cannot draw ${missing}`);
+      }
+    }
+    assert.deepStrictEqual(bad, [], `faces named as fallbacks that break Vietnamese:\n    ${bad.join("\n    ")}`);
+  });
+
+  await check("a stored text layer can ask for its own stack without the whole choice", () => {
+    // What the compositor does: it holds a family and a generic class, not a
+    // FontChoice. It used to build its own stack instead, and named Georgia.
+    const stack = fontStack({ family: "Cambria", fallback: "serif" });
+    assert.ok(stack.startsWith("'Cambria'"), stack);
+    assert.ok(!/Georgia|Times New Roman/.test(stack), "the serif stack still names a face without tone marks");
+    const src = require("fs").readFileSync(require("path").join(__dirname, "evolution/experiment/EditableDesign.ts"), "utf-8");
+    const code = src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "");
+    assert.ok(!/'Times New Roman'/.test(code), "the compositor names Times New Roman again");
+    assert.ok(/stackFor\(/.test(code), "the compositor does not use the shared stack");
   });
 
   await check("telemetry names faces and never the copy", () => {

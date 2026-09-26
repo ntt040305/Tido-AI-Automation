@@ -573,7 +573,11 @@ async function main() {
     assert.ok(/copyItems: \[\]/.test(stripped), "the copy items are not stripped");
     assert.ok(/role !== "LOGO"/.test(stripped), "the mark is not held back from the renderer");
 
-    const directive = pipeline.slice(pipeline.indexOf("const finalDirective ="), pipeline.indexOf("const finalDirective =") + 700);
+    // Bounded by the NEXT declaration rather than by a character count: a
+    // 700-char window failed the moment the directive grew a line, although
+    // every invariant below still held.
+    const dStart = pipeline.indexOf("const finalDirective =");
+    const directive = pipeline.slice(dStart, pipeline.indexOf("const editableHooks", dStart));
     assert.ok(/renderPlanForImagePrompt\(capturedPlan\)/.test(directive), "the typography intention is not transmitted");
     assert.ok(/NO_TEXT_DIRECTIVE/.test(directive), "the model is not told to render no text");
     assert.ok(!/textDirective\(textRequirement\)/.test(directive.split("      : ")[0]), "the exact words are sent on the hybrid path");

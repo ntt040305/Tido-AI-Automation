@@ -167,9 +167,20 @@ const GENERIC: Record<FontClass, FontChoice["fallback"]> = {
   mono: "monospace",
 };
 
-/** Faces the renderer should try, in order, when the chosen one is absent. */
-export function fontStack(choice: FontChoice): string {
-  const safe = choice.fallback === "serif" ? "Cambria, Constantia" : "Segoe UI, Arial, Helvetica";
+/**
+ * Faces the renderer should try, in order, when the chosen one is absent.
+ *
+ * Takes only the family and the generic class, so a stored TEXT LAYER can ask
+ * for its own stack without reconstructing the whole choice. Every named
+ * fallback is a face measured as carrying Vietnamese: a stack that falls back to
+ * Georgia or Times New Roman would reintroduce the mid-word substitution this
+ * module exists to remove, on exactly the machines where the chosen face is
+ * missing and the fallback is all there is.
+ */
+export function fontStack(choice: Pick<FontChoice, "family" | "fallback">): string {
+  // Helvetica was in this list until it was probed: on this platform it draws
+  // none of `ảặđươễỹốầụ`. Arial, Tahoma and Verdana all do.
+  const safe = choice.fallback === "serif" ? "Cambria, Constantia" : "Segoe UI, Arial, Tahoma, Verdana";
   return `'${choice.family.replace(/'/g, "")}', ${safe}, ${choice.fallback}`;
 }
 

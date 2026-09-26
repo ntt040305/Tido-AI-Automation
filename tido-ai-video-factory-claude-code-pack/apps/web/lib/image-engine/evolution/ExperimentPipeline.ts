@@ -49,12 +49,13 @@ import {
   type TypographyPlan,
 } from "./experiment/TypographyPlan";
 import { composeEditable, editableTelemetry, type ComposeResult } from "./experiment/EditableDesign";
+import { buildTypographyDNA, categoryHint, renderDnaForImagePrompt } from "./experiment/TypographyDNA";
 import type { CreativeDocument } from "./experiment/CreativeDocument";
 import type { BrandKit } from "./experiment/BrandKit";
 import fs from "fs";
 import path from "path";
 import { IMAGE_ENGINE_CONFIG } from "../config";
-import { blueprintTelemetry } from "./experiment/CreativeBlueprint";
+import { blueprintTelemetry, type CreativeBlueprint } from "./experiment/CreativeBlueprint";
 import { CreativeRefinementLoop } from "./experiment/CreativeRefinementLoop";
 import { MarketingBrainService } from "../llm/marketing-brain.service";
 import type { MarketingBrainStrategy } from "../llm/prompt-strategy.schema";
@@ -327,6 +328,8 @@ export class ExperimentPipeline {
       logo: Buffer | null;
       /** The typography plan, resolved at composition time. */
       plan?: () => TypographyPlan | null;
+      /** The blueprint, resolved at composition time. Phase 5.6.3. */
+      blueprint?: () => CreativeBlueprint | null;
       onComposed: (result: ComposeResult) => void;
     }
   ): ImageGenerationProvider {
@@ -405,7 +408,16 @@ ${directive}` : withBlueprint;
           return out;
         }
         try {
-          const composed = await composeEditable({ document: doc, brandKit: editable.brandKit, scene: out.imageBuffer, logo: editable.logo, plan: editable.plan?.() ?? null });
+          const composed = await composeEditable({
+            document: doc,
+            brandKit: editable.brandKit,
+            scene: out.imageBuffer,
+            logo: editable.logo,
+            plan: editable.plan?.() ?? null,
+            // Phase 5.6.3: the director's decisions reach the compositor, which
+            // is what lets the type be art-directed rather than only placed.
+            blueprint: editable.blueprint?.() ?? null,
+          });
           ExperimentPipeline.storeLayerFiles(input.generationId, composed.files);
           editable.onComposed(composed);
           console.log("[EXPERIMENT][EDITABLE]", editableTelemetry(composed.design));
@@ -854,6 +866,18 @@ ${directive}` : withBlueprint;
           [
             brandKitDirective(decision.brandKit, "none", { logo: false }),
             typographyPlanOn ? renderPlanForImagePrompt(capturedPlan) : undefined,
+            // Phase 5.6.3: what the reserved area must BE for the planned
+            // typographic treatment to read on it. Silent for a plain
+            // treatment, which is most of them, so the prompt does not grow
+            // for a render that asks nothing extra of the frame.
+            renderDnaForImagePrompt(
+              buildTypographyDNA({
+                blueprint: capturedBlueprint,
+                personality: capturedPlan?.style?.personality ?? null,
+                category: categoryHint(capturedBlueprint),
+                brandKit: decision.brandKit ?? null,
+              }),
+            ),
             NO_TEXT_DIRECTIVE,
           ]
             .filter(Boolean)
@@ -865,6 +889,7 @@ ${directive}` : withBlueprint;
           brandKit: decision.brandKit ?? null,
           logo: editableLogo,
           plan: () => capturedPlan,
+          blueprint: () => capturedBlueprint,
           onComposed: (r: ComposeResult) => {
             capturedDocument = { ...(capturedDocument || {}), version: 3, editable_mode: true, editable: r.design };
           },
