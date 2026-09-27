@@ -184,6 +184,24 @@ export function fontStack(choice: Pick<FontChoice, "family" | "fallback">): stri
   return `'${choice.family.replace(/'/g, "")}', ${safe}, ${choice.fallback}`;
 }
 
+/**
+ * What the letterforms have to be able to DO, decided before a face is chosen.
+ *
+ * Phase 5.6.3 put the creative reasoning first: the typography layer decides
+ * what kind of letterforms the idea needs, and this module then finds a face
+ * that can express it and draw the script. Structurally compatible with
+ * `TypographyDNA.FontNeed` and deliberately not imported from it -- this module
+ * is the technical foundation and must not depend on the creative layer.
+ */
+export interface FontRequirement {
+  /** Stroke contrast wanted, 0 (even) to 1 (high modulation). */
+  contrast: number;
+  /** Letterforms with a hand in them rather than built geometrically. */
+  humanist: boolean;
+  /** Presence at display size rather than legibility at small size. */
+  display: boolean;
+}
+
 export interface FontSelectionInput {
   /** The typographic personality the Creative Director chose. */
   personality?: string | null;
@@ -195,6 +213,11 @@ export interface FontSelectionInput {
   lines?: string[];
   /** "heading" picks for presence; "body" picks for legibility. */
   role?: "heading" | "body";
+  /**
+   * What the creative layer decided the letterforms must do. Optional: without
+   * it the choice rests on personality and category as before.
+   */
+  need?: FontRequirement | null;
 }
 
 /**
@@ -235,6 +258,18 @@ export function selectFont(input: FontSelectionInput): FontChoice {
       if (category && f.categories.includes(category)) score += 2;
       if (role === "body" && (f.class === "sans-serif" || f.class === "humanist")) score += 1;
       if (role === "heading" && (f.class === "serif" || f.class === "display-sans")) score += 1;
+      // Phase 5.6.3: what the creative layer decided the letters must DO. It
+      // outscores the personality label, because the label is a summary and
+      // this is the specific requirement the idea produced.
+      const need = input.need;
+      if (need) {
+        if (need.contrast >= 0.5 && f.class === "serif") score += 3;
+        if (need.contrast < 0.3 && (f.class === "sans-serif" || f.class === "display-sans")) score += 2;
+        if (need.humanist && (f.class === "humanist" || f.family === "Constantia")) score += 3;
+        if (!need.humanist && f.class === "humanist") score -= 1;
+        if (need.display && role === "heading" && f.weights.regular >= 700) score += 3;
+        if (!need.display && f.weights.regular >= 900) score -= 2;
+      }
       return { f, score };
     })
     .sort((a, b) => b.score - a.score || a.f.family.localeCompare(b.f.family));
