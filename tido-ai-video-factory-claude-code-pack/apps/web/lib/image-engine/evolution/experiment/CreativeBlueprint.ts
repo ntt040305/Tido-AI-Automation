@@ -179,6 +179,33 @@ export interface LayoutDirection {
   composition_balance: Decision | null;
 }
 
+/**
+ * Phase 6 — what the work is FOR, before anything visual is decided.
+ *
+ * The sections below this one describe a PICTURE. This one describes the
+ * commercial and human situation the picture exists to change, and it is the
+ * layer everything else is downstream of: who is looking, what they should come
+ * away believing, where the brand stands, and why this is not the advertisement
+ * anyone would have made for this category.
+ *
+ * Every field rests on something upstream already said -- the director's
+ * audience and brand reasoning, the client's stated objective, the product's
+ * own declared difference. Nothing here is inferred from a category, because a
+ * category cannot know who is looking.
+ */
+export interface CreativeIntentDirection {
+  /** Who is looking, and what they should come away believing. */
+  audience_perception: Decision | null;
+  /** Where the brand stands and how it behaves, in its own terms. */
+  brand_position: Decision | null;
+  /** What this campaign is for commercially. */
+  campaign_purpose: Decision | null;
+  /** Why this is not the generic advertisement for this category. */
+  differentiation_reason: Decision | null;
+  /** The way INTO the idea -- the angle taken on it, not the idea itself. */
+  creative_angle: Decision | null;
+}
+
 /** What the picture says about the brand. */
 export interface BrandExpressionDirection {
   visual_language: Decision | null;
@@ -189,6 +216,7 @@ export interface BrandExpressionDirection {
 }
 
 export type BlueprintSection =
+  | "intent"
   | "concept"
   | "visual_world"
   | "photography"
@@ -197,6 +225,9 @@ export type BlueprintSection =
   | "brand_expression";
 
 export const BLUEPRINT_SECTIONS: readonly BlueprintSection[] = [
+  // Intent first: it is the parent decision layer, and everything after it is
+  // a consequence of it rather than a parallel reading of the same brief.
+  "intent",
   "concept",
   "visual_world",
   "photography",
@@ -207,6 +238,10 @@ export const BLUEPRINT_SECTIONS: readonly BlueprintSection[] = [
 
 /** Field order per section, fixed, so two blueprints are always comparable. */
 export const SECTION_FIELDS: Record<BlueprintSection, readonly string[]> = {
+  intent: [
+    "audience_perception", "brand_position", "campaign_purpose",
+    "differentiation_reason", "creative_angle",
+  ],
   concept: ["big_idea", "campaign_concept", "visual_story", "creative_tension", "emotional_hook", "message_strategy"],
   visual_world: [
     "visual_world", "environment_logic", "color_story", "visual_metaphor",
@@ -233,6 +268,18 @@ export const TOTAL_BLUEPRINT_FIELDS = Object.values(SECTION_FIELDS).reduce((n, f
 export interface CreativeBlueprint {
   /** What this product is, as something worth saying. From ProductTruth. */
   story: Decision | null;
+  /**
+   * Phase 6. Why the work exists at all, decided before anything visual.
+   *
+   * NOT printed into the image prompt. A renderer cannot act on a campaign
+   * objective or an audience belief, and this prompt has around a hundred
+   * characters of headroom: a section the model cannot use would cost a render
+   * to say nothing. It is consumed by the layers that CAN act on it -- the
+   * composition's account of what the frame is about, the typographic role --
+   * and it is carried into the record, where the reason a picture looks like
+   * this is the thing anyone reviewing it will want.
+   */
+  intent: CreativeIntentDirection;
   concept: CampaignDirection;
   visual_world: ArtDirection;
   photography: PhotographyDirection;
@@ -249,7 +296,7 @@ export interface CreativeBlueprint {
     strategy: boolean;
     director: boolean;
   };
-  /** Share of the 36 fields that are grounded, 0–1. Never a quality score. */
+  /** Share of the blueprint's fields that are grounded, 0–1. Never a quality score. */
   confidence: number;
   /**
    * Phase 5 grounding metrics. Shares of the GROUNDED decisions, not of 36 —
@@ -440,5 +487,70 @@ export function blueprintProvenance(args: {
     visual_dna: Boolean(args.visualDNA),
     strategy: Boolean(args.strategy),
     director: Boolean(args.director),
+  };
+}
+
+/**
+ * Phase 6 — the five questions a creative director answers before a designer
+ * starts, answered from the blueprint's own decisions.
+ *
+ * Composed, never invented: each answer quotes a field, and a field nothing
+ * decided answers "not decided" rather than producing a plausible sentence.
+ * An invented answer here would be worse than an absent one, because it would
+ * read in the record exactly like a decision somebody made.
+ */
+export interface CreativeQuestions {
+  /** What is the single most important idea? */
+  single_idea: string;
+  /** What should the audience feel? */
+  audience_should_feel: string;
+  /** What should they remember afterwards? */
+  remembered: string;
+  /** Why should this visual concept exist? */
+  why_it_exists: string;
+  /** What makes this different from a generic advertisement? */
+  not_generic: string;
+  /** How many of the five rest on a real decision. Never a quality score. */
+  answered: number;
+}
+
+export function creativeQuestions(b: CreativeBlueprint | null | undefined): CreativeQuestions {
+  const v = (d: Decision | null | undefined): string => (d && d.value ? d.value : "");
+  const i = b?.intent;
+  const c = b?.concept;
+
+  const single_idea = v(c?.big_idea) || v(c?.campaign_concept);
+  const audience_should_feel = v(c?.emotional_hook) || v(b?.brand_expression?.emotional_direction);
+  // What is remembered is the picture's own subject, not the message: a viewer
+  // remembers what they saw before they remember what it said.
+  const remembered = v(c?.visual_story) || v(b?.story);
+  const why_it_exists = v(i?.campaign_purpose) || v(c?.message_strategy);
+  const not_generic = v(i?.differentiation_reason) || v(c?.creative_tension);
+
+  const answers = [single_idea, audience_should_feel, remembered, why_it_exists, not_generic];
+  const undecided = "not decided";
+  return {
+    single_idea: single_idea || undecided,
+    audience_should_feel: audience_should_feel || undecided,
+    remembered: remembered || undecided,
+    why_it_exists: why_it_exists || undecided,
+    not_generic: not_generic || undecided,
+    answered: answers.filter(Boolean).length,
+  };
+}
+
+/** Counts and provenance only. Never the client's copy. */
+export function intentTelemetry(b: CreativeBlueprint | null | undefined) {
+  const i = b?.intent;
+  if (!i) return { creative_intent: false };
+  const fields = SECTION_FIELDS.intent;
+  const decided = fields.filter((f) => (i as unknown as Record<string, Decision | null>)[f]);
+  return {
+    creative_intent: true,
+    decided: decided.length,
+    of: fields.length,
+    undecided: fields.filter((f) => !(i as unknown as Record<string, Decision | null>)[f]),
+    bases: [...new Set(decided.map((f) => (i as unknown as Record<string, Decision>)[f].derived_from))],
+    questions_answered: creativeQuestions(b).answered,
   };
 }

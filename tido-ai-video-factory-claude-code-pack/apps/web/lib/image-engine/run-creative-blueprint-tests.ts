@@ -333,11 +333,16 @@ check("P3: the brain makes no model call and is deterministic", () => {
 
 // ── Phase 4 — the blueprint ─────────────────────────────────────────────────
 
-check("P4: six sections, thirty-six fields, fixed order", () => {
+check("P4: seven sections, forty-one fields, fixed order", () => {
   const b = fullBrain();
   const flat = allDecisions(b);
   assert.strictEqual(flat.length, TOTAL_BLUEPRINT_FIELDS);
-  assert.strictEqual(TOTAL_BLUEPRINT_FIELDS, 36);
+  // 36 until Phase 6 added the five-field `intent` section: what the work is
+  // FOR, decided before anything visual. The count is asserted rather than
+  // computed so a field added without a source, or lost, is visible here.
+  assert.strictEqual(TOTAL_BLUEPRINT_FIELDS, 41);
+  assert.strictEqual(BLUEPRINT_SECTIONS.length, 7);
+  assert.strictEqual(BLUEPRINT_SECTIONS[0], "intent", "intent is not first: it is the layer the others are downstream of");
   assert.deepStrictEqual([...new Set(flat.map((f) => f.section))], [...BLUEPRINT_SECTIONS]);
   assert.deepStrictEqual(allDecisions(b).map((f) => f.field), allDecisions(fullBrain()).map((f) => f.field));
 });
@@ -415,7 +420,7 @@ check("P4: telemetry counts bases and leaks no decision text", () => {
   const t = JSON.stringify(blueprintTelemetry(fullBrain()));
   assert.ok(!t.includes("counter height"), "a decision value leaked");
   assert.ok(!t.includes("Mở cửa"), "client copy leaked");
-  assert.ok(/"fields":36/.test(t));
+  assert.ok(/"fields":41/.test(t));
   assert.deepStrictEqual(blueprintTelemetry(null), { blueprint: false });
 });
 

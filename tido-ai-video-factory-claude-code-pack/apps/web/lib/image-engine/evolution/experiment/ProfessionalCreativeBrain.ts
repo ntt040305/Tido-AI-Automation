@@ -11,11 +11,13 @@ import {
   ArtDirection,
   BrandExpressionDirection,
   CampaignDirection,
+  CreativeIntentDirection,
   CreativeBlueprint,
   Decision,
   DecisionBasis,
   LayoutDirection,
   PhotographyDirection,
+  BLUEPRINT_SECTIONS,
   SECTION_FIELDS,
   TOTAL_BLUEPRINT_FIELDS,
   TypographyDirection,
@@ -252,6 +254,49 @@ export class ProfessionalCreativeBrain {
       t ? rung(stated(t.functional_truth), "ProductTruth.functional_truth, declared by the client", "product_truth", "high") : null,
       d ? rung(clean(d.visual_story), "the director's visual story for this brief", "director", "medium") : null,
     ]);
+
+    // ── intent: what the work is FOR ───────────────────────────────────────
+    //
+    // Sourced the same way as everything else: a ladder of real upstream
+    // statements, first one with something to say wins. There is no rung here
+    // that reads a category, because no category knows who is looking or what
+    // this particular campaign was commissioned to do.
+    const intent: CreativeIntentDirection = {
+      audience_perception: decide([
+        d ? rung(clean(d.audience_context), "the director's reading of who is looking and what earns their trust", "director", "high") : null,
+        mi?.target_customer ? rung(clean(mi.target_customer.value), "MarketingInsight.target_customer — who is actually looking", "strategy", "high") : null,
+        mi?.life_context ? rung(clean(mi.life_context.value), "MarketingInsight.life_context — when the product meets their day", "strategy") : null,
+        corrected("intent.audience_perception"),
+      ]),
+      brand_position: decide([
+        d ? rung(clean(d.brand_context), "the director's reading of how this brand behaves", "director", "high") : null,
+        s ? rung(clean(s.brand_personality), "MarketingStrategy.brand_personality — how this brand behaves", "strategy") : null,
+        corrected("intent.brand_position"),
+      ]),
+      campaign_purpose: decide([
+        ac?.communication_goal ? rung(clean(ac.communication_goal), "the communication goal this format carries", "strategy", "high") : null,
+        mi?.purchase_trigger ? rung(clean(mi.purchase_trigger.value), "MarketingInsight.purchase_trigger — the moment this has to create", "strategy") : null,
+        d ? rung(clean(d.creative_goal), "what the director set out to achieve", "director", "medium") : null,
+        corrected("intent.campaign_purpose"),
+      ]),
+      // The three places the engine records a real difference: what the client
+      // declared this product does that others do not, what the insight found
+      // the alternative lacks, and the route the director turned down. An
+      // invented "differentiation" would be the category stereotype this layer
+      // exists to refuse.
+      differentiation_reason: decide([
+        t ? rung(stated(t.differentiation), "ProductTruth.differentiation, declared by the client", "product_truth", "high") : null,
+        mi?.competitive_angle ? rung(clean(mi.competitive_angle.value), "MarketingInsight.competitive_angle — what this has that the alternative does not", "strategy", "high") : null,
+        d ? rung(clean(d.deliberately_avoided), "the direction the director rejected, which is what this one is not", "director", "medium") : null,
+        corrected("intent.differentiation_reason"),
+      ]),
+      creative_angle: decide([
+        d ? rung(clean(d.strategy_reason), "why the director took this route rather than another", "director", "high") : null,
+        s ? rung(clean(s.creative_angle), "the angle strategy committed the campaign to", "strategy") : null,
+        d ? rung(clean(d.selected_direction), "the direction chosen for this brief", "director", "medium") : null,
+        corrected("intent.creative_angle"),
+      ]),
+    };
 
     // ── concept ────────────────────────────────────────────────────────────
     const concept: CampaignDirection = {
@@ -600,8 +645,16 @@ export class ProfessionalCreativeBrain {
       ]),
     };
 
+    // NOTE: the `as` below defeats the structural check at the one site where
+    // it would matter most -- a section added to `CreativeBlueprint` and
+    // forgotten here compiles clean and is silently null everywhere
+    // downstream. That is exactly what happened when `intent` was added.
+    // Left as an assertion rather than widened here because narrowing it is a
+    // change to how `missing` and `confidence` are computed, which belongs in
+    // its own pass.
     const draft = {
       story,
+      intent,
       concept,
       visual_world,
       photography,
@@ -633,7 +686,11 @@ export class ProfessionalCreativeBrain {
       metrics: {
         grounded_in_product_score: shareOf((b) => b === "product_truth" || b === "visual_dna"),
         grounded_in_strategy_score: shareOf((b) => b === "strategy"),
-        creative_coherence_score: Math.round((sectionsDeciding / 6) * 100) / 100,
+        // Divided by the number of sections there ARE, not by a literal. It
+        // was 6, and adding the intent section made a fully decided blueprint
+        // score 1.17 -- a coherence score above its own maximum, which is the
+        // kind of number nobody questions until it is used in a comparison.
+        creative_coherence_score: Math.round((sectionsDeciding / BLUEPRINT_SECTIONS.length) * 100) / 100,
       },
       missing: flat.filter((x) => !x.decision).map((x) => `${x.section}.${x.field}`),
     };

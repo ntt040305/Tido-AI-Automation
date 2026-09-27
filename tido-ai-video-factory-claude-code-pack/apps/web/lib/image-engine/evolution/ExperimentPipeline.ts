@@ -63,7 +63,7 @@ import type { BrandKit } from "./experiment/BrandKit";
 import fs from "fs";
 import path from "path";
 import { IMAGE_ENGINE_CONFIG } from "../config";
-import { blueprintTelemetry, type CreativeBlueprint } from "./experiment/CreativeBlueprint";
+import { blueprintTelemetry, intentTelemetry, type CreativeBlueprint } from "./experiment/CreativeBlueprint";
 import { CreativeRefinementLoop } from "./experiment/CreativeRefinementLoop";
 import { MarketingBrainService } from "../llm/marketing-brain.service";
 import type { MarketingBrainStrategy } from "../llm/prompt-strategy.schema";
@@ -1182,6 +1182,11 @@ ${directive}` : withBlueprint;
           // what was planned says whether text was required and which.
           Object.assign(bp as object, { text_requirement: textRequirement });
           console.log("[EXPERIMENT][CREATIVE_BLUEPRINT]", blueprintTelemetry(bp));
+          // Phase 6: what the work is FOR, and how many of the five creative
+          // questions the brief actually answered. Logged separately because a
+          // render that decided the whole picture and none of its purpose is a
+          // specific, fixable failure, and the blueprint's own count hides it.
+          console.log("[EXPERIMENT][CREATIVE_INTENT]", intentTelemetry(bp));
           // Translate for the interface. Free: every input is already in memory.
           {
             const critique = critiqueRender({ blueprint: bp, prompt: composedPrompt });
