@@ -963,8 +963,16 @@ async function main() {
     const src = fs.readFileSync(path.join(__dirname, "evolution/ExperimentPipeline.ts"), "utf8");
     const i = src.indexOf("private static attachDesignContext");
     assert.ok(i > 0, "the pipeline does not attach design context");
+    // Bounded by the NEXT method rather than by a character count: a 1,200-char
+    // window failed the moment the context gained two more keys, although every
+    // property is still attached non-enumerably. Not bounded by the first
+    // `return result;` either — the method opens with an early return for the
+    // nothing-to-attach case, which would cut the body before the loop.
+    const after = src.slice(i + 1);
+    const nextMethod = after.search(/\n {2}(?:public|private|protected|static)\s/);
+    const body = after.slice(0, nextMethod > 0 ? nextMethod : after.length);
     assert.ok(
-      /enumerable:\s*false/.test(src.slice(i, i + 1200)),
+      /enumerable:\s*false/.test(body),
       "the design context is enumerable and will leak into responses",
     );
   });

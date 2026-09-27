@@ -496,8 +496,10 @@ ${directive}` : withBlueprint;
     visualDna?: unknown,
     judgment?: unknown,
     designDocument?: unknown,
+    compositionPlan?: unknown,
+    typographyDna?: unknown,
   ): SimpleImageGenerationResultV1 {
-    if (!blueprint && !typography && !geometry && !composition && !assetDna && !prompt && !strategy && !visualDna && !judgment && !designDocument) {
+    if (!blueprint && !typography && !geometry && !composition && !assetDna && !prompt && !strategy && !visualDna && !judgment && !designDocument && !compositionPlan && !typographyDna) {
       return result;
     }
     for (const [key, value] of [
@@ -512,6 +514,11 @@ ${directive}` : withBlueprint;
       ["creativeJudgment", judgment],
       // Phase 5.1: the editable design document the render was made from.
       ["designDocument", designDocument],
+      // Phase 7: the decisions the vision review compares the render against.
+      // Without them the loop can say what it saw and not whether it was what
+      // was asked for.
+      ["compositionPlan", compositionPlan],
+      ["typographyDna", typographyDna],
     ] as const) {
       if (!value) continue;
       Object.defineProperty(result, key, { value, enumerable: false, configurable: true });
@@ -1607,6 +1614,8 @@ ${text || ""}`,
           visualDNA,
           capturedJudgment,
           capturedDocument,
+          capturedCompositionPlan,
+          capturedDocument?.editable?.typography_dna ?? null,
         );
       } catch (err: any) {
         console.error("[EVOLUTION][EXPERIMENT] generation failed", {
@@ -1760,6 +1769,8 @@ ${text || ""}`,
         visualDNA,
         capturedJudgment,
         capturedDocument,
+        capturedCompositionPlan,
+        capturedDocument?.editable?.typography_dna ?? null,
       );
     } catch (err: any) {
       console.error("[EVOLUTION][EXPERIMENT] generation failed", {

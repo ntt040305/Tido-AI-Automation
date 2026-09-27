@@ -71,6 +71,7 @@ const SUITES = [
   "run-composition-plan-tests",
   "run-prompt-ownership-tests",
   "run-creative-intent-tests",
+  "run-vision-review-tests",
   "run-foundation-tests",
   "run-evolution-tests",
 ];

@@ -74,6 +74,11 @@ export const DESIGN_CONTEXT_KEYS = [
   "visualDna",
   "creativeJudgment",
   "designDocument",
+  // Phase 7: the decisions the review compares the render against. Without
+  // these the vision loop can say what it saw and not whether it was what was
+  // asked for.
+  "compositionPlan",
+  "typographyDna",
 ] as const;
 
 /**
@@ -258,6 +263,7 @@ export async function reviewRender(
     } = await import("./experiment/VisionDesignDecisionEngine");
     const { sanitizeActions } = await import("./experiment/VisionAnalysisResult");
     const { critiqueTypography, typographyCritiqueTelemetry } = await import("./experiment/TypographyCritique");
+    const { buildVisionReview, visionReviewTelemetry } = await import("./experiment/VisionReview");
 
     const analyzer = new VisionAnalyzerService();
     // What the image was required to say: exactly the lines the person typed,
@@ -302,6 +308,33 @@ export async function reviewRender(
       typography: (result as any).typographySystem || null,
       layout: (result as any).layoutGeometry || null,
     });
+
+    // Phase 7: the render judged against the decisions that produced it, and
+    // every issue attributed to the layer that owns it.
+    //
+    // Separate from `decisions` above, which asks "what should change in the
+    // design". This asks the prior question -- did the picture do what was
+    // decided -- and answers it per dimension with an owner, so a fix goes to
+    // the layer that failed rather than to whichever one is easiest to edit.
+    const editable = (result as unknown as { designDocument?: { editable?: Record<string, unknown> } }).designDocument?.editable ?? null;
+    const scene = editable?.scene_content as { product: unknown; focal: unknown } | undefined;
+    const creativeReview = buildVisionReview({
+      analysis,
+      plan: (result as any).compositionPlan || null,
+      dna: (result as any).typographyDna || null,
+      blueprint: (result as any).creativeBlueprint || null,
+      design: (editable as any) || null,
+      // The composition map is not carried whole. What the design recorded of
+      // it -- the product box and the focal point -- is what the placement
+      // checks need, and the rest is left at zero rather than reconstructed.
+      map: scene
+        ? ({ size: 64, luminance: [], detail: [], product: scene.product, focal: scene.focal, mean_luminance: 0, mean_detail: 0 } as any)
+        : null,
+    });
+    console.log("[VISION_REVIEW][CREATIVE]", visionReviewTelemetry(creativeReview));
+    for (const issue of creativeReview.detected_issues) {
+      console.log("[VISION_REVIEW][ISSUE]", { owner: issue.owner, severity: issue.severity, because: issue.because });
+    }
 
     const telemetry: VisionReviewTelemetry = {
       vision_called: true,
