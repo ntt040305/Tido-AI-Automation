@@ -2,6 +2,7 @@ import type { CreativeBlueprint } from "./CreativeBlueprint";
 import type { CompositionPlan } from "./CompositionPlan";
 import type { TypographyDNA, TypographyTreatment } from "./TypographyDNA";
 import { TREATMENT_AXES } from "./TypographyDNA";
+import { normalizeHex } from "./BrandKit";
 import type { CompositionMap } from "./CompositionMap";
 import type { EditableDesign, TextLayer } from "./EditableDesign";
 import type { VisionAnalysisResult } from "./VisionAnalysisResult";
@@ -405,6 +406,13 @@ function judgeTypography(
     return { alignment: "missed", intended, observed: "the composited type carries no treatment", because: "compared against the composited design", from_observation: false };
   }
 
+  // Phase 7.5: the five questions a typographic art director asks, added to
+  // the existing comparison rather than to a second critic. Each is grounded
+  // in something already decided or already measured -- none of them asks a
+  // model whether the type "feels designed", which is a question that produces
+  // a different answer every time it is asked.
+  judgeTypographyIntent(dna, design, texts, headline, issues);
+
   const drifted = TREATMENT_AXES.filter((a) => Math.abs((wanted[a] ?? 0) - (applied[a] ?? 0)) > 0.2);
   const weightOff = Math.abs(wanted.weight - headline.font_weight) >= 200;
   const observed = describe(applied, headline.font_weight);
@@ -433,6 +441,175 @@ function judgeTypography(
       : "compared behaviour by behaviour against the composited layer",
     from_observation: false,
   };
+}
+
+/**
+ * Phase 7.5 — the five checks, each with an actionable finding.
+ *
+ * "Typography bad" is not a finding. Every issue here names what it is
+ * measured against and what direction to move in, because a critic that cannot
+ * say which way is better has only expressed a preference.
+ */
+function judgeTypographyIntent(
+  dna: TypographyDNA,
+  design: EditableDesign,
+  texts: TextLayer[],
+  headline: TextLayer,
+  issues: VisionIssue[],
+): void {
+  // ── 1. does it match the creative intent? ────────────────────────────────
+  //
+  // Checked against `avoid_rules`, which are the losing sides of arguments
+  // this brief actually had. A direction that drifted back toward the thing it
+  // argued against is the specific failure "generic" usually means.
+  const applied = headline.treatment;
+  if (applied) {
+    const strongest = TREATMENT_AXES.reduce((a, b) => ((applied[b] ?? 0) > (applied[a] ?? 0) ? b : a), TREATMENT_AXES[0]);
+    // Tolerant of a DNA written before Phase 7.5: these arrive from a stored
+    // design document, which may predate the fields.
+    for (const rule of dna.avoid_rules ?? []) {
+      const m = /do not drift back toward ([a-z ]+):/.exec(rule);
+      if (!m) continue;
+      const loser = m[1].trim();
+      // The only drift this layer can see: a behaviour the losing quality
+      // wanted turning up at strength anyway.
+      if (LOSER_WANTS[loser]?.includes(strongest) && (applied[strongest] ?? 0) >= 0.4) {
+        issues.push({
+          what: `the headline is set ${strongest} at ${(applied[strongest] ?? 0).toFixed(2)}, which is what ${loser} wanted — and ${loser} lost this brief's argument`,
+          severity: "minor",
+          owner: "TypographyDNA",
+          because: `the direction records "${rule}" and the applied treatment leads with exactly that behaviour`,
+          improvement_direction: `move away from ${loser}: ${shorten(dna.headline_behavior ?? dna.visual_behavior, 90)}`,
+        });
+      }
+    }
+  }
+
+  // ── 2. does it belong to the environment? ────────────────────────────────
+  //
+  // Measured: the ink against the frame it sits on. Type that is light on a
+  // light frame or dark on a dark one is not integrated, it is stranded.
+  const scene = design.scene_content;
+  const relationship = (dna.relationship_to_scene ?? "").toLowerCase();
+  const wantsLight = /light type on a dark frame/.test(relationship);
+  const wantsDark = /dark type on a light frame/.test(relationship);
+  const ink = luminanceOf(headline.color);
+  if ((wantsLight && ink < 0.35) || (wantsDark && ink > 0.65)) {
+    issues.push({
+      what: `the type was set ${ink < 0.35 ? "dark" : "light"} where the composition expected the opposite against this frame`,
+      severity: "major",
+      owner: "Renderer",
+      because: `the direction says "${shorten(dna.relationship_to_scene, 70)}" and the composited ink contradicts it`,
+      improvement_direction: "set the ink against the area it actually sits on, not against the frame's average",
+    });
+  }
+
+  // ── 3. does the hierarchy support the message? ───────────────────────────
+  //
+  // Measured on the composited sizes. A subheading larger than the headline is
+  // not a style opinion; it is the reading order inverted, and it was a real
+  // defect in this engine before the layout work.
+  const byRole = new Map(texts.map((t) => [t.role, t]));
+  const head = byRole.get("headline");
+  const sub = byRole.get("subheadline");
+  const cta = byRole.get("cta");
+  if (head && sub && sub.font_size > head.font_size) {
+    issues.push({
+      what: `the subheadline is set larger than the headline (${sub.font_size}px against ${head.font_size}px), so the reading order is inverted`,
+      severity: "major",
+      owner: "Renderer",
+      because: "the hierarchy strategy puts the headline first and the composited sizes put it second",
+      improvement_direction: `restore the order the strategy asked for: ${shorten(dna.hierarchy_strategy ?? "the headline is read first", 90)}`,
+    });
+  }
+  if (head && cta && cta.font_size > head.font_size) {
+    issues.push({
+      what: `the call to action is set larger than the headline (${cta.font_size}px against ${head.font_size}px)`,
+      severity: "minor",
+      owner: "Renderer",
+      because: "the action closes the read and cannot open it",
+      improvement_direction: "size the action below the line that carries the idea",
+    });
+  }
+
+  // ── 4. does it compete with the product? ─────────────────────────────────
+  //
+  // Measured against where the product actually came back, not where it was
+  // planned: type over the product is the collision the whole layout engine
+  // exists to avoid, and it is worth checking after the fact.
+  if (scene?.product) {
+    const canvas = design.canvas;
+    for (const t of texts) {
+      const box = {
+        x: (t.x / canvas.width) * 100, y: (t.y / canvas.height) * 100,
+        width: (t.width / canvas.width) * 100, height: (t.height / canvas.height) * 100,
+      };
+      const share = overlapShare(box, scene.product);
+      if (share > 0.35) {
+        issues.push({
+          what: `the ${t.role} sits over ${(share * 100).toFixed(0)}% of the product, so the two compete for the same area`,
+          severity: share > 0.6 ? "major" : "minor",
+          owner: "CompositionPlan",
+          because: "the frame came back with the product where the copy was placed, and the composition reserved that area for copy",
+          improvement_direction: `${dna.relationship_to_product} — move the reserved area to where the product actually is not`,
+        });
+      }
+    }
+  }
+
+  // ── 5. does it feel designed, or merely applied? ─────────────────────────
+  //
+  // The honest version of "does it look generic". Not a judgement about taste:
+  // a brief that argued strongly about how the letters should behave, and then
+  // got letters that do nothing at all, has lost its direction somewhere
+  // between the two -- and that is measurable.
+  const hasBehaviour = applied ? TREATMENT_AXES.some((a) => (applied[a] ?? 0) >= 0.12) : false;
+  const askedForSomething = TREATMENT_AXES.some((a) => (dna.treatment[a] ?? 0) >= 0.25);
+  if (askedForSomething && !hasBehaviour && !dna.refused.length) {
+    issues.push({
+      what: "the direction asked the letterforms to behave and the composited type does nothing at all, so it reads as type applied rather than designed",
+      severity: "minor",
+      owner: "Renderer",
+      because: "a behaviour was resolved above the visibility threshold, nothing was refused, and none of it reached the layer",
+      improvement_direction: `apply what was decided: ${shorten(dna.visual_behavior, 90)}`,
+    });
+  }
+}
+
+/**
+ * Which behaviours each quality argues FOR.
+ *
+ * Only the ones that can be seen on a composited layer, and only for qualities
+ * that appear in `avoid_rules`. It maps a losing argument to the evidence that
+ * it won anyway -- it does not decide anything.
+ */
+const LOSER_WANTS: Record<string, string[]> = {
+  diffusion: ["softness"],
+  "emitted light": ["luminosity"],
+  "polished surface": ["sheen"],
+  transparency: ["translucency"],
+  "printed surface": ["contact"],
+  force: ["relief"],
+  heat: ["relief", "luminosity"],
+  play: ["relief"],
+  cinema: ["contact"],
+  "the near future": ["luminosity", "sheen"],
+};
+
+/** Relative luminance of a hex colour, on the same curve WCAG uses. */
+function luminanceOf(hex: string): number {
+  const h = normalizeHex(hex) || "#000000";
+  const ch = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255);
+  const lin = (c: number) => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
+  return 0.2126 * lin(ch[0]) + 0.7152 * lin(ch[1]) + 0.0722 * lin(ch[2]);
+}
+
+/** Share of `box` that falls inside `other`. Both in frame percentages. */
+function overlapShare(box: { x: number; y: number; width: number; height: number }, other: { x: number; y: number; width: number; height: number }): number {
+  const x = Math.max(0, Math.min(box.x + box.width, other.x + other.width) - Math.max(box.x, other.x));
+  const y = Math.max(0, Math.min(box.y + box.height, other.y + other.height) - Math.max(box.y, other.y));
+  const area = box.width * box.height;
+  return area > 0 ? (x * y) / area : 0;
 }
 
 function describe(t: TypographyTreatment, weight: number): string {

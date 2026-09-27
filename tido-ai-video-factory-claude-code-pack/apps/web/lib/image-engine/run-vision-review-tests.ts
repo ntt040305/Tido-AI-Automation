@@ -97,6 +97,11 @@ function dna(over: Record<string, unknown> = {}) {
     relationship_to_scene: "light type on a dark frame",
     visual_behavior: "light strokes, widely spaced; nothing applied to the surface",
     uniqueness_reason: "this brief reads as restraint",
+    hierarchy_strategy: "the headline carries the entry and everything else is read after it",
+    headline_behavior: "light, widely spaced, in the centre left the composition kept quiet for it",
+    supporting_text_behavior: "clearly subordinate, never a second headline",
+    color_direction: "light ink on a dark frame, so the words are the brightest thing in their own area",
+    avoid_rules: ["nothing that reads as type laid over a finished photograph: the words are part of the picture or they are wrong"],
     treatment: { ...NEUTRAL_TREATMENT, weight: 400, tracking: 0.07 },
     personality: "editorial",
     font_character: "high stroke contrast",
@@ -466,6 +471,100 @@ function main() {
     });
     assert.strictEqual(r.achieved_creative_goal, "partly");
     assert.strictEqual(r.severity, "minor");
+  });
+
+  // ── 4.5 Phase 7.5: the five typographic questions ───────────────────────
+  console.log("\n4.5 — typography judged as art direction, not as placement");
+
+  check("EXAMPLE 1 — artisan pizza: a discount-style glow is caught as off-direction", () => {
+    // A handmade brief where a FUTURISTIC reading argued for emitted light and
+    // lost. Glow is not forbidden in general — it is forbidden HERE, because
+    // this brief already had that argument, and the finding says so.
+    const r = buildVisionReview({
+      analysis: clean(), plan: plan(), map: map(), blueprint: blueprint(),
+      dna: dna({
+        avoid_rules: ["do not drift back toward the near future: it argued for a different luminosity in this brief and lost"],
+        headline_behavior: "heavy, openly spaced, in the quiet the oven arch leaves",
+        treatment: { ...NEUTRAL_TREATMENT, weight: 700, tracking: 0.02 },
+      }),
+      design: design({ font_weight: 700, treatment: { ...NEUTRAL_TREATMENT, luminosity: 0.7, weight: 700 } }),
+    });
+    const issue = r.detected_issues.find((i: { what: string }) => /luminosity/.test(i.what));
+    assert.ok(issue, `an off-direction glow raised nothing: ${JSON.stringify(r.detected_issues)}`);
+    assert.strictEqual(issue.owner, "TypographyDNA");
+    // Actionable: it says which way to move, not that the typography is "bad".
+    assert.ok(/move away from the near future/.test(issue.improvement_direction), issue.improvement_direction);
+    assert.ok(issue.improvement_direction.length > 40, "the finding names a fault without a direction");
+  });
+
+  check("EXAMPLE 2 — summer beverage: weak hierarchy is caught and named", () => {
+    const r = buildVisionReview({
+      analysis: clean(), plan: plan(), map: map(), blueprint: blueprint(),
+      dna: dna({ hierarchy_strategy: "the headline wins the entry; everything else is read after it" }),
+      design: {
+        ...design(),
+        layers: [
+          { ...design().layers[0], role: "headline", font_size: 60, id: "h" },
+          { ...design().layers[0], role: "subheadline", font_size: 90, id: "s", content: "Fresh every day" },
+        ],
+      } as never,
+    });
+    const issue = r.detected_issues.find((i: { what: string }) => /reading order is inverted/.test(i.what));
+    assert.ok(issue, `an inverted hierarchy raised nothing: ${JSON.stringify(r.detected_issues)}`);
+    assert.strictEqual(issue.severity, "major");
+    assert.ok(/restore the order/.test(issue.improvement_direction), issue.improvement_direction);
+  });
+
+  check("EXAMPLE 3 — luxury: type that does nothing where the direction asked for something", () => {
+    // The honest version of "does it look generic": a brief that argued for a
+    // behaviour and got letters that do nothing lost its direction somewhere.
+    const r = buildVisionReview({
+      analysis: clean(), plan: plan(), map: map(), blueprint: blueprint(),
+      dna: dna({ treatment: { ...NEUTRAL_TREATMENT, contact: 0.6, weight: 400, tracking: 0.07 }, refused: [] }),
+      design: design({ treatment: { ...NEUTRAL_TREATMENT, weight: 400, tracking: 0.07 } }),
+    });
+    const issue = r.detected_issues.find((i: { what: string }) => /applied rather than designed/.test(i.what));
+    assert.ok(issue, `type that expressed nothing raised nothing: ${JSON.stringify(r.detected_issues)}`);
+    assert.strictEqual(issue.owner, "Renderer");
+  });
+
+  check("type stranded against its own frame is caught", () => {
+    const r = buildVisionReview({
+      analysis: clean(), plan: plan(), map: map(), blueprint: blueprint(),
+      dna: dna({ relationship_to_scene: "light type on a dark frame" }),
+      design: design({ color: "#101010" }),
+    });
+    const issue = r.detected_issues.find((i: { what: string }) => /set dark where the composition expected/.test(i.what));
+    assert.ok(issue, `dark ink on a dark frame raised nothing: ${JSON.stringify(r.detected_issues)}`);
+    assert.strictEqual(issue.severity, "major");
+  });
+
+  check("type sitting over the product is caught, and owned by the composition", () => {
+    const r = buildVisionReview({
+      analysis: clean(), plan: plan(), map: map(), blueprint: blueprint(), dna: dna(),
+      design: {
+        ...design(),
+        scene_content: { product: { x: 0, y: 15, width: 60, height: 30 }, focal: { x: 30, y: 30 } },
+      } as never,
+    });
+    const issue = r.detected_issues.find((i: { what: string }) => /compete for the same area/.test(i.what));
+    assert.ok(issue, `type over the product raised nothing: ${JSON.stringify(r.detected_issues)}`);
+    assert.strictEqual(issue.owner, "CompositionPlan");
+  });
+
+  check("a faithful render triggers none of the five", () => {
+    const r = buildVisionReview({ analysis: clean(), plan: plan(), dna: dna(), design: design(), map: map(), blueprint: blueprint() });
+    assert.deepStrictEqual(r.detected_issues, [], "the typographic checks fire on a correct render");
+  });
+
+  check("a DNA written before this phase does not crash the critic", () => {
+    // These arrive from a stored design document, which may predate the fields.
+    const older = dna();
+    delete (older as Record<string, unknown>).avoid_rules;
+    delete (older as Record<string, unknown>).hierarchy_strategy;
+    delete (older as Record<string, unknown>).headline_behavior;
+    const r = buildVisionReview({ analysis: clean(), plan: plan(), dna: older, design: design(), map: map(), blueprint: blueprint() });
+    assert.strictEqual(r.typography_alignment.alignment, "aligned");
   });
 
   // ── 5. telemetry ────────────────────────────────────────────────────────

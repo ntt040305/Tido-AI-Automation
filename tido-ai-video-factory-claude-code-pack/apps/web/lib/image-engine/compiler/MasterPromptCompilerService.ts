@@ -548,11 +548,26 @@ export class MasterPromptCompilerService {
       typographyAndReadableCopyText = lines.join("\n");
     } else {
       warnings.push("NO_EXACT_COPY");
-      // No copy was authorized, which is a decision in itself: this image has to
-      // communicate without words. Previously this line only forbade text and
-      // told the renderer to leave a gap for type that is never coming.
+      // No copy reached the compiler. That is TWO different situations and this
+      // text cannot tell them apart:
+      //
+      //   1. the brief genuinely has no copy, or
+      //   2. hybrid typography stripped it, because the words are composited
+      //      afterwards and the frame must leave room for them.
+      //
+      // It used to close with "compose for a finished image rather than leaving
+      // a blank band for type that will not be added", which is right for (1)
+      // and directly contradicts (2) -- where the composition section, later in
+      // the same prompt, asks for exactly that band. Measured on a live render:
+      // both sentences present, and the model resolved the contradiction by
+      // painting the copy into the frame itself, on top of the copy that was
+      // then composited over it. Every line appeared twice.
+      //
+      // The clause is gone rather than made conditional: whether a band is
+      // reserved is the COMPOSITION's decision and it already states it, so
+      // this sentence had no business asserting the opposite from here.
       typographyAndReadableCopyText =
-        "Do not add any typography or text. No copy is authorized, so this image communicates entirely without words \u2014 the picture carries the whole message. Render no words, letters, invented brand names, prices, labels or decorative lettering anywhere in the frame. Compose for a finished image rather than leaving a blank band for type that will not be added. The only exception is lettering physically printed on the uploaded product itself: it is part of the product and stays exactly as the product reference shows it.";
+        "Do not add any typography or text. No copy is authorized for this pass, so render no words, letters, invented brand names, prices, labels or decorative lettering anywhere in the frame. The only exception is lettering physically printed on the uploaded product itself: it is part of the product and stays exactly as the product reference shows it.";
     }
 
     provenance.exact_copy = { source: "user.copyItems", items: copyItems };

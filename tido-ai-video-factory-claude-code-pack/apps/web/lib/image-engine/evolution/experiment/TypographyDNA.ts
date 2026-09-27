@@ -133,6 +133,29 @@ export interface TypographyDNA {
   /** Why THIS direction, for THIS concept -- including what it beat. */
   uniqueness_reason: string;
 
+  // ── Phase 7.5: the rest of the typographic art direction ───────────────
+  //
+  // This object IS the typography blueprint. Six of its fields already
+  // described the creative intent; these five are what it could not say --
+  // how the reading order is built, how each level behaves, what colour is
+  // for, and what this direction must NOT do.
+  /** How the reading order is constructed, and why that order. */
+  hierarchy_strategy: string;
+  /** What the line that carries the idea does, in this frame. */
+  headline_behavior: string;
+  /** What everything under it does, and how far under. */
+  supporting_text_behavior: string;
+  /** What colour is doing for the type -- never a named palette. */
+  color_direction: string;
+  /**
+   * What this direction must not do, derived from what it argued against.
+   *
+   * Not a style blacklist: each rule is the losing side of a contest this
+   * brief actually had, or something the brand refused, so it is specific to
+   * this work rather than a house rule about typography in general.
+   */
+  avoid_rules: string[];
+
   // ── what the compositor draws ───────────────────────────────────────────
   treatment: TypographyTreatment;
   /** The typographic voice, carried from the director where it named one. */
@@ -630,6 +653,11 @@ export function buildTypographyDNA(input: TypographyDNAInput): TypographyDNA {
     relationship_to_scene: sceneRelationship(treatment, map, field, input.compositionPlan ?? null),
     visual_behavior: describe(treatment, readings),
     uniqueness_reason: uniqueness(readings, contested, role),
+    hierarchy_strategy: hierarchyStrategy(field, role, input.copyLines ?? 0, input.compositionPlan ?? null),
+    headline_behavior: headlineBehavior(treatment, role, input.compositionPlan ?? null, readings),
+    supporting_text_behavior: supportingBehavior(role, input.copyLines ?? 0),
+    color_direction: colorDirection(field, kit, map, treatment),
+    avoid_rules: avoidRules(readings, contested, kit, refused),
     treatment,
     personality,
     font_character: characterOf(treatment, readings, base),
@@ -638,6 +666,145 @@ export function buildTypographyDNA(input: TypographyDNAInput): TypographyDNA {
     refused,
     accent,
   };
+}
+
+/**
+ * How the reading order is built, and why that order.
+ *
+ * The director's own hierarchy reasoning where there is one. Otherwise
+ * composed from what the frame is doing: a picture already carrying the idea
+ * needs the words ordered for clarity, and one that is not needs them ordered
+ * for impact. Never "headline, then body" -- that is a list, not a strategy.
+ */
+function hierarchyStrategy(
+  field: (k: string) => string,
+  role: RoleDecision,
+  copyLines: number,
+  plan: CompositionPlan | null,
+): string {
+  const stated = clean(field("hierarchy_logic"));
+  if (stated) return shorten(stated, 150);
+  if (copyLines === 0) return "no reading order: this frame carries no words";
+  const firstRead = plan?.visual_hierarchy?.[0]?.element;
+  if (copyLines === 1) {
+    return role.hero
+      ? "one line, so the hierarchy is between the line and the picture: the words win the first read and the product wins the second"
+      : "one line, subordinate: the picture is read first and the line names who is speaking";
+  }
+  const base = firstRead === "product"
+    ? "the product is read first, so the copy's own order starts after it"
+    : "the copy is read first, so its own order has to carry the whole entry";
+  return `${base}; ${copyLines} lines separated by size and weight rather than by rules or boxes, so the order is felt rather than enforced`;
+}
+
+/**
+ * What the line carrying the idea does in THIS frame.
+ *
+ * Composed from three things that are already decided -- the treatment, the
+ * role, and where the composition left room -- so it describes this artwork
+ * rather than headlines in general. "Large white text at the top" is a
+ * coordinate; this is what the line is FOR.
+ */
+function headlineBehavior(
+  t: TypographyTreatment,
+  role: RoleDecision,
+  plan: CompositionPlan | null,
+  readings: Reading[],
+): string {
+  const weight = t.weight >= 800 ? "very heavy" : t.weight >= 700 ? "heavy" : t.weight >= 500 ? "medium" : "light";
+  const space = t.tracking >= 0.04 ? "widely spaced" : t.tracking > 0.01 ? "openly spaced" : t.tracking < -0.005 ? "tightly set" : "normally spaced";
+  const where = plan?.typography_zone.from === "geometry"
+    ? `in the ${plan.typography_zone.value.label} the composition kept quiet for it`
+    : "in the area the layout reserved";
+  const surface = TREATMENT_AXES.filter((a) => t[a] >= 0.2);
+  const carries = role.hero
+    ? "carrying the idea, so it wins the first read"
+    : "naming who is speaking rather than what is felt, so it stays under the picture";
+  const character = readings[0]?.quality.reads;
+  return [
+    `${weight}, ${space}, ${where}`,
+    carries,
+    surface.length ? `wearing ${surface.join(" and ")} so it belongs to the frame's own light rather than sitting on it` : "solid, because nothing in the direction asks the letters to be a material",
+    character,
+  ].filter(Boolean).join("; ");
+}
+
+/** What everything under the headline does, and how far under. */
+function supportingBehavior(role: RoleDecision, copyLines: number): string {
+  if (copyLines <= 1) return "there is no supporting copy in this frame";
+  return role.hero
+    ? "clearly subordinate: smaller, lighter and set close enough to read as part of the same statement, never as a second headline competing for the entry"
+    : "quiet and factual: it completes what the picture already said, and earns none of the frame's attention for itself";
+}
+
+/**
+ * What colour is DOING for the type.
+ *
+ * Not a palette. The ink itself is chosen by the layout engine against the
+ * measured pixels, which is a legibility decision; this says what the choice is
+ * FOR, which is a creative one. The brand's own colours are named only when the
+ * brand has them -- there is no rule here mapping a mood to a hue.
+ */
+function colorDirection(
+  field: (k: string) => string,
+  kit: BrandKit | null,
+  map: CompositionMap | null,
+  t: TypographyTreatment,
+): string {
+  const stated = clean(field("contrast_strategy"));
+  if (stated) return shorten(stated, 150);
+  const brandColours = (kit?.colors ?? []).length;
+  const onDark = map ? map.mean_luminance < 0.4 : null;
+  const ground = onDark === null
+    ? "against whatever the render returns"
+    : onDark
+      ? "light ink on a dark frame, so the words are the brightest thing in their own area"
+      : "dark ink on a light frame, so the words are the densest thing in their own area";
+  const brand = brandColours
+    ? "drawn from the brand's own colours where they clear the contrast floor, and abandoned for legibility where they do not"
+    : "no brand colour exists, so the ink is whatever the frame can carry";
+  const surface = t.sheen >= 0.25 ? "; the graded surface takes its colour from the brand rather than from a generic metal" : "";
+  return `${ground}; ${brand}${surface}`;
+}
+
+/**
+ * What this direction must NOT do.
+ *
+ * Every rule is the losing side of an argument this brief actually had, or
+ * something the brand refused, or a behaviour the render could not carry. A
+ * generic list -- "avoid cheap effects" -- would apply to every brief and
+ * therefore guide nothing.
+ */
+function avoidRules(
+  readings: Reading[],
+  contested: Array<{ axis: string; note: string; winner: string; loser: string }>,
+  kit: BrandKit | null,
+  refused: string[],
+): string[] {
+  const rules: string[] = [];
+  // Grouped by the quality that LOST, not by axis. Restraint losing three
+  // separate arguments is one thing to avoid, and listing it three times reads
+  // as three rules nobody will follow.
+  const lostOn = new Map<string, string[]>();
+  for (const c of contested) lostOn.set(c.loser, [...(lostOn.get(c.loser) ?? []), c.axis]);
+  for (const [loser, axes] of lostOn) {
+    rules.push(
+      `do not drift back toward ${loser}: it argued for a different ${axes.join(", ")} in this brief and lost`,
+    );
+  }
+  for (const f of kit?.style?.forbidden ?? []) rules.push(`the brand refuses ${f.toLowerCase()}`);
+  for (const r of refused) {
+    const axis = r.split(":")[0].trim();
+    if (axis) rules.push(`no ${axis}: ${r.split(":").slice(1).join(":").trim() || "it did not survive the frame"}`);
+  }
+  // The one rule every brief gets, because it is the failure this whole
+  // architecture exists to prevent rather than a matter of taste.
+  rules.push("nothing that reads as type laid over a finished photograph: the words are part of the picture or they are wrong");
+  if (readings.length) {
+    const led = readings[0].quality.name;
+    rules.push(`nothing that contradicts ${led}, which is what this brief is most strongly about`);
+  }
+  return [...new Set(rules)];
 }
 
 /** Words that mean "do not do this to my type", per behaviour. */
@@ -658,8 +825,8 @@ function voiceWord(prose: string): string {
 }
 
 /** Behaviours two readings pulled in opposite directions, and who won. */
-function contestedAxes(readings: Reading[]): Array<{ axis: string; note: string }> {
-  const out: Array<{ axis: string; note: string }> = [];
+function contestedAxes(readings: Reading[]): Array<{ axis: string; note: string; winner: string; loser: string }> {
+  const out: Array<{ axis: string; note: string; winner: string; loser: string }> = [];
   for (const axis of [...TREATMENT_AXES, "weight" as const, "tracking" as const]) {
     const pushes = readings.filter((r) => (r.quality.pull[axis as TreatmentAxis] ?? 0) > 0);
     const pulls = readings.filter((r) => (r.quality.pull[axis as TreatmentAxis] ?? 0) < 0);
@@ -670,6 +837,8 @@ function contestedAxes(readings: Reading[]): Array<{ axis: string; note: string 
     const loser = forSide >= againstSide ? pulls[0] : pushes[0];
     out.push({
       axis,
+      winner: winner.quality.name,
+      loser: loser.quality.name,
       note:
         `${axis} was contested — ${loser.quality.name} (${loser.field}) argued against ` +
         `${winner.quality.name} (${winner.field}), and ${winner.quality.name} won`,
