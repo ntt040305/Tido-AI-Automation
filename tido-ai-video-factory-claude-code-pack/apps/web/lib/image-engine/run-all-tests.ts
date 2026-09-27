@@ -68,6 +68,7 @@ const SUITES = [
   "run-typography-composition-tests",
   "run-font-intelligence-tests",
   "run-typography-dna-tests",
+  "run-composition-plan-tests",
   "run-foundation-tests",
   "run-evolution-tests",
 ];

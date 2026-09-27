@@ -7,9 +7,11 @@ import { fontStack as stackFor, needsVietnamese, selectPairing } from "./FontInt
 import { buildCompositionMap, compositionMapTelemetry, type Box, type CompositionMap } from "./CompositionMap";
 import { layoutText, type BlockInput, type Role } from "./TextLayoutEngine";
 import type { CreativeBlueprint } from "./CreativeBlueprint";
+import type { CompositionPlan } from "./CompositionPlan";
 import {
-  buildTypographyDNA, categoryHint, materialForContrast, materialPaint,
-  type Material, type TypographyDNA, typographyDnaTelemetry,
+  buildTypographyDNA, categoryHint, treatmentForContrast, treatmentPaint,
+  NEUTRAL_TREATMENT, TREATMENT_AXES,
+  type TypographyDNA, type TypographyTreatment, typographyDnaTelemetry,
 } from "./TypographyDNA";
 
 /**
@@ -93,14 +95,15 @@ export interface TextLayer extends LayerBase {
   color: string;
   align: "left" | "center" | "right";
   /**
-   * Phase 5.6.3 — the creative treatment of the letterforms themselves.
+   * Phase 5.6.3 — how the letterforms behave, as independent amounts.
    *
-   * Set from the `TypographyDNA` on the design, then narrowed per layer: a
-   * treatment that would drop THIS line under its contrast floor is refused
-   * here even where the design as a whole asked for it. `plain` is a real
-   * answer, not a missing one.
+   * Not a style name: the axes combine freely, so this layer can be softly
+   * luminous or transparent with a contact shadow. Taken from the design's
+   * `typography_dna` and then narrowed for THIS line -- a behaviour that would
+   * drop it under its contrast floor is reduced or dropped here even where the
+   * design as a whole asked for it. All zeroes is a real answer.
    */
-  material?: Material;
+  treatment?: TypographyTreatment;
 }
 
 export interface EffectLayer extends LayerBase {
@@ -158,6 +161,21 @@ export interface EditableDesign {
 /** Mean relative luminance (0..1) of a canvas-pixel box of the scene. */
 export type LuminanceProbe = (box: { x: number; y: number; width: number; height: number }) => number;
 
+/** Whether any behaviour is strong enough to be worth drawing. */
+function isTreated(t: TypographyTreatment): boolean {
+  return TREATMENT_AXES.some((a) => t[a] >= 0.12);
+}
+
+/**
+ * The behaviours as a compact string for the SVG and the record.
+ *
+ * Generated from the numbers, so a combination nobody anticipated is still
+ * described rather than labelled with the nearest preset's name.
+ */
+function describeTreatment(t: TypographyTreatment): string {
+  return TREATMENT_AXES.filter((a) => t[a] >= 0.12).map((a) => `${a} ${t[a].toFixed(2)}`).join(", ");
+}
+
 /**
  * A measured luminance as a grey of the same lightness.
  *
@@ -210,6 +228,12 @@ export interface PlanInput {
    * that is honest about knowing nothing rather than decorative by guess.
    */
   blueprint?: CreativeBlueprint | null;
+  /**
+   * Phase 5.6.4 — the composition decided before the render. Authoritative
+   * about what typography is doing in this frame; the typography layer reads it
+   * rather than reasoning about the same blueprint a second time.
+   */
+  compositionPlan?: CompositionPlan | null;
 }
 
 const ROLES = new Set(["headline", "subheadline", "body", "cta"]);
@@ -348,23 +372,32 @@ export function planEditableDesign(input: PlanInput): EditableDesign {
   const viCopy = needsVietnamese(copyLines);
   const personality = plan?.style?.personality ?? null;
   const category = input.category ?? categoryHint(input.blueprint);
-  const pairing = selectPairing({
-    personality,
-    category,
-    brandFamily: kit?.fonts?.heading ?? null,
-    lines: copyLines,
-  });
 
-  // Phase 5.6.3 — the creative treatment, resolved once for the whole design
-  // from decisions the director already made. It needs the rendered scene to
-  // finish the job, which is why it is built here rather than at plan time:
-  // whether a glow reads at all depends on how light the picture came back.
+  // Phase 5.6.3 — the creative reasoning, resolved once for the whole design
+  // from decisions the director already made, and resolved BEFORE the typeface.
+  //
+  // The order is the point. It used to pick a face from a personality label and
+  // then decide the treatment around whatever came back; a designer decides
+  // what the letters must do, then finds one that does it. It also needs the
+  // rendered scene to finish the job, which is why this happens here rather
+  // than at plan time: whether emitted light reads at all depends on how light
+  // the picture came back.
   const dna = buildTypographyDNA({
     blueprint: input.blueprint ?? null,
     personality,
     category,
     brandKit: kit,
     map: input.map ?? null,
+    copyLines: copyLines.length,
+    compositionPlan: input.compositionPlan ?? null,
+  });
+
+  const pairing = selectPairing({
+    personality,
+    category,
+    brandFamily: kit?.fonts?.heading ?? null,
+    lines: copyLines,
+    need: dna.font_need,
   });
 
   const planned = new Map((plan?.blocks || []).map((b) => [b.content, b]));
@@ -402,9 +435,9 @@ export function planEditableDesign(input: PlanInput): EditableDesign {
       // on almost every brief and pinned every headline to 800 whatever the
       // direction said. The DNA reads that personality AND the mood AND the
       // render, so it is the better-informed of the two.
-      font_weight: role === "headline" ? dna.weight : weightOf(role, st.font_weight),
+      font_weight: role === "headline" ? dna.treatment.weight : weightOf(role, st.font_weight),
       line_height: st.line_height || 1.2,
-      letter_spacing: role === "headline" ? dna.spacing || trackingOf(st.letter_spacing) : trackingOf(st.letter_spacing),
+      letter_spacing: role === "headline" ? dna.treatment.tracking || trackingOf(st.letter_spacing) : trackingOf(st.letter_spacing),
       color: normalizeHex(st.color || "") || null,
       plate: plateOf(el),
     };
@@ -431,19 +464,20 @@ export function planEditableDesign(input: PlanInput): EditableDesign {
       ?? (input.luminance ? greyOf(input.luminance({ x: b.x, y: b.y, width: b.width, height: b.height })) : background);
     // Only the HEADLINE wears the treatment.
     //
-    // Rendered with every line wearing it, a glow direction produced a glowing
-    // headline, a mushy subheadline and a glowing CTA on a solid button plate:
-    // the treatment stopped being art direction and became a filter over the
-    // whole frame. A designer gives the voice to the line that carries it and
-    // leaves the rest clean, and a CTA on a plate is a button, not a place for
+    // Rendered with every line wearing it, a luminous direction produced a
+    // glowing headline, a mushy subheadline and a glowing CTA on a solid button
+    // plate: the treatment stopped being art direction and became a filter over
+    // the whole frame. A designer gives the voice to the line that carries it
+    // and leaves the rest clean; a CTA on a plate is a button, not a place for
     // an effect.
-    const wants = b.role === "headline" ? dna.material : "plain";
-    const checked = materialForContrast(wants, b.color, under, dna.accent);
-    if (checked.refused && !dna.refused.includes(checked.refused)) {
-      dna.refused.push(`${b.role} — ${checked.refused}`);
+    const wants = b.role === "headline" ? dna.treatment : { ...NEUTRAL_TREATMENT, weight: b.font_weight, tracking: b.letter_spacing };
+    const checked = treatmentForContrast(wants, b.color, under, dna.accent);
+    for (const r of checked.refused) {
+      const note = `${b.role} — ${r}`;
+      if (!dna.refused.includes(note)) dna.refused.push(note);
     }
     texts.push({
-      material: checked.material,
+      treatment: checked.treatment,
       kind: "text", id: b.id, name: `Text \u2014 ${b.role}`, role: b.role, content: b.content, lines: b.lines,
       font_family: b.font_family, font_fallback: b.font_fallback,
       font_size: b.font_size, font_weight: b.font_weight, line_height: round(b.line_height), letter_spacing: b.letter_spacing,
@@ -532,22 +566,23 @@ export function editableSvg(
     `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">`,
     `<desc>TIDO editable design. Text elements are live text; the scene (background + product) is one raster.</desc>`,
   ];
-  // Phase 5.6.3 — the material treatment, as gradients and filters scoped to
-  // the layer that wears them. Built up front so every definition is declared
+  // Phase 5.6.3 — the behaviours, as gradients and filter chains scoped to the
+  // layer that wears them. Built up front so every definition is declared
   // before it is referenced, which is what a strict SVG reader requires; the
-  // attributes are applied to the `<text>` below. `plain` produces neither.
+  // attributes are applied to the `<text>` below. A layer with no behaviour
+  // above the visibility threshold produces neither.
   const paints = new Map<string, { defs: string; attrs: Record<string, string> }>();
   const dna = design.typography_dna;
   if (dna) {
     for (const l of design.layers) {
-      if (l.kind !== "text" || !l.material || l.material === "plain") continue;
-      paints.set(l.id, materialPaint({ ...dna, material: l.material }, l.id, l.color, {
+      if (l.kind !== "text" || !l.treatment || !isTreated(l.treatment)) continue;
+      paints.set(l.id, treatmentPaint({ treatment: l.treatment, accent: dna.accent }, l.id, l.color, {
         // The brand's ACCENT, resolved with the design. Reading the brand's
         // first colour here instead took the PRIMARY, and a dark green primary
-        // made a "metallic" headline dark green on a near-black frame.
+        // made a graded headline dark green on a near-black frame.
         accent: dna.accent ?? null,
-        // The treatment is scaled from the line's own size: a relief measured
-        // on a 64px probe is invisible on a 240px headline.
+        // Scaled from the line's own size: a relief measured on a 64px probe is
+        // invisible on a 240px headline.
         size: l.font_size,
       }));
     }
@@ -582,15 +617,16 @@ export function editableSvg(
       const spans = lines
         .map((line, i) => `<tspan x="${ax}" y="${round(ys[i])}">${esc(line)}</tspan>`)
         .join("");
-      // The material's own fill, stroke and filter replace the plain fill. An
-      // editor still opens this as live text: the treatment is attributes on
+      // The treatment's own fill, stroke and filter replace the plain fill. An
+      // editor still opens this as live text: the behaviours are attributes on
       // the text element, never a rasterised or outlined copy of it.
       const paint = paints.get(l.id);
       const painted = paint
         ? Object.entries(paint.attrs).map(([k, v]) => `${k}="${esc(v)}"`).join(" ")
         : `fill="${esc(l.color)}"`;
+      const behaviour = l.treatment && isTreated(l.treatment) ? describeTreatment(l.treatment) : "";
       out.push(
-        `<text ${common} data-role="${l.role}"${l.material && l.material !== "plain" ? ` data-material="${esc(l.material)}"` : ""} text-anchor="${anchor}"` +
+        `<text ${common} data-role="${l.role}"${behaviour ? ` data-treatment="${esc(behaviour)}"` : ""} text-anchor="${anchor}"` +
           ` font-family="${esc(family)}" font-size="${l.font_size}" font-weight="${l.font_weight}"` +
           ` letter-spacing="${round(l.letter_spacing * l.font_size)}" ${painted}>${spans}</text>`,
       );
@@ -611,6 +647,8 @@ export interface ComposeInput {
   plan?: TypographyPlan | null;
   /** The director's decisions. Without them the type is set plain. */
   blueprint?: CreativeBlueprint | null;
+  /** The composition decided before the render. */
+  compositionPlan?: CompositionPlan | null;
   /** The commercial category, when the caller knows one. */
   category?: string | null;
 }
@@ -684,6 +722,7 @@ export async function composeEditable(input: ComposeInput): Promise<ComposeResul
     plan: input.plan ?? null,
     blueprint: input.blueprint ?? null,
     category: input.category ?? null,
+    compositionPlan: input.compositionPlan ?? null,
   });
   console.log("[EDITABLE][COMPOSITION]", compositionMapTelemetry(map));
   for (const note of design.layout_notes || []) console.log("[EDITABLE][LAYOUT]", note);

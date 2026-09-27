@@ -26,6 +26,10 @@ import { ProfessionalCreativeBrain } from "./experiment/ProfessionalCreativeBrai
 import { HumanTensionAnalyzer } from "../reasoning/HumanTensionAnalyzer";
 import { buildDesignSystem, designSystemTelemetry, renderDesignSystem } from "./experiment/DesignSystem";
 import { buildComposition, compositionTelemetry, renderComposition } from "./experiment/VisualComposition";
+import {
+  buildCompositionPlan, compositionPlanTelemetry, renderCompositionPlan,
+  type CompositionPlan,
+} from "./experiment/CompositionPlan";
 import { planAssets, assetTelemetry, renderAssets } from "./experiment/AssetIntelligence";
 import { buildAssetDNA, renderAssetDNA, assetDNATelemetry } from "./experiment/AssetDNA";
 import { chooseStructure, structureTelemetry } from "./experiment/CampaignStructure";
@@ -330,6 +334,8 @@ export class ExperimentPipeline {
       plan?: () => TypographyPlan | null;
       /** The blueprint, resolved at composition time. Phase 5.6.3. */
       blueprint?: () => CreativeBlueprint | null;
+      /** The composition decided before the render. Phase 5.6.4. */
+      compositionPlan?: () => CompositionPlan | null;
       onComposed: (result: ComposeResult) => void;
     }
   ): ImageGenerationProvider {
@@ -417,6 +423,10 @@ ${directive}` : withBlueprint;
             // Phase 5.6.3: the director's decisions reach the compositor, which
             // is what lets the type be art-directed rather than only placed.
             blueprint: editable.blueprint?.() ?? null,
+            // Phase 5.6.4: the frame the render was composed for, so the
+            // typography engine places into a composition rather than reasoning
+            // about the brief a second time.
+            compositionPlan: editable.compositionPlan?.() ?? null,
           });
           ExperimentPipeline.storeLayerFiles(input.generationId, composed.files);
           editable.onComposed(composed);
@@ -833,6 +843,14 @@ ${directive}` : withBlueprint;
     // three above: each already exists, each is thrown away when the response
     // is written, and none of them can be recovered afterwards.
     let capturedComposition: any = null;
+    /**
+     * Phase 5.6.4. The composition, decided before the render and the only
+     * account of the frame: where the product is, how it is framed and lit,
+     * what stays quiet and what that means for the words. Captured for the same
+     * reason the geometry is -- the critic checks the render against it, and
+     * the record has to show what was asked for.
+     */
+    let capturedCompositionPlan: CompositionPlan | null = null;
     let capturedAssetDna: any = null;
     let capturedPrompt: string | null = null;
     // Phase 5.1: the editable design document, when the execution layer built one.
@@ -876,6 +894,10 @@ ${directive}` : withBlueprint;
                 personality: capturedPlan?.style?.personality ?? null,
                 category: categoryHint(capturedBlueprint),
                 brandKit: decision.brandKit ?? null,
+                // How much copy there is changes what typography is FOR: one
+                // line against a stated idea is a hero statement, five lines
+                // are information to be ordered.
+                copyLines: textRequirement.lines.length,
               }),
             ),
             NO_TEXT_DIRECTIVE,
@@ -890,6 +912,7 @@ ${directive}` : withBlueprint;
           logo: editableLogo,
           plan: () => capturedPlan,
           blueprint: () => capturedBlueprint,
+          compositionPlan: () => capturedCompositionPlan,
           onComposed: (r: ComposeResult) => {
             capturedDocument = { ...(capturedDocument || {}), version: 3, editable_mode: true, editable: r.design };
           },
@@ -1226,6 +1249,14 @@ ${directive}` : withBlueprint;
             capturedPlan = plan;
             if (plan) console.log("[EXPERIMENT][TYPOGRAPHY_PLAN]", typographyPlanTelemetry(plan));
             const composition = buildComposition({ blueprint: bp, decision: dec, visualDNA });
+            // Phase 5.6.4: the single account of the frame. Built here, after
+            // the geometry and the layer stack it reads and BEFORE the
+            // typography that has to live inside it.
+            capturedCompositionPlan = buildCompositionPlan({
+              blueprint: bp, geometry, composition, visualDNA,
+              assetContext: assetCtx, copyLines: textLines.length,
+            });
+            console.log("[EXPERIMENT][COMPOSITION_PLAN]", compositionPlanTelemetry(capturedCompositionPlan));
             // Phase 5.1: the editable design document. Built from the same
             // geometry and typography the prompt below is written from, so what
             // the renderer is told and what is stored are one structure.
@@ -1244,8 +1275,13 @@ ${directive}` : withBlueprint;
             // handed to a model told in the same prompt to render none.
             executionText = (
               editableOn
-                ? [renderGeometry(geometry, { sceneOnly: typographyPlanOn }), NO_TEXT_DIRECTIVE]
-                : [renderGeometry(geometry), renderTypography(typography)]
+                // Phase 5.6.4: one composition section in place of the geometry
+                // block. It carries what the geometry carried plus the camera,
+                // the light and the reason the quiet area is quiet, and it is
+                // SHORTER than the geometry block and the layer stack together,
+                // which it also replaces below.
+                ? [renderCompositionPlan(capturedCompositionPlan, { sceneOnly: typographyPlanOn }), NO_TEXT_DIRECTIVE]
+                : [renderCompositionPlan(capturedCompositionPlan), renderTypography(typography)]
             )
               .filter(Boolean)
               .join("\n\n");
@@ -1350,7 +1386,11 @@ ${directive}` : withBlueprint;
             const sections = [
               renderAssetDNA(assetDna),
               renderDesignSystem(ds),
-              renderComposition(comp),
+              // The layer stack only writes its own block when no composition
+              // plan was built -- with one, it is already inside that section,
+              // and printing both would be the two-accounts-of-one-frame
+              // problem this phase exists to remove.
+              capturedCompositionPlan ? undefined : renderComposition(comp),
               renderAssets(assets),
               prefText,
               memoryText,
