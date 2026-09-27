@@ -30,6 +30,10 @@ import {
   buildCompositionPlan, compositionPlanTelemetry, renderCompositionPlan,
   type CompositionPlan,
 } from "./experiment/CompositionPlan";
+import {
+  TOPIC_OWNER, assemble, auditSections, ownershipTelemetry,
+  type PromptSection, type PromptTopic,
+} from "./experiment/PromptOwnership";
 import { planAssets, assetTelemetry, renderAssets } from "./experiment/AssetIntelligence";
 import { buildAssetDNA, renderAssetDNA, assetDNATelemetry } from "./experiment/AssetDNA";
 import { chooseStructure, structureTelemetry } from "./experiment/CampaignStructure";
@@ -406,7 +410,11 @@ ${directive}` : withBlueprint;
               input.prompt.length > PromptBudgetManagerService.EMERGENCY_TARGET,
           });
         }
+        // `finalPrompt` goes back with the result so the stored record is the
+        // prompt that was sent, not the one the orchestrator compiled before
+        // this wrapper appended to it.
         const out = await inner.generateImage({ ...input, prompt: finalPrompt });
+        if (out && !out.finalPrompt) out.finalPrompt = finalPrompt;
         if (!editable || !out.success || !out.imageBuffer) return out;
         const doc = editable.document();
         if (!doc) {
@@ -1229,11 +1237,21 @@ ${directive}` : withBlueprint;
             });
             capturedGeometry = geometry;
             capturedTypography = typography;
+            // Phase 5.6.4/5.6.5: the composition, built here because it OWNS
+            // the reserved copy area and everything after it reads that area
+            // rather than deriving a second one. Creative direction, then
+            // composition, then typography, then rendering.
+            const composition = buildComposition({ blueprint: bp, decision: dec, visualDNA });
+            capturedCompositionPlan = buildCompositionPlan({
+              blueprint: bp, geometry, composition, visualDNA,
+              assetContext: assetCtx, copyLines: textLines.length,
+              copy: textLines, brandKit: decision.brandKit, ratio: request.aspectRatio,
+            });
+            console.log("[EXPERIMENT][COMPOSITION_PLAN]", compositionPlanTelemetry(capturedCompositionPlan));
             // The typography plan. Built AFTER the typography system so it can
-            // reuse the personality that system already resolved, and BEFORE
-            // the document so the document carries it -- the compositor reads
-            // the plan's reserved area from the document, not from a second
-            // channel that could disagree with it.
+            // reuse the personality that system already resolved, AFTER the
+            // composition whose reserved area it lays blocks into, and BEFORE
+            // the document so the document carries it.
             const plan = typographyPlanOn
               ? buildTypographyPlan({
                   mode: textRequirement.mode,
@@ -1244,19 +1262,11 @@ ${directive}` : withBlueprint;
                   geometry,
                   typography,
                   ratio: request.aspectRatio,
+                  compositionPlan: capturedCompositionPlan,
                 })
               : null;
             capturedPlan = plan;
             if (plan) console.log("[EXPERIMENT][TYPOGRAPHY_PLAN]", typographyPlanTelemetry(plan));
-            const composition = buildComposition({ blueprint: bp, decision: dec, visualDNA });
-            // Phase 5.6.4: the single account of the frame. Built here, after
-            // the geometry and the layer stack it reads and BEFORE the
-            // typography that has to live inside it.
-            capturedCompositionPlan = buildCompositionPlan({
-              blueprint: bp, geometry, composition, visualDNA,
-              assetContext: assetCtx, copyLines: textLines.length,
-            });
-            console.log("[EXPERIMENT][COMPOSITION_PLAN]", compositionPlanTelemetry(capturedCompositionPlan));
             // Phase 5.1: the editable design document. Built from the same
             // geometry and typography the prompt below is written from, so what
             // the renderer is told and what is stored are one structure.
@@ -1273,18 +1283,35 @@ ${directive}` : withBlueprint;
             // transmitted as areas to keep clear rather than under typographic
             // names -- a block headed "headline" is typography vocabulary
             // handed to a model told in the same prompt to render none.
-            executionText = (
-              editableOn
-                // Phase 5.6.4: one composition section in place of the geometry
-                // block. It carries what the geometry carried plus the camera,
-                // the light and the reason the quiet area is quiet, and it is
-                // SHORTER than the geometry block and the layer stack together,
-                // which it also replaces below.
-                ? [renderCompositionPlan(capturedCompositionPlan, { sceneOnly: typographyPlanOn }), NO_TEXT_DIRECTIVE]
-                : [renderCompositionPlan(capturedCompositionPlan), renderTypography(typography)]
-            )
-              .filter(Boolean)
-              .join("\n\n");
+            // Phase 5.6.5: each section declares who OWNS what it says, and the
+            // assembly is audited before it is sent. Two modules describing the
+            // same camera differently is how a renderer ends up following
+            // whichever it read last; this makes that visible in a log line
+            // rather than invisible in 23,000 characters.
+            //
+            // Phase 5.6.4: one composition section in place of the geometry
+            // block. It carries what the geometry carried plus the camera, the
+            // light and the reason the quiet area is quiet, and is SHORTER than
+            // the geometry block and the layer stack together, which it also
+            // replaces below.
+            const executionSections: PromptSection[] = [];
+            const own = (topic: PromptTopic, text: string | undefined) => {
+              if (text) executionSections.push({ topic, owner: TOPIC_OWNER[topic], text });
+            };
+            own("composition", renderCompositionPlan(capturedCompositionPlan, { sceneOnly: editableOn && typographyPlanOn }));
+            if (editableOn) {
+              own("render_constraints", NO_TEXT_DIRECTIVE);
+            } else {
+              own("typography_intent", renderTypography(typography));
+            }
+            const ownership = auditSections(executionSections);
+            console.log("[EXPERIMENT][PROMPT_OWNERSHIP]", ownershipTelemetry(ownership));
+            for (const c of ownership.contested) {
+              console.warn("[EXPERIMENT][PROMPT_OWNERSHIP] contested", {
+                section: c.section, wrote_about: c.topic, owned_by: TOPIC_OWNER[c.topic], phrases: c.phrases,
+              });
+            }
+            executionText = assemble(executionSections);
             // Phase 1: one context, validated before a render is paid for.
             if (productionPipelineOn) {
               const ctx = buildProductionContext({

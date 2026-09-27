@@ -3,6 +3,10 @@ import type { LayoutGeometry, Zone, ZoneName } from "./LayoutGeometry";
 import type { VisualComposition } from "./VisualComposition";
 import type { VisualDNA } from "./VisualDNAAnalyzer";
 import type { AssetContext } from "./AssetContext";
+import type { BrandKit } from "./BrandKit";
+import type { TextLine } from "./TypographySystem";
+import { wantsGenerousSpace } from "./BrandKit";
+import { spaceFor, demandForLines } from "./TypographyPlan";
 
 /**
  * Phase 5.6.4 — the composition, decided before anything is rendered.
@@ -102,7 +106,22 @@ export interface CompositionPlan {
    * statements and only the second is art direction.
    */
   negative_space: PlanField<{ share: number; purpose: string }>;
-  typography_zone: PlanField<PlanBox & { label: string }>;
+  /**
+   * The area the frame must leave for the words, OWNED here.
+   *
+   * Phase 5.6.5. `TypographyPlan` used to derive its own copy column from the
+   * same geometry, which is two answers to one question and a divergence
+   * waiting to happen. This is now the only derivation; typography lays blocks
+   * into it. It carries everything that plan needs, including which side the
+   * product is therefore pushed to.
+   */
+  typography_zone: PlanField<PlanBox & {
+    label: string;
+    /** Where the product must sit, given where the copy went. */
+    product_zone: "left" | "right" | "upper" | "lower" | "center";
+    /** Share of the frame the copy column takes, 0-1. */
+    share: number;
+  }>;
   /**
    * What typography's presence MEANS here, not where it sits.
    *
@@ -173,6 +192,18 @@ export interface CompositionPlanInput {
   assetContext?: AssetContext | null;
   /** How many client lines there are. A frame with no copy is composed differently. */
   copyLines?: number;
+  /**
+   * The client's lines with their roles. The reserved area is sized from what
+   * the copy actually demands -- a one-line headline and a three-line headline
+   * are different pictures -- so the composition needs them, not just a count.
+   */
+  copy?: TextLine[] | null;
+  /** A brand that asks for uncluttered space is given more of it. */
+  brandKit?: BrandKit | null;
+  /** Drives how tall a line of copy is against the frame. */
+  ratio?: string;
+  /** Information density, when the asset context read one. Sparser copy runs larger. */
+  sparse?: boolean;
 }
 
 /**
@@ -194,7 +225,7 @@ export function buildCompositionPlan(input: CompositionPlanInput): CompositionPl
   const zones = g?.zones ?? [];
   const zone = (name: ZoneName): Zone | null => zones.find((z) => z.name === name) ?? null;
   const productZone = zone("product");
-  const copyZones = zones.filter((z) => z.name !== "product" && z.name !== "logo");
+
   const copyLines = input.copyLines ?? 0;
 
   // ── what the picture is about ───────────────────────────────────────────
@@ -299,18 +330,54 @@ export function buildCompositionPlan(input: CompositionPlanInput): CompositionPl
   })();
 
   // ── where the words live, and what that means ──────────────────────────
-  const copyBox = boundingBox(copyZones);
-  const typography_zone: PlanField<PlanBox & { label: string }> = copyBox
-    ? {
-        value: { ...copyBox, label: positionLabel(copyBox.x + copyBox.width / 2, copyBox.y + copyBox.height / 2) },
-        because: copyZones[0]?.because || "the area the layout reserved for copy",
-        from: "geometry",
-      }
-    : {
-        value: { x: 0, y: 0, width: 0, height: 0, label: "none" },
-        because: copyLines === 0 ? "this frame carries no copy" : "no copy zone exists in this layout",
-        from: copyLines === 0 ? "derived" : "absent",
-      };
+  // The reserved area. Sized from what the copy demands, placed on the side
+  // the layout's alignment chose -- which is the side the product is not on,
+  // because the geometry placed the product first and the copy around it.
+  const ratio = clean(input.ratio) || g?.ratio || "1:1";
+  const wide = ratio === "16:9";
+  const generous = wantsGenerousSpace(input.brandKit ?? null);
+  const align = g?.decisions?.alignment;
+  const side: "left" | "right" | "center" =
+    align === "left" ? "left" : align === "right" ? "right" : wide ? "left" : "center";
+  const copy = input.copy ?? null;
+  const hasCopy = copyLines > 0 && (!copy || copy.length > 0);
+  const typography_zone: PlanField<PlanBox & { label: string; product_zone: "left" | "right" | "upper" | "lower" | "center"; share: number }> =
+    hasCopy && g
+      ? (() => {
+          // The same arithmetic `TypographyPlan` used, imported rather than
+          // restated: units of demand, a column width for the side, and a
+          // height capped so the copy cannot take the whole frame.
+          const units = copy
+            ? demandForLines(copy, generous, Boolean(input.sparse))
+            : // No roles supplied: assume one headline-sized line and the rest
+              // supporting, which is what a count alone can honestly say.
+              copyLines * 1.35 * 1.4;
+          const requirement = spaceFor(
+            [{ scale: units / Math.max(1, 1.35), max_lines: 1 }],
+            side, wide, generous,
+          );
+          return {
+            value: {
+              x: requirement.x,
+              y: requirement.y,
+              width: requirement.width,
+              height: requirement.height,
+              label: positionLabel(requirement.x + requirement.width / 2, requirement.y + requirement.height / 2),
+              product_zone: requirement.product_zone,
+              share: requirement.share,
+            },
+            because:
+              `${copyLines} line${copyLines === 1 ? "" : "s"} of copy set against the ${side === "center" ? "centre axis" : `${side} edge`}, ` +
+              `so the product takes the ${requirement.product_zone} and the two do not cross`,
+            from: "geometry",
+          };
+        })()
+      : {
+          value: { x: 0, y: 0, width: 0, height: 0, label: "none", product_zone: "center", share: 0 },
+          because: copyLines === 0 ? "this frame carries no copy" : "no layout was available to reserve an area for copy",
+          from: copyLines === 0 ? "derived" : "absent",
+        };
+  const copyBox = typography_zone.from === "geometry" ? typography_zone.value : null;
 
   const lightingBehaviour = f("photography", "lighting_behavior");
   const atmosphereText = f("visual_world", "atmosphere");
@@ -456,15 +523,6 @@ function scaleLabel(share: number): string {
   if (share >= 26) return "large — unmistakably the subject";
   if (share >= 14) return "measured — clearly present, with room around it";
   return "small — placed within a larger scene";
-}
-
-function boundingBox(zones: Zone[]): PlanBox | null {
-  if (!zones.length) return null;
-  const x0 = Math.min(...zones.map((z) => z.x - z.width / 2));
-  const x1 = Math.max(...zones.map((z) => z.x + z.width / 2));
-  const y0 = Math.min(...zones.map((z) => z.y - z.height / 2));
-  const y1 = Math.max(...zones.map((z) => z.y + z.height / 2));
-  return { x: round(Math.max(0, x0)), y: round(Math.max(0, y0)), width: round(x1 - x0), height: round(y1 - y0) };
 }
 
 /**

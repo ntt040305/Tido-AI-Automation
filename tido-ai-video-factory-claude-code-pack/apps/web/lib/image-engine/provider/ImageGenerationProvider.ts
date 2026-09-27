@@ -23,6 +23,19 @@ export interface ProviderImageGenerationInput {
 
 export interface ProviderImageGenerationOutput {
   success: boolean;
+  /**
+   * The prompt the provider was ACTUALLY sent, when a wrapper changed it.
+   *
+   * Phase 5.6.5. A wrapper may append sections after the orchestrator has
+   * compiled the prompt -- the composition, the typographic intention, the
+   * render constraints. The orchestrator stored what it compiled, so the
+   * recorded prompt was short by everything the wrapper added: 22,064 chars on
+   * disk against 23,804 actually sent. Every downstream reader of that file --
+   * the vision loop, the memory loop, the benchmark's own prompt accounting --
+   * was reading a prompt that was never used. A wrapper that modifies the
+   * prompt MUST return it here.
+   */
+  finalPrompt?: string;
   imageUrl?: string;
   imageBuffer?: Buffer;
   mimeType?: string;

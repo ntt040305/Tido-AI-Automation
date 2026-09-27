@@ -1,6 +1,7 @@
 import type { CreativeBlueprint } from "./CreativeBlueprint";
 import type { AssetContext } from "./AssetContext";
 import type { BrandKit } from "./BrandKit";
+import type { CompositionPlan } from "./CompositionPlan";
 import type { TextLine, TextRole, TypographySystem } from "./TypographySystem";
 import type { LayoutGeometry } from "./LayoutGeometry";
 import { wantsGenerousSpace } from "./BrandKit";
@@ -212,6 +213,20 @@ function capitalizationFor(personality: string, lines: TextLine[]): string {
   return "as supplied — case is the client's and carries their tone";
 }
 
+/** The composition's reserved area, as the plan's own requirement. */
+function spaceFromComposition(plan: CompositionPlan): SpaceRequirement {
+  const z = plan.typography_zone.value;
+  return {
+    product_zone: z.product_zone,
+    x: z.x,
+    y: z.y,
+    width: z.width,
+    height: z.height,
+    share: z.share,
+    because: `${plan.typography_zone.because}. ${plan.negative_space.value.purpose}`,
+  };
+}
+
 export interface TypographyPlanInput {
   /** The requirement's mode. "none" produces a plan with no blocks. */
   mode?: TextMode;
@@ -225,6 +240,12 @@ export interface TypographyPlanInput {
   /** The typography system, when one was already built. Its personality is reused. */
   typography?: TypographySystem | null;
   ratio?: string;
+  /**
+   * The composition, decided before this plan. Where it exists it OWNS the
+   * reserved copy area, and this plan lays blocks into that area rather than
+   * deciding a second one from the same geometry.
+   */
+  compositionPlan?: CompositionPlan | null;
 }
 
 /**
@@ -309,7 +330,12 @@ export function buildTypographyPlan(input: TypographyPlanInput): TypographyPlan 
     cta: first("cta"),
     supporting,
     style,
-    space: spaceFor(blocks, side, wide, generous),
+    // Phase 5.6.5: the composition owns the reserved area. Typography reads
+    // it and lays blocks into it; it computes one only when no composition
+    // plan exists, which is a degraded render.
+    space: input.compositionPlan?.typography_zone.from === "geometry"
+      ? spaceFromComposition(input.compositionPlan)
+      : spaceFor(blocks, side, wide, generous),
     blocks,
   };
 }
@@ -321,14 +347,41 @@ export function buildTypographyPlan(input: TypographyPlanInput): TypographyPlan 
  * relative size they are. A one-line headline and a three-line headline are
  * different pictures, and until now the prompt could not tell them apart.
  */
-function spaceFor(
-  blocks: PlannedBlock[],
+/**
+ * How much vertical room the copy needs, in units of "one line of the smallest
+ * text". Exported because `CompositionPlan` OWNS the reserved area and has to
+ * know the demand to size it; the arithmetic lives here, with the roles and
+ * scales it is made of, so there is one definition of it rather than two.
+ */
+export function copyDemandUnits(blocks: Array<{ scale: number; max_lines: number }>): number {
+  return blocks.reduce((n, b) => n + b.scale * b.max_lines * 1.35, 0);
+}
+
+/** The demand of a set of client lines, before any of them has been planned. */
+export function demandForLines(lines: TextLine[], generous: boolean, sparse: boolean): number {
+  return copyDemandUnits(
+    lines.map((l) => ({ scale: scaleFor(l.role, sparse), max_lines: linesFor(l.role, l.text, generous) })),
+  );
+}
+
+/**
+ * The reserved area, computed the way `CompositionPlan` computes it.
+ *
+ * Phase 5.6.5 moved ownership of this decision to the composition, where the
+ * product's position and the frame's negative space are decided, because two
+ * modules deriving the same rectangle from the same inputs is a divergence
+ * waiting for someone to change one of them. This remains only as the path for
+ * a render with no composition plan -- a degraded run -- and the composition
+ * imports the same arithmetic rather than restating it.
+ */
+export function spaceFor(
+  blocks: Array<{ scale: number; max_lines: number; text_role?: TextRole }>,
   side: "left" | "right" | "center",
   wide: boolean,
   generous: boolean,
 ): SpaceRequirement {
   // Total vertical demand, in units of "one line of the smallest text".
-  const units = blocks.reduce((n, b) => n + b.scale * b.max_lines * 1.35, 0);
+  const units = copyDemandUnits(blocks);
   // One such unit is about 4.5% of the frame's height in a square, less in a
   // wide one where height is scarce and the copy column is taller than it is
   // broad.

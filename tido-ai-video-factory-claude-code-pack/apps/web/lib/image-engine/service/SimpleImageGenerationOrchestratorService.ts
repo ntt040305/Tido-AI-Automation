@@ -837,9 +837,14 @@ export class SimpleImageGenerationOrchestratorService {
             generation_id: generationId,
             imageBuffer: providerRes.imageBuffer,
             mimeType: providerRes.mimeType || "image/png",
-            masterPrompt,
+            // What the provider actually received. A wrapper may have appended
+            // to what was compiled here, and a record that disagrees with the
+            // render is worse than no record: everything downstream trusts it.
+            masterPrompt: providerRes.finalPrompt || masterPrompt,
             metadata: {
               generation_id: generationId,
+              prompt_chars_compiled: masterPrompt.length,
+              prompt_chars_sent: (providerRes.finalPrompt || masterPrompt).length,
               provider: providerRes.remoteDetails?.provider_name || "imgstudio",
               model: providerRes.remoteDetails?.model || "flow-nano-banana-2",
               aspect_ratio: adapted.aspectRatio || "1:1",

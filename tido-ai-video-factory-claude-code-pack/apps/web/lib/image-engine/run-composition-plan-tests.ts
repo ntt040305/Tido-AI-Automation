@@ -34,6 +34,9 @@ const { resolveTextRequirement } = require("./compiler/ExactCopyIntegrityValidat
 
 const WEB = path.join(__dirname, "..", "..");
 const read = (rel: string) => fs.readFileSync(path.join(WEB, rel), "utf-8");
+/** Source with comments removed, so a check cannot pass on a mention in prose. */
+const stripComments = (src: string) => src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "");
+const NEWLINE = "\n";
 
 let passed = 0;
 let failed = 0;
@@ -357,34 +360,51 @@ function main() {
     assert.notStrictEqual(withPlan.relationship_to_scene, without.relationship_to_scene, "the plan changed nothing downstream");
   });
 
-  check("the two modules that reserve a copy area do not contradict each other", () => {
-    // `TypographyPlan.spaceFor` still derives its own copy column, and the plan
-    // derives a typography zone from the same geometry. They agree today
-    // because both follow the layout's alignment -- this catches the day one of
-    // them stops. Consolidating them into one derivation is the remaining step
-    // of this phase, and is deliberately not bundled with the prompt change.
+  check("the composition OWNS the copy area and typography consumes it", () => {
+    // Phase 5.6.5. `TypographyPlan.spaceFor` used to derive its own copy
+    // column from the same geometry -- two answers to one question. The plan
+    // now owns it; this asserts the typography plan reproduces it EXACTLY
+    // rather than merely landing nearby.
     const { buildTypographyPlan } = require("./evolution/experiment/TypographyPlan");
     const { buildTypographySystem } = require("./evolution/experiment/TypographySystem");
     for (const name of NAMES) {
       const bp = COFFEE[name];
-      const req = resolveTextRequirement({ contentMessage: COPY.join("\n") });
+      const req = resolveTextRequirement({ contentMessage: COPY.join(NEWLINE) });
       const assigned = assignTextRoles(req.lines);
       const geometry = buildGeometry({
         ratio: "1:1", blueprint: bp, copyRoles: geometryRolesFor(assigned), productCount: 1,
         compositionHint: bp?.visual_world?.composition_logic?.value ?? null,
       });
       const typography = buildTypographySystem({ geometry, lines: assigned });
-      const tp = buildTypographyPlan({ mode: req.mode, lines: assigned, geometry, typography, ratio: "1:1" });
-      const cp = buildCompositionPlan({ blueprint: bp, geometry, copyLines: COPY.length });
-      if (!tp.space || cp.typography_zone.from !== "geometry") continue;
-      const planCentre = cp.typography_zone.value.x + cp.typography_zone.value.width / 2;
-      const spaceCentre = tp.space.x + tp.space.width / 2;
-      const sideOf = (c: number) => (c < 40 ? "left" : c > 60 ? "right" : "centre");
-      assert.strictEqual(
-        sideOf(planCentre), sideOf(spaceCentre),
-        `${name}: the composition puts the copy ${sideOf(planCentre)} and the typography plan puts it ${sideOf(spaceCentre)}`,
-      );
+      const cp = buildCompositionPlan({ blueprint: bp, geometry, copyLines: COPY.length, copy: assigned, ratio: "1:1" });
+      const tp = buildTypographyPlan({
+        mode: req.mode, lines: assigned, geometry, typography, ratio: "1:1", compositionPlan: cp,
+      });
+      const z = cp.typography_zone.value;
+      assert.ok(tp.space, `${name}: the typography plan reserved nothing`);
+      for (const k of ["x", "y", "width", "height", "share"] as const) {
+        assert.strictEqual(tp.space[k], z[k], `${name}: typography's ${k} (${tp.space[k]}) differs from the composition's (${z[k]})`);
+      }
+      assert.strictEqual(tp.space.product_zone, z.product_zone, `${name}: the two disagree about where the product goes`);
+      assert.ok(tp.space.because.includes(cp.negative_space.value.purpose), `${name}: typography did not carry the composition's reason`);
     }
+  });
+
+  check("typography derives its own area only when no composition exists", () => {
+    const { buildTypographyPlan } = require("./evolution/experiment/TypographyPlan");
+    const { buildTypographySystem } = require("./evolution/experiment/TypographySystem");
+    const req = resolveTextRequirement({ contentMessage: COPY.join(NEWLINE) });
+    const assigned = assignTextRoles(req.lines);
+    const geometry = buildGeometry({ ratio: "1:1", copyRoles: geometryRolesFor(assigned), productCount: 1 });
+    const typography = buildTypographySystem({ geometry, lines: assigned });
+    // A degraded render still has to reserve something, so the fallback stays.
+    const degraded = buildTypographyPlan({ mode: req.mode, lines: assigned, geometry, typography, ratio: "1:1" });
+    assert.ok(degraded.space, "a render with no composition plan reserved nothing at all");
+    // And the source must show the fallback is conditional, not the default.
+    const src = read("lib/image-engine/evolution/experiment/TypographyPlan.ts");
+    const code = stripComments(src);
+    assert.ok(/compositionPlan\?\.typography_zone/.test(code), "the typography plan does not read the composition's area");
+    assert.ok(!/space: spaceFor\(/.test(code), "the typography plan still reserves its own area unconditionally");
   });
 
   // ── 6. the six questions ────────────────────────────────────────────────
