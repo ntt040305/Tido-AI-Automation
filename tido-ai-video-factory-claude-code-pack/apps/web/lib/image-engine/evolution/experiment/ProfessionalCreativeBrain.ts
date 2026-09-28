@@ -704,9 +704,38 @@ export class ProfessionalCreativeBrain {
    * with nothing under it — a renderer handed an empty heading treats it as a
    * dimension it may fill itself, which is the opposite of the intent.
    */
+  /**
+   * Phase 5.6.5 — what the blueprint must NOT say when another layer owns it.
+   *
+   * Measured on a live 31,629-character prompt, three writers described one
+   * frame and they DISAGREED. The blueprint's layout section said the watch was
+   * "anchored in the lower-right third, leaving the upper two-thirds as
+   * negative space"; the composition section, 1,500 characters later, said
+   * "centre right of the frame, about 52% by 60%". A renderer reading both
+   * follows one of them, and nobody can say which.
+   *
+   * So where the composition and the typography layers speak for a topic, the
+   * blueprint stays quiet about it. It is not losing a decision -- it is the
+   * same decision, carried by the layer that resolved it against the geometry
+   * and the copy rather than in prose.
+   *
+   * Only applied when those layers are actually present. On a degraded render
+   * with no composition, the blueprint is still the only account of the frame
+   * and prints in full.
+   */
+  private static readonly OWNED_ELSEWHERE: Record<string, readonly string[]> = {
+    // CompositionPlan: it places the product and reserves the copy area.
+    layout: ["visual_balance", "product_position", "text_area", "negative_space", "attention_flow", "composition_balance"],
+    // TypographyDNA: it decides what the letterforms do.
+    design: ["font_character", "typographic_voice", "hierarchy_logic", "spacing_behavior", "placement_reason", "contrast_strategy"],
+    // CompositionPlan carries the camera and the light. `material_rendering`
+    // and `focus_behavior` are NOT in it, so they stay here.
+    photography: ["camera_language", "lens_character", "lighting_behavior", "depth_feeling"],
+  };
+
   static render(
     b: CreativeBlueprint | null | undefined,
-    opts: { maxChars?: number } = {}
+    opts: { maxChars?: number; omitOwnedElsewhere?: boolean } = {}
   ): string | undefined {
     if (!b) return undefined;
     // Order is the spec's, and it is load-bearing rather than cosmetic: the
@@ -726,9 +755,10 @@ export class ProfessionalCreativeBrain {
     if (b.story) lines.push("", "THE STORY:", `- ${b.story.value}`);
     for (const section of Object.keys(LABELS)) {
       const bag = (b as any)[section] || {};
+      const owned = opts.omitOwnedElsewhere ? ProfessionalCreativeBrain.OWNED_ELSEWHERE[section] ?? [] : [];
       const rows = SECTION_FIELDS[section as keyof typeof SECTION_FIELDS]
         .map((f) => [f, bag[f] as Decision | null] as const)
-        .filter(([, dec]) => dec);
+        .filter(([f, dec]) => dec && !owned.includes(f));
       if (!rows.length) continue;
       lines.push("", `${LABELS[section]}:`, ...rows.map(([f, dec]) => `- ${f.replace(/_/g, " ")}: ${dec!.value}`));
     }

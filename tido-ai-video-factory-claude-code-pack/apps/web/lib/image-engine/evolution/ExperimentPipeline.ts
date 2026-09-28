@@ -1454,8 +1454,26 @@ ${directive}` : withBlueprint;
               ...projectTelemetry(project),
             });
           }
+          // Phase 5.6.5 — a BOUNDED creative budget.
+          //
+          // This was `headroom - everything else`, so the blueprint expanded to
+          // fill whatever was left: measured at 6,250 characters on one render
+          // and 5,492 on another from the same system, purely because the
+          // headroom differed. A section that grows to fit the space is not
+          // making a decision about how much it has to say.
+          //
+          // The allowance is fixed and generous: the sections it still owns
+          // measured about 3,400 characters with the composition present, so
+          // 4,500 leaves room to say more where there is more to say, and
+          // stops it consuming a budget that belongs to nobody.
+          const BLUEPRINT_ALLOWANCE = 4500;
+          const remaining = Math.max(0, headroom - productionText.length - executionText.length);
           const text = ProfessionalCreativeBrain.render(bp, {
-            maxChars: Math.max(0, headroom - productionText.length - executionText.length),
+            maxChars: Math.min(BLUEPRINT_ALLOWANCE, remaining),
+            // The composition and typography layers speak for their own topics
+            // in this prompt, so the blueprint does not repeat them. Only true
+            // when the composition actually ran.
+            omitOwnedElsewhere: Boolean(capturedCompositionPlan),
           });
           // The evaluation layer, finally reading something. It was built,
           // tested and imported by nothing, so every render so far was scored
@@ -1489,7 +1507,12 @@ ${text || ""}`,
           });
           console.log("[EXPERIMENT][BLUEPRINT_BUDGET]", {
             headroom,
+            allowance: BLUEPRINT_ALLOWANCE,
             emitted: text ? text.length : 0,
+            // What it would have written unbounded and unfiltered, so the
+            // saving is visible rather than inferred.
+            unbounded: ProfessionalCreativeBrain.render(bp)!.length,
+            omitted_owned_elsewhere: Boolean(capturedCompositionPlan),
             trimmed: text ? text.length < ProfessionalCreativeBrain.render(bp)!.length : false,
           });
           const tail = [productionText, executionText].filter(Boolean).join("\n\n");
