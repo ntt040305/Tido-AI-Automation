@@ -58,10 +58,13 @@ import {
 } from "./experiment/TypographyPlan";
 import { composeEditable, editableTelemetry, type ComposeResult } from "./experiment/EditableDesign";
 import { buildTypographyDNA, categoryHint, renderDnaForImagePrompt } from "./experiment/TypographyDNA";
+import { TypographyDesignContractService } from "./experiment/TypographyDesignContract";
 import type { CreativeDocument } from "./experiment/CreativeDocument";
 import type { BrandKit } from "./experiment/BrandKit";
 import fs from "fs";
 import path from "path";
+import crypto from "crypto";
+import type { RoutingResultSchema } from "../types";
 import { IMAGE_ENGINE_CONFIG } from "../config";
 import { blueprintTelemetry, intentTelemetry, type CreativeBlueprint } from "./experiment/CreativeBlueprint";
 import { CreativeRefinementLoop } from "./experiment/CreativeRefinementLoop";
@@ -110,12 +113,92 @@ function countAttachedProducts(request: SimpleInputRequestV1): number {
  */
 const VISUAL_DNA_CACHE = new Map<string, VisualDNA>();
 const VISUAL_DNA_CACHE_MAX = 200;
+const VISUAL_DNA_DISK_CACHE_DIR = path.join(process.cwd(), "data", "cache", "visual-dna");
 
 function cacheKeyFor(images: { role?: string; buffer?: Buffer }[]): string {
   return images
     .filter((i) => i?.buffer?.length)
     .map((i) => `${String(i.role || "").toUpperCase()}:${VisualDNAAnalyzer.hash(i.buffer!)}`)
     .join("|");
+}
+
+function readVisualDNACache(cacheKey: string): VisualDNA | null {
+  if (!cacheKey) return null;
+  const inMem = VISUAL_DNA_CACHE.get(cacheKey);
+  if (inMem) return inMem;
+
+  try {
+    const keyHash = crypto.createHash("sha256").update(cacheKey).digest("hex").slice(0, 24);
+    const diskPath = path.join(VISUAL_DNA_DISK_CACHE_DIR, `${keyHash}.json`);
+    if (fs.existsSync(diskPath)) {
+      const content = fs.readFileSync(diskPath, "utf-8");
+      const parsed = JSON.parse(content) as VisualDNA;
+      if (parsed?.provenance?.derived_from_image && parsed?.observed) {
+        if (VISUAL_DNA_CACHE.size >= VISUAL_DNA_CACHE_MAX) {
+          VISUAL_DNA_CACHE.delete(VISUAL_DNA_CACHE.keys().next().value as string);
+        }
+        VISUAL_DNA_CACHE.set(cacheKey, parsed);
+        return parsed;
+      }
+    }
+  } catch (_) {}
+  return null;
+}
+
+function writeVisualDNACache(cacheKey: string, dna: VisualDNA): void {
+  if (!cacheKey || !dna?.provenance?.derived_from_image) return;
+  if (VISUAL_DNA_CACHE.size >= VISUAL_DNA_CACHE_MAX) {
+    VISUAL_DNA_CACHE.delete(VISUAL_DNA_CACHE.keys().next().value as string);
+  }
+  VISUAL_DNA_CACHE.set(cacheKey, dna);
+
+  try {
+    const keyHash = crypto.createHash("sha256").update(cacheKey).digest("hex").slice(0, 24);
+    if (!fs.existsSync(VISUAL_DNA_DISK_CACHE_DIR)) {
+      fs.mkdirSync(VISUAL_DNA_DISK_CACHE_DIR, { recursive: true });
+    }
+    const diskPath = path.join(VISUAL_DNA_DISK_CACHE_DIR, `${keyHash}.json`);
+    fs.writeFileSync(diskPath, JSON.stringify(dna), "utf-8");
+  } catch (_) {}
+}
+
+function strategyFromJudgment(
+  j: CreativeJudgment,
+  brief: DirectorBriefInput,
+  assetCtx?: any
+): MarketingBrainStrategy {
+  const dec = toCreativeDecision(j);
+  const route = j.strategy?.selected || j.selected || "Commercial Hero";
+  const reason = j.strategy?.selection_reason || j.selection_reason || brief.concept || "";
+  const consumer = j.consumer;
+  const brand = j.brand;
+  const reasoning = j.reasoning;
+
+  return {
+    creative_angle: route,
+    commercial_goal: brief.objective || "Commercial product display",
+    target_customer_psychology: consumer?.viewer || consumer?.desire_driver || "Target consumer",
+    prompt_guidance: dec?.scene_definition || reason || route,
+    consumer_insight: consumer?.first_feeling || consumer?.trust_driver || reason,
+    emotional_response: brand?.emotional_territory || consumer?.first_feeling || "poised commercial confidence",
+    creative_message: reason || route,
+    asset_reasoning: assetCtx?.communication_goal || undefined,
+    communication_objective: brief.objective || undefined,
+    creative_route: route,
+    brand_personality: brand?.personality || undefined,
+    visual_translation: {
+      scene_moment: dec?.scene_definition || "Product presented in tailored commercial environment",
+      human_presence: consumer?.viewer ? `Authentic reflection of ${consumer.viewer}` : undefined,
+      camera_intent: reasoning?.camera?.choice || dec?.camera_decision,
+      typography_intent: reasoning?.typography?.choice || dec?.typography_decision,
+      subject_representation: route,
+      atmosphere: dec?.environment_decision || "focused commercial setting",
+      lighting_character: reasoning?.lighting?.choice || dec?.lighting_decision || "controlled directional studio lighting",
+      material_treatment: (dec as any)?.materials_decision || "authentic product texture",
+      composition_principle: reasoning?.composition?.choice || dec?.composition_decision || "balanced hierarchy",
+      colour_direction: reasoning?.colour?.choice || "harmonious palette",
+    },
+  };
 }
 
 /**
@@ -416,6 +499,12 @@ ${directive}` : withBlueprint;
         const out = await inner.generateImage({ ...input, prompt: finalPrompt });
         if (out && !out.finalPrompt) out.finalPrompt = finalPrompt;
         if (!editable || !out.success || !out.imageBuffer) return out;
+        const editablePostRenderActive = Boolean(process.env.TIDO_ENABLE_EDITABLE_POST_RENDER === "true");
+        if (!editablePostRenderActive) {
+          // Production Flat Render: Nano Banana 2 renders typography directly inside the artwork.
+          // Return pure flat raster image buffer without post-render compositing modifications.
+          return out;
+        }
         const doc = editable.document();
         if (!doc) {
           console.warn("[EXPERIMENT][EDITABLE] no design document was built; serving the scene as rendered");
@@ -644,6 +733,9 @@ ${directive}` : withBlueprint;
       (request.images || []).some((i) => (i as { role?: string }).role === "LOGO") ||
       Boolean(decision.brandKit?.has_logo);
     const editableOn = executionOn && (hasTextToSet || hasMarkToPlace);
+    // Safest minimal runtime guard: Editable post-render compositing is bypassed for production flat render.
+    // Set TIDO_ENABLE_EDITABLE_POST_RENDER=true to re-enable post-render SVG compositing.
+    const editableActive = editableOn && Boolean(process.env.TIDO_ENABLE_EDITABLE_POST_RENDER === "true");
 
     // Phase 1.1D — Creative Director authority over inferred art direction.
     //
@@ -762,11 +854,34 @@ ${directive}` : withBlueprint;
     // compared against anything.
     // Reads the client's attachments before any decision is made, or returns
     // null and leaves the director exactly where it was.
+    // Start KnowledgeRouter in parallel with VisualDNA and Creative Director
+    const attachments = [...(request.images || []), ...(request.referenceImages || [])];
+    const routerPromise: Promise<RoutingResultSchema | null> = (async () => {
+      try {
+        const { KnowledgeRouterService } = await import("../service/KnowledgeRouterService");
+        const routerService = new KnowledgeRouterService();
+        const res = await routerService.analyzeProductReferences({
+          images: attachments.map((a: any, idx: number) => ({
+            reference_id: a.reference_id || `REF_${String(idx + 1).padStart(2, "0")}`,
+            buffer: a.buffer,
+            mimeType: a.mimeType || "image/png",
+            filename: a.filename || `ref_${idx + 1}.png`,
+          })),
+          concept: request.concept,
+          useCase: request.useCase,
+          aspectRatio: request.aspectRatio,
+        });
+        return res.success && res.routing ? res.routing : null;
+      } catch (e: any) {
+        console.warn("[EXPERIMENT][ROUTER_PARALLEL] non-fatal router pre-fetch error:", e?.message || e);
+        return null;
+      }
+    })();
+
     let visualDNA: VisualDNA | null = null;
     if (visualDNAOn) {
-      const attachments = [...(request.images || []), ...(request.referenceImages || [])];
       const cacheKey = cacheKeyFor(attachments as any);
-      const cached = cacheKey ? VISUAL_DNA_CACHE.get(cacheKey) : undefined;
+      const cached = readVisualDNACache(cacheKey);
       const dnaStart = Date.now();
       visualDNA = await new VisualDNAAnalyzer().analyze({
         images: attachments as any,
@@ -775,10 +890,7 @@ ${directive}` : withBlueprint;
         existingDNA: cached ?? null,
       });
       if (visualDNA && cacheKey && !cached) {
-        if (VISUAL_DNA_CACHE.size >= VISUAL_DNA_CACHE_MAX) {
-          VISUAL_DNA_CACHE.delete(VISUAL_DNA_CACHE.keys().next().value as string);
-        }
-        VISUAL_DNA_CACHE.set(cacheKey, visualDNA);
+        writeVisualDNACache(cacheKey, visualDNA);
       }
       console.log("[EXPERIMENT][VISUAL_DNA_PASS]", {
         ...visualDNATelemetry(visualDNA),
@@ -878,11 +990,11 @@ ${directive}` : withBlueprint;
     // logo -- the scene only -- while `textRequirement` above keeps the
     // client's lines for the director, the typography and the document. The
     // logo is held back to be placed as its own layer, unaltered.
-    const editableLogo = editableOn
+    const editableLogo = editableActive
       ? ((request.images || []).find((i) => (i as { role?: string }).role === "LOGO") as { buffer?: Buffer } | undefined)?.buffer ?? null
       : null;
     const renderSource = (r: SimpleInputRequestV1): SimpleInputRequestV1 =>
-      editableOn
+      editableActive
         ? {
             ...r,
             contentMessage: "",
@@ -894,7 +1006,7 @@ ${directive}` : withBlueprint;
     // renders none of it. The plan is resolved lazily because it is built
     // inside the execution block below, after the blueprint exists, and this
     // string is assembled before the provider is wrapped.
-    const finalDirective = editableOn
+    const finalDirective = editableActive
       ? () =>
           [
             brandKitDirective(decision.brandKit, "none", { logo: false }),
@@ -920,7 +1032,7 @@ ${directive}` : withBlueprint;
             .filter(Boolean)
             .join("\n\n")
       : [brandKitDirective(decision.brandKit, textRequirement.mode), textDirective(textRequirement)].filter(Boolean).join("\n\n");
-    const editableHooks = editableOn
+    const editableHooks = editableActive
       ? {
           document: () => capturedDocument as CreativeDocument | null,
           brandKit: decision.brandKit ?? null,
@@ -933,7 +1045,7 @@ ${directive}` : withBlueprint;
           },
         }
       : undefined;
-    if (editableOn) {
+    if (editableActive) {
       console.log("[EXPERIMENT][EDITABLE] mode on", { text_lines: textRequirement.lines.length, logo_layer: Boolean(editableLogo) });
     }
     let productTruthForBrain: import("./experiment/ProductTruth").ProductTruth | null = null;
@@ -1178,9 +1290,9 @@ ${directive}` : withBlueprint;
             // reach the renderer as copy to draw -- directly contradicting the
             // "render no text" instruction in the same prompt. The design
             // document still gets both, from the text requirement and the kit.
-            copyItems: editableOn ? [] : textRequirement.lines,
+            copyItems: editableActive ? [] : textRequirement.lines,
             productCount,
-            hasLogo: editableOn ? false : hasLogoForBrain,
+            hasLogo: editableActive ? false : hasLogoForBrain,
             visualDNA,
             decision: dec,
             judgment: j,
@@ -1310,11 +1422,20 @@ ${directive}` : withBlueprint;
             const own = (topic: PromptTopic, text: string | undefined) => {
               if (text) executionSections.push({ topic, owner: TOPIC_OWNER[topic], text });
             };
-            own("composition", renderCompositionPlan(capturedCompositionPlan, { sceneOnly: editableOn && typographyPlanOn }));
-            if (editableOn) {
+            own("composition", renderCompositionPlan(capturedCompositionPlan, { sceneOnly: editableActive && typographyPlanOn }));
+            if (editableActive) {
               own("render_constraints", NO_TEXT_DIRECTIVE);
             } else {
-              own("typography_intent", renderTypography(typography));
+              const contract = TypographyDesignContractService.buildContract({
+                lines: textLines,
+                blueprint: bp,
+                compositionPlan: capturedCompositionPlan,
+                brandKit: decision.brandKit,
+                typographySystem: typography,
+                ratio: request.aspectRatio,
+                personality: capturedPlan?.style?.personality ?? null,
+              });
+              own("typography_intent", TypographyDesignContractService.renderAgencyTypographyArtDirection(contract));
             }
             const ownership = auditSections(executionSections);
             console.log("[EXPERIMENT][PROMPT_OWNERSHIP]", ownershipTelemetry(ownership));
@@ -1596,9 +1717,11 @@ ${text || ""}`,
 
       const innerConcurrent = options?.generationProvider || new ImgStudioImageGenerationProvider();
       try {
+        const precomputedRouting = await routerPromise;
         const generated = await RenderCore.generateSimpleImage(renderSource(request), {
           ...options,
           ...cdAuthorityOptions,
+          ...(precomputedRouting ? { mockRoutingResult: precomputedRouting } : {}),
           ...(earlyStrategy ? { precomputedStrategy: earlyStrategy } : {}),
           generationProvider: this.wrapProvider(
             innerConcurrent,
@@ -1755,10 +1878,13 @@ ${text || ""}`,
 
 
     try {
+      const precomputedRouting = await routerPromise;
+      const effectiveStrategy = earlyStrategy || (judgment ? strategyFromJudgment(judgment, brief, assetCtx) : undefined);
       const generated = await RenderCore.generateSimpleImage(renderSource(effectiveRequest), {
         ...options,
         ...cdAuthorityOptions,
-        ...(earlyStrategy ? { precomputedStrategy: earlyStrategy } : {}),
+        ...(precomputedRouting ? { mockRoutingResult: precomputedRouting } : {}),
+        ...(effectiveStrategy ? { precomputedStrategy: effectiveStrategy } : {}),
         generationProvider: this.wrapProvider(
           inner,
           judgment,
@@ -1788,7 +1914,7 @@ ${text || ""}`,
         capturedComposition,
         capturedAssetDna,
         capturedPrompt,
-        earlyStrategy,
+        earlyStrategy || effectiveStrategy,
         visualDNA,
         capturedJudgment,
         capturedDocument,

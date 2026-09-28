@@ -206,6 +206,9 @@ export class ProviderPromptOptimizer {
     "USER BRIEF",
     "USER HARD REQUIREMENTS",
     "TYPOGRAPHY & READABLE COPY",
+    "TYPOGRAPHY ART DIRECTION",
+    "TYPOGRAPHY",
+    "EXACT COPY",
     "COMMERCIAL LAYOUT",
     "ART DIRECTION",
     "CONFLICT PRIORITY",
@@ -248,7 +251,7 @@ export class ProviderPromptOptimizer {
     {
       name: "IMAGE_QUALITY",
       pattern:
-        /\b(?:ultra[- ])?(?:high|photo)[- ]?(?:realistic|resolution|quality|definition)(?:,?\s+(?:ultra[- ]detailed|highly detailed|sharp focus|crisp detail))?\b/gi,
+        /\b(?:ultra[- ])?(?:high|photo)[- ]?(?:realistic|resolution|quality|definition)(?:\s+(?:high|photo)[- ]?(?:realistic|resolution|quality|definition))?(?:,?\s+(?:ultra[- ]detailed|highly detailed|sharp focus|crisp detail))?\b/gi,
       replacement: "photorealistic high-resolution",
     },
     {

@@ -164,10 +164,11 @@ export class KnowledgeRouterService {
     let lastError: any = null;
     let rawTextResponse = "";
 
-    while (attempts <= IMAGE_ENGINE_CONFIG.ROUTER_MAX_RETRIES) {
+    const maxRetries = Math.min(1, Math.max(0, IMAGE_ENGINE_CONFIG.ROUTER_MAX_RETRIES ?? 1));
+    while (attempts <= maxRetries) {
       attempts++;
       try {
-        const timeoutMs = 12000;
+        const timeoutMs = 8000;
         let timeoutId: any;
         const timeoutPromise = new Promise<never>((_, reject) => {
           timeoutId = setTimeout(() => reject(new Error(`KnowledgeRouter Gemini call timed out after ${timeoutMs}ms`)), timeoutMs);
@@ -192,7 +193,7 @@ export class KnowledgeRouterService {
       } catch (err: any) {
         lastError = err;
         console.warn(`[KnowledgeRouterService] Request ${requestId} attempt ${attempts} failed: ${err.message || String(err)}`);
-        if (attempts > IMAGE_ENGINE_CONFIG.ROUTER_MAX_RETRIES) {
+        if (attempts > maxRetries) {
           break;
         }
       }

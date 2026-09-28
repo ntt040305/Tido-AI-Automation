@@ -184,21 +184,23 @@ function productBox(detail: number[], G: number): Box | null {
   // canvas, so this says nothing instead.
   if (share < 0.01 || share > 0.6) return null;
 
-  const span = (counts: number[]) => {
-    const floor = Math.max(1, Math.round(busy / G / 6));
+  const span = (counts: number[], isRow = false) => {
+    const peak = Math.max(...counts);
+    // Narrow vertical features like bottle necks have fewer busy cells across than a wide base.
+    const floor = isRow ? Math.max(2, Math.min(4, Math.round(peak * 0.12))) : Math.max(2, Math.round(peak * 0.22));
     let lo = 0;
     let hi = G - 1;
     while (lo < hi && counts[lo] < floor) lo++;
     while (hi > lo && counts[hi] < floor) hi--;
     return [lo, hi] as const;
   };
-  const [x0, x1] = span(cols);
-  const [y0, y1] = span(rows);
+  const [x0, x1] = span(cols, false);
+  const [y0, y1] = span(rows, true);
   // A box that covers three quarters of the frame is not a product, it is a
   // frame that is busy everywhere. Returning it would push every line off the
   // canvas chasing clear space that does not exist, so this says nothing
   // instead and lets the contrast path protect the type.
-  if (((x1 - x0 + 1) * (y1 - y0 + 1)) / (G * G) > 0.75) return null;
+  if (((x1 - x0 + 1) * (y1 - y0 + 1)) / (G * G) > 0.85) return null;
   const toPct = (v: number) => (v / G) * 100;
   return {
     x: Math.round(toPct(x0)),

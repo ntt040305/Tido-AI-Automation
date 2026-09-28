@@ -277,8 +277,8 @@ async function main() {
       try {
         c.judged = await judgeRender(img, brief);
         console.log(`  scored ${c.brief_id}: ${mean(c.judged.map((s) => s.score))}`);
-      } catch (e) {
-        c.judge_error = e instanceof Error ? e.message : String(e);
+      } catch (e: any) {
+        c.judge_error = e?.message ?? (e instanceof Error ? e.message : String(e));
         console.log(`  ! ${c.brief_id}: ${c.judge_error}`);
       }
     }

@@ -235,8 +235,8 @@ export interface LayoutInput {
 const pct = (v: number, total: number) => (v / 100) * total;
 const round = (n: number) => Math.round(n * 100) / 100;
 
-/** Gap below a block, as a fraction of its own size. Larger after a headline. */
-const GAP_AFTER: Record<Role, number> = { headline: 0.55, subheadline: 0.45, body: 0.4, cta: 0.3 };
+/** Gap below a block, as a fraction of its own size. Optical grouping pairs headline and subheadline closely. */
+const GAP_AFTER: Record<Role, number> = { headline: 0.3, subheadline: 0.35, body: 0.4, cta: 0.3 };
 
 /**
  * Sets the column. Pure and total.
@@ -270,7 +270,7 @@ export function layoutText(input: LayoutInput): LayoutResult {
     // other part of the frame scored a fraction higher -- the pre-render plan
     // is what the picture was composed for, and second-guessing it by a point
     // would undo the composition the prompt bought.
-    if (crosses > 0.18 || score < 6) {
+    if (crosses > 0.04 || score < 6) {
       // Moving is tried at the planned width first, then at progressively
       // narrower columns. A designer whose column will not fit beside the
       // product narrows the column; they do not set the headline across the
@@ -299,7 +299,7 @@ export function layoutText(input: LayoutInput): LayoutResult {
         score = chosen.score;
         notes.push(
           [
-            crosses > 0.18
+            crosses > 0.04
               ? `the copy column was moved clear of the product: ${Math.round(crosses * 100)}% of the planned area fell across it`
               : "the copy column was moved to the quietest area of the render; the planned area was too busy to carry type",
             narrowed ? `and narrowed to ${Math.round(chosen.width)}% of the frame to fit beside it` : "",
@@ -307,7 +307,7 @@ export function layoutText(input: LayoutInput): LayoutResult {
             .filter(Boolean)
             .join(" "),
         );
-      } else if (crosses > 0.18) {
+      } else if (crosses > 0.04) {
         notes.push(`the planned copy area crosses the product by ${Math.round(crosses * 100)}% and no clearer area exists in the frame at any usable width`);
       }
     }
@@ -316,7 +316,6 @@ export function layoutText(input: LayoutInput): LayoutResult {
   const colX = pct(column.x, W);
   let colYPct = column.y;
   const colW = pct(column.width, W);
-  const colH = pct(column.height, H);
 
   // ── one more relief, vertical only ───────────────────────────────────────
   //
@@ -328,7 +327,7 @@ export function layoutText(input: LayoutInput): LayoutResult {
   if (input.map?.product && !moved) {
     const product = input.map.product;
     const current = overlapShare({ ...column, y: colYPct }, product);
-    if (current > 0.18) {
+    if (current > 0.04) {
       let bestY = colYPct;
       let bestOverlap = current;
       const step = 100 / input.map.size;
@@ -347,6 +346,7 @@ export function layoutText(input: LayoutInput): LayoutResult {
     }
   }
   const colY = pct(colYPct, H);
+  const colH = pct(column.height, H);
 
   // ── one base size for the whole column ───────────────────────────────────
   //
@@ -419,6 +419,20 @@ export function layoutText(input: LayoutInput): LayoutResult {
   // taller reserved area reads as a mistake, not as a choice.
   let cursor = colY + Math.max(0, (colH - totalH) / 2);
 
+  // Column-level dominant ink polarity: all un-plated text in the same column
+  // shares a unified light-or-dark polarity so headlines and subheadlines do not
+  // invert black/white within the same reading group.
+  const colBoxPct: Box = {
+    x: (colX / W) * 100,
+    y: (colY / H) * 100,
+    width: (colW / W) * 100,
+    height: (colH / H) * 100,
+  };
+  const colBehind = input.map ? regionOf(input.map, colBoxPct) : null;
+  const colLum = colBehind ? colBehind.luminance : 1;
+  const colBehindHex = grey(colLum);
+  const colPrefersDark = colLum >= 0.55;
+
   const out: LaidOutBlock[] = [];
   for (let i = 0; i < wrapped.length; i++) {
     const { block: b, lines, size } = wrapped[i];
@@ -426,7 +440,11 @@ export function layoutText(input: LayoutInput): LayoutResult {
     const height = lines.length * lineH;
     const widest = Math.max(...lines.map((l) => measure(l, size, b.font_weight, b.letter_spacing)));
     const width = Math.min(colW, Math.ceil(widest));
-    const x = b.alignment === "left" ? colX : b.alignment === "right" ? colX + colW - width : colX + (colW - width) / 2;
+    const effectiveAlign =
+      b.alignment === "center" && (colX > W * 0.35 || colX + colW < W * 0.65) && colW < W * 0.55
+        ? "left"
+        : b.alignment;
+    const x = effectiveAlign === "left" ? colX : effectiveAlign === "right" ? colX + colW - width : colX + (colW - width) / 2;
     const y = cursor;
 
     // ── ink and contrast, against what this block will actually sit on ─────
@@ -456,24 +474,25 @@ export function layoutText(input: LayoutInput): LayoutResult {
         because: "the action is set on a solid plate, the highest-contrast element in the frame",
       };
     } else {
-      const lum = behind ? behind.luminance : 1;
+      const lum = behind ? behind.luminance : colLum;
       const behindHex = grey(lum);
       const dark = "#111111";
       const light = "#ffffff";
-      const candidates = brand ? [brand, contrastRatio(dark, behindHex) >= contrastRatio(light, behindHex) ? dark : light] : [dark, light];
-      color = candidates.reduce((best, c) => (contrastRatio(c, behindHex) > contrastRatio(best, behindHex) ? c : best), candidates[0]);
+      const preferred = colPrefersDark ? dark : light;
+      if (brand && contrastRatio(brand, behindHex) >= 4.5) {
+        color = brand;
+      } else {
+        color = preferred;
+      }
       ratio = contrastRatio(color, behindHex);
 
-      // Headline-size type is legible at 3:1; everything else needs 4.5:1. A
-      // busy region needs more than a ratio can express, so detail counts too.
-      const floor = size >= Math.min(W, H) * 0.045 ? 3 : 4.5;
-      const busy = behind ? behind.detail > 0.22 : false;
-      // A line lying across a tonal edge -- half on the lit product, half on a
-      // shadowed ground -- averages to a comfortable mid-tone and passes the
-      // ratio while being illegible over half its length. The mean cannot see
-      // that; the spread can.
-      const uneven = behind ? behind.spread > 0.18 : false;
-      if (ratio < floor || busy || uneven) {
+      // Headline and subheadline display type (>= 24px) is legible at 3:1;
+      // small body detail needs 4.5:1.
+      const floor = size >= Math.min(W, H) * 0.024 ? 3 : 4.5;
+      const busy = behind ? behind.detail > 0.35 : false;
+      const uneven = behind ? behind.spread > 0.30 : false;
+      const crossesProduct = input.map?.product ? overlapShare(boxPct, input.map.product) >= 0.18 : false;
+      if (ratio < floor || crossesProduct || (ratio < 4.5 && (busy || uneven))) {
         const wash = color === "#ffffff" ? "#000000" : "#ffffff";
         const padX = Math.round(size * 0.6);
         const padY = Math.round(size * 0.35);
@@ -481,15 +500,17 @@ export function layoutText(input: LayoutInput): LayoutResult {
           fill: wash,
           // Enough to carry the line, not enough to read as a box: measured
           // against how far the region falls short.
-          opacity: Math.min(0.62, Math.max(0.28, (floor - Math.min(ratio, floor)) / floor + (busy ? 0.22 : 0) + (uneven ? 0.18 : 0))),
+          opacity: Math.min(0.62, Math.max(0.28, (floor - Math.min(ratio, floor)) / floor + (busy ? 0.22 : 0) + (uneven || crossesProduct ? 0.18 : 0))),
           radius: Math.round(size * 0.2),
           x: Math.round(x - padX), y: Math.round(y - padY),
           width: Math.round(width + padX * 2), height: Math.round(height + padY * 2),
-          because: busy
-            ? "the render is too detailed behind this line to carry it unaided"
-            : uneven
-              ? "this line lies across a tonal edge in the render: half of it would read and half would not"
-              : `the line reached ${round(ratio)}:1 against the picture, below the ${floor}:1 it needs`,
+          because: crossesProduct
+            ? "this line crosses the product and needs protection to remain legible"
+            : busy
+              ? "the render is too detailed behind this line to carry it unaided"
+              : uneven
+                ? "this line lies across a tonal edge in the render: half of it would read and half would not"
+                : `the line reached ${round(ratio)}:1 against the picture, below the ${floor}:1 it needs`,
         };
         const washed = mix(grey(lum), wash, scrim.opacity);
         ratio = contrastRatio(color, washed);
@@ -508,7 +529,7 @@ export function layoutText(input: LayoutInput): LayoutResult {
       letter_spacing: b.letter_spacing,
       font_family: b.font_family,
       font_fallback: b.font_fallback,
-      align: b.alignment,
+      align: effectiveAlign,
       color,
       contrast: round(ratio),
       x: Math.round(x),

@@ -1,42 +1,678 @@
-CURRENT
+PHASE 5.5.5 — Experience Consolidation
+Trạng thái: ✅ HOÀN THÀNH
+Mục tiêu:
 
-Fix proxy
+Chỉ còn một creative pipeline duy nhất.
 
-↓
+Trước:
 
-Live verify Hybrid Typography
+Stable
+ |
+ Experience
 
-↓
+Sau:
 
-Complete Phase 5.6
-
-    5.6.4 Font Pipeline
-
-    5.6.5 Composition Plan
-
-    Prompt Ownership
-
+User
 
 ↓
 
-Real Creative Baseline
+Experience Creative Pipeline
 
 ↓
 
-Phase 7 Composition Intelligence
+Creative Intelligence
 
 ↓
 
-Phase 6 Creative Intelligence
+Composition
 
 ↓
 
-Phase 8 Vision Loop
+Typography
 
 ↓
 
-Phase 9 Memory
+Render
 
 ↓
 
-Phase 10 Production
+Vision
+Đã hoàn thành:
+
+✅ Experience trở thành production pipeline
+
+✅ Xóa Stable creative pipeline
+
+✅ Xóa routing phân nhánh
+
+✅ Xóa editable export complexity
+
+✅ Giữ lại:
+
+TypographyPlan
+CompositionMap
+TextLayoutEngine
+TypographyCritique
+PHASE 5.6 — Creative Foundation Upgrade
+Trạng thái: đang thực hiện
+
+Mục tiêu:
+
+Xây nền móng để AI suy nghĩ như designer.
+
+Không làm:
+
+"render xong rồi sửa"
+
+Mà:
+
+"thiết kế trước rồi render".
+
+5.6.1 — Prompt Architecture & Intelligence Ownership
+Mục tiêu:
+
+Một thông tin chỉ có một nơi chịu trách nhiệm.
+
+Hiện tại:
+
+Compiler
+Composer
+Blueprint
+Directive
+
+cùng nói về:
+- concept
+- layout
+- typography
+- art direction
+
+Cần chuyển thành:
+
+Creative Director
+        |
+        |
+Creative Decisions
+
+        |
+        |
+Prompt Assembler
+
+        |
+        |
+Image Model
+Ownership:
+Creative Concept
+
+Owner:
+
+Creative Director
+
+Product Truth
+
+Owner:
+
+Product Intelligence
+
+Composition
+
+Owner:
+
+Composition Planner
+
+Typography Direction
+
+Owner:
+
+Typography Intelligence
+
+Exact User Text
+
+Owner:
+
+Typography Renderer
+
+Hard Requirements
+
+Owner:
+
+System Constraint Layer
+
+Kết quả:
+
+Prompt:
+
+từ khoảng 32k
+
+↓
+
+mục tiêu:
+
+18-22k
+
+nhưng không giảm chất lượng.
+
+5.6.2 — Hybrid Typography Architecture
+Trạng thái: đang xây
+
+Mục tiêu:
+
+Image model không còn chịu trách nhiệm tạo chữ.
+
+Sai:
+
+Prompt
+
++
+Text
+
+↓
+
+Image AI tự viết chữ
+
+Đúng:
+
+Creative Direction
+
+↓
+
+Typography Intelligence
+
+↓
+
+Image AI tạo không gian
+
+↓
+
+Typography Engine đặt chữ
+
+Image AI nhận:
+
+Reserve elegant upper-left negative space
+for premium Vietnamese typography
+
+Không nhận:
+
+Write:
+"SUMMER SALE 50%"
+5.6.3 — Typography Intelligence Foundation
+(Bổ sung mới)
+
+Đây là thay đổi lớn nhất.
+
+Trước đây:
+
+Typography = Font + Position
+
+Sai.
+
+Typography phải là:
+
+Visual Language.
+A. Font Intelligence
+
+Đã làm:
+
+Vietnamese glyph
+font coverage
+category-aware font
+
+Ví dụ:
+
+Food:
+
+không dùng font lỗi tiếng Việt.
+
+B. Typography Personality Engine
+
+AI quyết định:
+
+Typography DNA.
+
+Ví dụ:
+
+Cloud / Dream
+
+Output:
+
+personality:
+ethereal
+
+font:
+soft rounded
+
+spacing:
+wide
+
+movement:
+floating
+
+effect:
+mist glow
+
+relationship:
+blend with atmosphere
+Luxury
+editorial
+
+high contrast serif
+
+large spacing
+
+gold foil
+
+minimal
+Energy
+bold
+
+compressed
+
+dynamic
+
+motion
+C. Typography Material Intelligence
+
+Cho phép AI hiểu:
+
+cloud
+glass
+metallic
+gold foil
+neon
+paper
+emboss
+organic
+D. Typography Composition Relationship
+
+Typography hiểu:
+
+sản phẩm
+ánh sáng
+background
+camera
+
+Ví dụ:
+
+Luxury:
+
+Không đè sản phẩm.
+
+Energy:
+
+Có thể tương tác motion.
+
+5.6.4 — Composition Plan
+(Bắt buộc)
+
+Đây là cầu nối giữa:
+
+Creative Brain
+
+và
+
+Image Model.
+
+Trước render phải có:
+
+{
+hero_product:"",
+camera:"",
+lighting:"",
+text_zone:"",
+negative_space:"",
+supporting_elements:"",
+visual_hierarchy:""
+}
+
+Composition quyết định:
+
+sản phẩm ở đâu
+chữ ở đâu
+khoảng trống bao nhiêu
+ánh sáng hướng nào
+5.6.5 — Validation Framework
+
+Mọi thay đổi phải đo.
+
+Benchmark:
+
+12-20 creative briefs.
+
+Đánh giá:
+
+Creative
+originality
+concept strength
+Design
+composition
+hierarchy
+Product
+clarity
+truth
+Typography
+beauty
+integration
+Commercial
+advertising quality
+Sau Phase 5.6
+
+Hệ thống đạt:
+
+"AI biết thiết kế trước khi vẽ".
+
+PHASE 7 — Composition Intelligence Upgrade
+Mục tiêu:
+
+Biến AI thành Art Director.
+
+7.1 Master Composition Planner
+
+AI quyết định:
+
+Hero Product
+position
+scale
+angle
+Camera
+macro
+cinematic
+lifestyle
+studio
+Lighting
+soft
+dramatic
+premium
+Space
+negative space
+typography zone
+7.2 Asset Intelligence
+
+AI hiểu:
+
+Upload:
+
+chai nước
+
+không chỉ là:
+
+"một cái chai"
+
+Mà:
+
+brand
+packaging
+logo
+material
+identity
+7.3 Visual Storytelling Engine
+
+Nâng cấp:
+
+Từ:
+
+Product + Background
+
+thành:
+
+Product World
+
+Ví dụ:
+
+Coffee:
+
+Không chỉ:
+
+ly cafe
+
+Mà:
+
+buổi sáng
+ánh nắng
+hơi lạnh
+lifestyle
+PHASE 6 — Creative Intelligence Upgrade
+
+(Đổi thứ tự so với roadmap cũ)
+
+Lý do:
+
+Creative tốt cần nền composition tốt.
+
+6.1 Creative Opportunity
+
+Input:
+
+Concept thô
+
+Output:
+
+Audience
+
+Emotion
+
+Marketing goal
+
+Creative opportunity
+
+Visual direction
+
+Ví dụ:
+
+"Serum dưỡng da"
+
+Không:
+
+"chai serum đẹp"
+
+Mà:
+
+"ritual chăm sóc bản thân cao cấp"
+
+6.2 Category Intelligence
+
+AI hiểu ngành:
+
+Beauty:
+
+luxury
+clean
+skin
+
+Food:
+
+appetite
+texture
+
+Technology:
+
+innovation
+
+Fashion:
+
+editorial
+6.3 Direction Scoring
+
+Không chọn ý tưởng đầu tiên.
+
+Tạo:
+
+A:
+
+Minimal luxury
+
+B:
+
+Dynamic
+
+C:
+
+Lifestyle
+
+Chấm:
+
+originality
+brand fit
+commercial potential
+PHASE 8 — Senior Designer Vision Loop
+
+Mục tiêu:
+
+AI tự review như Art Director.
+
+Không chỉ:
+
+"ảnh có lỗi không?"
+
+Mà hỏi:
+
+Creative:
+
+Có đáng nhớ không?
+
+Composition:
+
+Có đúng hierarchy không?
+
+Typography:
+
+Có hòa vào thiết kế không?
+
+Commercial:
+
+Có thể chạy quảng cáo không?
+
+Correction:
+
+Minor:
+
+chỉnh typography
+chỉnh layout
+
+Major:
+
+rerender
+PHASE 9 — Memory & Learning
+
+Không train model.
+
+Xây Creative Memory.
+
+9.1 User Preference Memory
+
+Nhớ:
+
+style thích
+màu
+density
+composition
+9.2 Creative Pattern Memory
+
+Nhớ:
+
+Những pattern tạo ảnh tốt.
+
+Ví dụ:
+
+"Beauty luxury thường đạt điểm cao khi..."
+
+9.3 Brand Memory
+
+Nhớ:
+
+logo
+màu
+font
+tone
+forbidden rules
+PHASE 10 — Production Hardening
+
+Sau khi chất lượng đạt.
+
+Speed
+caching
+parallel
+optimization
+Cost
+giảm LLM call không cần thiết
+routing thông minh
+Security
+auth
+rate limit
+API protection
+Monitoring
+
+Theo dõi:
+
+quality score
+failures
+latency
+cost
+KIẾN TRÚC CUỐI CÙNG MỤC TIÊU
+USER BRIEF
+
+↓
+
+Creative Understanding
+
+↓
+
+Creative Director
+
+↓
+
+Creative Opportunity
+
+↓
+
+Composition Planner
+
+↓
+
+Typography Intelligence
+
+↓
+
+Prompt Assembler
+
+↓
+
+Image Generation
+
+↓
+
+Typography Rendering
+
+↓
+
+Vision Critique
+
+↓
+
+Correction Loop
+
+↓
+
+Memory
+
+↓
+
+FINAL COMMERCIAL ARTWORK
+Một thay đổi quan trọng so với roadmap cũ
+
+Trước:
+
+Image AI
++
+Text Engine
+
+Sau:
+
+Creative Brain
+
++
+Composition Brain
+
++
+Typography Brain
+
++
+Vision Brain

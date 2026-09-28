@@ -291,11 +291,29 @@ export function selectFont(input: FontSelectionInput): FontChoice {
 export function selectPairing(input: FontSelectionInput): { heading: FontChoice; body: FontChoice } {
   const heading = selectFont({ ...input, role: "heading" });
   let body = selectFont({ ...input, role: "body" });
+
+  // A serif heading needs a calm, neutral sans companion (like Segoe UI) rather than
+  // an idiosyncratic flared humanist face (like Candara), which creates an unresolved clash.
+  if (heading.class === "serif" && body.class === "humanist") {
+    const vi = needsVietnamese(input.lines || []);
+    const neutralSans = FONT_CATALOGUE.find((f) => (vi ? f.vietnamese : true) && f.class === "sans-serif");
+    if (neutralSans) {
+      body = {
+        family: neutralSans.family, class: neutralSans.class, fallback: GENERIC[neutralSans.class],
+        weights: neutralSans.weights, brand_font: false,
+        because: `${neutralSans.because} — clean neutral sans paired against ${heading.family} for harmonious hierarchy`,
+      };
+    }
+  }
+
   if (body.family === heading.family) {
     // One family throughout is a legitimate choice, but hierarchy then rests
     // entirely on weight and size. Prefer a companion when one is available.
     const vi = needsVietnamese(input.lines || []);
     const companion = FONT_CATALOGUE.find(
+      (f) => (vi ? f.vietnamese : true) && f.family !== heading.family &&
+        (heading.class === "serif" ? f.class === "sans-serif" : f.class === "serif"),
+    ) || FONT_CATALOGUE.find(
       (f) => (vi ? f.vietnamese : true) && f.family !== heading.family &&
         (heading.class === "serif" ? f.class !== "serif" : f.class === "serif" || f.class === "humanist"),
     );

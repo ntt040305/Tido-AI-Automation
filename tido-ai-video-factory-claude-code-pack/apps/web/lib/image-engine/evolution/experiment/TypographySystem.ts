@@ -299,10 +299,10 @@ function zoneFor(role: TextRole, geometry: LayoutGeometry | null | undefined): Z
   return ZONE_FALLBACK[role].find((n) => geometry.zones.some((z) => z.name === n)) ?? ZONE_OF[role];
 }
 
-/** Scale relative to the smallest text. Wider spread where density is lower. */
+/** Scale relative to the smallest text. Clear >= 2.2x ratio between headline and subheadline. */
 function scaleFor(role: TextRole, density: string): number {
   const sparse = /one idea|single|only|room/i.test(density);
-  const base: Record<TextRole, number> = { headline: sparse ? 3.2 : 2.4, subheadline: 1.6, cta: 1.3, body: 1 };
+  const base: Record<TextRole, number> = { headline: sparse ? 3.2 : 2.8, subheadline: 1.25, cta: 1.2, body: 1 };
   return base[role];
 }
 

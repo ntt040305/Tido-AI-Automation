@@ -436,7 +436,7 @@ export function planEditableDesign(input: PlanInput): EditableDesign {
       // direction said. The DNA reads that personality AND the mood AND the
       // render, so it is the better-informed of the two.
       font_weight: role === "headline" ? dna.treatment.weight : weightOf(role, st.font_weight),
-      line_height: st.line_height || 1.2,
+      line_height: st.line_height ? Math.max(1.28, st.line_height) : (viCopy ? 1.32 : 1.26),
       letter_spacing: role === "headline" ? dna.treatment.tracking || trackingOf(st.letter_spacing) : trackingOf(st.letter_spacing),
       color: normalizeHex(st.color || "") || null,
       plate: plateOf(el),

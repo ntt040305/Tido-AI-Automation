@@ -186,7 +186,20 @@ export class CreativeInterpretationService {
     const rawConcept = input.concept || "";
     const assetType = input.assetType || "poster";
 
-    // Tier 1 — dedicated structured interpretation.
+    // Fast path: reuse the router's multilingual reading of the same brief (0ms overhead)
+    const routerIntent = options?.routerIntent;
+    if (routerIntent && (routerIntent.core_creative_intent || "").trim()) {
+      const locked = this.buildLockedIntentFromRouter(routerIntent, rawConcept, input);
+      console.log("[CREATIVE_INTERPRETATION]", {
+        source: "ROUTER_STRUCTURED_INTENT",
+        subject: locked.subject.join(", ").slice(0, 80),
+        camera_requirements: locked.camera_requirements,
+        lighting_requirements: locked.lighting_requirements,
+      });
+      return this.assemble(rawConcept, assetType, locked, input, "ROUTER_STRUCTURED_INTENT");
+    }
+
+    // Secondary path: dedicated structured interpretation if no router intent was supplied
     try {
       const provider = options?.llmProvider || new LLMProviderService();
       if (provider.isConfigured() && rawConcept.trim()) {
@@ -208,20 +221,7 @@ export class CreativeInterpretationService {
       );
     }
 
-    // Tier 2 — reuse the router's multilingual reading of the same brief.
-    const routerIntent = options?.routerIntent;
-    if (routerIntent && (routerIntent.core_creative_intent || "").trim()) {
-      const locked = this.buildLockedIntentFromRouter(routerIntent, rawConcept, input);
-      console.log("[CREATIVE_INTERPRETATION]", {
-        source: "ROUTER_STRUCTURED_INTENT",
-        subject: locked.subject.join(", ").slice(0, 80),
-        camera_requirements: locked.camera_requirements,
-        lighting_requirements: locked.lighting_requirements,
-      });
-      return this.assemble(rawConcept, assetType, locked, input, "ROUTER_STRUCTURED_INTENT");
-    }
-
-    // Tier 3 — deterministic.
+    // Tier 3 — deterministic fallback.
     console.log("[CREATIVE_INTERPRETATION]", { source: "DETERMINISTIC_FALLBACK" });
     return this.interpret(input);
   }
@@ -331,7 +331,7 @@ Rules:
         { role: "user", content: user },
       ],
       "creative_interpretation",
-      { temperature: 0.2, max_tokens: 900, timeoutMs: 20000 }
+      { temperature: 0.2, max_tokens: 900, timeoutMs: 4000 }
     );
 
     const match = raw.match(/\{[\s\S]*\}/);

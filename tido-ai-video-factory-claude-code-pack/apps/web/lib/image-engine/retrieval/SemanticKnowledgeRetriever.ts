@@ -61,42 +61,53 @@ export class SemanticKnowledgeRetriever {
       return resultsMap;
     }
 
+    // Embed all unique queries in parallel
+    const uniqueQueries = Array.from(new Set(queriesToRun.map((q) => q.query)));
+    const queryVectorMap = new Map<string, number[]>();
+    await Promise.all(
+      uniqueQueries.map(async (query) => {
+        try {
+          const vec = await EmbeddingService.embedQuery(query);
+          queryVectorMap.set(query, vec);
+        } catch (err: any) {
+          console.warn(`Semantic retrieval embedding failed for query '${query}': ${err.message}`);
+        }
+      })
+    );
+
     // Run semantic similarity search per query
     for (const qItem of queriesToRun) {
-      try {
-        const queryVector = await EmbeddingService.embedQuery(qItem.query);
+      const queryVector = queryVectorMap.get(qItem.query);
+      if (!queryVector) continue;
 
-        for (const block of activeBlocks) {
-          const docVector = indexVectorMap.get(block.metadata.id);
-          if (!docVector) continue;
+      for (const block of activeBlocks) {
+        const docVector = indexVectorMap.get(block.metadata.id);
+        if (!docVector) continue;
 
-          const sim = CosineSimilarity.compute(queryVector, docVector);
-          const weightedSim = Math.max(0, sim) * qItem.weight;
+        const sim = CosineSimilarity.compute(queryVector, docVector);
+        const weightedSim = Math.max(0, sim) * qItem.weight;
 
-          if (weightedSim >= 0.35) { // Minimum semantic threshold
-            const existing = resultsMap.get(block.metadata.id) || {
-              blockId: block.metadata.id,
-              semanticScore: 0,
-              matchedQueries: [],
-              selectionReasons: [],
-              maxQueryImportance: 0,
-            };
+        if (weightedSim >= 0.35) { // Minimum semantic threshold
+          const existing = resultsMap.get(block.metadata.id) || {
+            blockId: block.metadata.id,
+            semanticScore: 0,
+            matchedQueries: [],
+            selectionReasons: [],
+            maxQueryImportance: 0,
+          };
 
-            existing.semanticScore = Math.max(existing.semanticScore, Number(weightedSim.toFixed(3)));
-            existing.maxQueryImportance = Math.max(existing.maxQueryImportance, qItem.weight);
+          existing.semanticScore = Math.max(existing.semanticScore, Number(weightedSim.toFixed(3)));
+          existing.maxQueryImportance = Math.max(existing.maxQueryImportance, qItem.weight);
 
-            if (!existing.matchedQueries.includes(qItem.query)) {
-              existing.matchedQueries.push(qItem.query);
-              existing.selectionReasons.push(
-                `Strong semantic match (${Math.round(sim * 100)}%) to ${qItem.label} query: "${qItem.query}"`
-              );
-            }
-
-            resultsMap.set(block.metadata.id, existing);
+          if (!existing.matchedQueries.includes(qItem.query)) {
+            existing.matchedQueries.push(qItem.query);
+            existing.selectionReasons.push(
+              `Strong semantic match (${Math.round(sim * 100)}%) to ${qItem.label} query: "${qItem.query}"`
+            );
           }
+
+          resultsMap.set(block.metadata.id, existing);
         }
-      } catch (err: any) {
-        console.warn(`Semantic retrieval failed for query '${qItem.query}': ${err.message}`);
       }
     }
 

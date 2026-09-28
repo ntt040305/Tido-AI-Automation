@@ -81,6 +81,10 @@ export const PROMPT_SECTION_POLICY: SectionPolicyRule[] = [
   { match: /^USER BRIEF$/i, tier: TIER_PROTECTED, note: "What the client actually asked for." },
   { match: /^USER HARD REQUIREMENTS$/i, tier: TIER_PROTECTED, note: "Client constraints. Was droppable at priority 2, which meant an oversized prompt could discard the client's own requirements." },
   { match: /^TYPOGRAPHY & READABLE COPY$/i, tier: TIER_PROTECTED, note: "Carries the customer's exact words, which are immutable. Losing it produces an image with wrong or invented text." },
+  { match: /^TYPOGRAPHY ART DIRECTION$/i, tier: TIER_PROTECTED, note: "Protected production-critical typography art direction. Master Prompt single source of typography truth." },
+  { match: /^TYPOGRAPHY$/i, tier: TIER_PROTECTED, note: "Protected typography direction." },
+  { match: /^TEXT IN THE IMAGE.*$/i, tier: TIER_PROTECTED, note: "Immutable text directive." },
+  { match: /^EXACT COPY.*$/i, tier: TIER_PROTECTED, note: "Exact copy mandate." },
 
   { match: /^PRODUCT IDENTITY$/i, tier: TIER_PROTECTED, note: "What the product IS. An image with the wrong product cannot be repaired." },
   { match: /^PRODUCT INSTANCE REQUIREMENTS$/i, tier: TIER_PROTECTED, note: "Identity lock from reference evidence." },

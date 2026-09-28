@@ -478,7 +478,7 @@ const VOICE_BASE: Record<string, { weight: number; tracking: number; contrast: n
   technical: { weight: 500, tracking: 0, contrast: 0.1, humanist: false },
   crafted: { weight: 500, tracking: 0.01, contrast: 0.3, humanist: true },
   direct: { weight: 700, tracking: 0, contrast: 0.2, humanist: false },
-  quiet: { weight: 300, tracking: 0.05, contrast: 0.3, humanist: true },
+  quiet: { weight: 400, tracking: 0.04, contrast: 0.3, humanist: true },
   assertive: { weight: 800, tracking: -0.01, contrast: 0.1, humanist: false },
 };
 
@@ -1081,15 +1081,18 @@ export function treatmentPaint(
     attrs.fill = safe;
   }
 
-  // Transparency thins the fill and keeps an outline, so the shape survives.
+  // Transparency thins the fill; clean vector glyph edges without an artificial outline stroke.
   if (t.translucency >= 0.12) {
     attrs["fill-opacity"] = String(Math.round((1 - 0.5 * t.translucency) * 100) / 100);
-    attrs.stroke = safe;
-    attrs["stroke-width"] = String(n(0.5 + t.translucency));
   }
 
   if (t.softness >= 0.12) {
-    steps.push(`<feGaussianBlur in="${last}" stdDeviation="${n(0.3 + 1.4 * t.softness)}" result="soft"/>`);
+    // Optical edge softening: diffuses subtle ink softness behind the glyph while
+    // keeping the core character sharp and legible (never destroying vector letterform definition).
+    steps.push(`<feGaussianBlur in="${last}" stdDeviation="${n(0.25 + 0.6 * t.softness)}" result="soft_edge"/>`);
+    steps.push(
+      `<feMerge result="soft"><feMergeNode in="soft_edge"/><feMergeNode in="${last}"/></feMerge>`,
+    );
     last = "soft";
   }
   if (t.luminosity >= 0.12) {
@@ -1114,7 +1117,9 @@ export function treatmentPaint(
     last = "relief";
   }
   if (t.contact >= 0.12) {
-    steps.push(...shadow(last, 0, n(1 + 4 * t.contact), n(1 + 4 * t.contact), "#000", round2(0.2 + 0.35 * t.contact), "contact", `${id}_c`));
+    // Restrained ambient grounding shadow, soft blur, subtle optical tint (warm tone on natural scenes, never harsh raw #000 drop-shadow).
+    const shadowColor = t.translucency > 0.3 || t.softness > 0.3 ? "#1e130c" : "#1a1a1a";
+    steps.push(...shadow(last, 0, n(0.8 + 1.6 * t.contact), n(1.2 + 2.4 * t.contact), shadowColor, round2(0.12 + 0.2 * t.contact), "contact", `${id}_c`));
     last = "contact";
   }
 
