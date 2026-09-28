@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { chargeRender } from "@/lib/security/render-rate-limit";
 import { PipelineRouter } from "@/lib/image-engine/evolution/PipelineRouter";
 import { getIdentityProvider, getInfrastructure } from "@tido/infrastructure";
 import { loadKitForIdentity } from "@/lib/user-kit/kit-memory";
@@ -23,6 +24,25 @@ export const runtime = "nodejs";
  */
 export async function POST(req: NextRequest) {
   const T_received = Date.now();
+  // Phase 10.3 — a ceiling on paid renders per caller.
+  //
+  // Anonymous rendering is deliberate on this route and stays that way: this
+  // does not authenticate, it only stops one caller spending without limit.
+  // Its own `identify` call rather than the one further down, because the
+  // charge has to happen before any work, and that one runs after the form is
+  // parsed. A verified person gets their own bucket so they are not starved by
+  // anonymous traffic sharing an address.
+  {
+    const rateIdentity = await getIdentityProvider().identify(req).catch(() => null);
+    const rate = chargeRender(req, rateIdentity?.firebaseUid ?? null);
+    if (!rate.ok) {
+      console.warn("[RATE_LIMIT] paid render refused", { bucket: rate.bucket, retry_after_s: rate.retryAfter });
+      return NextResponse.json(
+        { error: "Too many renders in a short time. Wait a moment and try again." },
+        { status: 429, headers: { "Retry-After": String(rate.retryAfter) } },
+      );
+    }
+  }
   // Phase 5.4. The Brand Kit the client asked for. An id, not a kit: what it
   // resolves to is decided below, against the verified person's workspaces.
   let brandKitId: string | null = null;

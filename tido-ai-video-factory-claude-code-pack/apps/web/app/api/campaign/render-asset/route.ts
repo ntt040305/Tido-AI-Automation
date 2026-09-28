@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getIdentityProvider } from "@tido/infrastructure";
+import { chargeRender } from "@/lib/security/render-rate-limit";
 import { IMAGE_ENGINE_CONFIG } from "@/lib/image-engine/config";
 import { ImgStudioImageGenerationProvider } from "@/lib/image-engine/provider/ImgStudioImageGenerationProvider";
 import { ProviderReferenceImage } from "@/lib/image-engine/provider/ImageGenerationProvider";
@@ -32,6 +34,23 @@ export const runtime = "nodejs";
  */
 export async function POST(req: NextRequest) {
   const startedAt = Date.now();
+  // Phase 10.3 — a ceiling on paid renders per caller.
+  //
+  // Anonymous rendering is deliberate here, so this does not authenticate:
+  // it only stops one caller spending without limit. A verified subject gets
+  // its own bucket so a signed-in person is not starved by anonymous traffic.
+  {
+    const identity = await getIdentityProvider().identify(req).catch(() => null);
+    const rate = chargeRender(req, identity?.firebaseUid ?? null);
+    if (!rate.ok) {
+      console.warn("[RATE_LIMIT] paid render refused", { bucket: rate.bucket, retry_after_s: rate.retryAfter });
+      return NextResponse.json(
+        { error: "Too many renders in a short time. Wait a moment and try again." },
+        { status: 429, headers: { "Retry-After": String(rate.retryAfter) } },
+      );
+    }
+  }
+
   try {
     const contentType = req.headers.get("content-type") || "";
     let prompt = "";
