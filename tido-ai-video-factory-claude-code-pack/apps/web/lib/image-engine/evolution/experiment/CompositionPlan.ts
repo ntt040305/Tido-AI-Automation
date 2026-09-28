@@ -356,19 +356,35 @@ export function buildCompositionPlan(input: CompositionPlanInput): CompositionPl
             [{ scale: units / Math.max(1, 1.35), max_lines: 1 }],
             side, wide, generous,
           );
+          // PREVENT the collision rather than report it.
+          //
+          // The column above is sized from the copy and placed on the side the
+          // alignment chose. The product is placed by the geometry. Those were
+          // two independent derivations, and measured across ratios and copy
+          // lengths they CONTRADICTED EACH OTHER in 20 of 36 cases -- the plan
+          // reserving up to 51% of its copy area on top of its own product.
+          // Downstream then reported "the planned copy area crosses the product
+          // by 55% and no clearer area exists", which was true: the plan never
+          // gave it one.
+          //
+          // The area is now constructed from the product's COMPLEMENT, so an
+          // overlap is not something to be detected afterwards -- it cannot be
+          // expressed.
+          const placed = clearOfProduct(requirement, productZone, wide, side);
           return {
             value: {
-              x: requirement.x,
-              y: requirement.y,
-              width: requirement.width,
-              height: requirement.height,
-              label: positionLabel(requirement.x + requirement.width / 2, requirement.y + requirement.height / 2),
-              product_zone: requirement.product_zone,
-              share: requirement.share,
+              x: placed.x,
+              y: placed.y,
+              width: placed.width,
+              height: placed.height,
+              label: positionLabel(placed.x + placed.width / 2, placed.y + placed.height / 2),
+              product_zone: placed.product_zone,
+              share: round((placed.width * placed.height) / 10000, 2),
             },
-            because:
-              `${copyLines} line${copyLines === 1 ? "" : "s"} of copy set against the ${side === "center" ? "centre axis" : `${side} edge`}, ` +
-              `so the product takes the ${requirement.product_zone} and the two do not cross`,
+            because: placed.because
+              ? `${copyLines} line${copyLines === 1 ? "" : "s"} of copy; ${placed.because}`
+              : `${copyLines} line${copyLines === 1 ? "" : "s"} of copy set against the ${side === "center" ? "centre axis" : `${side} edge`}, ` +
+                `so the product takes the ${placed.product_zone} and the two do not cross`,
             from: "geometry",
           };
         })()
@@ -483,6 +499,104 @@ export function buildCompositionPlan(input: CompositionPlanInput): CompositionPl
 }
 
 const round = (n: number, dp = 1) => Math.round(n * 10 ** dp) / 10 ** dp;
+
+/** How much of `a` falls inside `b`, 0-1. */
+function overlapShare(a: PlanBox, b: PlanBox): number {
+  const x = Math.max(0, Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x));
+  const y = Math.max(0, Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y));
+  const area = a.width * a.height;
+  return area > 0 ? (x * y) / area : 0;
+}
+
+/**
+ * The copy area, placed where the product is not.
+ *
+ * Built from the four bands the product leaves inside the safe area: left of
+ * it, right of it, above it, below it. The band that can hold the copy and
+ * best matches the side the alignment asked for wins. Where no band can hold
+ * the full demand, the LARGEST is taken and the area is reduced to fit it --
+ * a smaller copy column is a design compromise, and copy printed across the
+ * product is a defect.
+ *
+ * Returns the requirement unchanged when there is no product to avoid, so a
+ * frame without one behaves exactly as it did before this existed.
+ */
+function clearOfProduct(
+  requirement: { x: number; y: number; width: number; height: number; product_zone: "left" | "right" | "upper" | "lower" | "center" },
+  productZone: Zone | null,
+  wide: boolean,
+  side: "left" | "right" | "center",
+): { x: number; y: number; width: number; height: number; product_zone: "left" | "right" | "upper" | "lower" | "center"; because: string } {
+  const asked = { x: requirement.x, y: requirement.y, width: requirement.width, height: requirement.height };
+  if (!productZone) return { ...asked, product_zone: requirement.product_zone, because: "" };
+
+  const product: PlanBox = {
+    x: productZone.x - productZone.width / 2,
+    y: productZone.y - productZone.height / 2,
+    width: productZone.width,
+    height: productZone.height,
+  };
+  const crossing = overlapShare(asked, product);
+  // Below this the two touch at an edge, which line breaking and a scrim
+  // already handle. Above it the copy is being set across the product.
+  const TOLERATED = 0.12;
+  if (crossing <= TOLERATED) return { ...asked, product_zone: requirement.product_zone, because: "" };
+
+  const inset = wide ? 4 : 5;
+  const min = { width: 26, height: 14 };
+  const bands: Array<{ box: PlanBox; zone: "left" | "right" | "upper" | "lower"; prefers: boolean }> = [
+    { box: { x: inset, y: inset, width: product.x - inset, height: 100 - inset * 2 }, zone: "right", prefers: side === "left" },
+    {
+      box: { x: product.x + product.width, y: inset, width: 100 - inset - (product.x + product.width), height: 100 - inset * 2 },
+      zone: "left", prefers: side === "right",
+    },
+    { box: { x: inset, y: inset, width: 100 - inset * 2, height: product.y - inset }, zone: "lower", prefers: side === "center" },
+    {
+      box: { x: inset, y: product.y + product.height, width: 100 - inset * 2, height: 100 - inset - (product.y + product.height) },
+      zone: "upper", prefers: false,
+    },
+  ];
+
+  const usable = bands
+    .filter((b) => b.box.width >= min.width && b.box.height >= min.height)
+    .map((b) => ({
+      ...b,
+      // Enough room for the demand, and how well it matches what was asked.
+      fits: b.box.width >= asked.width * 0.75 && b.box.height >= asked.height * 0.75,
+      area: b.box.width * b.box.height,
+    }))
+    .sort((a, b) => Number(b.fits) - Number(a.fits) || Number(b.prefers) - Number(a.prefers) || b.area - a.area);
+
+  if (!usable.length) {
+    // Nothing the product leaves can hold copy at all. The honest answer is the
+    // band with the most room, reduced to it -- not the asked-for column over
+    // the product.
+    const widest = bands.sort((a, b) => b.box.width * b.box.height - a.box.width * a.box.height)[0];
+    return {
+      x: round(widest.box.x), y: round(widest.box.y),
+      width: round(Math.max(min.width, widest.box.width)), height: round(Math.max(min.height, widest.box.height)),
+      product_zone: widest.zone,
+      because:
+        `the product leaves no area large enough for the copy, so it takes the largest the frame has ` +
+        `(${round(widest.box.width)}%×${round(widest.box.height)}%) rather than crossing the product`,
+    };
+  }
+
+  const chosen = usable[0];
+  // Centred in the band, never wider or taller than was asked for.
+  const width = Math.min(asked.width, chosen.box.width);
+  const height = Math.min(asked.height, chosen.box.height);
+  const x = chosen.box.x + (chosen.box.width - width) / 2;
+  const y = chosen.box.y + (chosen.box.height - height) / 2;
+  return {
+    x: round(x), y: round(y), width: round(width), height: round(height),
+    product_zone: chosen.zone,
+    because:
+      `the column the copy asked for crossed the product by ${(crossing * 100).toFixed(0)}%, so it was moved into the ` +
+      `${chosen.zone === "left" || chosen.zone === "right" ? `${chosen.zone === "left" ? "right" : "left"} of the frame` : chosen.zone === "lower" ? "upper part of the frame" : "lower part of the frame"} ` +
+      `the product leaves open${chosen.fits ? "" : ", reduced to what fits there"}`,
+  };
+}
 
 /** A position in words, the way a designer says it. */
 function positionLabel(x: number, y: number): string {

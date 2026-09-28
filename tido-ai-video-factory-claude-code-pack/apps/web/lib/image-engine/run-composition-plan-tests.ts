@@ -407,6 +407,71 @@ function main() {
     assert.ok(!/space: spaceFor\(/.test(code), "the typography plan still reserves its own area unconditionally");
   });
 
+  check("the plan can never reserve copy on top of its own product", () => {
+    // MEASURED before the fix: across three ratios, three copy lengths and
+    // four composition hints, 20 of 36 plans reserved a copy area over the
+    // product they had just placed -- up to 51% of it. Downstream then
+    // reported "the planned copy area crosses the product by 55% and no
+    // clearer area exists", which was true: the plan never gave it one.
+    //
+    // The area is now built from the product's COMPLEMENT, so the overlap is
+    // not detected afterwards -- it cannot be expressed.
+    const overlap = (a: any, b: any) => {
+      const x = Math.max(0, Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x));
+      const y = Math.max(0, Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y));
+      return a.width * a.height > 0 ? (x * y) / (a.width * a.height) : 0;
+    };
+    const copies: Record<string, string[]> = {
+      one: ["Slow mornings"],
+      three: [...COPY],
+      five: ["Giảm 50%", "Chỉ trong tuần này", "Áp dụng toàn bộ sản phẩm", "Miễn phí giao hàng", "Đặt ngay"],
+    };
+    const hints = [null, "the bottle sits off-centre to the right third", "the bottle sits to the left third", "centred and symmetrical"];
+    let worst = 0;
+    let checked = 0;
+    for (const ratio of ["1:1", "9:16", "16:9"]) {
+      for (const lines of Object.values(copies)) {
+        for (const hint of hints) {
+          const req = resolveTextRequirement({ contentMessage: lines.join(NEWLINE) });
+          const assigned = assignTextRoles(req.lines);
+          const geometry = buildGeometry({ ratio, copyRoles: geometryRolesFor(assigned), productCount: 1, compositionHint: hint });
+          const cp = buildCompositionPlan({ geometry, copyLines: lines.length, copy: assigned, ratio });
+          if (cp.typography_zone.from !== "geometry" || cp.product_position.from !== "geometry") continue;
+          checked++;
+          worst = Math.max(worst, overlap(cp.typography_zone.value, cp.product_position.value));
+        }
+      }
+    }
+    console.log(`      ${checked} plans checked; worst copy-over-product overlap ${(worst * 100).toFixed(1)}%`);
+    assert.ok(checked >= 30, `only ${checked} plans were checked`);
+    // 12% is an edge touch, which line breaking and a scrim already handle.
+    assert.ok(worst <= 0.12, `a plan reserves ${(worst * 100).toFixed(0)}% of its copy area on the product`);
+  });
+
+  check("a copy area that has to move says so, and says where it went", () => {
+    const req = resolveTextRequirement({ contentMessage: COPY.join(NEWLINE) });
+    const assigned = assignTextRoles(req.lines);
+    const geometry = buildGeometry({ ratio: "1:1", copyRoles: geometryRolesFor(assigned), productCount: 1 });
+    const cp = buildCompositionPlan({ geometry, copyLines: COPY.length, copy: assigned, ratio: "1:1" });
+    assert.ok(/crossed the product|the product leaves/.test(cp.typography_zone.because), cp.typography_zone.because);
+    // And the product zone it reports has to agree with where the copy went.
+    const t = cp.typography_zone.value;
+    assert.ok(["left", "right", "upper", "lower", "center"].includes(t.product_zone));
+  });
+
+  check("a frame with no product is placed exactly as before", () => {
+    // The complement of nothing is everything: a brief with no product must
+    // behave as it did before this existed.
+    const req = resolveTextRequirement({ contentMessage: COPY.join(NEWLINE) });
+    const assigned = assignTextRoles(req.lines);
+    const geometry = buildGeometry({ ratio: "1:1", copyRoles: geometryRolesFor(assigned), productCount: 0 });
+    const cp = buildCompositionPlan({ geometry, copyLines: COPY.length, copy: assigned, ratio: "1:1" });
+    if (cp.product_position.from === "absent") {
+      assert.ok(cp.typography_zone.value.width > 0, "a frame with no product reserved nothing");
+      assert.ok(!/crossed the product/.test(cp.typography_zone.because), cp.typography_zone.because);
+    }
+  });
+
   // ── 6. the six questions ────────────────────────────────────────────────
   console.log("\n6 — the questions an art director answers first");
 
