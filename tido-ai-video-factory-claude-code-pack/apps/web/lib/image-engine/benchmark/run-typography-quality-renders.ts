@@ -105,7 +105,7 @@ function countLlmCalls(): { stop: () => number } {
   let n = 0;
   proto.generateChatCompletion = function (...args: unknown[]) {
     n++;
-    return original.apply(this, args);
+    return (original as any).apply(this, args);
   };
   return {
     stop: () => {

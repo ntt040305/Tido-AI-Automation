@@ -6,6 +6,8 @@ import type { CreativeQualityScore } from "../../benchmark/CommercialRenderCriti
 import type { CreativeDiagnosis } from "../../benchmark/CreativeDiagnosis";
 import type { ConceptComparison } from "../../benchmark/ConceptEvaluator";
 import type { MarketingBrainStrategy } from "../../llm/prompt-strategy.schema";
+import type { IndustryLandscape } from "./IndustryContextIntelligence";
+import type { CreativeOpportunity } from "./CreativeOpportunity";
 
 /**
  * The creative intelligence, translated for a person.
@@ -75,6 +77,18 @@ export interface CreativeIntelligence {
   /** Every direction considered, the chosen one marked. */
   concepts?: ConceptOption[];
   /**
+   * Phase 6 / New Product Principle: Commercial Category Landscape & Strategic Opportunity.
+   */
+  category_intelligence?: {
+    industry: string;
+    provenance: string;
+    core_opportunity?: string;
+    human_tension?: string;
+    category_relationship?: string;
+    whitespace_leveraged?: string;
+    overused_cliches_avoided?: string[];
+  };
+  /**
    * Present only when something was genuinely undecided.
    *
    * Shown so a professional can see where the system stopped rather than
@@ -128,6 +142,8 @@ export interface IntelligenceInput {
   critic?: CreativeQualityScore | null;
   diagnosis?: CreativeDiagnosis[] | null;
   concepts?: ConceptComparison | null;
+  industryLandscape?: IndustryLandscape | null;
+  creativeOpportunity?: CreativeOpportunity | null;
 }
 
 /**
@@ -251,6 +267,21 @@ export function buildCreativeIntelligence(input: IntelligenceInput): CreativeInt
     };
     const areas = [...new Set(b.missing.map((m) => AREA[m.split(".")[0]]).filter(Boolean))];
     if (areas.length) out.undecided = areas;
+  }
+
+  // ── category context & creative opportunity ────────────────────────────
+  if (input.industryLandscape) {
+    const l = input.industryLandscape;
+    const opp = input.creativeOpportunity;
+    out.category_intelligence = {
+      industry: l.industry_name,
+      provenance: l.provenance,
+      ...(opp?.core_opportunity ? { core_opportunity: opp.core_opportunity } : {}),
+      ...(opp?.human_tension ? { human_tension: opp.human_tension } : {}),
+      ...(opp?.category_relationship ? { category_relationship: opp.category_relationship } : {}),
+      ...(opp?.originality_reason ? { whitespace_leveraged: opp.originality_reason } : {}),
+      ...(l.overused_category_cliches?.length ? { overused_cliches_avoided: l.overused_category_cliches } : {}),
+    };
   }
 
   return out;

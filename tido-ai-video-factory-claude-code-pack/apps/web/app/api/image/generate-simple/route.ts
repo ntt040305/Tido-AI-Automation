@@ -74,7 +74,8 @@ export async function POST(req: NextRequest) {
         copyItems: body.copyItems,
         hardRequirements: body.hardRequirements,
         requestId: body.requestId,
-        marketingContext: body.marketingContext,
+        marketingContext: body.marketingContext || (body.industry ? { industry: body.industry } : undefined),
+        industry: body.industry || body.marketingContext?.industry,
         creativeDirection: body.creativeDirection,
         salesContext: body.salesContext,
       };
@@ -208,6 +209,12 @@ export async function POST(req: NextRequest) {
         })),
       });
 
+      const formIndustry = (formData.get("industry") as string) || undefined;
+      if (formIndustry) {
+        marketingContext = marketingContext || {};
+        marketingContext.industry = formIndustry;
+      }
+
       simpleRequest = {
         images: parsedImages,
         concept,
@@ -217,6 +224,7 @@ export async function POST(req: NextRequest) {
         brandName,
         copyItems,
         marketingContext,
+        industry: marketingContext?.industry || formIndustry,
         creativeDirection,
         salesContext,
       };

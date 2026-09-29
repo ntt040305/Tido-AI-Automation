@@ -45,6 +45,16 @@ import { brandKitBrief, brandKitDirective, brandKitTelemetry } from "./experimen
 import { buildCreativeDocument, documentTelemetry } from "./experiment/CreativeDocument";
 import { critiqueRender, criticTelemetry } from "../benchmark/CommercialRenderCritic";
 import { buildCreativeIntelligence, intelligenceTelemetry, CreativeIntelligence } from "./experiment/CreativeIntelligenceView";
+import {
+  resolveIndustryLandscape,
+  renderIndustryLandscapeForDirector,
+  type IndustryLandscape,
+} from "./experiment/IndustryContextIntelligence";
+import {
+  buildCreativeOpportunity,
+  renderCreativeOpportunityForDirector,
+  type CreativeOpportunity,
+} from "./experiment/CreativeOpportunity";
 import { diagnose } from "../benchmark/CreativeDiagnosis";
 import { RenderQualityJudge } from "../benchmark/RenderQualityJudge";
 import { compareConcepts } from "../benchmark/ConceptEvaluator";
@@ -587,8 +597,10 @@ ${directive}` : withBlueprint;
     designDocument?: unknown,
     compositionPlan?: unknown,
     typographyDna?: unknown,
+    industryLandscape?: unknown,
+    creativeOpportunity?: unknown,
   ): SimpleImageGenerationResultV1 {
-    if (!blueprint && !typography && !geometry && !composition && !assetDna && !prompt && !strategy && !visualDna && !judgment && !designDocument && !compositionPlan && !typographyDna) {
+    if (!blueprint && !typography && !geometry && !composition && !assetDna && !prompt && !strategy && !visualDna && !judgment && !designDocument && !compositionPlan && !typographyDna && !industryLandscape && !creativeOpportunity) {
       return result;
     }
     for (const [key, value] of [
@@ -608,6 +620,8 @@ ${directive}` : withBlueprint;
       // was asked for.
       ["compositionPlan", compositionPlan],
       ["typographyDna", typographyDna],
+      ["industryLandscape", industryLandscape],
+      ["creativeOpportunity", creativeOpportunity],
     ] as const) {
       if (!value) continue;
       Object.defineProperty(result, key, { value, enumerable: false, configurable: true });
@@ -1154,6 +1168,37 @@ ${directive}` : withBlueprint;
       });
     }
 
+    // Phase 6 / New Product Principle: Commercial Industry Context & Creative Opportunity
+    const rawIndustry = request.marketingContext?.industry || (request as any).industry;
+    let industryLandscape: IndustryLandscape | null = null;
+    let creativeOpportunity: CreativeOpportunity | null = null;
+    if (rawIndustry) {
+      industryLandscape = resolveIndustryLandscape(rawIndustry, { userSupplied: rawIndustry });
+      const renderedLandscape = renderIndustryLandscapeForDirector(industryLandscape);
+      if (renderedLandscape) {
+        brief = { ...brief, industryLandscape: renderedLandscape };
+      }
+
+      creativeOpportunity = buildCreativeOpportunity({
+        landscape: industryLandscape,
+        productTruth: productTruthForBrain,
+        productMeaning,
+        marketingInsight,
+        userConcept: request.concept,
+        brandKit: decision.brandKit,
+      });
+      const renderedOpportunity = renderCreativeOpportunityForDirector(creativeOpportunity);
+      if (renderedOpportunity) {
+        brief = { ...brief, creativeOpportunity: renderedOpportunity };
+      }
+      console.log("[EXPERIMENT][INDUSTRY_INTELLIGENCE]", {
+        industry: industryLandscape.industry_name,
+        provenance: industryLandscape.provenance,
+        core_opportunity: creativeOpportunity?.core_opportunity ? creativeOpportunity.core_opportunity.slice(0, 60) : null,
+        human_tension: creativeOpportunity?.human_tension ? creativeOpportunity.human_tension.slice(0, 60) : null,
+      });
+    }
+
     // What the user pinned themselves. A click outranks a decision —
     // `VisualDirectionResolver` already says so, and the loop fix must not
     // quietly invert that for the one case where the preset is legitimate.
@@ -1331,6 +1376,8 @@ ${directive}` : withBlueprint;
               critic: critique,
               diagnosis: diagnose(bp, report, concepts),
               concepts,
+              industryLandscape,
+              creativeOpportunity,
             });
             console.log("[EXPERIMENT][CREATIVE_INTELLIGENCE]", intelligenceTelemetry(capturedIntelligence));
           }
@@ -1654,7 +1701,15 @@ ${text || ""}`,
         // Evaluated on what the director actually wrote, so a route that
         // invented text is marked down and the record says so; then held to
         // the requirement before anything renders.
-        const evaluation = evaluateDirections(j, { evidence: decision.routeEvidence, productObserved, directorMs, textRequirement, brandKit: decision.brandKit });
+        const evaluation = evaluateDirections(j, {
+          evidence: decision.routeEvidence,
+          productObserved,
+          directorMs,
+          textRequirement,
+          brandKit: decision.brandKit,
+          industryLandscape,
+          creativeOpportunity,
+        });
         console.log("[EXPERIMENT][DIRECTOR_EVALUATION]", evaluationTelemetry(evaluation));
         const enforced = enforceTextRequirement(applyEvaluation(j, evaluation), textRequirement);
         if (enforced.removed.length) {
@@ -1762,6 +1817,8 @@ ${text || ""}`,
           capturedDocument,
           capturedCompositionPlan,
           capturedDocument?.editable?.typography_dna ?? null,
+          industryLandscape,
+          creativeOpportunity,
         );
       } catch (err: any) {
         console.error("[EVOLUTION][EXPERIMENT] generation failed", {
@@ -1920,6 +1977,8 @@ ${text || ""}`,
         capturedDocument,
         capturedCompositionPlan,
         capturedDocument?.editable?.typography_dna ?? null,
+        industryLandscape,
+        creativeOpportunity,
       );
     } catch (err: any) {
       console.error("[EVOLUTION][EXPERIMENT] generation failed", {

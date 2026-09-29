@@ -13,11 +13,16 @@ export type AssetType =
 export type IndustryType =
   | "food_beverage"
   | "beauty_skincare"
+  | "coffee_tea"
   | "fashion_apparel"
   | "electronics_tech"
+  | "fmcg"
+  | "home_lifestyle"
   | "healthcare_wellness"
   | "real_estate"
-  | "education";
+  | "education"
+  | "other"
+  | (string & {});
 
 export type CampaignObjective =
   | "awareness"

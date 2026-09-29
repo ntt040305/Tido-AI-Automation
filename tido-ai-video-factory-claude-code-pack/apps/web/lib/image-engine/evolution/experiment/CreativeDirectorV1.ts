@@ -5,6 +5,7 @@ import {
   unauthorizedText,
   type TextRequirement,
 } from "../../compiler/ExactCopyIntegrityValidator";
+import { diversifyCandidateSet } from "./DirectionDiversity";
 
 /**
  * Creative Judgment V1 — exploration, reasoning, and the generic check.
@@ -391,6 +392,8 @@ export interface DirectorBriefInput {
   useCase?: string;
   aspectRatio?: string;
   industry?: string;
+  industryLandscape?: string;
+  creativeOpportunity?: string;
   objective?: string;
   audience?: string;
 }
@@ -638,6 +641,15 @@ is shuffled every time, so the first is not the recommended one.
 
 Develop THREE of them into real directions. Say why those three are the three
 worth developing for THIS brief — not why they are interesting in general.
+
+ANTI-TEMPLATE PRINCIPLE & DIVERSITY:
+Industry context describes the commercial landscape, conventions, and consumer tensions.
+It is NOT a visual style template. Do NOT default to category clichés (e.g. coffee steam/beans,
+skincare pale minimal beige, tech blue neon). The candidates must differ in:
+- STRATEGIC IDEA (the core mechanism solving the brief)
+- VISUAL METAPHOR & SCENE (not merely surface colour or lighting tweaks)
+- CATEGORY RELATIONSHIP (whether the route respects, reinterprets, contrasts, or disrupts conventions)
+- EMOTIONAL TERRITORY & CONSUMER TENSION
 
 A direction is not finished at what happens in the frame. Say how it is
 RENDERED as well: the light, the distance, the surface, the colour. "A bottle on
@@ -1112,6 +1124,8 @@ ${shape.join(",\n")}
           : "",
       brief.brandName ? `BRAND: ${brief.brandName}` : "",
       brief.industry ? `INDUSTRY: ${brief.industry}` : "",
+      brief.industryLandscape ? `\n${brief.industryLandscape}` : "",
+      brief.creativeOpportunity ? `\n${brief.creativeOpportunity}` : "",
       brief.objective ? `CAMPAIGN OBJECTIVE: ${brief.objective}` : "",
       brief.audience ? `AUDIENCE: ${brief.audience}` : "",
       // The context replaces the bare label when it is available: printing both
@@ -1272,7 +1286,11 @@ ${user}`);
         ) {
           return null;
         }
-        return { ...parsed, directions } as CreativeJudgment;
+        const judgment = { ...parsed, directions } as CreativeJudgment;
+        if (judgment.strategy?.candidates && judgment.strategy.candidates.length > 1) {
+          judgment.strategy.candidates = diversifyCandidateSet(judgment.strategy.candidates).candidates;
+        }
+        return judgment;
       } catch {
         return null;
       }

@@ -42,6 +42,7 @@ export function CreativeBriefPanel({
   onUpdateAssetType,
   onUpdateCreativeConcept,
   onUpdateAssetConfiguration,
+  onUpdateMarketingContext,
   onUpdateCreativeDirection,
   onUpdateContentMessage,
   onUpdateBrandIdentity,
@@ -50,6 +51,7 @@ export function CreativeBriefPanel({
   const currentConcept = brief.creative_concept || brief.user_notes || "";
   const currentProductCount = brief.creative_direction?.target_product_count ?? 1;
   const currentAspectRatio = brief.creative_direction?.aspect_ratio ?? "4:5";
+  const currentIndustry = brief.marketing_context?.industry || "";
 
   const [isProfessionalizing, setIsProfessionalizing] = useState(false);
   const [professionalResult, setProfessionalResult] = useState<{
@@ -72,6 +74,17 @@ export function CreativeBriefPanel({
       execution_reasoning?: string;
     };
   } | null>(null);
+
+  const INDUSTRY_OPTIONS: Array<{ id: string; label: string; icon: string }> = [
+    { id: "beauty_skincare", label: "Làm đẹp & Skincare", icon: "✨" },
+    { id: "food_beverage", label: "Ẩm thực & F&B", icon: "🍽️" },
+    { id: "coffee_tea", label: "Cà phê & Trà", icon: "☕" },
+    { id: "fashion_apparel", label: "Thời trang & Phụ kiện", icon: "👗" },
+    { id: "electronics_tech", label: "Công nghệ & Điện tử", icon: "⚡" },
+    { id: "fmcg", label: "Hàng tiêu dùng (FMCG)", icon: "📦" },
+    { id: "home_lifestyle", label: "Nhà cửa & Đời sống", icon: "🏡" },
+    { id: "other", label: "Khác / Đa ngành", icon: "🌐" },
+  ];
 
   const PRODUCT_COUNT_OPTIONS: Array<{ label: string; value: number | "multiple" }> = [
     { label: "1 sản phẩm", value: 1 },
@@ -156,6 +169,39 @@ export function CreativeBriefPanel({
           <h2 className="text-[18px] font-bold text-text tracking-tight mt-0.5">
             Yêu cầu Sản xuất Visual AI
           </h2>
+        </div>
+      </div>
+
+      {/* 0. Industry / Category Context */}
+      <div className="space-y-2.5">
+        <div className="flex items-center justify-between">
+          <label className="text-[13.5px] font-semibold text-text flex items-center gap-1.5">
+            <span aria-hidden>🏢</span>
+            <span>Ngành hàng & Lĩnh vực (Industry Context)</span>
+          </label>
+          <span className="text-[11px] text-text3 font-medium">
+            Ngữ cảnh thị trường, không áp đặt phong cách
+          </span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {INDUSTRY_OPTIONS.map((opt) => {
+            const isActive = currentIndustry === opt.id;
+            return (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => onUpdateMarketingContext({ industry: opt.id })}
+                className={`py-2 px-3 rounded-xl border text-[12.5px] font-medium transition-all cursor-pointer outline-none flex items-center gap-2 ${
+                  isActive
+                    ? "bg-accent/15 border-accent text-white shadow-sm ring-1 ring-accent/40 font-semibold"
+                    : "bg-surface2/60 border-borderStrong text-text2 hover:bg-surface2 hover:text-text"
+                }`}
+              >
+                <span>{opt.icon}</span>
+                <span className="truncate">{opt.label}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 

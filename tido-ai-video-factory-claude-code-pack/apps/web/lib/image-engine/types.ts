@@ -1166,6 +1166,7 @@ export interface SimpleInputRequestV1 {
   aspectRatio: string;
   brandName?: string;
   brandInfo?: string;
+  industry?: string;
   copyItems?: (CopyItemInput | string)[];
   hardRequirements?: string[];
   requestId?: string;

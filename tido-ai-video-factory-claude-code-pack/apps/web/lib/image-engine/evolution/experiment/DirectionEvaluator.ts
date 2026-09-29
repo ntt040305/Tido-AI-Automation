@@ -2,6 +2,8 @@ import type { CreativeJudgment, StrategyCandidate, StrategyVerdict } from "./Cre
 import { routeLabel } from "./UserKitLearning";
 import { NO_TEXT_TYPOGRAPHY, unauthorizedText, type TextRequirement } from "../../compiler/ExactCopyIntegrityValidator";
 import { forbiddenStylesIn, preferredStylesIn, type BrandKit } from "./BrandKit";
+import type { IndustryLandscape } from "./IndustryContextIntelligence";
+import type { CreativeOpportunity } from "./CreativeOpportunity";
 
 /**
  * Phase 4.2 / 4.3. Evaluates the directions the Creative Director developed,
@@ -84,6 +86,8 @@ export interface ConceptEvaluation {
     brand_violations?: string[];
     /** Phase 5.4. Styles the brand prefers that this route embodies. */
     brand_matches?: string[];
+    cliche_detected?: boolean;
+    opportunity_aligned?: boolean;
   };
 }
 
@@ -194,6 +198,8 @@ function evaluateCandidate(
   isDirectorPick: boolean,
   textRequirement?: TextRequirement | null,
   brandKit?: BrandKit | null,
+  industryLandscape?: IndustryLandscape | null,
+  creativeOpportunity?: CreativeOpportunity | null,
 ): ConceptEvaluation {
   const strengths: string[] = [];
   const weaknesses: string[] = [];
@@ -270,6 +276,51 @@ function evaluateCandidate(
     strengths.push(`brand: embodies the brand's preferred style (${brandMatches.join(", ")})`);
   }
 
+  // Industry cliché avoidance vs creative disruption
+  let clicheDetected = false;
+  if (industryLandscape && industryLandscape.overused_category_cliches?.length) {
+    const textToScan = [c.core_idea, c.visual_language, c.composition, c.lighting].join(" ").toLowerCase();
+    for (const cliche of industryLandscape.overused_category_cliches) {
+      const words = cliche.toLowerCase().split(/\s+/).filter((w) => w.length > 3);
+      const matches = words.filter((w) => textToScan.includes(w));
+      if (words.length > 0 && matches.length >= Math.ceil(words.length * 0.5)) {
+        clicheDetected = true;
+        score -= 0.05;
+        weaknesses.push(`industry: relies on overused category cliché ("${cliche}")`);
+        break;
+      }
+    }
+    if (!clicheDetected) {
+      const isCoffeeCliche = /khói bốc|hơi khói|bàn gỗ mộc|hạt cà phê|steam rising|rustic wood|coffee beans/i.test(textToScan);
+      const isSkincareCliche = /giọt nước bắn|bọt nước|nền be|da không tì vết|water splash|pastel beige|flawless skin/i.test(textToScan);
+      const isTechCliche = /neon xanh|mạch điện tử|blue neon|circuit board/i.test(textToScan);
+      if (
+        (industryLandscape.industry_id === "coffee_tea" && isCoffeeCliche) ||
+        (industryLandscape.industry_id === "beauty_skincare" && isSkincareCliche) ||
+        (industryLandscape.industry_id === "electronics_tech" && isTechCliche)
+      ) {
+        clicheDetected = true;
+        score -= 0.05;
+        weaknesses.push("industry: relies on overused category visual cliché");
+      }
+    }
+  }
+
+  // Creative opportunity alignment & human tension resolution
+  let opportunityAligned = false;
+  if (creativeOpportunity) {
+    const textToScan = [c.core_idea, c.visual_language, c.why_this_route, (c as any).emotional_objective].join(" ").toLowerCase();
+    const tensionWords = (creativeOpportunity.human_tension || "").toLowerCase().split(/\s+/).filter((w) => w.length > 3);
+    const tensionMatches = tensionWords.filter((w) => textToScan.includes(w));
+    const oppWords = (creativeOpportunity.core_opportunity || "").toLowerCase().split(/\s+/).filter((w) => w.length > 3);
+    const oppMatches = oppWords.filter((w) => textToScan.includes(w));
+    if (tensionMatches.length >= 2 || oppMatches.length >= 2) {
+      opportunityAligned = true;
+      score += 0.08;
+      strengths.push("opportunity: addresses human tension and strategic whitespace");
+    }
+  }
+
   const against = historyAgainst(e);
   const blocking = ["product", "feasibility"].filter(
     (axis) => a[axis as keyof typeof a]?.stance === "works_against",
@@ -300,6 +351,8 @@ function evaluateCandidate(
       director_pick: isDirectorPick,
       typography_compliant: textRequirement ? textViolations.length === 0 : null,
       text_violations: textViolations,
+      cliche_detected: clicheDetected,
+      opportunity_aligned: opportunityAligned,
       ...(brandKit ? { brand_violations: brandViolations, brand_matches: brandMatches } : {}),
     },
   };
@@ -327,6 +380,8 @@ export function evaluateDirections(
     textRequirement?: TextRequirement | null;
     /** Phase 5.4: the brand's preferred and forbidden styles. */
     brandKit?: BrandKit | null;
+    industryLandscape?: IndustryLandscape | null;
+    creativeOpportunity?: CreativeOpportunity | null;
   },
 ): DirectionEvaluation | null {
   const strategy = judgment?.strategy;
@@ -338,7 +393,16 @@ export function evaluateDirections(
   const isPick = (route: string) => key(route) === key(directorPick);
 
   const evaluations = candidates.map((c) =>
-    evaluateCandidate(c, evidence, Boolean(ctx.productObserved), isPick(c.route), ctx.textRequirement, ctx.brandKit),
+    evaluateCandidate(
+      c,
+      evidence,
+      Boolean(ctx.productObserved),
+      isPick(c.route),
+      ctx.textRequirement,
+      ctx.brandKit,
+      ctx.industryLandscape,
+      ctx.creativeOpportunity,
+    ),
   );
   const ranked = [...evaluations].sort((x, y) => y.score - x.score);
   const pickEval = evaluations.find((e) => isPick(e.route)) ?? ranked[0];
