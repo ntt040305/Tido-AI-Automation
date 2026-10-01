@@ -2,7 +2,7 @@
 
 import React from "react";
 import { AssetType } from "../../types/picture-engine.types";
-import { Layout, Image, ShoppingBag, Tv, Megaphone, Smartphone } from "lucide-react";
+import { Layout, ShoppingBag, Tv, Megaphone, Smartphone } from "lucide-react";
 
 export interface AssetTypeOption {
   id: AssetType;
@@ -54,18 +54,17 @@ export function AssetTypeSelector({
   onChange,
 }: AssetTypeSelectorProps) {
   return (
-    <div className="space-y-3">
+    <div className="space-y-2.5">
       <div className="flex items-center justify-between">
-        <label className="text-[13.5px] font-semibold text-text flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-accent" />
-          <span>Bước 1: Loại tài sản sản xuất</span>
+        <label className="font-mono text-[11px] uppercase tracking-wider text-text-telemetry flex items-center gap-1.5">
+          <span>LOẠI TÀI SẢN SẢN XUẤT</span>
         </label>
-        <span className="text-[11px] font-mono text-accent uppercase">
+        <span className="text-[10.5px] font-mono text-text uppercase px-1.5 py-0.2 rounded-[2px] bg-surface2 border border-border">
           {selected}
         </span>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
         {ASSET_TYPE_OPTIONS.map((opt) => {
           const Icon = opt.icon;
           const isActive = selected === opt.id;
@@ -74,26 +73,26 @@ export function AssetTypeSelector({
               key={opt.id}
               type="button"
               onClick={() => onChange(opt.id)}
-              className={`p-3 rounded-xl border text-left transition-all duration-200 cursor-pointer outline-none flex flex-col justify-between h-[92px] ${
+              className={`p-2.5 rounded-[2px] border text-left transition-colors cursor-pointer outline-none flex flex-col justify-between h-[84px] ${
                 isActive
-                  ? "bg-accent/10 border-accent text-white shadow-md shadow-accent/10 ring-1 ring-accent/40"
-                  : "bg-surface2/60 border-borderStrong hover:bg-surface2 hover:border-text3 text-text2 hover:text-text"
+                  ? "bg-surface3 border-borderStrong text-text"
+                  : "bg-surface2 border-border hover:border-borderStrong text-text-muted hover:text-text"
               }`}
             >
               <div className="flex items-center justify-between w-full">
                 <Icon
-                  size={18}
-                  className={isActive ? "text-accent" : "text-text3"}
+                  size={16}
+                  className={isActive ? "text-text" : "text-text-telemetry"}
                 />
                 {isActive && (
-                  <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+                  <span className="w-1.5 h-1.5 rounded-[1px] bg-tally-live" />
                 )}
               </div>
               <div>
-                <div className="text-[13px] font-semibold tracking-tight">
+                <div className="text-[12.5px] font-semibold tracking-tight font-sans">
                   {opt.label}
                 </div>
-                <div className="text-[10.5px] text-text3 line-clamp-1 mt-0.5">
+                <div className="text-[10px] text-text-telemetry line-clamp-1 mt-0.5 font-sans">
                   {opt.description}
                 </div>
               </div>

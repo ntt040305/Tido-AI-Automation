@@ -118,6 +118,8 @@ export interface RoutingDecision {
   features_enabled: string[];
 }
 
+import { RenderTracer } from "../observability/RenderTracer";
+
 export class PipelineRouter {
   /** The decision for this request: flags in force, versions, and why. */
   public static decide(
@@ -167,6 +169,19 @@ export class PipelineRouter {
       reason: decision.reason,
       features: decision.features_enabled,
     });
+
+    if (RenderTracer.isTraceEnabled()) {
+      RenderTracer.stage({
+        stageNum: "01",
+        name: "PIPELINE ROUTING & FEATURE RESOLUTION",
+        file: "apps/web/lib/image-engine/evolution/PipelineRouter.ts",
+        func: "PipelineRouter.decide",
+        input: { requestId: request.requestId, useCase: request.useCase, context },
+        decision: { pipeline: decision.pipeline, reason: decision.reason, features_enabled: decision.features_enabled },
+        output: decision,
+        nextStage: "ExperimentPipeline.run",
+      });
+    }
 
     const result: SimpleImageGenerationResultV1 = await ExperimentPipeline.run(request, options, decision);
 

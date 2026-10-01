@@ -1,5 +1,6 @@
 import { MasterPromptCompilerService } from "../compiler/MasterPromptCompilerService";
 import { PromptBudgetValidator } from "../compiler/PromptBudgetValidator";
+import { RenderTracer } from "../observability/RenderTracer";
 import { IMAGE_ENGINE_CONFIG } from "../config";
 import {
   ImageGenerationProvider,
@@ -149,6 +150,19 @@ export class SimpleImageGenerationOrchestratorService {
       }
       console.log("[SIMPLE][01 VALIDATION] PASS");
 
+      if (RenderTracer.isTraceEnabled()) {
+        RenderTracer.stage({
+          stageNum: "06",
+          name: "ORCHESTRATOR INPUT VALIDATION",
+          file: "apps/web/lib/image-engine/service/SimpleImageGenerationOrchestratorService.ts",
+          func: "generateSimpleImage",
+          input: { concept: request.concept, useCase: request.useCase, aspectRatio: request.aspectRatio },
+          decision: { isValid: validation.isValid, errors: validation.errors },
+          output: { validationDurationMs },
+          nextStage: "MarketingBrainService.generateStrategy",
+        });
+      }
+
       // 1.5 GROQ Marketing Brain Stage (Real LLM Commercial Strategy)
       console.log("[SIMPLE][01.5 GROQ MARKETING BRAIN] START");
       const mbStart = Date.now();
@@ -175,6 +189,23 @@ export class SimpleImageGenerationOrchestratorService {
         // ORDER changed, and the order is the whole point.
         reused_precomputed: Boolean(options?.precomputedStrategy),
       });
+
+      if (RenderTracer.isTraceEnabled()) {
+        RenderTracer.stage({
+          stageNum: "07",
+          name: "MARKETING BRAIN STRATEGY RESOLUTION",
+          file: "apps/web/lib/image-engine/service/SimpleImageGenerationOrchestratorService.ts",
+          func: "generateSimpleImage",
+          input: { concept: request.concept, marketingContext: request.marketingContext },
+          decision: {
+            reused_precomputed: Boolean(options?.precomputedStrategy),
+            creative_angle: groqStrategy.creative_angle,
+            has_consumer_insight: Boolean(groqStrategy.consumer_insight),
+          },
+          output: groqStrategy,
+          nextStage: "ReferenceImageProcessorService.processReferenceImages",
+        });
+      }
 
       // 1.8 Reference Image Preprocessing Layer
       console.log("[SIMPLE][01.8 PREPROCESSOR] START");
@@ -271,6 +302,26 @@ export class SimpleImageGenerationOrchestratorService {
         routingResult = routerRes.routing;
       }
       console.log("[SIMPLE][02 ROUTER] PASS");
+
+      if (RenderTracer.isTraceEnabled()) {
+        RenderTracer.stage({
+          stageNum: "08",
+          name: "REFERENCE PREPROCESSING & KNOWLEDGE ROUTING",
+          file: "apps/web/lib/image-engine/service/SimpleImageGenerationOrchestratorService.ts",
+          func: "generateSimpleImage",
+          input: {
+            processedCount: processedRequestImages.length,
+            diagnostics: processorResult.diagnostics,
+          },
+          decision: {
+            mockRoutingResult: Boolean(options?.mockRoutingResult),
+            productsDetected: routingResult.products?.length ?? 0,
+            roles: (request.images || []).map((img) => (img as { role?: string }).role),
+          },
+          output: routingResult,
+          nextStage: "SimpleInputAdapterService.adapt",
+        });
+      }
 
       // 3. Adapter Pass
       console.log("[SIMPLE][03 ADAPTER] START");
@@ -411,6 +462,25 @@ export class SimpleImageGenerationOrchestratorService {
       }
       console.log("[SIMPLE][04 RETRIEVAL] PASS");
 
+      if (RenderTracer.isTraceEnabled()) {
+        RenderTracer.stage({
+          stageNum: "09",
+          name: "INPUT ADAPTER & KNOWLEDGE RETRIEVAL",
+          file: "apps/web/lib/image-engine/service/SimpleImageGenerationOrchestratorService.ts",
+          func: "generateSimpleImage",
+          input: { resolvedRoutingResult: adapted.resolvedRoutingResult },
+          decision: {
+            resolvedProductCount: adapted.resolvedProductCount,
+            brandAssetsCount: adapted.brandAssets.length,
+            supportReferencesCount: adapted.supportReferences.length,
+            universalBlocksCount: (retrievalRes.package?.universal_blocks || []).length,
+            selectedBlocksCount: (retrievalRes.package?.selected_blocks || []).length,
+          },
+          output: retrievalRes.package,
+          nextStage: "CreativeInterpretationService.interpretAsync",
+        });
+      }
+
       // 4.5 Stage 4A Creative Interpretation Pass
       //
       // Structured, language-agnostic reading of the brief. Falls back to the
@@ -440,6 +510,24 @@ export class SimpleImageGenerationOrchestratorService {
         camera_requirements: creativeInterpretation.locked_intent.camera_requirements,
         lighting_requirements: creativeInterpretation.locked_intent.lighting_requirements,
       });
+
+      if (RenderTracer.isTraceEnabled()) {
+        RenderTracer.stage({
+          stageNum: "10",
+          name: "CREATIVE INTERPRETATION",
+          file: "apps/web/lib/image-engine/service/SimpleImageGenerationOrchestratorService.ts",
+          func: "generateSimpleImage",
+          input: { concept: request.concept, useCase: adapted.useCase },
+          decision: {
+            source: creativeInterpretation.interpretation_source,
+            locked_subject: creativeInterpretation.locked_intent.subject,
+            camera_requirements: creativeInterpretation.locked_intent.camera_requirements,
+            lighting_requirements: creativeInterpretation.locked_intent.lighting_requirements,
+          },
+          output: creativeInterpretation,
+          nextStage: "MasterPromptCompilerService.compile",
+        });
+      }
 
       // 4.6 Stage 4A.5 Inspiration Style Intelligence Pass (Phase 3.6 Additive Layer)
       let inspirationStyleManifest = request.inspirationStyleManifest;
@@ -553,6 +641,23 @@ export class SimpleImageGenerationOrchestratorService {
       }
       console.log("[SIMPLE][05 COMPILER] PASS");
 
+      if (RenderTracer.isTraceEnabled()) {
+        RenderTracer.stage({
+          stageNum: "11",
+          name: "MASTER PROMPT COMPILER PASS",
+          file: "apps/web/lib/image-engine/service/SimpleImageGenerationOrchestratorService.ts",
+          func: "generateSimpleImage",
+          input: { compilerInput: adapted.compilerInput },
+          decision: {
+            masterPromptChars: compilerRes.package.compiled_prompt.length,
+            provenance: compilerRes.package?.provenance,
+            warnings: compilerRes.package?.compiler_warnings,
+          },
+          output: { masterPromptChars: compilerRes.package.compiled_prompt.length },
+          nextStage: "PRE-PROVIDER GUARDS",
+        });
+      }
+
       // Phase 3.5 Reference Quality Decision Telemetry Log
       const refManifest = adapted.resolvedRoutingResult?.reference_manifest;
       if (refManifest?.reference_quality_profile) {
@@ -574,6 +679,10 @@ export class SimpleImageGenerationOrchestratorService {
       }
 
       const masterPrompt = compilerRes.package.compiled_prompt;
+
+      if (RenderTracer.isTraceEnabled()) {
+        RenderTracer.recordCheckpoint("A", "MasterPromptCompiler output", masterPrompt, { generationId });
+      }
 
       // 6. Pre-Provider Validation Guards
       // Guard A: Exact Copy Integrity Check
@@ -778,6 +887,25 @@ export class SimpleImageGenerationOrchestratorService {
         referenceCount: providerInput.references.length,
         promptChars: providerInput.prompt.length,
       });
+
+      if (RenderTracer.isTraceEnabled()) {
+        RenderTracer.stage({
+          stageNum: "12",
+          name: "PRE-PROVIDER GUARDS & VALIDATION",
+          file: "apps/web/lib/image-engine/service/SimpleImageGenerationOrchestratorService.ts",
+          func: "generateSimpleImage",
+          input: { masterPromptChars: masterPrompt.length, providerReferencesCount: providerReferences.length },
+          decision: {
+            exactCopyCheck: "PASS",
+            budgetCheck: "PASS",
+            referenceOrderCheck: "PASS",
+            withholdInspirationImage,
+            attachedReferencesCount: attachedReferences.length,
+          },
+          output: { providerInput },
+          nextStage: "generationProvider.generateImage",
+        });
+      }
       const providerRes = await generationProvider.generateImage(providerInput);
       providerDurationMs = Date.now() - providerStart;
 

@@ -1,6 +1,7 @@
 import type { SimpleImageGenerationResultV1, SimpleInputRequestV1 } from "../types";
 import type { RoutingDecision } from "./PipelineRouter";
 import type { VisionAnalysisResult } from "./experiment/VisionAnalysisResult";
+import { RenderTracer } from "../observability/RenderTracer";
 
 /**
  * The review that happens after the picture exists.
@@ -349,6 +350,33 @@ export async function reviewRender(
     // describes the customer's product and copy.
     console.log("[VISION_REVIEW]", { ...telemetry, ...designDecisionTelemetry(decisions) });
 
+    if (RenderTracer.isTraceEnabled()) {
+      RenderTracer.stage({
+        stageNum: "16",
+        name: "VISION REVIEW & MULTIMODAL ANALYSIS",
+        file: "apps/web/lib/image-engine/evolution/VisionReviewLayer.ts",
+        func: "reviewRender",
+        input: {
+          image_bytes: result.imageBuffer?.length ?? 0,
+          expected_copy: expectedCopy,
+          product_description: request.concept,
+        },
+        decision: {
+          analyzed_image: analysis.analyzed_image,
+          typography_critique: analysis.typography_critique ? "generated" : "none",
+          creative_review_issues: creativeReview.detected_issues.length,
+          design_decisions_count: (decisions as any).decisions?.length || (decisions as any).actions?.length || 0,
+          untranslated_findings: decisions.untranslated.length,
+        },
+        output: {
+          telemetry,
+          analysis_data: (analysis as any).overall_quality || (analysis as any).text_check || null,
+          improvement_actions: analysis.improvement_actions,
+        },
+        nextStage: "CORRECTION DECISION & BUDGET EVALUATION",
+      });
+    }
+
     // Is there time to act on what was found?
     //
     // This is the fix for the failure that blocked this loop for two phases.
@@ -368,6 +396,38 @@ export async function reviewRender(
     const haveTime = remaining > needed;
 
     const instruction = renderDesignDecisions(decisions);
+
+    if (RenderTracer.isTraceEnabled()) {
+      RenderTracer.stage({
+        stageNum: "17",
+        name: "CORRECTION DECISION & BUDGET EVALUATION",
+        file: "apps/web/lib/image-engine/evolution/VisionReviewLayer.ts",
+        func: "reviewRender",
+        input: {
+          remaining_ms: remaining,
+          needed_ms: needed,
+          haveTime,
+          instruction_present: Boolean(instruction),
+          analyzed_image: analysis.analyzed_image,
+        },
+        decision: {
+          correction_triggered: Boolean(analysis.analyzed_image && instruction && haveTime),
+          skip_reason: !analysis.analyzed_image
+            ? "analyzed_image_false"
+            : !instruction
+            ? "no_actionable_instruction"
+            : !haveTime
+            ? "insufficient_time_budget"
+            : "none",
+          instruction_preview: instruction ? instruction.slice(0, 150) : "none",
+        },
+        output: {
+          instruction: instruction || null,
+          will_rerender: Boolean(analysis.analyzed_image && instruction && haveTime),
+        },
+        nextStage: Boolean(analysis.analyzed_image && instruction && haveTime) ? "second_render" : "response",
+      });
+    }
     if (!analysis.analyzed_image || !instruction || !haveTime) {
       if (instruction && !haveTime) {
         // Named explicitly so this is distinguishable in a log from "found
@@ -458,6 +518,31 @@ export async function reviewRender(
     const quality = compareDesignQuality(analysis, secondAnalysis);
     const secondWins = quality.recommendation === "second";
     telemetry.second_render_selected = secondWins;
+
+    if (RenderTracer.isTraceEnabled()) {
+      RenderTracer.stage({
+        stageNum: "18",
+        name: "CORRECTION RE-RENDER & WINNER SELECTION",
+        file: "apps/web/lib/image-engine/evolution/VisionReviewLayer.ts",
+        func: "reviewRender",
+        input: {
+          first_render_url: result.imageUrl,
+          second_render_url: second.imageUrl,
+          recommendation: quality.recommendation,
+          overall_reasoning: quality.overall_reasoning,
+        },
+        decision: {
+          winner: secondWins ? "second_render" : "first_render",
+          recommendation: quality.recommendation,
+          overall_reasoning: quality.overall_reasoning,
+        },
+        output: {
+          selected_version: secondWins ? 2 : 1,
+          selected_image_url: secondWins ? second.imageUrl : result.imageUrl,
+        },
+        nextStage: "response",
+      });
+    }
 
     console.log("[VISION_REVIEW][OUTCOME]", telemetry);
 

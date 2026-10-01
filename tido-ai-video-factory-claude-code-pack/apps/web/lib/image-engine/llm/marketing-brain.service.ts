@@ -1,5 +1,6 @@
 import { defaultLLMProviderService, LLMChatMessage, LLMProviderService } from "./llm-provider.service";
 import { MarketingBrainInput, MarketingBrainStrategy } from "./prompt-strategy.schema";
+import { RenderTracer } from "../observability/RenderTracer";
 
 /**
  * How each asset type is encountered, and what that makes worth reasoning about.
@@ -276,16 +277,17 @@ Generate the complete structured JSON commercial strategy now.`;
     ];
 
     try {
-      // The strategy schema is a full creative bridge — insight, emotional
-      // response, message and a six-field visual translation. That is a long
-      // structured JSON answer, and the provider's 15s default was aborting it on
-      // every call, silently dropping the campaign back to the offline fallback.
-      // Budget the call for the answer it actually asks for.
+      if (RenderTracer.isTraceEnabled()) {
+        RenderTracer.logPrompt("MARKETING_BRAIN", `[SYSTEM]\n${systemPrompt}\n\n[USER]\n${userPrompt}`, process.env.LLM_MODEL || "gemini-3.7-flash-high");
+      }
       const responseText = await this.llmProvider.generateChatCompletion(messages, "marketing_brain", {
         temperature: 0.6,
         max_tokens: 1800,
         timeoutMs: 60000,
       });
+      if (RenderTracer.isTraceEnabled()) {
+        RenderTracer.logResponse("MARKETING_BRAIN", responseText || "");
+      }
       
       let parsed: MarketingBrainStrategy;
       try {

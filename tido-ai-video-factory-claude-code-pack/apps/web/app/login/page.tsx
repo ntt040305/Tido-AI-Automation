@@ -2,7 +2,8 @@ import { Suspense } from "react";
 import { AuthScreen } from "@/features/auth/components/AuthScreen";
 
 export const metadata = {
-  title: "Đăng nhập — TIDO Studio",
+  title: "Đăng nhập — VMC Studio",
+  description: "Cổng xác thực VMC Studio Auth Gateway • VIC Marketing Pro",
 };
 
 /**
@@ -11,7 +12,7 @@ export const metadata = {
  */
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-bg" />}>
+    <Suspense fallback={<div className="min-h-screen bg-surface-container-lowest" />}>
       <AuthScreen />
     </Suspense>
   );

@@ -141,9 +141,7 @@ export default function Sidebar() {
                 onClick={async () => {
                   setMenuOpen(false);
                   await signOut();
-                  // Home rather than /login: signing out should land somewhere
-                  // usable, and rendering still works without an account.
-                  router.replace("/");
+                  router.push("/login");
                 }}
                 className="w-full px-2.5 py-2.5 text-[13.5px] text-text2 rounded-[5px] cursor-pointer flex items-center gap-2 hover:bg-surface3 hover:text-text transition-colors text-left outline-none"
               >

@@ -26,7 +26,7 @@ Bạn là Principal Software Architect, Senior Full-stack Engineer, AI Platform 
 5. Không thêm image provider ngoài Nano Banana 2.
 6. Không dùng một bài nhạc cố định cho nhiều project.
 7. Claude chỉ tạo `voice_requirements`; Voice Selection Engine mới chọn `voice_id`.
-8. Không để AI image/video tạo logo, giá, CTA, subtitle hoặc legal text.
+8. One-pass: AI image được render Copy chiến dịch, Headline, Giá tiền và CTA, nhưng CHỈ các chuỗi có trong Sổ chuỗi (Ledger) của `TextLedgerSystem`, nguyên văn từng ký tự, mỗi chuỗi đúng một lần, do `OpticalCompiler` phát ra ở Block 8. VẪN CẤM AI tự sinh logo hoặc nhãn hiệu giả: logo chỉ xuất hiện từ asset người dùng cung cấp. Subtitle và legal text của video vẫn dựng deterministic ở Composer.
 9. Không tạo hai hệ thống riêng cho 9:16 và 16:9.
 10. Không hard-code model name, giá, quota hoặc capability.
 11. Redis không phải source of truth.

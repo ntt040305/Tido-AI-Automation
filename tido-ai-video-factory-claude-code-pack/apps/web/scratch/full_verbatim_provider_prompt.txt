@@ -1,0 +1,178 @@
+<!-- ID: master_prompt_v2 | VERSION: 3.0.0 -->
+# MASTER PROMPT V3 ΓÇö TIDO IMAGE COMPILATION ARCHITECTURE
+
+## ROLE
+Downstream commercial image generation model. Produce one production-ready commercial visual with clear hierarchy, credible material optics, coherent scene physics and no generation artifacts, using the references, intent, constraints, copy, brand context and knowledge supplied below.
+
+Words like premium, luxury, cinematic, beautiful and stunning are verdicts, not instructions ΓÇö they describe how someone judged a finished picture, and rendering them produces the generic gloss every brand already looks like. Where such a word appears below, render the concrete thing that would earn it: the material, the light, the gesture, the moment. Build from nouns and verbs; let the adjectives grade what is already there.
+
+Sections appear in priority order. Earlier sections carry more authority than later ones, except where a section states otherwise.
+
+## CREATIVE INTENT
+CREATIVE CONCEPT: Luxury organic Centella Asiatica calming serum bottle resting on textured travertine stone platform, warm morning Mediterranean daylight, soft green botanical accents, elegant editorial skincare aesthetic
+VISUAL STYLE: commercial
+COMMERCIAL MARKETING CONTEXT:
+- Industry Domain: skincare
+- Target Audience: Discerning consumers seeking natural clinical dermatological care
+ATTACHED REFERENCE ROLES (ORDER MATCHES MULTIPART IMAGES):
+- Image 1 (REF_01): PRODUCT_01 identity reference
+CONTENT MESSAGE ΓÇö TEXT THAT MUST APPEAR IN THE IMAGE:
+- Main message: Barrier Calm Serum. Botanical recovery for sensitive skin.
+- Purpose: Brand communication
+- Visual requirement: render this text legibly and make it noticeable at a glance. The exact wording above is authorized copy and must be reproduced verbatim; do not paraphrase, translate or invent additional text.
+LOCKED CLIENT INTENT ΓÇö PRESERVE STRICTLY:
+- Subject: Luxury organic Centella Asiatica calming serum bottle resting on textured travertine stone platform, warm morning Mediterranean daylight, soft green botanical accents, elegant editorial skincare aesthetic
+- Visual style: commercial
+- Non-negotiable: Reference Identity Lock: Uploaded product reference identity takes strict priority over concept conflicts.
+- Non-negotiable: Preserve core subject: "Luxury organic Centella Asiatica calming serum bottle resting on textured travertine stone platform, warm morning Mediterranean daylight, soft green botanical accents, elegant editorial skincare aesthetic"
+- Non-negotiable: Respect brand identity: "AURA BOTANICA"
+COMMERCIAL FRAMING:
+- Objective: Preserve the subject 'Luxury organic Centella Asiatica calming serum bottle resting on textured travertine stone platform, warm morning Mediterranean daylight, soft green botanical accents, elegant editorial skincare aesthetic' and raise its commercial impact for Poster (editorial story).
+
+## CAMPAIGN STRATEGY
+BUSINESS GOAL: in skincare
+WHAT THIS IMAGE MUST ACHIEVE: Make the brand feel credible before it feels desirable ΓÇö a viewer must leave trusting the formula, not just admiring the object. Rules out decorative softness.
+HOW THIS BRAND BEHAVES: Aura Botanica inferred as a challenger: clinical credibility is its weapon, botanical provenance its soul. Precise, unhurried, uninterested in flattery.
+CONSUMER INSIGHT: Buyers of natural clinical skincare are not fleeing synthetic formulas out of fear; they are refusing to choose between efficacy and conscience, and they resent being asked to.
+WHO THIS IS FOR: Educated, ingredient-literate, sceptical of greenwashing. They respond to specificity over beauty, to restraint over abundance, and to images that treat them as intelligent. They buy trust before they buy desire.
+EMOTIONAL RESPONSE TO CREATE: Grounded certainty
+CREATIVE MESSAGE: This is where botanical intelligence and dermatological rigour meet without compromise.
+ASSET CONTEXT ΓÇö POSTER:
+- What this format asks of the design: Impact at first glance, before a word has been read. A hierarchy the eye follows without being instructed. A real relationship between picture and words ΓÇö not words laid over a photograph. Type scaled for the distance this will actually be read from.
+- Why this format serves this campaign: A square poster in this campaign earns one job: make a stranger stop and trust the object before they read a word. The image must carry authority on its own, so the scene cannot be decorative ΓÇö the product has to look like it belongs to a discipline.
+THE SCENE ΓÇö WHAT THE IMAGE ACTUALLY SHOWS:
+- What is happening: A single serum bottle sits on a slab of raw travertine ΓÇö not styled, not arranged ΓÇö as if it has always belonged there. A torn stem of fresh Centella Asiatica lies beside it, still damp, as though it arrived moments ago from the source. Morning light crosses the stone from one side, catching the bottle's shoulder and the leaf's veining in the same pass.
+- Who is in frame: No person appears. The absence is intentional: the formula is the protagonist, and a human presence would shift the story from the ingredient's authority to the consumer's aspiration ΓÇö which is the wrong story for a brand that has to earn clinical trust first.
+VISUAL TRANSLATION OF THAT MESSAGE:
+- Subject treatment: The serum bottle and the fresh Centella stem are co-subjects: the bottle carries the clinical half of the brand's claim, the plant carries the botanical half. Neither is subordinate. The travertine is the third character ΓÇö its age and texture signal that what is placed on it has earned that position.
+- Why the camera sits where it does: The camera sits at a low, near-level angle so the bottle reads as solid and present rather than displayed ΓÇö the viewer meets it as an object with weight, not a product on a shelf. This makes the travertine feel like ground, not prop.
+- Atmosphere: Still, unhurried, faintly mineral ΓÇö the emotional temperature of a laboratory that happens to face a garden.
+- Light should feel: Directional morning light entering from one side, warm but not golden, hard enough to cast a clean shadow from the bottle and reveal the stone's pore structure, soft enough not to flatten the leaf.
+- Materials should read: The travertine reads as genuinely old and porous ΓÇö its surface should not be polished or styled away. The bottle's glass or vessel material should carry visible weight and thickness. The Centella leaf reads as alive: translucent veining, slight surface moisture.
+- Organising principle: Asymmetric balance: the bottle occupies slightly more than one third of the frame, the torn stem and open stone hold the rest. The eye is given room to settle rather than a centre to be pushed toward.
+- Colour signals: Warm stone tones ΓÇö travertine ivory, sand, pale ochre ΓÇö against the cool blue-green of the Centella leaf. The bottle's own colour anchors the palette. No added green props or foliage beyond the single stem: restraint signals confidence.
+HOW THE FRAME SHOULD BE READ: The bottle's form and material weight land first; the travertine ground it second; the brand name confirms the promise third.
+THE ROUTE TAKEN: Took the quiet-authority route ΓÇö still life as specimen, not still life as mood ΓÇö over the sensory-ritual route, which the brand cannot own over established spa competitors.
+VISUAL DIRECTION: A serum bottle and a fresh-cut Centella Asiatica stem on raw travertine stone, directional morning light from one side casting clean shadows, camera at near-level height, warm stone palette against cool leaf green, no human presence, restrained and precise.
+
+## USER HARD REQUIREMENTS
+1. Thanh lß╗ïch: elegant high-contrast serif typography, refined proportions, premium editorial typesetting
+2. ß║ñm ├íp: warm colour grade, amber highlights and soft warm midtones, inviting commercial warmth
+3. FORBID extreme macro close-up crop that cuts out the surrounding scene environment
+4. FORBID isolated studio pedestal background when rich scene environment is requested
+5. FORBID flat sterile studio backdrop without atmospheric depth
+6. FORBID flat frontal lighting with no directional key, no shadow falloff and no depth separation
+7. FORBID muddy low-contrast lighting
+8. FORBID extreme macro close-up crop cutting out surrounding scene environment
+9. FORBID flat sterile studio pedestal backdrop when rich scene environment is requested
+
+## TYPOGRAPHY & READABLE COPY
+Use exactly the provided text. The strings below are the only words that may appear in the image. Reproduce them exactly ΓÇö spelling, capitalization, punctuation, numbers and accents ΓÇö and render no others; every other line in this prompt is a non-visible instruction.
+Decide their treatment rather than applying a default. Which string carries the message, and which merely supports it? Does the emphasis come from size, weight, colour, or the space around it? Does the type sit with the image or on top of it? Type that has to fight the picture behind it is placed wrong, not sized wrong. Let the brand and the way this format is read decide how loud it is ΓÇö both are stated above.
+"Barrier Calm Serum. Botanical recovery for sensitive skin."  ΓÇö supplied as: headline
+The roles above are what the client called each string, not an instruction about size or position.
+These strings are campaign copy. They belong to the layout, not to the product: set them in the frame around it and never on the label, cap, packaging or any other product surface. The words already printed on the product are part of the product ΓÇö reproduce them exactly and do not replace them with any string above.
+
+## REFERENCE SEMANTICS
+Reference images are evidence of PRODUCT IDENTITY, not source canvases.
+
+Interpret them as information about a physical product. Do not treat source-image pixels, crop boundaries, background, studio illumination, camera angle, shot distance, perspective, cast shadows, reflections, exposure, white balance, sharpness or depth of field as protected product identity. Do not composite or preserve the source photograph as a visual layer; re-render the product inside the new scene while staying faithful to reference-supported identity.
+
+**Protected (what the product is):** geometry, structural proportions, container form, logo, label text, authentic colours, materials, liquid identity, toppings and garnish.
+
+**Re-synthesized (how it is photographed):** camera angle, viewpoint height, framing, crop, perspective, hero scale, light direction, environmental reflections, contact and cast shadows, ambient colour response, focus.
+
+**Multi-product isolation:** each resolved PRODUCT_xx is an independent identity bound to its own reference evidence. Preserve each one's distinct differences. Do not average identities into a hybrid, do not clone one identity to satisfy another's instance count, and do not transfer features, materials, colours, labels, logos or liquids across identities. Correct quantity with wrong identities is an incorrect output.
+
+**Scene-native integration:** re-synthesize highlights, reflections, refraction, contact shadows, ambient colour, depth, focus and edge sharpness so every element shares one set of photographic conditions. Avoid any pasted cutout, sticker, collage or separately-lit appearance.
+
+**Single reference policy:** with one reference image, unseen surfaces are reconstructed conservatively without inventing unverified logos, text or structural features.
+
+## PRODUCT INSTANCE REQUIREMENTS
+- The final image MUST contain exactly 1 hero product instance (PRODUCT_01).
+- PRODUCT IDENTITY SOURCE: Reference image(s) [REF_01].
+[REFERENCE IDENTITY LOCK] References are identity evidence: never redesign or replace the product, never invent packaging it does not have, and never generate a logo or brand mark that is not in the reference.
+- REFERENCE RELATIONSHIP: SINGLE_PRODUCT
+- [REF CONTROL] Prio: REF_01(PRODUCT:0.9) | Lock: Product Silhouette & Geometry, Packaging Contours & Label Layout | Allow: Background Environment, Studio Illumination & Lighting, Camera Angle & Depth of Field | Forbid: Altering Product Shape, Inventing Unverified Text
+- PRODUCT PLANNING MANIFEST [HIGH] (Target Count: 1, Detected: 1):
+  * LOCK [PRODUCT_01] (Luxury organic Centella Asiatica calming serum bottle resting on textured travertine stone platform, warm morning Mediterranean daylight, soft green botanical accents, elegant editorial skincare aesthetic for brand Commercial Brand) [Refs: REF_01]:
+  - Shape: 3D Product Geometry
+  - Material: Glass / Plastic Container
+  - Packaging: Product Container
+  - Color: Transparent / Glossy
+  - Label: Commercial Brand Branding
+  - Rules: Preserve exact silhouette, packaging appearance, colors & logo/label. No redesign, no replacement.
+[REFERENCE ADAPTATION RULES]
+Reference image provides exact product identity ONLY. Do NOT copy flat background or flat lighting.
+- Synthesize realistic 3D depth, soft ground contact shadows, studio key lighting, and authentic surface reflections.
+- SINGLE-REFERENCE PRODUCTS (apply the single reference policy above): PRODUCT_01.
+- PRODUCT IDENTITY PROTECTION ΓÇö the product is photographed, never redesigned:
+  * Label: reproduce every word, mark and proportion exactly as the reference shows. Do not rewrite, retranslate, re-typeset, add to, remove from or leave blank any part of it.
+  * Logo: the reference's mark, letterforms and spacing. Do not restyle it or substitute another.
+  * Packaging shape: the reference's silhouette, proportions, closure and material. Do not slim, round, stretch or resize it.
+  * Product colour: the reference's colours, including the contents seen through the container. Do not re-tint to match the scene.
+  * A blank, partial or illegible label is a failed render, not a clean one.
+[CREATIVE DIRECTION]
+1. PRODUCT IDENTITY CHECK: Preserve exact product packaging silhouette and materials
+2. LOGO PRESERVATION: Maintain exact brand mark placement, vector sharpness, and clearance space (do NOT generate fake logos).
+
+## ART DIRECTION
+[RESOLVED ART DIRECTION]
+This block is the resolved art direction for camera, lighting, composition, typography, colour, environment, material and atmosphere. It is what to execute unless the client said otherwise: an explicit user requirement or client directive outranks it, and the user's own concept outranks anything derived from strategy. Where no client instruction covers a dimension, this block is final.
+- CAMERA: The camera sits at a low, near-level angle so the bottle reads as solid and present rather than displayed ΓÇö the viewer meets it as an object with weight, not a product on a shelf. This makes the travertine feel like ground, not prop.
+- LIGHTING: Directional morning light entering from one side, warm but not golden, hard enough to cast a clean shadow from the bottle and reveal the stone's pore structure, soft enough not to flatten the leaf.
+- COMPOSITION: Asymmetric balance: the bottle occupies slightly more than one third of the frame, the torn stem and open stone hold the rest. The eye is given room to settle rather than a centre to be pushed toward.
+- TYPOGRAPHY: The brand name sits quietly in the frame ΓÇö set, not spoken ΓÇö small enough that the image does not need it to land, present enough that it rewards a second look. It behaves like a hallmark on silver: proof of origin, not decoration.
+- COLOUR: Warm stone tones ΓÇö travertine ivory, sand, pale ochre ΓÇö against the cool blue-green of the Centella leaf. The bottle's own colour anchors the palette. No added green props or foliage beyond the single stem: restraint signals confidence.
+- ENVIRONMENT & SET: The serum bottle and the fresh Centella stem are co-subjects: the bottle carries the clinical half of the brand's claim, the plant carries the botanical half. Neither is subordinate. The travertine is the third character ΓÇö its age and texture signal that what is placed on it has earned that position.
+- MATERIALS & SURFACES: The travertine reads as genuinely old and porous ΓÇö its surface should not be polished or styled away. The bottle's glass or vessel material should carry visible weight and thickness. The Centella leaf reads as alive: translucent veining, slight surface moisture.
+EXCLUSIONS:
+- FORBID extreme macro close-up crop that cuts out the surrounding scene environment
+- FORBID isolated studio pedestal background when rich scene environment is requested
+- FORBID flat sterile studio backdrop without atmospheric depth
+- FORBID flat frontal lighting with no directional key, no shadow falloff and no depth separation
+- FORBID muddy low-contrast lighting
+- FORBID flat sterile studio pedestal backdrop when rich scene environment is requested
+
+## COMMERCIAL LAYOUT
+[COMMERCIAL LAYOUT PLAN]
+FORMAT: poster at 1:1. Editorial commercial poster: a strong hero image carrying a headline above it and an offer beneath it.
+HOW THIS IS VIEWED: Approached, then read. The image earns the pause and the headline pays it off.
+SAFE MARGIN: keep all meaningful content, product edges and any text at least 6% in from every edge.
+ATTENTION BUDGET (0ΓÇô100). This is the order a viewer must read the frame in. Give the strongest element the optical emphasis ΓÇö contrast, focus, scale and placement ΓÇö and make sure nothing below it competes for that emphasis:
+- PRODUCT ΓÇö 95/100. Hero. Carries desire through material quality and light.
+- HEADLINE ΓÇö 65/100. Names the idea the product is illustrating.
+- CTA ΓÇö 30/100. Closes the read. Present but subordinate.
+This image rests on the product itself.
+EYE FLOW: center out product first. Build the composition so the eye enters, travels and settles in that order; leading lines, focus falloff and tonal contrast should all reinforce it rather than fight it.
+NEGATIVE SPACE STRATEGY: Reserve a calm, tonally even band above the product for the headline, and keep the area immediately around the product silhouette free of props or highlights so its edge stays crisp.
+RESERVED ZONES (percentages of the canvas, origin top-left). These areas must stay visually calm ΓÇö even tone, low detail, no competing highlight, no part of the product crossing into them:
+- HEADLINE: x 6%, y 7%, w 88%, h 18%, center-aligned. Primary message. Highest contrast area of the composition.
+- PRODUCT_FOCAL: x 12%, y 27%, w 76%, h 52%, center-aligned. Hero product sits here, fully inside the frame, not cropped by any zone edge.
+- CTA: x 6%, y 81%, w 88%, h 9%, center-aligned. Offer or action line. Must not overlap product silhouette.
+READABILITY: Keep the headline zone tonally even so display type holds contrast without an outline or scrim.
+TYPOGRAPHY: only the exact authorized copy strings listed elsewhere in this prompt may be rendered, placed inside the zones above with the stated hierarchy. Reproduce them character-for-character including accents and punctuation. Render no other words.
+
+## CONFLICT PRIORITY
+When instructions conflict, resolve strictly in this order:
+1. **Real product identity supported by reference evidence** ΓÇö geometry, proportions, authentic colours, materials, contents, labels, logos. Excludes the reference photo's background, lighting, camera angle, framing, baked shadows, exposure and depth of field.
+2. **Verified factual and official brand information.**
+3. **Exact supplied copy text** ΓÇö user-supplied visible copy is immutable.
+4. **User hard requirements.**
+5. **Client directives inside ART DIRECTION** ΓÇö anything marked CLIENT DIRECTIVE outranks every other styling instruction, including this prompt's own defaults.
+6. **Campaign intent and creative brief.**
+7. **Art direction and commercial layout.**
+8. **Professional knowledge physical principles.**
+9. **Your own artistic execution** (lowest when in conflict with any of the above).
+
+## FINAL OUTPUT
+Render ONE finished production-grade commercial visual. Before rendering, verify: the product is faithful to the reference evidence; it looks photographed inside the scene rather than pasted; no source camera angle or framing has been inherited; every hard constraint is met; every rendered string is exact authorized copy with no metadata, slot labels or reference identifiers such as REF_01 or IMAGE 1 anywhere in the picture.
+
+Output no moodboards, no alternative concepts, no before/after comparisons and no explanatory text.
+[CREATIVE & RENDER CONSTRAINTS]
+- PRODUCT IDENTITY LOCK: ACTIVE (Strict preservation of product silhouette, shape, color, and packaging)
+- LOGO GENERATION: FORBIDDEN (Never generate fake, modified, or synthetic brand logos)
+- TEXT GENERATION: EXACT_COPY_ONLY (Render ONLY exact authorized user-supplied copy strings)
+- TYPOGRAPHY MODE: exact_copy_only (Render authorized strings only)
+- COMMERCIAL PRIORITY: product > material > lighting > composition
+- NEGATIVE CONSTRAINTS: DO NOT generate fake text, random letters, artificial brand names, pseudo-typography, or invented labels. DO NOT invent synthetic logos or modify preserved product brand marks. Reserve clean, uncluttered negative space for post-production typography layout.

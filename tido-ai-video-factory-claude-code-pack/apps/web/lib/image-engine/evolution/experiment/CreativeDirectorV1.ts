@@ -1,4 +1,5 @@
 import { defaultLLMProviderService, LLMProviderService } from "../../llm/llm-provider.service";
+import { RenderTracer } from "../../observability/RenderTracer";
 import {
   NO_TEXT_TYPOGRAPHY,
   stripUnauthorizedText,
@@ -1193,6 +1194,9 @@ ${brief.memoryContext}` : "",
     attempt: number
   ): Promise<{ judgment: CreativeJudgment | null; retryable: boolean }> {
     try {
+      if (RenderTracer.isTraceEnabled()) {
+        RenderTracer.logPrompt("CREATIVE_DIRECTOR", `[SYSTEM]\n${system}\n\n[USER]\n${user}`, process.env.LLM_MODEL || "gemini-3.7-flash-high");
+      }
       const raw = await this.llm.generateChatCompletion(
         [
           { role: "system", content: system },
@@ -1211,6 +1215,9 @@ ${brief.memoryContext}` : "",
         // budget.
         { temperature: 0.85, max_tokens: 8000, timeoutMs: DIRECTOR_TIMEOUT_MS }
       );
+      if (RenderTracer.isTraceEnabled()) {
+        RenderTracer.logResponse("CREATIVE_DIRECTOR", raw || "");
+      }
 
       const judgment = this.parse(raw);
       if (judgment?.strategy) {

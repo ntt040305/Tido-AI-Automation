@@ -26,7 +26,7 @@ export function EmptyCanvasState({
         Tạo Visual Marketing Chuyên Nghiệp Đầu Tiên
       </h3>
       <p className="text-[13px] text-text3 max-w-md leading-relaxed mb-6">
-        TIDO Picture Engine sẽ phân tích bối cảnh ngành hàng, khóa diện mạo sản phẩm và tự động biên dịch Visual Commercial đạt chuẩn chuyển đổi.
+        VIC Picture Engine sẽ phân tích bối cảnh ngành hàng, khóa diện mạo sản phẩm và tự động biên dịch Visual Commercial đạt chuẩn chuyển đổi.
       </p>
 
       {/* Action Guidance Stepper */}

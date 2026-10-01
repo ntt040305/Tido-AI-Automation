@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import { LLMProviderService } from "../../llm/llm-provider.service";
+import { RenderTracer } from "../../observability/RenderTracer";
 import { sniffImageMime } from "./VisualDNAAnalyzer";
 import {
   checkRenderedText,
@@ -81,7 +82,14 @@ export class LLMVisionProvider implements VisionProvider {
     system: string;
     instruction: string;
   }): Promise<string> {
-    return this.llm.generateChatCompletion(
+    if (RenderTracer.isTraceEnabled()) {
+      RenderTracer.logPrompt(
+        "VISION_REVIEW",
+        `[SYSTEM]\n${req.system}\n\n[INSTRUCTION]\n${req.instruction}\n\n[IMAGE_ATTACHMENT]\nmimeType=${req.mimeType}, bytes=${req.image.length}`,
+        process.env.LLM_MODEL || "gemini-3.7-flash-high"
+      );
+    }
+    const response = await this.llm.generateChatCompletion(
       [
         { role: "system", content: req.system },
         {
@@ -103,6 +111,10 @@ export class LLMVisionProvider implements VisionProvider {
       "vision_render_critic",
       { temperature: 0.2, max_tokens: 1200, timeoutMs: 60000 },
     );
+    if (RenderTracer.isTraceEnabled()) {
+      RenderTracer.logResponse("VISION_REVIEW", response || "");
+    }
+    return response;
   }
 }
 

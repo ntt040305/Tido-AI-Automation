@@ -18,6 +18,7 @@ import {
   ProviderImageGenerationInput,
   ProviderImageGenerationOutput,
 } from "./ImageGenerationProvider";
+import { RenderTracer } from "../observability/RenderTracer";
 
 export interface ImgStudioRemoteDetails {
   remote_image_id?: string;
@@ -218,6 +219,9 @@ export class ImgStudioImageGenerationProvider implements ImageGenerationProvider
         "[REFERENCE_PACKING][PROTOCOL]",
         protocolTelemetry(packing, effectivePrompt.length - input.prompt.length)
       );
+    }
+    if (RenderTracer.isTraceEnabled()) {
+      RenderTracer.recordCheckpoint("F_HTTP", "Provider prompt immediately before HTTP dispatch", effectivePrompt, { generationId: input.generationId });
     }
 
     const realReferences = packing.references;

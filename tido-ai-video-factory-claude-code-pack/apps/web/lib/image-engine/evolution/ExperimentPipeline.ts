@@ -68,6 +68,8 @@ import {
 } from "./experiment/TypographyPlan";
 import { composeEditable, editableTelemetry, type ComposeResult } from "./experiment/EditableDesign";
 import { buildTypographyDNA, categoryHint, renderDnaForImagePrompt } from "./experiment/TypographyDNA";
+import { compileOnePassPrompt, opticalTelemetry, type OnePassScript } from "./experiment/OpticalCompiler";
+import { buildTextLedgers, ledgerTelemetry } from "./experiment/TextLedgerSystem";
 import { TypographyDesignContractService } from "./experiment/TypographyDesignContract";
 import type { CreativeDocument } from "./experiment/CreativeDocument";
 import type { BrandKit } from "./experiment/BrandKit";
@@ -91,6 +93,7 @@ import {
   layoutContextTelemetry,
   renderLayoutContext,
 } from "./experiment/LayoutContextBridge";
+import { RenderTracer } from "../observability/RenderTracer";
 
 /**
  * Distinct products attached, counted the way the decision context counts them.
@@ -434,10 +437,28 @@ export class ExperimentPipeline {
       /** The composition decided before the render. Phase 5.6.4. */
       compositionPlan?: () => CompositionPlan | null;
       onComposed: (result: ComposeResult) => void;
-    }
+    },
+    /**
+     * One-pass. The eight-block render script, built from the analysis layer's
+     * own output once the composer and the blueprint have run.
+     *
+     * Lazy for the same reason the directive is: the composition plan and the
+     * typography plan are built inside the execution block, which runs while this
+     * provider is being awaited rather than before it was wrapped.
+     *
+     * When it returns a script, THAT script is the prompt. Blocks 1-7 carry the
+     * routed analysis sections, BLOCK 8 carries the ledgers, and everything BLOCK
+     * 8 supersedes -- the compiler's copy section, the typography art direction,
+     * the blueprint's typography and layout directions, the old text directive --
+     * is dropped by the router instead of being appended here.
+     */
+    opticalScriptFor?: (composed: string, blueprintText?: string) => OnePassScript | null
   ): ImageGenerationProvider {
     return {
       async generateImage(input: ProviderImageGenerationInput) {
+        if (RenderTracer.isTraceEnabled()) {
+          RenderTracer.recordCheckpoint("B", "Input entering wrapProvider()", input.prompt, { generationId: input.generationId });
+        }
         const waitStart = Date.now();
         const judgment = await judgmentSource;
         const directorWaitMs = Date.now() - waitStart;
@@ -453,6 +474,9 @@ export class ExperimentPipeline {
           creativeConstraint,
           carryNonSceneReasoning
         );
+        if (RenderTracer.isTraceEnabled()) {
+          RenderTracer.recordCheckpoint("C", "Output after NanoBananaPromptComposer", composed, { generationId: input.generationId });
+        }
         // Headroom against the budget the compiler itself enforces. The
         // blueprint is appended after compilation, so without this it escapes
         // the discipline every other section is held to: measured live, the
@@ -465,12 +489,33 @@ export class ExperimentPipeline {
         const headroom =
           PromptBudgetManagerService.HARD_MAXIMUM - composed.length - 2 - (directive ? directive.length + 2 : 0);
         const blueprintText = blueprintFor ? blueprintFor(judgment, headroom, composed) : undefined;
-        const withBlueprint = blueprintText ? `${composed}
-
-${blueprintText}` : composed;
-        const finalPrompt = directive ? `${withBlueprint}
-
-${directive}` : withBlueprint;
+        const withBlueprint = blueprintText ? `${composed}\n\n${blueprintText}` : composed;
+        // One-pass: the eight-block script IS the prompt. The legacy assembly
+        // below it survives only as the path a failed compile falls back to, which
+        // is also the editable path -- nothing else reaches the provider.
+        const optical = opticalScriptFor ? opticalScriptFor(composed, blueprintText) : null;
+        const finalPrompt = optical
+          ? optical.prompt
+          : directive
+            ? `${withBlueprint}\n\n${directive}`
+            : withBlueprint;
+        if (optical) {
+          console.log("[OPTICAL][SCRIPT]", {
+            ...opticalTelemetry(optical),
+            dropped: optical.route.dropped,
+            unrouted: optical.route.unrouted,
+            chars_legacy_assembly: withBlueprint.length + (directive ? directive.length + 2 : 0),
+            chars_sent: finalPrompt.length,
+          });
+          if (!optical.ok) {
+            console.warn("[OPTICAL][SCRIPT] invariant failed", {
+              failed: optical.invariants.filter((x) => !x.ok).map((x) => `${x.id}: ${x.because}`),
+            });
+          }
+        }
+        if (RenderTracer.isTraceEnabled()) {
+          RenderTracer.recordCheckpoint("F", "FINAL ProviderImageGenerationInput.prompt immediately before ImgStudio HTTP dispatch", finalPrompt, { generationId: input.generationId });
+        }
         if (blueprintText) {
           console.log("[EXPERIMENT][CREATIVE_BLUEPRINT_TRANSMITTED]", {
             blueprint_chars: blueprintText.length,
@@ -503,11 +548,73 @@ ${directive}` : withBlueprint;
               input.prompt.length > PromptBudgetManagerService.EMERGENCY_TARGET,
           });
         }
-        // `finalPrompt` goes back with the result so the stored record is the
-        // prompt that was sent, not the one the orchestrator compiled before
-        // this wrapper appended to it.
+        if (RenderTracer.isTraceEnabled()) {
+          RenderTracer.stage({
+            stageNum: "13",
+            name: "PROMPT COMPOSER & BLUEPRINT SYNTHESIS",
+            file: "apps/web/lib/image-engine/evolution/ExperimentPipeline.ts",
+            func: "wrapProvider",
+            input: {
+              compiledPromptChars: input.prompt.length,
+              hasJudgment: Boolean(judgment),
+              controlled,
+              fixesApplied: Boolean(fixes),
+              hasBlueprint: Boolean(blueprintText),
+              hasDirective: Boolean(directive),
+            },
+            decision: {
+              composedPromptChars: composed.length,
+              blueprintChars: blueprintText?.length ?? 0,
+              finalPromptChars: finalPrompt.length,
+              headroom,
+            },
+            output: {
+              finalPrompt,
+            },
+            nextStage: "inner.generateImage",
+          });
+
+          RenderTracer.stage({
+            stageNum: "14",
+            name: "IMAGE PROVIDER REQUEST & GENERATION",
+            file: "apps/web/lib/image-engine/evolution/ExperimentPipeline.ts",
+            func: "wrapProvider -> inner.generateImage",
+            input: {
+              model: input.model || "flow-nano-banana-2",
+              aspectRatio: input.aspectRatio,
+              referenceCount: input.references?.length ?? 0,
+              promptChars: finalPrompt.length,
+            },
+            decision: {
+              provider: "ImgStudioImageGenerationProvider",
+              model: "flow-nano-banana-2",
+              endpoint: (input.references?.length ?? 0) > 0 ? "/api/v1/images/edit" : "/api/v1/images/generate",
+            },
+            output: "calling provider...",
+            nextStage: "ImgStudio API Response",
+          });
+          RenderTracer.recordImageRender();
+        }
+
         const out = await inner.generateImage({ ...input, prompt: finalPrompt });
         if (out && !out.finalPrompt) out.finalPrompt = finalPrompt;
+
+        if (RenderTracer.isTraceEnabled()) {
+          RenderTracer.stage({
+            stageNum: "14.1",
+            name: "IMAGE PROVIDER RESPONSE RECEIVED",
+            file: "apps/web/lib/image-engine/evolution/ExperimentPipeline.ts",
+            func: "wrapProvider",
+            input: { success: out.success, error: out.error?.code },
+            decision: {
+              imageBufferBytes: out.imageBuffer?.length ?? 0,
+              imageUrl: out.imageUrl,
+              cost_vnd: out.remoteDetails?.cost_vnd,
+            },
+            output: out,
+            nextStage: "attachDesignContext",
+          });
+        }
         if (!editable || !out.success || !out.imageBuffer) return out;
         const editablePostRenderActive = Boolean(process.env.TIDO_ENABLE_EDITABLE_POST_RENDER === "true");
         if (!editablePostRenderActive) {
@@ -1062,6 +1169,51 @@ ${directive}` : withBlueprint;
     if (editableActive) {
       console.log("[EXPERIMENT][EDITABLE] mode on", { text_lines: textRequirement.lines.length, logo_layer: Boolean(editableLogo) });
     }
+    // One-pass: the eight-block script.
+    //
+    // Everything the analysis layer decided reaches the renderer through this and
+    // nothing else. Built lazily: the composition plan, the typography plan and the
+    // typography DNA are produced inside the execution block, which runs while the
+    // provider is being awaited.
+    //
+    // Null in editable mode, where the model renders the scene only, and null on a
+    // failed compile -- in both cases the legacy assembly still runs, so a bug here
+    // cannot cost a render.
+    const opticalScriptFor = editableActive
+      ? undefined
+      : (composedPrompt: string, blueprintText?: string): OnePassScript | null => {
+          try {
+            const ledgers = buildTextLedgers({
+              requirement: textRequirement,
+              roles: (capturedPlan?.blocks || []).map((b) => ({ text: b.content, role: b.text_role })),
+              hasProductReference: countAttachedProducts(request) > 0,
+            });
+            const dna = buildTypographyDNA({
+              blueprint: capturedBlueprint,
+              personality: capturedPlan?.style?.personality ?? null,
+              category: categoryHint(capturedBlueprint),
+              brandKit: decision.brandKit ?? null,
+              copyLines: textRequirement.lines.length,
+            });
+            const script = compileOnePassPrompt({
+              compiled: composedPrompt,
+              blueprint: blueprintText ?? null,
+              plan: capturedCompositionPlan,
+              brand: brandKitDirective(decision.brandKit, textRequirement.mode),
+              ledgers,
+              treatment: dna.treatment,
+              avoidRules: dna.avoid_rules,
+              accentInk: Boolean(dna.accent),
+            });
+            console.log("[OPTICAL][LEDGERS]", ledgerTelemetry(ledgers));
+            return script;
+          } catch (err: any) {
+            console.warn("[OPTICAL][SCRIPT] compile failed; the legacy assembly was sent instead", {
+              error: err?.message,
+            });
+            return null;
+          }
+        };
     let productTruthForBrain: import("./experiment/ProductTruth").ProductTruth | null = null;
     if (contextV1) {
       const context = buildContext({
@@ -1196,6 +1348,34 @@ ${directive}` : withBlueprint;
         provenance: industryLandscape.provenance,
         core_opportunity: creativeOpportunity?.core_opportunity ? creativeOpportunity.core_opportunity.slice(0, 60) : null,
         human_tension: creativeOpportunity?.human_tension ? creativeOpportunity.human_tension.slice(0, 60) : null,
+      });
+    }
+
+    if (RenderTracer.isTraceEnabled()) {
+      RenderTracer.stage({
+        stageNum: "02",
+        name: "CREATIVE CONTEXT & MEMORY ASSEMBLY",
+        file: "apps/web/lib/image-engine/evolution/ExperimentPipeline.ts",
+        func: "ExperimentPipeline.run",
+        input: {
+          concept: request.concept,
+          useCase: request.useCase,
+          aspectRatio: request.aspectRatio,
+          productCount,
+          flags: judgmentFlags,
+        },
+        decision: {
+          visualDNA: visualDNA ? "analyzed" : "skipped",
+          earlyStrategy: earlyStrategy ? "precomputed" : "none",
+          industryLandscape: industryLandscape?.industry_name || "none",
+          creativeOpportunity: creativeOpportunity?.core_opportunity || "none",
+          textRequirement,
+          brandBrief: brandBrief ? "attached" : "none",
+          memoryContext: memoryContext ? "attached" : "none",
+          routeEvidence: routeEvidence ? "attached" : "none",
+        },
+        output: brief,
+        nextStage: "CreativeDirectorV1.judge",
       });
     }
 
@@ -1643,6 +1823,9 @@ ${directive}` : withBlueprint;
             // when the composition actually ran.
             omitOwnedElsewhere: Boolean(capturedCompositionPlan),
           });
+          if (RenderTracer.isTraceEnabled()) {
+            RenderTracer.recordCheckpoint("D", "Output after ProfessionalCreativeBrain / blueprint injection", text || "");
+          }
           // The evaluation layer, finally reading something. It was built,
           // tested and imported by nothing, so every render so far was scored
           // by no one. Free, deterministic and offline, so it costs the render
@@ -1684,7 +1867,11 @@ ${text || ""}`,
             trimmed: text ? text.length < ProfessionalCreativeBrain.render(bp)!.length : false,
           });
           const tail = [productionText, executionText].filter(Boolean).join("\n\n");
-          return tail ? [text, tail].filter(Boolean).join("\n\n") : text;
+          const blueprintText = tail ? [text, tail].filter(Boolean).join("\n\n") : text;
+          if (RenderTracer.isTraceEnabled()) {
+            RenderTracer.recordCheckpoint("E", "Output after CompositionPlan / THE COMPOSITION injection", blueprintText ? `${composedPrompt}\n\n${blueprintText}` : composedPrompt);
+          }
+          return blueprintText;
         }
       : undefined;
 
@@ -1716,6 +1903,22 @@ ${text || ""}`,
           console.warn("[EXPERIMENT][TEXT_REQUIREMENT] director text removed", {
             mode: textRequirement.mode,
             removed: enforced.removed.length,
+          });
+        }
+        if (RenderTracer.isTraceEnabled()) {
+          RenderTracer.stage({
+            stageNum: "04",
+            name: "DIRECTOR EVALUATION & TEXT ENFORCEMENT",
+            file: "apps/web/lib/image-engine/evolution/ExperimentPipeline.ts",
+            func: "direct",
+            input: { rawJudgment: j },
+            decision: {
+              evaluation: evaluationTelemetry(evaluation),
+              textRemovedCount: enforced.removed.length,
+              removed: enforced.removed,
+            },
+            output: enforced.judgment,
+            nextStage: "toCreativeDecision",
           });
         }
         return enforced.judgment;
@@ -1790,7 +1993,8 @@ ${text || ""}`,
             false,
             blueprintFor,
             finalDirective,
-            editableHooks
+            editableHooks,
+            opticalScriptFor
           ),
         });
 
@@ -1828,9 +2032,28 @@ ${text || ""}`,
       }
     }
 
+    const rawJudgment = decision.pinnedJudgment
+      ? decision.pinnedJudgment
+      : await new CreativeDirectorV1().judge(brief, judgmentFlags);
+    if (RenderTracer.isTraceEnabled()) {
+      RenderTracer.stage({
+        stageNum: "03",
+        name: "CREATIVE DIRECTOR EXECUTION",
+        file: "apps/web/lib/image-engine/evolution/ExperimentPipeline.ts",
+        func: "ExperimentPipeline.run",
+        input: { brief, judgmentFlags },
+        decision: {
+          produced: Boolean(rawJudgment),
+          selected: rawJudgment?.strategy?.selected || rawJudgment?.selected || "none",
+          directionsCount: rawJudgment?.directions?.length || 0,
+        },
+        output: rawJudgment,
+        nextStage: "direct",
+      });
+    }
     const judgment = decision.pinnedJudgment
       ? decision.pinnedJudgment
-      : direct(await new CreativeDirectorV1().judge(brief, judgmentFlags), Date.now() - judgeStart);
+      : direct(rawJudgment, Date.now() - judgeStart);
     recordRoutesOffered(judgment, routes);
     capturedJudgment = judgment;
     logCreativeStrategyTrace({
@@ -1879,6 +2102,29 @@ ${text || ""}`,
         // sections instead, so passing `bridge` here too would state each of
         // them twice — once as a sentence and once as a block. One carrier.
         effectiveRequest = applyCreativeDecision(request, decision, false);
+        if (RenderTracer.isTraceEnabled()) {
+          RenderTracer.stage({
+            stageNum: "05",
+            name: "CREATIVE DECISION TO BRIEF MUTATION",
+            file: "apps/web/lib/image-engine/evolution/ExperimentPipeline.ts",
+            func: "ExperimentPipeline.run",
+            input: { originalConcept: request.concept, decision },
+            decision: {
+              controlled: true,
+              selected_direction: decision.selected_direction,
+              scene_definition: decision.scene_definition,
+              camera: decision.camera_decision,
+              lighting: decision.lighting_decision,
+              composition: decision.composition_decision,
+              typography: decision.typography_decision,
+            },
+            output: {
+              effectiveConcept: effectiveRequest.concept,
+              hardRequirements: effectiveRequest.hardRequirements,
+            },
+            nextStage: "RenderCore.generateSimpleImage",
+          });
+        }
         // The communication goal travels as a hard requirement, not in the
         // concept: the concept is budget-constrained, and the brain does not
         // need to turn a goal into a scene — it needs to know what the scene it
@@ -1953,7 +2199,8 @@ ${text || ""}`,
           bridge,
           blueprintFor,
           finalDirective,
-          editableHooks
+          editableHooks,
+          opticalScriptFor
         ),
       });
 
@@ -1963,7 +2210,7 @@ ${text || ""}`,
       //
       // The vision review runs above this, in PipelineRouter. See the note at
       // the concurrent branch for why it is not here.
-      return ExperimentPipeline.attachDesignContext(
+      const attached = ExperimentPipeline.attachDesignContext(
         capturedIntelligence ? { ...generated, creativeIntelligence: capturedIntelligence } : generated,
         capturedBlueprint,
         capturedTypography,
@@ -1980,6 +2227,28 @@ ${text || ""}`,
         industryLandscape,
         creativeOpportunity,
       );
+      if (RenderTracer.isTraceEnabled()) {
+        RenderTracer.stage({
+          stageNum: "15",
+          name: "DESIGN CONTEXT ATTACHMENT",
+          file: "apps/web/lib/image-engine/evolution/ExperimentPipeline.ts",
+          func: "ExperimentPipeline.run",
+          input: { generationId: generated.generationId },
+          decision: {
+            blueprintAttached: Boolean(capturedBlueprint),
+            typographySystemAttached: Boolean(capturedTypography),
+            geometryAttached: Boolean(capturedGeometry),
+            compositionPlanAttached: Boolean(capturedCompositionPlan),
+            creativeIntelligenceAttached: Boolean(capturedIntelligence),
+          },
+          output: {
+            hasImageBuffer: Boolean(attached.imageBuffer),
+            imageUrl: attached.imageUrl,
+          },
+          nextStage: "VisionReviewLayer.reviewRender",
+        });
+      }
+      return attached;
     } catch (err: any) {
       console.error("[EVOLUTION][EXPERIMENT] generation failed", {
         error: err?.message || String(err),

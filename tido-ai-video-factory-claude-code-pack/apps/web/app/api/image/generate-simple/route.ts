@@ -8,6 +8,7 @@ import { preferenceDecisions } from "@/lib/image-engine/evolution/experiment/Use
 import { recordGeneration } from "@/lib/persistence/record-generation";
 import { loadBrandKitForRender, type LoadedBrandKit } from "@/lib/brand-kit/brand-kit-store";
 import { SimpleInputRequestV1, AssetRoleV1 } from "@/lib/image-engine/types";
+import { RenderTracer } from "@/lib/image-engine/observability/RenderTracer";
 
 export const runtime = "nodejs";
 
@@ -79,6 +80,9 @@ export async function POST(req: NextRequest) {
         creativeDirection: body.creativeDirection,
         salesContext: body.salesContext,
       };
+      if (RenderTracer.isTraceEnabled()) {
+        RenderTracer.startTrace(simpleRequest.requestId || `req_${Date.now()}`, simpleRequest);
+      }
     } else if (contentType.includes("multipart/form-data")) {
       const formData = await req.formData();
       tFormDone = Date.now();
@@ -228,6 +232,9 @@ export async function POST(req: NextRequest) {
         creativeDirection,
         salesContext,
       };
+      if (RenderTracer.isTraceEnabled()) {
+        RenderTracer.startTrace(simpleRequest.requestId || `req_${Date.now()}`, simpleRequest);
+      }
       tRequestBuilt = Date.now();
     } else {
       return NextResponse.json(
@@ -411,6 +418,17 @@ export async function POST(req: NextRequest) {
         },
         { status: httpStatus }
       );
+    }
+
+    if (RenderTracer.isTraceEnabled()) {
+      RenderTracer.summary({
+        productionEntryPoint: "apps/web/app/api/image/generate-simple/route.ts",
+        correctionTriggered: Boolean(result.visionReview?.second_render_created),
+        secondRenderCreated: Boolean(result.visionReview?.second_render_created),
+        finalImage: result.imageUrl,
+        editableAsset: result.designDocument?.editable || null,
+        compiledPromptChars: result.diagnostics?.promptChars,
+      });
     }
 
     const response = NextResponse.json({

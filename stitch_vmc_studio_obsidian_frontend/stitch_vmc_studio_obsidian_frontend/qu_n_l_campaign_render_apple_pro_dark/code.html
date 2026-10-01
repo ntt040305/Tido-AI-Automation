@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="vi"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base { html, body { margin: 0; padding: 0; } body { overscroll-behavior: none; } main > :first-child { margin-top: 0 !important; } main > :last-child { margin-bottom: 0 !important; } } ::-webkit-scrollbar { display: none; }</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-primary-fixed-variant": "#930001", "tertiary-fixed": "#bfe9ff", "on-secondary": "#3f2e00", "inverse-surface": "#e5e2e3", "primary": "#ffb4a8", "surface-container-highest": "#353436", "background": "#131314", "surface2": "#1C1C1F", "border": "#28282C", "on-primary": "#690000", "tertiary-fixed-dim": "#71d2fd", "surface-variant": "#353436", "secondary-fixed-dim": "#f1c04c", "on-primary-fixed": "#410000", "on-secondary-fixed": "#261a00", "on-surface-variant": "#e4beb8", "surface-container-lowest": "#0e0e0f", "surface-tint": "#ffb4a8", "surface-container": "#201f20", "primary-fixed": "#ffdad4", "on-background": "#e5e2e3", "on-surface": "#e5e2e3", "outline-variant": "#5b403c", "on-secondary-fixed-variant": "#5b4300", "text-telemetry": "#65645F", "secondary-container": "#b58a17", "inverse-primary": "#b91e13", "on-error": "#690005", "ai-gold": "#E3B341", "primary-container": "#ff5541", "inverse-on-surface": "#313031", "on-tertiary-fixed-variant": "#004d65", "surface-container-low": "#1c1b1c", "on-tertiary-fixed": "#001f2a", "border-strong": "#38383D", "on-tertiary": "#003547", "surface-bright": "#3a393a", "surface3": "#232326", "tally-success": "#5FBF77", "secondary-fixed": "#ffdf9e", "on-error-container": "#ffdad6", "secondary": "#f1c04c", "on-primary-container": "#5c0000", "tertiary": "#71d2fd", "text-muted": "#9C9B96", "error": "#ffb4ab", "surface": "#151517", "tertiary-container": "#2f9bc4", "on-tertiary-container": "#002e3e", "primary-fixed-dim": "#ffb4a8", "outline": "#ab8983", "surface-container-high": "#2a2a2b", "text": "#F2F1ED", "tally-live": "#E6402F", "tally-warning": "#E8A33D", "on-secondary-container": "#372700", "surface-dim": "#131314", "error-container": "#93000a" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "gutter": "1rem", "space-xl": "2rem", "space-md": "1rem", "space-lg": "1.5rem", "gutter-desktop": "1.5rem", "margin-desktop": "2rem", "space-xs": "0.25rem", "margin": "1rem", "space-sm": "0.5rem" }, "fontFamily": { "body-md": ["Be Vietnam Pro"], "body-sm": ["Be Vietnam Pro"], "telemetry-md": ["Space Mono"], "telemetry-lg": ["Space Mono"], "headline-lg": ["Be Vietnam Pro"], "headline-xl-mobile": ["Be Vietnam Pro"], "title-sm": ["Be Vietnam Pro"], "telemetry-sm": ["Space Mono"], "headline-xl": ["Be Vietnam Pro"], "label-caps": ["Space Mono"], "headline-md": ["Be Vietnam Pro"] }, "fontSize": { "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "body-sm": ["13px", { "lineHeight": "18px", "fontWeight": "400" }], "telemetry-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "400" }], "telemetry-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "700" }], "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "headline-xl-mobile": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.01em", "fontWeight": "700" }], "title-sm": ["16px", { "lineHeight": "24px", "fontWeight": "600" }], "telemetry-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "400" }], "headline-xl": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "label-caps": ["10px", { "lineHeight": "12px", "letterSpacing": "0.08em", "fontWeight": "700" }], "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }] } } } };</script></head><body class="bg-surface-container-lowest text-text font-body-md text-body-md min-h-screen selection:bg-surface-container-highest"><aside class="fixed left-0 top-0 h-full w-64 bg-surface border-r border-border z-50 flex flex-col justify-between"><div class="flex flex-col"><div class="h-16 px-space-md border-b border-border flex items-center gap-space-sm"><img alt="VMC Logo.png" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1XJHRRCPC38HmmNVZMtwSvPxMeg8LtVs1oT-6UzIIo4AZYeXFqSwiNf7wJLQOgHHIWI6gK4AZz5FEgYs3V9SBUlFjqW5BcK-5X9zNF0gcgYjHMgo653SQXLqPwiTxzE64aprWmzR27i4rj5A1flpxc-Zal4XtpWWw9gQlLynrYmpox2YfSrCIhSIn0iIQn_GuO9n5UYF9AyGzs0SYvK76iXAx-NsANscSRbqTliv7Vf24JoijP8owh8oN_7qTQMjbAuWx4iPUMGbw"/><div class="flex flex-col"><span class="font-title-sm text-title-sm text-text leading-none tracking-tight">VMC STUDIO</span><span class="font-label-caps text-label-caps text-text-telemetry tracking-widest uppercase mt-space-xs">VIC Marketing Pro</span></div></div><div class="px-space-md py-space-sm border-b border-border flex items-center justify-between"><span class="font-label-caps text-label-caps text-text-telemetry uppercase tracking-wider">Node Telemetry</span><div class="flex items-center gap-space-xs"><span class="w-1.5 h-1.5 rounded-full bg-tally-success"></span><span class="font-telemetry-sm text-telemetry-sm text-text-muted">PRO-SYS 01</span></div></div><nav class="flex flex-col gap-space-xs p-space-sm mt-space-xs" data-active-classes="bg-surface2 text-text border border-border-strong"><a class="flex items-center gap-space-sm px-space-md py-2.5 rounded-lg text-text-muted hover:bg-surface2 hover:text-text transition-colors" data-path="du-an-anh" href="#"><span class="material-symbols-outlined text-[18px]">grid_view</span><span class="font-body-md text-body-md">Dự án Ảnh</span></a><a class="flex items-center gap-space-sm px-space-md py-2.5 rounded-lg text-text-muted hover:bg-surface2 hover:text-text transition-colors" data-path="studio-render" href="#"><span class="material-symbols-outlined text-[18px]">videocam</span><span class="font-body-md text-body-md">Studio Render</span></a><a class="flex items-center gap-space-sm px-space-md py-2.5 rounded-lg text-text-muted hover:bg-surface2 hover:text-text transition-colors" data-path="quan-ly-campaign" href="#"><span class="material-symbols-outlined text-[18px]">layers</span><span class="font-body-md text-body-md">Quản lý Campaign</span></a></nav></div><div class="p-space-sm border-t border-border"><div class="p-space-sm rounded-lg bg-surface2 border border-border flex items-center justify-between"><div class="flex items-center gap-space-sm overflow-hidden"><div class="w-8 h-8 rounded-full bg-primary flex-shrink-0 flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div><div class="flex flex-col truncate"><span class="font-body-sm text-body-sm text-text font-medium truncate">Creative Operator</span><span class="font-telemetry-sm text-telemetry-sm text-text-telemetry truncate">id: operator@vmc.io</span></div></div><span class="material-symbols-outlined text-text-telemetry text-[18px]">more_vert</span></div></div></aside><div class="pl-64"><header class="fixed top-0 left-64 right-0 h-16 bg-surface border-b border-border z-40 flex items-center justify-between px-space-lg"><div class="flex items-center gap-space-sm"><div class="flex items-center gap-space-xs text-text-muted font-body-sm text-body-sm"><span class="text-text-telemetry font-label-caps text-label-caps uppercase">Trạm Máy</span><span class="text-border-strong">/</span><span class="text-text font-medium">Hệ thống Sản xuất</span></div></div><div class="flex items-center gap-space-md"><div class="flex items-center gap-space-xs px-2.5 py-1 rounded-full bg-surface2 border border-border"><span class="w-1.5 h-1.5 rounded-full bg-tally-live"></span><span class="font-telemetry-sm text-telemetry-sm text-text-muted">CORE LIVE</span></div><button class="flex items-center gap-space-xs rounded-full bg-text text-background px-5 py-2 font-body-sm text-body-sm font-semibold hover:bg-white transition-colors cursor-pointer" type="button"><span class="material-symbols-outlined text-[16px]">add</span><span>+ Tạo Dự án Mới</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center border border-border-strong flex-shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></header><main class="relative pt-16 w-full min-h-screen bg-surface-container-lowest"><div class="flex flex-col w-full px-space-lg py-space-lg gap-space-lg text-text">
+<!-- Top Utility Bar: Search, Filtering & Quick Stats Trigger -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-md">
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs text-text-telemetry font-label-caps text-label-caps uppercase tracking-wider">
+<span>VIC ENGINE</span>
+<span>•</span>
+<span>QUEUE MANAGER</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-text font-semibold tracking-tight mt-0.5">Quản lý Campaign Render</h1>
+</div>
+<!-- macOS style search pill and controls -->
+<div class="flex items-center gap-space-sm flex-wrap">
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3 text-text-telemetry text-[18px]">search</span>
+<input class="bg-surface text-text pl-9 pr-4 py-1.5 rounded-full text-body-sm font-body-sm placeholder:text-text-telemetry focus:outline-none focus:bg-surface2 transition-all w-64 md:w-72" placeholder="Tìm chiến dịch, SKU, định dạng..." type="text"/>
+</div>
+<div class="flex items-center bg-surface p-1 rounded-full">
+<button class="px-3 py-1 rounded-full text-body-sm font-body-sm bg-surface2 text-text font-medium" type="button">Tất cả (18)</button>
+<button class="px-3 py-1 rounded-full text-body-sm font-body-sm text-text-muted hover:text-text transition-colors" type="button">Đang Render (6)</button>
+<button class="px-3 py-1 rounded-full text-body-sm font-body-sm text-text-muted hover:text-text transition-colors" type="button">Hoàn thành</button>
+</div>
+<button class="h-8 w-8 rounded-full bg-surface hover:bg-surface2 flex items-center justify-center text-text-muted hover:text-text transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">tune</span>
+</button>
+</div>
+</div>
+<!-- Row 1: 4 KPI Cards in Apple Dark Clean Aesthetics -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-md">
+<!-- Card 1 -->
+<div class="bg-surface rounded-2xl p-space-lg flex flex-col justify-between transition-all hover:bg-surface2">
+<div class="flex items-center justify-between">
+<span class="text-text-muted font-body-sm text-body-sm font-medium">Chiến dịch hoạt động</span>
+<span class="flex items-center gap-1.5 font-telemetry-sm text-telemetry-sm text-text-telemetry">
+<span class="w-1.5 h-1.5 rounded-full bg-tally-live"></span> RUNNING
+        </span>
+</div>
+<div class="mt-4 flex items-baseline justify-between">
+<span class="font-telemetry-lg text-[32px] leading-tight font-bold tracking-tight text-text">06</span>
+<span class="font-telemetry-sm text-telemetry-sm text-text-muted">/ 18 Tổng số</span>
+</div>
+<div class="mt-3 w-full bg-surface3 h-1 rounded-full overflow-hidden">
+<div class="bg-text h-full rounded-full w-[33%]"></div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface rounded-2xl p-space-lg flex flex-col justify-between transition-all hover:bg-surface2">
+<div class="flex items-center justify-between">
+<span class="text-text-muted font-body-sm text-body-sm font-medium">Ảnh trong hàng đợi</span>
+<span class="material-symbols-outlined text-text-telemetry text-[18px]">photo_library</span>
+</div>
+<div class="mt-4 flex items-baseline justify-between">
+<span class="font-telemetry-lg text-[32px] leading-tight font-bold tracking-tight text-text">142</span>
+<span class="font-telemetry-sm text-telemetry-sm text-text-muted">+24 mới nhận</span>
+</div>
+<div class="mt-3 w-full bg-surface3 h-1 rounded-full overflow-hidden">
+<div class="bg-text-muted h-full rounded-full w-[72%]"></div>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="bg-surface rounded-2xl p-space-lg flex flex-col justify-between transition-all hover:bg-surface2">
+<div class="flex items-center justify-between">
+<span class="text-text-muted font-body-sm text-body-sm font-medium">Tỷ lệ QC đạt chuẩn</span>
+<span class="flex items-center gap-1.5 font-telemetry-sm text-telemetry-sm text-text-telemetry">
+<span class="w-1.5 h-1.5 rounded-full bg-tally-success"></span> AI-PASS
+        </span>
+</div>
+<div class="mt-4 flex items-baseline justify-between">
+<span class="font-telemetry-lg text-[32px] leading-tight font-bold tracking-tight text-text">98.4%</span>
+<span class="font-telemetry-sm text-telemetry-sm text-text-muted">Target: &gt;97%</span>
+</div>
+<div class="mt-3 w-full bg-surface3 h-1 rounded-full overflow-hidden">
+<div class="bg-text h-full rounded-full w-[98.4%]"></div>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="bg-surface rounded-2xl p-space-lg flex flex-col justify-between transition-all hover:bg-surface2">
+<div class="flex items-center justify-between">
+<span class="text-text-muted font-body-sm text-body-sm font-medium">Thời gian trung bình</span>
+<span class="material-symbols-outlined text-text-telemetry text-[18px]">speed</span>
+</div>
+<div class="mt-4 flex items-baseline justify-between">
+<span class="font-telemetry-lg text-[32px] leading-tight font-bold tracking-tight text-text">3.8s</span>
+<span class="font-telemetry-sm text-telemetry-sm text-text-muted">-0.4s vs tuần trước</span>
+</div>
+<div class="mt-3 w-full bg-surface3 h-1 rounded-full overflow-hidden">
+<div class="bg-text h-full rounded-full w-[85%]"></div>
+</div>
+</div>
+</div>
+<!-- Row 2: Main Workspace Split (Table on Left, Live Stage Preview on Right) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-start">
+<!-- Left Column: Active Campaigns List (7 Cols) -->
+<div class="lg:col-span-7 bg-surface rounded-2xl p-space-lg flex flex-col">
+<div class="flex items-center justify-between pb-space-md">
+<div>
+<h2 class="font-title-sm text-title-sm text-text font-semibold">Danh sách Chiến dịch</h2>
+<p class="font-body-sm text-body-sm text-text-muted mt-0.5">Tiến trình kết xuất song song theo thời gian thực</p>
+</div>
+<div class="flex items-center gap-2">
+<button class="px-3 py-1.5 rounded-full bg-surface2 hover:bg-surface-bright text-text font-body-sm text-body-sm transition-colors flex items-center gap-1.5" type="button">
+<span class="material-symbols-outlined text-[16px]">filter_list</span>
+<span>Lọc</span>
+</button>
+<button class="px-3 py-1.5 rounded-full bg-surface2 hover:bg-surface-bright text-text font-body-sm text-body-sm transition-colors flex items-center gap-1.5" type="button">
+<span class="material-symbols-outlined text-[16px]">refresh</span>
+</button>
+</div>
+</div>
+<!-- Campaign Table -->
+<div class="overflow-x-auto w-full">
+<table class="w-full text-left">
+<thead>
+<tr class="text-text-telemetry font-label-caps text-label-caps uppercase tracking-wider">
+<th class="py-3 px-3 font-medium">Chiến Dịch &amp; SKU</th>
+<th class="py-3 px-3 font-medium">Tiến Độ</th>
+<th class="py-3 px-3 font-medium">Trạng Thái</th>
+<th class="py-3 px-3 font-medium">Tỉ Lệ</th>
+<th class="py-3 px-3 text-right font-medium">Thao Tác</th>
+</tr>
+</thead>
+<tbody class="text-body-sm font-body-sm">
+<!-- Row 1: Selected / In Focus -->
+<tr class="bg-surface2 rounded-xl transition-colors cursor-pointer group">
+<td class="py-3.5 px-3 rounded-l-xl">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-lg bg-surface3 overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Editorial product render of a sleek modern ceramic vase in dramatic minimalist studio lighting with obsidian black pedestal and soft directional shadows, premium Apple aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9dSIbELh2sZb3VAxbXfYMQ6rl1rDkRYO93i7ZIARi3Non22vCh7Ab_0nA_85lMnFa9lxSC8d9_B-ibeRvVWMCNQuIG_zBlR75RBbemRABAd5BXEPdSwkW9lKEDOBz06PNzcDP8P_OQCH7YiRBq37gixqdjRZSTlTHQJ_TddYxnqYh-5z-6QRudEneHfpVuqzFSPNNNIGe4q3ZJBkK1SLrOxfY0bk2UJY4GHeN2bxlxd3XG0T4XQ6Byg"/>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="text-text font-medium truncate">Mùa Thu - Lookbook 2024</span>
+<span class="font-telemetry-sm text-telemetry-sm text-text-telemetry">CMP-8910 • 48 Sản phẩm</span>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-3 min-w-[130px]">
+<div class="flex flex-col gap-1.5">
+<div class="flex justify-between font-telemetry-sm text-telemetry-sm text-text-muted">
+<span>34/48</span>
+<span>71%</span>
+</div>
+<div class="w-full bg-surface3 h-1 rounded-full overflow-hidden">
+<div class="bg-text h-full rounded-full w-[71%]"></div>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-3 whitespace-nowrap">
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface3 text-text">
+<span class="w-1.5 h-1.5 rounded-full bg-tally-live"></span>
+<span class="text-body-sm font-body-sm">Đang render</span>
+</div>
+</td>
+<td class="py-3.5 px-3">
+<span class="font-telemetry-sm text-telemetry-sm px-2 py-0.5 rounded bg-surface3 text-text-muted">9:16</span>
+</td>
+<td class="py-3.5 px-3 text-right rounded-r-xl">
+<div class="inline-flex items-center gap-1">
+<button class="w-8 h-8 rounded-full bg-surface3 hover:bg-surface-bright flex items-center justify-center text-text transition-colors" title="Tạm dừng" type="button">
+<span class="material-symbols-outlined text-[16px]">pause</span>
+</button>
+<button class="w-8 h-8 rounded-full bg-surface3 hover:bg-surface-bright flex items-center justify-center text-text-muted hover:text-text transition-colors" title="Tùy chọn" type="button">
+<span class="material-symbols-outlined text-[16px]">more_horiz</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface2/60 rounded-xl transition-colors cursor-pointer group">
+<td class="py-3.5 px-3 rounded-l-xl">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-lg bg-surface3 overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Monochrome luxury skincare cosmetic bottles staged on wet black slate with gentle highlights and crisp typography packaging, ultra-high key dark mode rendering" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDlbyfa3LK_YGrfM7P4SNKDBvKi-EwcljvdJOYSEBDjDSFdx2WnikFbDnDy7d0mqbl205BoMfrZ5Mz78xBYgojaNbD4EjIqfvTXawyny6uQ1Ru33376RxuYUzzdAhRg_DjAhRO47k5dywUQq7xei4-Aqjx9AiK434Iq3H7H-JSD_dlWJq2ESz7YyPQMNJFnXv98nMEQfBXZ9188Q8p1sRoZyLw2I9xCeVQyfoySY0rLi03pQuVoWI-nZg"/>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="text-text font-medium truncate">Serum Dưỡng Trắng VIC PRO</span>
+<span class="font-telemetry-sm text-telemetry-sm text-text-telemetry">CMP-8912 • 20 Biến thể</span>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-3 min-w-[130px]">
+<div class="flex flex-col gap-1.5">
+<div class="flex justify-between font-telemetry-sm text-telemetry-sm text-text-muted">
+<span>18/20</span>
+<span>90%</span>
+</div>
+<div class="w-full bg-surface3 h-1 rounded-full overflow-hidden">
+<div class="bg-text h-full rounded-full w-[90%]"></div>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-3 whitespace-nowrap">
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface3 text-text">
+<span class="w-1.5 h-1.5 rounded-full bg-tally-live"></span>
+<span class="text-body-sm font-body-sm">Đang render</span>
+</div>
+</td>
+<td class="py-3.5 px-3">
+<span class="font-telemetry-sm text-telemetry-sm px-2 py-0.5 rounded bg-surface3 text-text-muted">1:1</span>
+</td>
+<td class="py-3.5 px-3 text-right rounded-r-xl">
+<div class="inline-flex items-center gap-1">
+<button class="w-8 h-8 rounded-full bg-surface3 hover:bg-surface-bright flex items-center justify-center text-text transition-colors" title="Tạm dừng" type="button">
+<span class="material-symbols-outlined text-[16px]">pause</span>
+</button>
+<button class="w-8 h-8 rounded-full bg-surface3 hover:bg-surface-bright flex items-center justify-center text-text-muted hover:text-text transition-colors" title="Tùy chọn" type="button">
+<span class="material-symbols-outlined text-[16px]">more_horiz</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface2/60 rounded-xl transition-colors cursor-pointer group">
+<td class="py-3.5 px-3 rounded-l-xl">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-lg bg-surface3 overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Matte black wireless mechanical keyboard and aluminum audio interface resting on a clean graphite surface, precise technical lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCLSxqqsLY7MmjwNTWCeU6_COUT-sbCdz1bq7daA5kI_reeFqEBan5W7smWWQa50dwK1yns5Hk1KMr1er8JijlMh1daNTCl73itTb-WG2YJnU_m4Qz8fPM6VCIiOagBoZ-w9i3HjTTiccP-_UIFcOa9Pp7uxajII6xOHU1phCM2J04f0mZr6s9YegK-XUEYSo7HFeijsApIhv0E7MZGeApQuDu2wpnmU7PWrdvJsBgCJT8dnS6yt1hunw"/>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="text-text font-medium truncate">Gaming Gear Bàn Phím Cơ</span>
+<span class="font-telemetry-sm text-telemetry-sm text-text-telemetry">CMP-8874 • 36 Góc chụp</span>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-3 min-w-[130px]">
+<div class="flex flex-col gap-1.5">
+<div class="flex justify-between font-telemetry-sm text-telemetry-sm text-text-muted">
+<span>36/36</span>
+<span>100%</span>
+</div>
+<div class="w-full bg-surface3 h-1 rounded-full overflow-hidden">
+<div class="bg-tally-success h-full rounded-full w-full"></div>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-3 whitespace-nowrap">
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface3 text-text">
+<span class="w-1.5 h-1.5 rounded-full bg-tally-success"></span>
+<span class="text-body-sm font-body-sm">Hoàn thành</span>
+</div>
+</td>
+<td class="py-3.5 px-3">
+<span class="font-telemetry-sm text-telemetry-sm px-2 py-0.5 rounded bg-surface3 text-text-muted">16:9</span>
+</td>
+<td class="py-3.5 px-3 text-right rounded-r-xl">
+<div class="inline-flex items-center gap-1">
+<button class="w-8 h-8 rounded-full bg-surface3 hover:bg-surface-bright flex items-center justify-center text-text transition-colors" title="Tải về" type="button">
+<span class="material-symbols-outlined text-[16px]">download</span>
+</button>
+<button class="w-8 h-8 rounded-full bg-surface3 hover:bg-surface-bright flex items-center justify-center text-text-muted hover:text-text transition-colors" title="Tùy chọn" type="button">
+<span class="material-symbols-outlined text-[16px]">more_horiz</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-surface2/60 rounded-xl transition-colors cursor-pointer group">
+<td class="py-3.5 px-3 rounded-l-xl">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-lg bg-surface3 overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Minimalist titanium wristwatch with woven charcoal strap isolated on dark micro-textured background, precise luxury studio illumination" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBOfDheEt1T7AbEIypLmebtCJnnab5h_PzygIkGFdL6HPFvuFzeL87--cQ8etQw2MLetJc3ATGHBoc5DSffls39LtGx3lgRMYonJwhUGdu54CIF1WcGxpo6iQJ80lPvjH9Ii7PRXjlfqvOA1ESpj-LLUOkNZPGAg8eeSURruaiOcuI9nJlZSZiIHQxHzqCwFcv2W3hvC20RzHP80w16GqarLFQympHOvX5yOuoplGfc1PtW8DOtlEUvMg"/>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="text-text font-medium truncate">Đồng Hồ Titan Chrono X</span>
+<span class="font-telemetry-sm text-telemetry-sm text-text-telemetry">CMP-8869 • 12 Render</span>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-3 min-w-[130px]">
+<div class="flex flex-col gap-1.5">
+<div class="flex justify-between font-telemetry-sm text-telemetry-sm text-text-muted">
+<span>12/12</span>
+<span>100%</span>
+</div>
+<div class="w-full bg-surface3 h-1 rounded-full overflow-hidden">
+<div class="bg-tally-success h-full rounded-full w-full"></div>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-3 whitespace-nowrap">
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface3 text-text">
+<span class="w-1.5 h-1.5 rounded-full bg-tally-success"></span>
+<span class="text-body-sm font-body-sm">Hoàn thành</span>
+</div>
+</td>
+<td class="py-3.5 px-3">
+<span class="font-telemetry-sm text-telemetry-sm px-2 py-0.5 rounded bg-surface3 text-text-muted">4:5</span>
+</td>
+<td class="py-3.5 px-3 text-right rounded-r-xl">
+<div class="inline-flex items-center gap-1">
+<button class="w-8 h-8 rounded-full bg-surface3 hover:bg-surface-bright flex items-center justify-center text-text transition-colors" title="Tải về" type="button">
+<span class="material-symbols-outlined text-[16px]">download</span>
+</button>
+<button class="w-8 h-8 rounded-full bg-surface3 hover:bg-surface-bright flex items-center justify-center text-text-muted hover:text-text transition-colors" title="Tùy chọn" type="button">
+<span class="material-symbols-outlined text-[16px]">more_horiz</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 5 -->
+<tr class="hover:bg-surface2/60 rounded-xl transition-colors cursor-pointer group">
+<td class="py-3.5 px-3 rounded-l-xl">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-lg bg-surface3 overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Matte black insulated thermal travel mug set against geometric graphite cubes with clean edge bevels and subtle architectural shadows" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCn0FQNM1sPzkgjGOKtDaZQSjzRBeA6LI2FyTtjpoiLl29PqIskIyXhDf59gY_27JpqueWqJQEPo_Na0WsHt6P15s13QI-rI_wC_bxGVwYvhOhh34A6726i5-MK-mXn2fmQHjUIthydeQ54JaB-H8u8WK9CgA7LobvbgvzNJKwTuASHXPopIVbgOxpfdkf4GSC-Kv8SEY_KxGsORHMfEMkjQ7_qRwpYyPy0cmo1yepyeOkITvKp7BR9JA"/>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="text-text font-medium truncate">Bình Giữ Nhiệt Nordic Matte</span>
+<span class="font-telemetry-sm text-telemetry-sm text-text-telemetry">CMP-8850 • 24 Sản phẩm</span>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-3 min-w-[130px]">
+<div class="flex flex-col gap-1.5">
+<div class="flex justify-between font-telemetry-sm text-telemetry-sm text-text-muted">
+<span>11/24</span>
+<span>45%</span>
+</div>
+<div class="w-full bg-surface3 h-1 rounded-full overflow-hidden">
+<div class="bg-text h-full rounded-full w-[45%]"></div>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-3 whitespace-nowrap">
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface3 text-text">
+<span class="w-1.5 h-1.5 rounded-full bg-tally-live"></span>
+<span class="text-body-sm font-body-sm">Đang render</span>
+</div>
+</td>
+<td class="py-3.5 px-3">
+<span class="font-telemetry-sm text-telemetry-sm px-2 py-0.5 rounded bg-surface3 text-text-muted">9:16</span>
+</td>
+<td class="py-3.5 px-3 text-right rounded-r-xl">
+<div class="inline-flex items-center gap-1">
+<button class="w-8 h-8 rounded-full bg-surface3 hover:bg-surface-bright flex items-center justify-center text-text transition-colors" title="Tạm dừng" type="button">
+<span class="material-symbols-outlined text-[16px]">pause</span>
+</button>
+<button class="w-8 h-8 rounded-full bg-surface3 hover:bg-surface-bright flex items-center justify-center text-text-muted hover:text-text transition-colors" title="Tùy chọn" type="button">
+<span class="material-symbols-outlined text-[16px]">more_horiz</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination Footer -->
+<div class="mt-4 pt-3 flex items-center justify-between font-telemetry-sm text-telemetry-sm text-text-muted">
+<span>Hiển thị 1 - 5 trên 18 chiến dịch</span>
+<div class="flex items-center gap-2">
+<button class="w-7 h-7 rounded-full bg-surface2 hover:bg-surface-bright flex items-center justify-center text-text-muted hover:text-text transition-colors" type="button">
+<span class="material-symbols-outlined text-[14px]">chevron_left</span>
+</button>
+<span class="text-text font-medium">Trang 1 / 4</span>
+<button class="w-7 h-7 rounded-full bg-surface2 hover:bg-surface-bright flex items-center justify-center text-text-muted hover:text-text transition-colors" type="button">
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Right Column: Live Campaign Preview & Inspector (5 Cols) -->
+<div class="lg:col-span-5 bg-surface rounded-2xl p-space-lg flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-tally-live"></span>
+<h2 class="font-title-sm text-title-sm text-text font-semibold">Xem Trước Trực Tiếp</h2>
+</div>
+<span class="font-telemetry-sm text-telemetry-sm text-text-telemetry">CAMERA 02 • ACTIVE</span>
+</div>
+<!-- Main Stage Viewport (Aspect Locked: 9:16 or 16:9 Switchable View) -->
+<div class="relative w-full aspect-[4/5] bg-surface-container-lowest rounded-xl overflow-hidden flex items-center justify-center group">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-102" data-alt="Editorial close-up of a high-end black ceramic vessel with soft specular highlight reflecting warm rim light in a dark minimalist photo studio, high contrast Apple commercial style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDSZwIIuclbKm-WpdA7M2c8r1580KfgQro3-8Mzs96JWLbe9FcqRynqOMt6oM0p_3KKtcwBIaL8SAgiOIfboOAjT5DHrF9Bn4zkCSrE5LpXZO8CLhfAGTV8YwafHVey7LFJdrbUqrTW_JsjEYZimYx_ncjUVrc0WW2D2i9di1Mr5bXQHSnH_2AcZVk3qUyUW2Er2xnB-8DzPW9q8Xowun4b3R9Q9uKfNmMr1V49nDiQrSyIIEIsJl1qxg"/>
+<!-- Live Status Overlay Capsule -->
+<div class="absolute top-3 left-3 flex items-center gap-2 px-3 py-1 rounded-full bg-surface/80 backdrop-blur-md">
+<span class="w-1.5 h-1.5 rounded-full bg-tally-live"></span>
+<span class="font-telemetry-sm text-telemetry-sm text-text">FRAME 34 / 48</span>
+<span class="text-text-telemetry">•</span>
+<span class="font-telemetry-sm text-telemetry-sm text-text-muted">2160x3840 (9:16)</span>
+</div>
+<!-- Shutter / Focus Guide overlay marks -->
+<div class="absolute inset-4 pointer-events-none flex flex-col justify-between opacity-30">
+<div class="flex justify-between text-text-telemetry font-telemetry-sm text-[10px]">
+<span>[+0.0 EV]</span>
+<span>[ISO 100]</span>
+</div>
+<div class="flex justify-between text-text-telemetry font-telemetry-sm text-[10px]">
+<span>1/250s</span>
+<span>f/2.8</span>
+</div>
+</div>
+</div>
+<!-- Selected Campaign Detail Meta -->
+<div class="flex flex-col gap-2">
+<div class="flex items-start justify-between">
+<div>
+<h3 class="font-title-sm text-title-sm text-text font-semibold">Mùa Thu - Lookbook 2024</h3>
+<p class="font-telemetry-sm text-telemetry-sm text-text-telemetry">ID: VIC-CAM-8910-PRO • Engine: vmc-neural-v4</p>
+</div>
+<span class="px-2.5 py-0.5 rounded-full bg-surface2 text-text font-telemetry-sm text-telemetry-sm">9:16 Vertical</span>
+</div>
+<!-- Progress Specs Grid -->
+<div class="grid grid-cols-3 gap-2 mt-2 bg-surface2 p-3 rounded-xl">
+<div class="flex flex-col">
+<span class="text-text-telemetry font-telemetry-sm text-telemetry-sm">Đã kết xuất</span>
+<span class="font-telemetry-md text-telemetry-md font-bold text-text">34 ảnh</span>
+</div>
+<div class="flex flex-col">
+<span class="text-text-telemetry font-telemetry-sm text-telemetry-sm">Còn lại</span>
+<span class="font-telemetry-md text-telemetry-md font-bold text-text">14 ảnh (~52s)</span>
+</div>
+<div class="flex flex-col">
+<span class="text-text-telemetry font-telemetry-sm text-telemetry-sm">Độ phân giải</span>
+<span class="font-telemetry-md text-telemetry-md font-bold text-text">4K UHD</span>
+</div>
+</div>
+<!-- Action Buttons (Strictly matching Apple Dark Mode & Ghost Buttons) -->
+<div class="flex items-center gap-space-sm mt-2">
+<button class="flex-1 py-2.5 px-4 rounded-full bg-surface2 hover:bg-surface-bright text-text font-body-sm text-body-sm font-medium transition-colors flex items-center justify-center gap-2" type="button">
+<span class="material-symbols-outlined text-[18px]">pause</span>
+<span>Tạm Dừng Render</span>
+</button>
+<button class="flex-1 py-2.5 px-4 rounded-full bg-surface2 hover:bg-surface-bright text-text font-body-sm text-body-sm font-medium transition-colors flex items-center justify-center gap-2" type="button">
+<span class="material-symbols-outlined text-[18px]">cloud_download</span>
+<span>Tải Trọn Bộ (ZIP)</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Row 3: Format Presets Shelf (Bo góc 14px tinh gọn, Apple UI Style) -->
+<div class="flex flex-col gap-space-sm pt-space-xs">
+<div class="flex items-center justify-between">
+<div class="flex flex-col">
+<h2 class="font-title-sm text-title-sm text-text font-semibold">Preset Định Dạng Chuẩn</h2>
+<p class="font-body-sm text-body-sm text-text-muted">Chọn hoặc gắn preset sẵn sàng cho tác vụ sinh hàng loạt</p>
+</div>
+<button class="px-3.5 py-1.5 rounded-full bg-surface hover:bg-surface2 text-text-muted hover:text-text font-body-sm text-body-sm transition-colors flex items-center gap-1.5" type="button">
+<span class="material-symbols-outlined text-[16px]">tune</span>
+<span>Cấu hình Preset</span>
+</button>
+</div>
+<!-- 3 Preset Cards -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-md">
+<!-- Preset 1: TikTok 9:16 -->
+<div class="bg-surface hover:bg-surface2 transition-all p-space-md rounded-[14px] flex items-center justify-between cursor-pointer group">
+<div class="flex items-center gap-space-md">
+<div class="w-12 h-14 bg-surface3 rounded-lg flex flex-col items-center justify-center text-text flex-shrink-0 group-hover:bg-text group-hover:text-background transition-colors">
+<span class="font-telemetry-sm text-telemetry-sm font-bold">9:16</span>
+<span class="material-symbols-outlined text-[18px] mt-0.5">phone_iphone</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-body-md text-body-md text-text font-medium">TikTok &amp; Reels Story</span>
+<span class="font-telemetry-sm text-telemetry-sm px-1.5 py-0.2 rounded bg-surface3 text-text-muted">Phổ biến</span>
+</div>
+<span class="font-telemetry-sm text-telemetry-sm text-text-telemetry mt-0.5">1080 x 1920 px • 60 FPS Video / 4K Stills</span>
+<span class="font-body-sm text-body-sm text-text-muted mt-1">Tối ưu dọc toàn màn hình, text an toàn phía dưới</span>
+</div>
+</div>
+<button class="w-8 h-8 rounded-full bg-surface3 group-hover:bg-surface-bright flex items-center justify-center text-text-muted group-hover:text-text transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+<!-- Preset 2: E-Commerce 1:1 -->
+<div class="bg-surface hover:bg-surface2 transition-all p-space-md rounded-[14px] flex items-center justify-between cursor-pointer group">
+<div class="flex items-center gap-space-md">
+<div class="w-12 h-14 bg-surface3 rounded-lg flex flex-col items-center justify-center text-text flex-shrink-0 group-hover:bg-text group-hover:text-background transition-colors">
+<span class="font-telemetry-sm text-telemetry-sm font-bold">1:1</span>
+<span class="material-symbols-outlined text-[18px] mt-0.5">crop_square</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-body-md text-body-md text-text font-medium">E-Commerce &amp; Marketplace</span>
+<span class="font-telemetry-sm text-telemetry-sm px-1.5 py-0.2 rounded bg-surface3 text-text-muted">Sàn TMĐT</span>
+</div>
+<span class="font-telemetry-sm text-telemetry-sm text-text-telemetry mt-0.5">2048 x 2048 px • Nền trắng / Nền Studio</span>
+<span class="font-body-sm text-body-sm text-text-muted mt-1">Chuẩn tỉ lệ Shopee, Lazada, Amazon và TikTok Shop</span>
+</div>
+</div>
+<button class="w-8 h-8 rounded-full bg-surface3 group-hover:bg-surface-bright flex items-center justify-center text-text-muted group-hover:text-text transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+<!-- Preset 3: Quảng cáo ngang 16:9 -->
+<div class="bg-surface hover:bg-surface2 transition-all p-space-md rounded-[14px] flex items-center justify-between cursor-pointer group">
+<div class="flex items-center gap-space-md">
+<div class="w-12 h-14 bg-surface3 rounded-lg flex flex-col items-center justify-center text-text flex-shrink-0 group-hover:bg-text group-hover:text-background transition-colors">
+<span class="font-telemetry-sm text-telemetry-sm font-bold">16:9</span>
+<span class="material-symbols-outlined text-[18px] mt-0.5">desktop_mac</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-body-md text-body-md text-text font-medium">Quảng Cáo Ngang &amp; YouTube</span>
+<span class="font-telemetry-sm text-telemetry-sm px-1.5 py-0.2 rounded bg-surface3 text-text-muted">Màn rộng</span>
+</div>
+<span class="font-telemetry-sm text-telemetry-sm text-text-telemetry mt-0.5">3840 x 2160 px • Banner Website &amp; Key Visual</span>
+<span class="font-body-sm text-body-sm text-text-muted mt-1">Độ sắc nét điện ảnh, tối ưu chiều sâu trường ảnh</span>
+</div>
+</div>
+<button class="w-8 h-8 rounded-full bg-surface3 group-hover:bg-surface-bright flex items-center justify-center text-text-muted group-hover:text-text transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</div></main></div></body></html>

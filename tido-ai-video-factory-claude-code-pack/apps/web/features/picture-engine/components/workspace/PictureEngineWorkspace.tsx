@@ -9,6 +9,12 @@ export interface PictureEngineWorkspaceProps {
   brainNode: React.ReactNode;
 }
 
+/**
+ * 3-Column Industrial Console Layout for VMC Studio Obsidian:
+ * - Col 1: Parameter Console (Creative Brief, Industry, Brand Identity, Visual Direction)
+ * - Col 2: Main Viewport Stage & AI Reasoning Timeline
+ * - Col 3: AI Creative Brain (Strategy, Knowledge, Vision Diagnostics)
+ */
 export function PictureEngineWorkspace({
   headerNode,
   briefNode,
@@ -16,24 +22,24 @@ export function PictureEngineWorkspace({
   brainNode,
 }: PictureEngineWorkspaceProps) {
   return (
-    <div className="min-h-screen bg-bg text-text flex flex-col font-sans selection:bg-accent/30 selection:text-white">
-      {/* HEADER ZONE */}
+    <div className="min-h-screen bg-surface-container-lowest text-text flex flex-col font-sans select-none">
+      {/* Top Workspace Header */}
       {headerNode}
 
-      {/* 3-ZONE CREATIVE STUDIO MAIN WORKSPACE */}
-      <main className="flex-1 max-w-[1700px] w-full mx-auto p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-[380px_1fr_320px] xl:grid-cols-[420px_1fr_320px] gap-6 items-start">
-        {/* LEFT ZONE: CREATIVE BRIEF PANEL */}
-        <section className="w-full space-y-6">
+      {/* 3-Column Workspace Grid */}
+      <main className="flex-1 max-w-[1750px] w-full mx-auto p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-[400px_1fr_340px] xl:grid-cols-[430px_1fr_360px] gap-5 items-start">
+        {/* Col 1: Parameter Console */}
+        <section className="w-full space-y-5">
           {briefNode}
         </section>
 
-        {/* CENTER ZONE: RENDER CANVAS WORKSPACE (Sticky) */}
-        <section className="w-full sticky top-20 space-y-6">
+        {/* Col 2: Center Viewport Canvas & AI Timeline (Sticky) */}
+        <section className="w-full sticky top-20 space-y-5">
           {canvasNode}
         </section>
 
-        {/* RIGHT ZONE: AI CREATIVE BRAIN PANEL (Sticky) */}
-        <section className="w-full sticky top-20 space-y-6">
+        {/* Col 3: Right AI Strategy Deck (Sticky) */}
+        <section className="w-full sticky top-20 space-y-5">
           {brainNode}
         </section>
       </main>
