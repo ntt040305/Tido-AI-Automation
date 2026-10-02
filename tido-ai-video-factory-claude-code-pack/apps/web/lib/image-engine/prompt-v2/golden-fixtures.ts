@@ -68,4 +68,5 @@ export const GOLDEN_FIXTURES: GoldenFixture[] = [
   },
 ];
 
+export { CENTELLA_COPY };
 export const CENTELLA_COPY_LENGTH = CENTELLA_COPY.length;

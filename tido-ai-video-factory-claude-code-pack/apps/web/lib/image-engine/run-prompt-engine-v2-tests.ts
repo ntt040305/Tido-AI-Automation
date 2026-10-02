@@ -20,14 +20,35 @@ import { DEFAULT_PROMPT_ENGINE, includeLabelText, isV2, labelCheckEnabled, promp
 import { playbookFor, PLAYBOOK_IDS } from "./prompt-v2/playbooks";
 import { lintMasterPrompt } from "./prompt-v2/linter";
 import { parseCreativeSpec } from "./prompt-v2/spec";
-import { GOLDEN_FIXTURES } from "./prompt-v2/golden-fixtures";
+import { buildV2Prompt } from "./prompt-v2/build";
+import { buildSystemPrompt, buildUserMessage, type DirectorInput } from "./prompt-v2/director";
+import { CENTELLA_COPY, GOLDEN_FIXTURES } from "./prompt-v2/golden-fixtures";
 
 let passed = 0;
 let failed = 0;
 const failures: string[] = [];
-function check(name: string, fn: () => void) {
+/** Async checks, awaited before the summary. The build is async; the rest is not. */
+const pending: Array<Promise<void>> = [];
+function check(name: string, fn: () => void | Promise<void>) {
   try {
-    fn();
+    const out = fn();
+    if (out && typeof (out as Promise<void>).then === "function") {
+      pending.push(
+        (out as Promise<void>).then(
+          () => {
+            passed++;
+            console.log(`  ✓ ${name}`);
+          },
+          (e: Error) => {
+            failed++;
+            failures.push(`${name}\n    ${e.message.split("\n")[0]}`);
+            console.log(`  ✗ ${name}`);
+            console.log(`    ${e.message.split("\n")[0]}`);
+          },
+        ),
+      );
+      return;
+    }
     passed++;
     console.log(`  ✓ ${name}`);
   } catch (e: unknown) {
@@ -265,6 +286,128 @@ function main(): void {
     );
   });
 
+  // ── 6. the build: one call, one repair, then fallback ───────────────────
+  console.log("\n6 — the build, with a stubbed model");
+
+  const SPEC_JSON = JSON.stringify(spec);
+  const buildInput = {
+    assetType: "Poster",
+    aspectRatio: "1:1" as const,
+    concept: "two serum bottles on a pale slab, calm and clinical",
+    brand: "SKIN1004",
+    productLine: "Centella",
+    copy,
+    products: [
+      { ref_index: 1, description: "serum bottle" },
+      { ref_index: 2, description: "toner bottle" },
+    ],
+    includeLabelText: true,
+  };
+
+  check("a good reply costs exactly one call", async () => {
+    let calls = 0;
+    const r = await buildV2Prompt(buildInput, {
+      chat: async () => {
+        calls++;
+        return SPEC_JSON;
+      },
+    });
+    assert.strictEqual(r.ok, true, r.reason);
+    assert.strictEqual(r.llmCalls, 1);
+    assert.strictEqual(calls, 1);
+    assert.strictEqual(r.prompt, GOOD);
+  });
+
+  check("a bad reply costs a second call and then succeeds", async () => {
+    let calls = 0;
+    const r = await buildV2Prompt(buildInput, {
+      chat: async () => {
+        calls++;
+        return calls === 1 ? JSON.stringify({ ...spec, master_prompt: "far too short" }) : SPEC_JSON;
+      },
+    });
+    assert.strictEqual(r.ok, true, r.reason);
+    assert.strictEqual(r.llmCalls, 2);
+  });
+
+  check("a second failure falls back rather than calling again", async () => {
+    let calls = 0;
+    const r = await buildV2Prompt(buildInput, {
+      chat: async () => {
+        calls++;
+        return JSON.stringify({ ...spec, master_prompt: "still far too short" });
+      },
+    });
+    assert.strictEqual(r.ok, false);
+    assert.strictEqual(calls, 2, "it called the model more than twice");
+    assert.ok(r.reason && /linter/.test(r.reason), r.reason);
+  });
+
+  check("a timeout falls back and never throws", async () => {
+    const r = await buildV2Prompt(buildInput, {
+      chat: async () => {
+        throw new Error("ETIMEDOUT after 30000ms");
+      },
+    });
+    assert.strictEqual(r.ok, false);
+    assert.ok(r.reason && /ETIMEDOUT/.test(r.reason));
+    assert.strictEqual(r.llmCalls, 1);
+  });
+
+  check("broken JSON falls back with the reason named", async () => {
+    const r = await buildV2Prompt(buildInput, { chat: async () => "I'm afraid I can't do that." });
+    assert.strictEqual(r.ok, false);
+    assert.ok(r.reason && /spec did not validate|JSON/.test(r.reason), r.reason);
+  });
+
+  check("copy inside budget stays exact; copy over budget adapts and warns", async () => {
+    const short = await buildV2Prompt(buildInput, { chat: async () => SPEC_JSON });
+    assert.strictEqual(short.copyPolicy, "exact");
+
+    const long = await buildV2Prompt({ ...buildInput, copy: [CENTELLA_COPY] }, { chat: async () => SPEC_JSON });
+    assert.strictEqual(long.copyPolicy, "adapt");
+    assert.ok(long.warnings.some((w) => /longer than a poster/.test(w)), JSON.stringify(long.warnings));
+    assert.strictEqual(long.copy_original[0], CENTELLA_COPY, "the original copy was not kept");
+  });
+
+  check("a time-bound claim raises a warning without editing the copy", async () => {
+    const r = await buildV2Prompt(buildInput, { chat: async () => SPEC_JSON });
+    assert.ok(r.warnings.some((w) => /claim review/i.test(w)), JSON.stringify(r.warnings));
+    assert.ok(r.copy_original.includes("Dịu da sau 14 ngày"));
+  });
+
+  check("the product photos reach the model in reference order", () => {
+    const msg = buildUserMessage({
+      assetType: "Poster",
+      aspectRatio: "1:1",
+      concept: "x",
+      brand: "SKIN1004",
+      copy: [],
+      copyPolicy: "exact",
+      includeLabelText: true,
+      products: [
+        { ref_index: 1, description: "first", imageUrl: "data:image/png;base64,AAA" },
+        { ref_index: 2, description: "second", imageUrl: "data:image/png;base64,BBB" },
+      ],
+    });
+    const parts = msg.content as Array<{ type: string; text?: string; image_url?: { url: string } }>;
+    const images = parts.filter((p) => p.type === "image_url").map((p) => p.image_url!.url);
+    assert.deepStrictEqual(images, ["data:image/png;base64,AAA", "data:image/png;base64,BBB"]);
+    assert.ok(
+      String(parts[0].text).includes("photo 1: first") && String(parts[0].text).includes("photo 2: second"),
+      String(parts[0].text).slice(0, 200),
+    );
+  });
+
+  check("label text off removes the instruction but keeps 'attached photo N'", () => {
+    const common: DirectorInput = { ...buildInput, copyPolicy: "exact", includeLabelText: true };
+    const on = buildSystemPrompt(playbookFor("Poster", "1:1"), common);
+    const off = buildSystemPrompt(playbookFor("Poster", "1:1"), { ...common, includeLabelText: false });
+    assert.ok(/lettering you can READ/.test(on));
+    assert.ok(/omit this field entirely/.test(off));
+    for (const p of [on, off]) assert.ok(/exactly as in attached photo N/.test(p), "the fidelity instruction is missing");
+  });
+
   // ── 5. fixtures are shared with v1 ──────────────────────────────────────
   console.log("\n5 — the two engines answer the same briefs");
 
@@ -274,9 +417,12 @@ function main(): void {
     }
   });
 
-  console.log(`\n${passed} passed, ${failed} failed\n`);
-  if (failures.length) for (const f of failures) console.log(`  ✗ ${f}`);
-  if (failed) process.exit(1);
+  void (async () => {
+    await Promise.all(pending);
+    console.log(`\n${passed} passed, ${failed} failed\n`);
+    if (failures.length) for (const f of failures) console.log(`  ✗ ${f}`);
+    if (failed) process.exit(1);
+  })();
 }
 
 main();
