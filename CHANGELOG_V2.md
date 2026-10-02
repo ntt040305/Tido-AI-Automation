@@ -16,13 +16,19 @@ V2_INCLUDE_LABEL_TEXT=false
 
 # tripwire so nhãn sau render (mặc định tắt, miễn phí khi bật)
 V2_LABEL_CHECK=true
+
+# chọn version file meta-prompt / playbook (mặc định v1)
+PROMPT_V2_TEMPLATE_VERSION=v1
+
+# khi v2 lỗi: mặc định render bằng v1. "off" để lỗi hiện ra thay vì bị che
+V2_FALLBACK=off
 ```
 
 ```bash
 cd tido-ai-video-factory-claude-code-pack/apps/web
 
-npm test                                                      # 53 suite, dừng ở lỗi đầu
-npx tsx lib/image-engine/run-all-tests.ts --keep-going         # chạy hết 53 suite (để đo baseline)
+npm test                                                      # 54 suite, dừng ở lỗi đầu
+npx tsx lib/image-engine/run-all-tests.ts --keep-going         # chạy hết 54 suite (để đo baseline)
 npm run typecheck
 
 npx tsx lib/image-engine/run-prompt-v2-eval.ts                 # eval mock, 23 brief, 0đ
@@ -33,6 +39,7 @@ npx tsx --env-file=.env.local lib/image-engine/run-prompt-v2-eval-live.ts   # IN
 # chỉ khi anh đồng ý tốn tiền:
 npx tsx --env-file=.env.local lib/image-engine/run-prompt-v2-eval-live.ts --yes-i-approve-spending
 
+npx tsx lib/image-engine/run-prompt-v2-simple-tests.ts          # engine đã đơn giản hoá, 67 test
 npx tsx lib/image-engine/run-prompt-engine-golden-tests.ts --update  # cập nhật golden, CÓ Ý THỨC
 ```
 
@@ -187,3 +194,121 @@ Không có mục nào đủ bằng chứng để xóa trong lượt này.
 - **Tỷ lệ khung**: provider chỉ nhận `1:1`, `9:16`, `16:9`
   (`ImgStudioImageGenerationProvider.ts:96-98`). Playbook v2 chỉ có ba cặp đó, và
   prompt **luôn** kết bằng câu nêu tỷ lệ — v1 **không bao giờ** nêu (23/23 case).
+
+---
+
+## 9. Đơn giản hoá engine v2 (lượt này)
+
+Workflow bây giờ đúng bốn bước: **gom input nguyên văn → 1 call LLM với meta-prompt
+(kèm ảnh sản phẩm) → 3 kiểm tra bằng code → gửi Nano Banana 2.** Tối đa **1 lần sửa**,
+sau đó dừng và báo lỗi (hoặc render bằng v1 nếu `V2_FALLBACK` còn bật — mặc định bật).
+
+### Meta-prompt và playbook là FILE, không phải code
+
+```
+lib/image-engine/prompt-v2/templates/
+  meta-prompt.v1.txt
+  playbooks/{poster,banner,social,hero,ugc}.v1.txt
+```
+
+- Sửa nội dung = sửa file `.txt`. Không đổi code, không build, không deploy.
+- Chỗ chèn playbook vào meta-prompt là `{{PLAYBOOK}}`. **Nội dung cuối cùng do anh
+  cung cấp** — bản v1 hiện tại là bản nháp để bộ khung chạy được và test được.
+- Version nằm trong tên file. Bản mới = file mới (`meta-prompt.v2.txt` + 5 playbook
+  `*.v2.txt`), `PROMPT_V2_TEMPLATE_VERSION=v2` để đổi, **file cũ vẫn còn trên đĩa và
+  vẫn chạy được**. Version dùng cho mỗi lần build được ghi vào telemetry.
+- Slot chưa điền thì **throw**, không im lặng thành chuỗi rỗng. Đây đúng là cách
+  `BUSINESS GOAL: in beauty_skincare` từng lọt vào một render thật.
+- Một chuỗi version không đúng dạng `vN` bị bỏ qua (nó là một phần tên file).
+
+### Output dùng thẻ, không dùng JSON
+
+`<plan>` `<copy_final>` `<warnings>` `<image_prompt>` — parser trong `tags.ts` chịu
+được: fence bọc cả câu trả lời, chữ thừa trước/sau thẻ, thẻ **không đóng**, thẻ sai
+thứ tự, thẻ rỗng, thuộc tính trên thẻ mở. Chữ ngoài thẻ được **báo lại** (`stray`)
+chứ không bị dùng làm nội dung.
+
+Một điều parser **không** làm: tự bịa `<image_prompt>` khi thiếu. Đó là trường hợp
+duy nhất không có giá trị mặc định hợp lý, và bịa ra nó sẽ biến một call thất bại
+thành một render sai đầy tự tin.
+
+### Đúng 3 kiểm tra
+
+| Code | Kiểm gì |
+|---|---|
+| `copy` | `exact`: `copy_final` khớp copy gốc **từng ký tự** (so sau NFC). Cả hai policy: mỗi chuỗi cuối xuất hiện trong prompt **đúng 1 lần** |
+| `ratio` | prompt có nêu đúng tỷ lệ user chọn, và **không** nêu tỷ lệ khác |
+| `shape` | 200–500 từ, dưới trần ký tự của provider, không có từ cấm, không có thông số kỹ thuật |
+
+`shape` quét **sau khi** đã bỏ: chuỗi trong ngoặc kép, các chuỗi copy, và tỷ lệ đã
+khai báo. `"Giảm 50% — chỉ 14 ngày"` là headline, không phải thông số. Danh sách từ
+cấm là **một mảng duy nhất** trong `checks.ts`, và được chèn vào meta-prompt — model
+được cho biết chính xác cái gì sẽ loại nó.
+
+11 rule của linter cũ → 3. Chín rule trong số đó mô tả **cùng một lỗi** (prompt viết
+bằng thông số thay vì bằng hình ảnh); hai rule còn lại (placeholder, `…`) là triệu
+chứng của việc *template ghép chuỗi*, không còn template nữa.
+
+### Ba lỗi thật mà test tìm ra
+
+| Lỗi | Hậu quả | Chỗ sửa |
+|---|---|---|
+| `ISO\s?\d` + `\b` ở cuối cả nhóm alternation | **mọi ISO ba chữ số lọt qua**: `\b` sau `4` đòi ký tự không-phải-chữ, nhưng sau nó là `0` | `checks.ts` — mỗi nhánh tự mang boundary của nó |
+| `\b100%\b` | `%` không phải word char nên `\b` đòi một chữ cái phía sau → **"Hết mụn 100%" không bị báo** | `build-simple.ts` `claimWarnings` |
+| `"two stops"` không có chữ số | thuật ngữ phơi sáng viết bằng chữ lọt qua | thêm nhánh `(one|two|…|half)\s+stops?` |
+
+Cả ba là lỗi của tôi, test tìm ra trước khi báo cáo, không phải sau.
+
+### Đã chạm vào code đang chạy
+
+| File | Thay đổi | Rủi ro |
+|---|---|---|
+| `evolution/ExperimentPipeline.ts` | `v2For` gọi `buildSimplePrompt` thay `buildV2Prompt`; `capturedV2`/`attachV2` nhận `SimpleResult`; log dùng `simpleTelemetry` | **Không chạy gì khi `PROMPT_ENGINE` ≠ `v2`** — `v2For` vẫn là `undefined`, nhánh prompt y nguyên |
+| `prompt-v2/engine-selector.ts` | thêm `fallbackToV1()` (`V2_FALLBACK`, mặc định bật) | Mặc định = hành vi cũ |
+| `run-all-tests.ts` | thêm suite `run-prompt-v2-simple-tests` | Mặc định giữ hành vi cũ |
+
+### Mất một thứ, và nói rõ là mất
+
+`promptV2.labels` bây giờ **rỗng** trên đường đã đơn giản hoá. Model trả 4 thẻ và
+không thẻ nào là danh sách chữ-trên-nhãn từng sản phẩm. Tripwire so nhãn
+(`V2_LABEL_CHECK`, **mặc định tắt**) đọc trường này; với mảng rỗng nó **không có gì
+để so** — nó không báo sai lệch giả. Lấy lại được bằng một thẻ thứ 5, nhưng anh chốt
+đúng 4 thẻ, nên tôi ghi lại chứ không tự thêm.
+
+### Giữ nguyên, đánh dấu SUPERSEDED — không xóa
+
+| File | Thay bởi | Bằng chứng không còn ai gọi từ production |
+|---|---|---|
+| `spec.ts` | `tags.ts` + `checks.ts` | `grep -rn "prompt-v2/spec" --include=*.ts lib app` → chỉ `build.ts`, `run-prompt-engine-v2-tests.ts` |
+| `director.ts` | `templates/meta-prompt.v1.txt` + `build-simple.ts` | → chỉ `build.ts`, `run-prompt-engine-v2-tests.ts`, `run-prompt-v2-eval.ts` |
+| `linter.ts` | `checks.ts` | → chỉ `build.ts`, 2 runner test/eval |
+| `build.ts` | `build-simple.ts` | → chỉ `run-prompt-engine-v2-tests.ts`, `run-prompt-v2-eval.ts`, `run-prompt-v2-eval-live.ts` |
+| `playbooks.ts` | `templates/playbooks/*.v1.txt` | → chỉ `build.ts`, `director.ts`, `linter.ts`, 2 runner |
+
+`ExperimentPipeline.ts` giờ import `build-simple` và `templates`, **không** import
+`build` hay `playbooks` nữa. Mỗi file trên có một khối header ghi rõ lý do giữ: eval
+so hai engine trên cùng bộ brief, và đường JSON là chỗ quay về **nếu** đường thẻ tệ
+hơn trên ảnh thật — điều **chưa ai đo**. Xóa trước khi đo là bỏ mất phép so sánh.
+
+`label-check.ts`, `engine-selector.ts`, `golden-fixtures.ts`: **vẫn đang dùng**.
+
+### Test / typecheck
+
+| | Trước lượt này | Sau |
+|---|---|---|
+| suite | 53/53 · **1590 passed, 6 failed** | 54/54 · **1657 passed, 6 failed** |
+| suite lỗi | 4 suite nói ở mục 3 | **y nguyên 4 suite đó, y nguyên 6 test** |
+| typecheck | 4 lỗi, toàn bộ trong `scratch/` | 4 lỗi, cùng chỗ, cùng nội dung |
+
+Suite mới `run-prompt-v2-simple-tests`: **67 test, 0 lỗi** — template (8), copy policy
+(7), parser (11), 3 kiểm tra (16), build + 1 repair (14), telemetry (4), flag (1) và
+các ca còn lại. Không ca nào gọi API; mọi câu trả lời của model là fixture viết tay.
+Suite cũ `run-prompt-engine-v2-tests` vẫn **38/38** — đường JSON vẫn xanh.
+
+### Còn lại chưa làm (chưa duyệt)
+
+1. **Nội dung thật của meta-prompt và 5 playbook** — anh nói sẽ cung cấp.
+2. **Eval chưa trỏ sang đường mới** — `run-prompt-v2-eval*.ts` vẫn đo đường JSON.
+3. **Chưa có render nào qua engine này.** Chất lượng prompt thật vẫn **CHƯA XÁC MINH**,
+   kể cả khung 200–500 từ có đúng hay không.
+4. **Mặc định vẫn là `v1`.** Không đổi cho đến khi anh duyệt.

@@ -74,8 +74,8 @@ import { finishTelemetry, renderFinishForPrompt, resolveFinish } from "./experim
 import { ideaTelemetry, renderIdeaForPrompt, resolveIdea } from "./experiment/IdeaLayer";
 import { copyFitsChannel, profileFor, profileTelemetry } from "./experiment/AssetProfile";
 import { includeLabelText, isV2 } from "../prompt-v2/engine-selector";
-import { buildV2Prompt, v2Telemetry, type V2BuildResult } from "../prompt-v2/build";
-import type { AspectRatio } from "../prompt-v2/playbooks";
+import { buildSimplePrompt, simpleTelemetry, type SimpleResult } from "../prompt-v2/build-simple";
+import type { AspectRatio } from "../prompt-v2/templates";
 import {
   cinematographyTelemetry,
   projectToSetup,
@@ -399,17 +399,21 @@ export class ExperimentPipeline {
    * the words the client typed -- and a gate that compares the wrong list would
    * report a correct render as wrong.
    */
-  private static attachV2<T extends object>(result: T, v2: V2BuildResult | null): T {
+  private static attachV2<T extends object>(result: T, v2: SimpleResult | null): T {
     if (!v2) return result;
     Object.assign(result as Record<string, unknown>, {
       promptV2: {
-        ...v2Telemetry(v2),
+        ...simpleTelemetry(v2),
         copy_original: v2.copy_original,
         copy_final: v2.copy_final,
         warnings: v2.warnings,
-        // What the spec said is printed on each product, for the optional
-        // post-render label check. Absent when V2_INCLUDE_LABEL_TEXT is off.
-        labels: (v2.spec?.products || []).map((p) => p.label_text).filter(Boolean),
+        // Empty under the simplified engine, and deliberately so: the model returns
+        // four tags and none of them is a per-product label list. The post-render
+        // label check (`V2_LABEL_CHECK`, default off) reads this, and with an empty
+        // list it simply has nothing to compare -- it does not report a false
+        // mismatch. Recovering it would mean a fifth tag; CHANGELOG_V2 records the
+        // trade rather than hiding it.
+        labels: [] as string[],
       },
     });
     return result;
@@ -498,12 +502,12 @@ export class ExperimentPipeline {
      * The v2 engine, when `PROMPT_ENGINE=v2`.
      *
      * Async because it makes a model call, and awaited here rather than at the
-     * call site because this is where the prompt is decided. Returning null --
-     * for a timeout, broken JSON, a schema violation or a linter failure the one
-     * repair did not fix -- leaves v1 to produce the prompt, which is the whole
-     * point of keeping v1.
+     * call site because this is where the prompt is decided. Returning null -- for
+     * a timeout, a reply with no `<image_prompt>`, or a check the one repair did not
+     * fix -- leaves v1 to produce the prompt, which is the whole point of keeping
+     * v1.
      */
-    v2For?: () => Promise<V2BuildResult | null>
+    v2For?: () => Promise<SimpleResult | null>
   ): ImageGenerationProvider {
     return {
       async generateImage(input: ProviderImageGenerationInput) {
@@ -554,7 +558,7 @@ export class ExperimentPipeline {
             ? `${withBlueprint}\n\n${directive}`
             : withBlueprint;
         if (v2) {
-          console.log("[PROMPT_V2]", { ...v2Telemetry(v2), chars_sent: finalPrompt.length });
+          console.log("[PROMPT_V2]", { ...simpleTelemetry(v2), chars_sent: finalPrompt.length });
           if (!v2.ok) console.warn("[PROMPT_V2] falling back to v1", { reason: v2.reason });
         }
         if (optical) {
@@ -1169,7 +1173,7 @@ export class ExperimentPipeline {
     let capturedPrompt: string | null = null;
     // The v2 build, when the flag selected it. Null on the v1 path, which is the
     // default: nothing here runs unless PROMPT_ENGINE=v2.
-    let capturedV2: V2BuildResult | null = null;
+    let capturedV2: SimpleResult | null = null;
     // Phase 5.1: the editable design document, when the execution layer built one.
     let capturedDocument: any = null;
     // The typography plan. Captured for the same reason the geometry is: the
@@ -1251,12 +1255,12 @@ export class ExperimentPipeline {
     // v2: one LLM call that writes the prompt itself. Off unless PROMPT_ENGINE=v2.
     //
     // Built here because this is where the request, the asset context and the
-    // product buffers are all in scope. It never throws: `buildV2Prompt` turns
+    // product buffers are all in scope. It never throws: `buildSimplePrompt` turns
     // every failure into `ok: false`, and this returns null on anything else so
     // the v1 assembly below still runs.
     const v2For = !isV2()
       ? undefined
-      : async (): Promise<V2BuildResult | null> => {
+      : async (): Promise<SimpleResult | null> => {
           try {
             const { LLMProviderService } = await import("../llm/llm-provider.service");
             const llm = new LLMProviderService();
@@ -1267,7 +1271,7 @@ export class ExperimentPipeline {
             const ratio = (["1:1", "9:16", "16:9"].includes(String(request.aspectRatio))
               ? String(request.aspectRatio)
               : "1:1") as AspectRatio;
-            const built = await buildV2Prompt(
+            const built = await buildSimplePrompt(
               {
                 assetType: assetCtx?.asset_type || request.useCase || "Poster",
                 aspectRatio: ratio,

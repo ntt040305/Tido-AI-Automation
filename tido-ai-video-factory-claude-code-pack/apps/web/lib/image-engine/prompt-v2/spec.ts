@@ -1,4 +1,27 @@
 /**
+ * SUPERSEDED, NOT DELETED. The render path no longer imports this file.
+ *
+ * Replaced by: `tags.ts` (parsing) and `checks.ts` (validation)
+ *
+ * Why: the simplified engine returns four tags instead of JSON and runs three
+ * checks instead of eleven lint rules. A nine-field JSON schema is no longer
+ * the contract, so there is nothing to parse into.
+ *
+ * Evidence that nothing in production reaches this file (2026-10-02):
+ *
+ *   grep -rn "prompt-v2/spec" --include=*.ts lib app
+ *
+ * answers only with other files in this list and with the test and eval runners
+ * `run-prompt-engine-v2-tests.ts`, `run-prompt-v2-eval.ts` and
+ * `run-prompt-v2-eval-live.ts`. `ExperimentPipeline.ts` imports `build-
+ * simple.ts`.
+ *
+ * It is kept, and kept passing its tests, for two reasons: the eval compares the
+ * two engines against the same briefs, and the JSON path is the fallback if the
+ * tag path turns out worse on real renders -- which has NOT yet been measured.
+ * Deleting it before that measurement would throw away the comparison.
+ */
+/**
  * The Creative Spec — what the one LLM call returns, and how it is checked.
  *
  * FIELD ORDER IS THE DESIGN
