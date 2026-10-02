@@ -165,7 +165,9 @@ export function lintMasterPrompt(prompt: string, opts: LintOptions): LintResult 
   if (/…|\.\.\.(\s|$)/.test(scan)) {
     errors.push({ code: "truncated", message: "a field was cut off mid-sentence" });
   }
-  for (const m of scan.matchAll(/\b(\d{1,5})(\.\d+)?\s?%/g)) {
+  // The whole number, decimals included: reading the integer part alone made
+  // "0.15%" -- a legitimate sliver of a frame -- look like zero.
+  for (const m of scan.matchAll(/\b(\d{1,5}(?:\.\d+)?)\s?%/g)) {
     const n = Number(m[1]);
     if (n > 100 || n === 0) errors.push({ code: "suspicious_percent", message: `${m[0]} cannot be a share of a frame` });
   }
