@@ -72,6 +72,7 @@ const SUITES = [
   "run-prompt-ownership-tests",
   "run-prompt-engine-golden-tests",
   "run-prompt-engine-v2-tests",
+  "run-prompt-v2-simple-tests",
   "run-creative-intent-tests",
   "run-vision-review-tests",
   "run-render-rate-limit-tests",

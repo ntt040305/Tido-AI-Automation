@@ -73,11 +73,28 @@ export function labelCheckEnabled(env: EnvLike = process.env): boolean {
   return String(env.V2_LABEL_CHECK || "").trim().toLowerCase() === "true";
 }
 
+/**
+ * What happens when v2 fails. Default: render through v1.
+ *
+ * `V2_FALLBACK=off` lets the failure surface instead, which is what you want while
+ * tuning the meta-prompt -- a silent fallback hides exactly the failures you are
+ * trying to see. The default is the other way round because in production a render
+ * that falls back costs the user a worse prompt, and one that errors costs them the
+ * job.
+ *
+ * The simplified build stops after one repair either way; this only decides who
+ * reports the failure.
+ */
+export function fallbackToV1(env: EnvLike = process.env): boolean {
+  return String(env.V2_FALLBACK || "").trim().toLowerCase() !== "off";
+}
+
 /** Counts and names only. Never a key, never a prompt. */
 export function engineTelemetry(env: EnvLike = process.env) {
   return {
     prompt_engine: promptEngineVersion(env),
     v2_include_label_text: includeLabelText(env),
     v2_label_check: labelCheckEnabled(env),
+    v2_fallback_to_v1: fallbackToV1(env),
   };
 }
