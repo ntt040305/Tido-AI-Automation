@@ -407,6 +407,9 @@ export class ExperimentPipeline {
         copy_original: v2.copy_original,
         copy_final: v2.copy_final,
         warnings: v2.warnings,
+        // What the spec said is printed on each product, for the optional
+        // post-render label check. Absent when V2_INCLUDE_LABEL_TEXT is off.
+        labels: (v2.spec?.products || []).map((p) => p.label_text).filter(Boolean),
       },
     });
     return result;

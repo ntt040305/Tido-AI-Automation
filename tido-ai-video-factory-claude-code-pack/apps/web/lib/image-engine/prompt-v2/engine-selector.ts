@@ -65,8 +65,9 @@ export function includeLabelText(env: EnvLike = process.env): boolean {
 /**
  * Whether the post-render product-label comparison runs. Default OFF.
  *
- * It costs a vision call per render and it is new, so it is opt-in: the render
- * path must behave identically for anyone who has not asked for it.
+ * It is free -- it reads the observation the review pass already made rather than
+ * paying for a second vision call -- but it is new, so it is opt-in: the render path
+ * must behave identically for anyone who has not asked for it.
  */
 export function labelCheckEnabled(env: EnvLike = process.env): boolean {
   return String(env.V2_LABEL_CHECK || "").trim().toLowerCase() === "true";

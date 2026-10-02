@@ -21,6 +21,7 @@ import { playbookFor, PLAYBOOK_IDS } from "./prompt-v2/playbooks";
 import { lintMasterPrompt } from "./prompt-v2/linter";
 import { parseCreativeSpec } from "./prompt-v2/spec";
 import { buildV2Prompt } from "./prompt-v2/build";
+import { checkProductLabels } from "./prompt-v2/label-check";
 import { buildSystemPrompt, buildUserMessage, type DirectorInput } from "./prompt-v2/director";
 import { CENTELLA_COPY, GOLDEN_FIXTURES } from "./prompt-v2/golden-fixtures";
 
@@ -406,6 +407,36 @@ function main(): void {
     assert.ok(/lettering you can READ/.test(on));
     assert.ok(/omit this field entirely/.test(off));
     for (const p of [on, off]) assert.ok(/exactly as in attached photo N/.test(p), "the fidelity instruction is missing");
+  });
+
+  // ── 7. the label tripwire ───────────────────────────────────────────────
+  console.log("\n7 — the product-label check");
+
+  check("nothing observed means nothing concluded", () => {
+    const c = checkProductLabels(["SKIN1004"], []);
+    assert.strictEqual(c.ok, true);
+    assert.strictEqual(c.confidence, "none");
+  });
+
+  check("a label read off the product counts even when the model read only part of it", () => {
+    const c = checkProductLabels(["SKIN1004 Centella Ampoule"], [{ text: "SKIN1004", on_product: true }]);
+    assert.strictEqual(c.ok, true, JSON.stringify(c));
+    assert.strictEqual(c.missing.length, 0);
+  });
+
+  check("a different mark on the product is reported", () => {
+    const c = checkProductLabels(["SKIN1004 Centella"], [{ text: "Tide", on_product: true }]);
+    assert.strictEqual(c.ok, false);
+    assert.deepStrictEqual(c.unexpected, ["Tide"]);
+    assert.strictEqual(c.missing.length, 1);
+  });
+
+  check("campaign copy in the frame is not mistaken for label lettering", () => {
+    const c = checkProductLabels(["SKIN1004"], [
+      { text: "Dịu da sau 14 ngày", on_product: false },
+      { text: "SKIN1004", on_product: true },
+    ]);
+    assert.strictEqual(c.ok, true, JSON.stringify(c));
   });
 
   // ── 5. fixtures are shared with v1 ──────────────────────────────────────
