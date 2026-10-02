@@ -28,6 +28,13 @@ const {
   TOPIC_OWNER, auditSections, assemble, ownershipTelemetry,
 } = require("./evolution/experiment/PromptOwnership");
 const { buildCompositionPlan, renderCompositionPlan } = require("./evolution/experiment/CompositionPlan");
+const {
+  projectToSetup,
+  renderEnvironmentForPrompt,
+  renderLensForPrompt,
+  renderLightForPrompt,
+  resolveOpticalAxes,
+} = require("./evolution/experiment/CinematographyLayer");
 const { buildTypographyDNA, renderDnaForImagePrompt } = require("./evolution/experiment/TypographyDNA");
 const { buildGeometry } = require("./evolution/experiment/LayoutGeometry");
 const { buildComposition } = require("./evolution/experiment/VisualComposition");
@@ -115,11 +122,22 @@ function sectionsFor(bp: any) {
   const push = (topic: string, text: string | undefined) => {
     if (text) out.push({ topic, owner: TOPIC_OWNER[topic], text });
   };
-  push("composition", renderCompositionPlan(plan, { sceneOnly: true }));
+  // The assembly this audits is the one the pipeline now builds: the plan states
+  // the staging and stops narrating the optics, and `CinematographyLayer` states
+  // the camera, the light and the set as parameters.
+  const axes = resolveOpticalAxes({
+    assetType: "poster",
+    evidence: [plan.atmosphere?.value, plan.lighting_quality?.value, plan.environment?.value],
+  });
+  const setup = projectToSetup(axes.values, { product_share: plan.product_scale?.value?.share ?? null });
+  push("composition", renderCompositionPlan(plan, { sceneOnly: true, omitOptics: true }));
+  push("lighting", renderLightForPrompt(setup));
+  push("camera", renderLensForPrompt(setup));
+  push("scene_environment", renderEnvironmentForPrompt(setup));
   push("typography_intent", renderDnaForImagePrompt(dna));
   push("typography_copy", textDirective(req));
   push("render_constraints", NO_TEXT_DIRECTIVE);
-  return { sections: out, plan, dna };
+  return { sections: out, plan, dna, axes, setup };
 }
 
 function main() {
@@ -135,8 +153,15 @@ function main() {
       assert.ok(typeof owner === "string" && owner.length > 2, `${topic} has no owner`);
     }
     // The four the brief names explicitly.
-    assert.strictEqual(TOPIC_OWNER.camera, "CompositionPlan");
-    assert.strictEqual(TOPIC_OWNER.lighting, "CompositionPlan");
+    // Transferred to `CinematographyLayer`: measured across the twelve-case
+    // benchmark, the plan's prose for these produced a physical parameter in at most
+    // 1 case of 12, so the owner is now the module that states them as parameters.
+    // The plan keeps `composition`, where it measures L3 on 12 of 12.
+    assert.strictEqual(TOPIC_OWNER.camera, "CinematographyLayer");
+    assert.strictEqual(TOPIC_OWNER.lighting, "CinematographyLayer");
+    assert.strictEqual(TOPIC_OWNER.scene_environment, "CinematographyLayer");
+    assert.strictEqual(TOPIC_OWNER.composition, "CompositionPlan");
+    assert.strictEqual(TOPIC_OWNER.finish, "FinishLayer");
     assert.strictEqual(TOPIC_OWNER.typography_intent, "TypographyDNA");
     assert.strictEqual(TOPIC_OWNER.creative_idea, "CreativeDirector");
     assert.strictEqual(TOPIC_OWNER.render_constraints, "Renderer");
@@ -276,11 +301,17 @@ function main() {
   });
 
   check("a decision can be traced from the prompt back to the field that caused it", () => {
-    const { plan, sections } = sectionsFor(BRIEF);
+    const { plan, sections, axes, setup } = sectionsFor(BRIEF);
     const text = assemble(sections);
-    // The camera in the prompt is the camera the plan resolved, and the plan
-    // says which director field it came from.
-    assert.ok(text.includes(plan.camera_angle.value), "the prompt's camera is not the plan's camera");
+    // The chain gained a link when the camera moved owner, and every link has to
+    // hold: the prompt states a focal length, the setup says which axes produced
+    // it, the axes say which phrase moved them, and the plan still says which
+    // director field it read. The prompt no longer quotes the plan's camera prose
+    // -- that prose is now evidence, not instruction -- so asserting that it does
+    // would be asserting the defect.
+    assert.ok(text.includes(`${setup.lens.focal_mm}mm`), "the prompt does not state the focal length the setup resolved");
+    assert.ok(/gravity|intimacy|stillness/.test(setup.because.focal_mm), setup.because.focal_mm);
+    assert.ok(Object.values(axes.because).some((b) => String(b).length > 20), "no axis recorded what moved it");
     assert.ok(plan.camera_angle.because.includes("camera language"), plan.camera_angle.because);
     assert.ok(plan.camera_angle.because.includes("eye level"), "the reason does not quote what the director wrote");
   });

@@ -809,7 +809,17 @@ export function compositionPlanTelemetry(p: CompositionPlan | null | undefined) 
  */
 export function renderCompositionPlan(
   plan: CompositionPlan | null | undefined,
-  opts: { sceneOnly?: boolean } = {},
+  /**
+   * `omitOptics` drops the camera, light and environment lines.
+   *
+   * Those three topics moved to `CinematographyLayer` in `TOPIC_OWNER`, which
+   * states them as parameters and reads this plan's prose as its evidence. Leaving
+   * the prose in as well is the same decision twice in two vocabularies -- the
+   * exact defect the registry exists to catch, and `auditSections` does catch it.
+   * The plan still DECIDES these fields; it just no longer narrates them into the
+   * prompt beside the setup built from them.
+   */
+  opts: { sceneOnly?: boolean; omitOptics?: boolean } = {},
 ): string | undefined {
   if (!plan) return undefined;
   const lines: string[] = [];
@@ -828,19 +838,21 @@ export function renderCompositionPlan(
     const p = plan.product_position.value;
     say("where the product sits", `${p.label} of the frame, about ${p.width}% by ${p.height}%`);
   }
-  say("camera angle", plan.camera_angle);
-  say("camera distance", plan.camera_distance);
-  say("lens behaviour", plan.camera_lens_behavior);
-  say("environment", plan.environment);
-  say("light direction", plan.lighting_direction);
-  say("light quality", plan.lighting_quality);
-  say("atmosphere", plan.atmosphere);
-  say("depth", plan.foreground_background_relationship);
-  // The planes and what is on them. Carried here because this section replaces
-  // the layer stack's own block in the prompt: if the plan does not say what
-  // occupies the frame, dropping that block would lose it.
-  for (const d of plan.depth_structure) {
-    lines.push(`- ${d.plane}: ${d.holds}`);
+  if (!opts.omitOptics) {
+    say("camera angle", plan.camera_angle);
+    say("camera distance", plan.camera_distance);
+    say("lens behaviour", plan.camera_lens_behavior);
+    say("environment", plan.environment);
+    say("light direction", plan.lighting_direction);
+    say("light quality", plan.lighting_quality);
+    say("atmosphere", plan.atmosphere);
+    say("depth", plan.foreground_background_relationship);
+    // The planes and what is on them. Carried here because this section replaces
+    // the layer stack's own block in the prompt: if the plan does not say what
+    // occupies the frame, dropping that block would lose it.
+    for (const d of plan.depth_structure) {
+      lines.push(`- ${d.plane}: ${d.holds}`);
+    }
   }
   for (const e of plan.supporting_elements) {
     lines.push(`- ${e.element} — ${e.purpose}; ${e.relationship}`);

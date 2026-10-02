@@ -2,6 +2,7 @@ import type { PromptSection, PromptTopic } from "./PromptOwnership";
 import { TOPIC_OWNER } from "./PromptOwnership";
 import type { TreatmentAxis, TypographyTreatment } from "./TypographyDNA";
 import { TREATMENT_AXES } from "./TypographyDNA";
+import { profileFor, renderProfileForPrompt } from "./AssetProfile";
 import type { LedgerUseViolation, TextLedgers } from "./TextLedgerSystem";
 import {
   PLAIN_INK_ABOVE_GRAPHEMES,
@@ -382,7 +383,12 @@ export interface OpticalRequirements {
   min_cap_height_pct: number;
 }
 
-const DEFAULT_REQUIREMENTS: OpticalRequirements = {
+/**
+ * Exported because the module that owns the camera has to honour it.
+ * `CinematographyLayer` reads the aperture floor when the frame carries drawn type:
+ * BLOCK 8 states the need, BLOCK 5 states the setting.
+ */
+export const TYPOGRAPHY_REQUIREMENTS: OpticalRequirements = {
   text_in_focal_plane: true,
   aperture_floor_f: 5.6,
   min_cap_height_pct: 2.2,
@@ -400,6 +406,12 @@ export interface ReservedZone {
 
 export interface TypographyBlockInput {
   ledgers: TextLedgers;
+  /**
+   * The channel, so BLOCK 8 uses its floor on type size. A banner's floor is nearly
+   * double a poster's because it is delivered at a few hundred pixels, and before
+   * `AssetProfile` existed both received the poster's number.
+   */
+  assetType?: string | null;
   /** The axes `TypographyDNA` resolved. Absent means flat ink. */
   treatment?: TypographyTreatment | null;
   /** `TypographyDNA.avoid_rules` — each one names a behaviour that lost this brief's argument. */
@@ -441,7 +453,12 @@ const clean = (v: unknown): string => (typeof v === "string" ? v.trim() : "");
  */
 export function buildTypographyBlock(input: TypographyBlockInput): TypographyBlock {
   const { ledgers } = input;
-  const requires = { ...DEFAULT_REQUIREMENTS, ...(input.requirements || {}) };
+  const profile = input.assetType ? profileFor(input.assetType) : null;
+  const requires = {
+    ...TYPOGRAPHY_REQUIREMENTS,
+    ...(profile ? { min_cap_height_pct: profile.min_cap_height_pct } : {}),
+    ...(input.requirements || {}),
+  };
   const hasCampaign = ledgers.mode === "exact" && ledgers.campaign.length > 0;
 
   // ── T1 ───────────────────────────────────────────────────────────────────
@@ -790,8 +807,13 @@ const SECTION_ROUTE: Array<[RegExp, RouteTarget]> = [
   [/^EXCLUSIONS?$/i, 7],
   // The copy's own list. BLOCK 8's T1 is the only place a string is written out.
   [/^CONTENT MESSAGE/i, "drop"],
-  [/^FINAL OUTPUT/i, 1],
-  [/^CONFLICT PRIORITY/i, 1],
+  // Replaced by `AUTHORITY_RULE`. The nine-item conflict list and the pre-render
+  // verification checklist are instructions ABOUT instructions: measured on a
+  // stored prompt they cost roughly 2,000 characters between them, and they
+  // restate an order the block structure already carries. A brief that has to
+  // explain how to read itself is spending the renderer's attention on itself.
+  [/^CONFLICT PRIORITY/i, "drop"],
+  [/^FINAL OUTPUT/i, "drop"],
   [/^OUTPUT CONTEXT/i, 1],
   [/^PRODUCT INSTANCE REQUIREMENTS/i, 2],
   [/^REFERENCE SEMANTICS/i, 2],
@@ -819,23 +841,87 @@ const SECTION_ROUTE: Array<[RegExp, RouteTarget]> = [
   [/^READABLE COPY/i, "drop"],
 ];
 
-/** A heading and the lines under it. */
+/**
+ * Lines that belong to a block their own section does not.
+ *
+ * The analysis layer writes labelled lines inside prose sections: `- CAMERA:`,
+ * `- LIGHTING:`, `- COLOUR:` all live under one heading routed to BLOCK 3. Leaving
+ * them there empties BLOCK 4 and BLOCK 5 on any run without a composition
+ * artifact, and then the dedupe pass keeps the lighting statement in BLOCK 3
+ * because that is where it was met first. Moving the LINE, not the section, is
+ * what puts each decision under the block that owns it.
+ *
+ * Only applied inside sections routed to blocks 3-7. Nothing is ever lifted out
+ * of the identity lock or the typography block.
+ */
+const LINE_ROUTE: Array<[RegExp, 3 | 4 | 5 | 6 | 7]> = [
+  [/^[-*\s]*(camera|camera language|camera behaviour|camera behavior|lens|lens behaviour|lens behavior|vantage)\s*:/i, 5],
+  [/^[-*\s]*(lighting|lighting behaviour|lighting behavior|light direction|light quality|light|atmosphere)\s*:/i, 4],
+  [/^[-*\s]*(environment|environment logic|environment & set|set|setting|background|midground|foreground|depth)\s*:/i, 6],
+  [/^[-*\s]*(colour|color|palette|materials|materials & surfaces|material language|surface|finish|grade|texture)\s*:/i, 7],
+  [/^[-*\s]*(composition|composition logic|layout|hierarchy|negative space|framing)\s*:/i, 3],
+];
+
+/**
+ * Where a retrieved knowledge card goes, by what its title is about.
+ *
+ * Applied ONLY to fourth-level headings, which is what a knowledge card is: the
+ * compiler writes each one as `#### [id] Title` and the optimizer then strips the
+ * id, so the heading that arrives here is the title alone. Matching loosely is
+ * safe at this level and would not be safe at section level -- `COMMERCIAL VISUAL
+ * HIERARCHY` has to reach composition, and a loose `hierarchy` rule applied to
+ * every section would start pulling prose sections apart.
+ *
+ * Typography cards are dropped for the same reason every other typographic writer
+ * is: BLOCK 8 says it once. Anything unmatched stays with the craft knowledge in
+ * BLOCK 7 rather than being dropped -- a card nobody classified is still craft.
+ */
+const CARD_ROUTE: Array<[RegExp, RouteTarget]> = [
+  [/typograph|lettering|readab.*type/i, "drop"],
+  [/light|illuminat|shadow|exposure/i, 4],
+  [/camera|perspective|lens|focal|foreshorten/i, 5],
+  [/composition|hierarchy|grid|layout|balance|negative space/i, 3],
+  [/physical|scene|environment|grounding|occlusion|contact/i, 6],
+  [/material|surface|colour|color|texture|finish/i, 7],
+];
+
+/**
+ * The heading level that makes a section a knowledge card.
+ *
+ * Counted so the script can tell the difference between "the library had nothing
+ * to say about this brief" and "the library said something and it was lost on the
+ * way" -- the second is what happened on every measured render before this.
+ */
+const CARD_LEVEL = 4;
+
+/** A heading, its level, and the lines under it. */
 export interface NamedSection {
   heading: string;
   body: string;
+  /** 1-4 for a hashed heading; 2 for a bracketed or all-caps label. */
+  level: number;
 }
 
 const HEADING_PATTERNS: RegExp[] = [
-  /^#{1,3}\s+(.+?)\s*$/,
+  // Four hashes, not three: each retrieved knowledge card is written as
+  // `#### [id] Title`, and treating a card as its own section is what lets a
+  // lighting card reach BLOCK 4 instead of riding along inside one container.
+  /^#{1,4}\s+(.+?)\s*$/,
   /^\[([A-Z][^\]]{4,})\]\s*$/,
   /^([A-Z][-A-Z0-9 &'/()–—]{5,}):\s*$/,
   /^([A-Z][-A-Z0-9 &'/()–—]{5,})\s*$/,
 ];
 
-function headingOf(line: string): string | null {
+function headingOf(line: string): { name: string; level: number } | null {
+  const hashes = /^(#{1,4})\s+/.exec(line);
   for (const re of HEADING_PATTERNS) {
     const m = re.exec(line);
-    if (m) return m[1].replace(/[:\s]+$/, "").trim();
+    if (!m) continue;
+    // The id the compiler writes in front of a card title is stripped by the
+    // optimizer before the prompt reaches here, so the heading may arrive either
+    // way. Both forms are reduced to the title.
+    const name = m[1].replace(/^\[[\w.\-]+\]\s*/, "").replace(/[:\s]+$/, "").trim();
+    return { name, level: hashes ? hashes[1].length : 2 };
   }
   return null;
 }
@@ -850,17 +936,19 @@ function headingOf(line: string): string | null {
 export function splitNamedSections(text: string): NamedSection[] {
   const out: NamedSection[] = [];
   let heading = "PREAMBLE";
+  let level = 2;
   let body: string[] = [];
   const flush = () => {
     const joined = body.join("\n").trim();
-    if (joined) out.push({ heading, body: joined });
+    if (joined) out.push({ heading, body: joined, level });
     body = [];
   };
   for (const line of String(text || "").split(/\r?\n/)) {
     const next = headingOf(line);
     if (next) {
       flush();
-      heading = next;
+      heading = next.name;
+      level = next.level;
       continue;
     }
     body.push(line);
@@ -1072,6 +1160,12 @@ export interface RouteResult {
   dropped: string[];
   /** Headings no rule named. They go to BLOCK 3 and are reported so a rule can be added. */
   unrouted: string[];
+  /** Labelled lines lifted out of their section into the block that owns them. */
+  lineMoves: number;
+  /** Retrieved knowledge cards that reached a block. Zero means the renderer got none. */
+  knowledgeCards: number;
+  /** The finish statement, declared under its own owner for the ownership audit. */
+  finishSection: PromptSection | null;
 }
 
 export interface RouteInput {
@@ -1085,6 +1179,27 @@ export interface RouteInput {
   plan?: PlanShape | null;
   /** The brand's own directive, minus anything typographic. */
   brand?: string | null;
+  /**
+   * What kind of photograph this is, from `FinishLayer`. Opens BLOCK 7, because the
+   * medium is the frame's own subject there and the knowledge cards and the brand
+   * notes sit under it.
+   */
+  finish?: string | null;
+  /**
+   * The setup, from `CinematographyLayer` — the owner of camera, lighting and the
+   * scene environment. Where these are present they ARE blocks 4, 5 and 6, and the
+   * composition artifact's prose about the same three topics is dropped: it was
+   * already read as evidence by the layer that produced these.
+   */
+  optics?: { light?: string | null; lens?: string | null; environment?: string | null; surface?: string | null } | null;
+  /** The asset type, so the channel's own numbers reach BLOCK 1 and BLOCK 8. */
+  assetType?: string | null;
+  /**
+   * The idea, from `IdeaLayer`. Opens BLOCK 3 and is protected from the dedupe
+   * pass: it is the line everything else in the script serves, so it may not be
+   * cut as a repeat of something it was derived from.
+   */
+  idea?: string | null;
 }
 
 /**
@@ -1100,6 +1215,8 @@ export function routePromptSections(input: RouteInput): RouteResult {
   const routed: RouteResult["routed"] = [];
   const dropped: string[] = [];
   const unrouted: string[] = [];
+  let lineMoves = 0;
+  let knowledgeCards = 0;
   const hasPlan = Boolean(input.plan);
   const ledgers = input.ledgers;
 
@@ -1109,9 +1226,12 @@ export function routePromptSections(input: RouteInput): RouteResult {
   ];
 
   for (const section of sections) {
-    const rule = SECTION_ROUTE.find(([re]) => re.test(section.heading));
-    const target: RouteTarget = rule ? rule[1] : 3;
-    if (!rule) unrouted.push(section.heading);
+    // A knowledge card is routed by its own table and defaults to the craft block;
+    // everything else is a prose section and defaults to staging.
+    const isCard = section.level >= CARD_LEVEL;
+    const rule = (isCard ? CARD_ROUTE : SECTION_ROUTE).find(([re]) => re.test(section.heading));
+    const target: RouteTarget = rule ? rule[1] : isCard ? 7 : 3;
+    if (!rule && !isCard) unrouted.push(section.heading);
 
     let body = section.body;
 
@@ -1144,19 +1264,85 @@ export function routePromptSections(input: RouteInput): RouteResult {
       dropped.push(section.heading);
       continue;
     }
-    bins[target].push(section.heading === "PREAMBLE" ? body : `${section.heading}\n${body}`);
+
+    // Labelled lines move to the block that owns their subject. A line that
+    // leaves takes its label with it, so it still reads as a decision rather
+    // than as a fragment.
+    if (target >= 3 && target <= 7) {
+      const stay: string[] = [];
+      for (const line of body.split(/\r?\n/)) {
+        const rule = line.trim() ? LINE_ROUTE.find(([re]) => re.test(line)) : undefined;
+        if (rule && rule[1] !== target) {
+          bins[rule[1]].push(line.trim());
+          lineMoves++;
+          continue;
+        }
+        stay.push(line);
+      }
+      body = stay.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+      if (!body) {
+        dropped.push(section.heading);
+        continue;
+      }
+    }
+
+    if (isCard) knowledgeCards++;
+    // A card keeps its title and gains a label. Two reasons: the renderer can tell
+    // a retrieved craft principle from a decision about THIS picture, and the
+    // prompt's own promise of "knowledge supplied below" now points at something
+    // findable -- which is what made that promise a dangling reference on every
+    // measured render.
+    const heading = isCard ? `KNOWLEDGE — ${section.heading}` : section.heading;
+    bins[target].push(section.heading === "PREAMBLE" ? body : `${heading}\n${body}`);
     routed.push({ heading: section.heading, block: target });
   }
+
+  // The idea opens BLOCK 3, above the staging it explains.
+  const idea = sanitizeRouted(input.idea || "");
+  if (idea) bins[3].unshift(idea);
+
+  // The setup opens each of its blocks: a parameter leads and any prose that
+  // survived beside it reads as support rather than as a competing instruction.
+  const optics = input.optics || null;
+  if (optics?.light) bins[4].unshift(sanitizeRouted(optics.light));
+  if (optics?.lens) bins[5].unshift(sanitizeRouted(optics.lens));
+  if (optics?.environment) bins[6].unshift(sanitizeRouted(optics.environment));
+  if (optics?.surface) bins[7].push(sanitizeRouted(optics.surface));
 
   if (input.plan) {
     const fromPlan = blocksFromCompositionPlan(input.plan);
     if (fromPlan.subject) bins[3].push(`THE FRAME, AS DECIDED\n${fromPlan.subject}`);
-    if (fromPlan.light) bins[4].push(fromPlan.light);
-    if (fromPlan.lens) bins[5].push(fromPlan.lens);
-    if (fromPlan.environment) bins[6].push(fromPlan.environment);
+    // The plan's prose for these three topics is the layer's INPUT. Emitting it
+    // beside the setup would be the same decision twice in two vocabularies, with
+    // the vaguer one winning on recency inside the block.
+    if (!optics?.light && fromPlan.light) bins[4].push(fromPlan.light);
+    if (!optics?.lens && fromPlan.lens) bins[5].push(fromPlan.lens);
+    if (!optics?.environment && fromPlan.environment) bins[6].push(fromPlan.environment);
   }
+  const finish = sanitizeRouted(input.finish || "");
+  if (finish) bins[7].unshift(finish);
   const brand = sanitizeRouted(stripTypographicLines(input.brand || ""));
   if (brand) bins[7].push(brand);
+
+  // The two things this module states on its own behalf, because they describe the
+  // script's own structure and its output, not any creative decision.
+  // The channel's own arithmetic sits under the authority rule: reading time,
+  // dominance and the test the frame has to pass. Before `AssetProfile` existed a
+  // banner and a poster received the same numbers, so two formats out of three
+  // were being briefed as the third.
+  const channel = input.assetType ? renderProfileForPrompt(profileFor(input.assetType)) : "";
+  bins[1].unshift([`${AUTHORITY_RULE}\n${OUTPUT_RULE}`, channel].filter(Boolean).join("\n\n"));
+
+  // A promise with nothing behind it is worse than silence: the ROLE line told the
+  // renderer to work "using ... brand context and knowledge supplied below" on all
+  // twelve measured prompts, and none of them carried a knowledge section. Where
+  // the knowledge really is absent, the sentence is corrected rather than left to
+  // point at nothing.
+  if (!knowledgeCards) {
+    for (let i = 0; i < bins[1].length; i++) {
+      bins[1][i] = bins[1][i].replace(/brand context and knowledge supplied below/gi, "brand context supplied below");
+    }
+  }
 
   const join = (n: number) => bins[n].filter(Boolean).join("\n\n").trim() || null;
   return {
@@ -1172,24 +1358,174 @@ export function routePromptSections(input: RouteInput): RouteResult {
     routed,
     dropped,
     unrouted,
+    lineMoves,
+    knowledgeCards,
+    finishSection: finish ? { topic: "finish", owner: TOPIC_OWNER.finish, text: finish } : null,
   };
 }
+
+/**
+ * Which block wins, in three lines.
+ *
+ * This replaces a nine-item conflict list and a pre-render verification checklist
+ * -- about 2,000 characters of text whose subject was the prompt rather than the
+ * picture. The order is NOT positional: recency settles ordinary disagreements,
+ * which is why BLOCK 8 is last and has the final word about type, but the product
+ * and the client's exact strings are absolute and no later block may touch them.
+ * Stating that in one rule is the whole of what the nine items said.
+ */
+export const AUTHORITY_RULE = [
+  "AUTHORITY. Two things are absolute and nothing below them may change them: the product's identity in BLOCK 2, and the exact strings in BLOCK 8's ledger.",
+  "Everything else: where two blocks describe the same thing differently, execute the LATER block's version.",
+  "Where no block covers a decision, it is yours to make, in the direction the blocks already establish.",
+].join("\n");
+
+/**
+ * The one line worth keeping out of the verification checklist that went.
+ *
+ * The rest of that checklist either repeated BLOCK 2 (do not inherit the
+ * reference's camera, do not render REF_01) or repeated the ROLE line (produce one
+ * visual). This did neither, and under one-pass it carries more weight than it did
+ * before: the type is now rendered by the same pass as the picture, so "nothing
+ * looks placed on top" is a statement about every element in the frame.
+ */
+export const OUTPUT_RULE =
+  "ONE finished photograph, made in a single exposure. Every element in the frame — the product, the staging, the words — belongs to the same light, the same lens and the same depth. Nothing is laid on top of the picture.";
 
 export interface OnePassInput extends TypographyBlockInput, RouteInput {}
 
 export interface OnePassScript extends OpticalScript {
   route: RouteResult;
+  /** Lines removed because something earlier, or BLOCK 8, had already said them. */
+  deduped: { lines: number; chars: number };
+}
+
+const DEDUPE_MIN_CHARS = 60;
+const DEDUPE_OVERLAP = 0.8;
+
+/** Normalised form used only to recognise a repeat. */
+const loose = (s: string) =>
+  s
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}%\s]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+/** Content words, for the overlap test. */
+const words = (s: string) => new Set(loose(s).split(" ").filter((w) => w.length > 3));
+
+function overlap(a: Set<string>, b: Set<string>): number {
+  if (!a.size || !b.size) return 0;
+  let shared = 0;
+  for (const w of a) if (b.has(w)) shared++;
+  return shared / (a.size + b.size - shared);
+}
+
+/**
+ * Blocks 1-7 with every line something else has already said removed.
+ *
+ * Measured on a stored prompt: one decision arrived four times -- as `SCENE`, as
+ * `- environment`, as `- background` and as `- environment logic` -- and the
+ * forbidden list arrived twice. A renderer reading the same instruction four
+ * times does not follow it four times harder; it spends four times the attention
+ * deciding whether the four are the same instruction.
+ *
+ * BLOCK 8 is seeded FIRST and never cut, because it owns type: an earlier block
+ * restating what the typography block says is exactly the restatement to drop.
+ * The first survivor of any repeat is kept -- blocks are ordered, and the earlier
+ * block is where the reader meets it.
+ */
+export function dedupeSources(
+  sources: ScriptSources,
+  typographyText: string,
+  /**
+   * Lines that may never be cut and are never used as a seed.
+   *
+   * The idea statement is derived from the brief's own concept sentence, so the two
+   * overlap heavily. Seeding it would delete the client's sentence; cutting it
+   * would delete the one line the rest of the script serves. It is exempt from both
+   * directions.
+   */
+  protect = "",
+): { sources: ScriptSources; lines: number; chars: number } {
+  const protected_ = new Set(
+    protect
+      .split(/\r?\n/)
+      .map((l) => loose(l))
+      .filter(Boolean),
+  );
+  const seenExact = new Set<string>();
+  const seenWords: Set<string>[] = [];
+  const remember = (line: string) => {
+    const key = loose(line);
+    if (!key) return;
+    seenExact.add(key);
+    if (key.length >= DEDUPE_MIN_CHARS) seenWords.push(words(line));
+  };
+  for (const line of typographyText.split(/\r?\n/)) remember(line);
+
+  let removed = 0;
+  let chars = 0;
+  const cutRepeats = (text: string | null | undefined): string | null => {
+    if (!text) return text ?? null;
+    const kept: string[] = [];
+    for (const line of text.split(/\r?\n/)) {
+      const key = loose(line);
+      if (!key) {
+        kept.push(line);
+        continue;
+      }
+      if (protected_.has(key)) {
+        kept.push(line);
+        continue;
+      }
+      const isRepeat =
+        seenExact.has(key) ||
+        (key.length >= DEDUPE_MIN_CHARS && seenWords.some((prev) => overlap(words(line), prev) >= DEDUPE_OVERLAP));
+      if (isRepeat) {
+        removed++;
+        chars += line.length + 1;
+        continue;
+      }
+      remember(line);
+      kept.push(line);
+    }
+    const out = kept.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+    return out || null;
+  };
+
+  // In block order, so the earlier block keeps the line and the later one loses it.
+  const outputContract = cutRepeats(sources.outputContract);
+  const identityLock = cutRepeats(sources.identityLock);
+  const subject = cutRepeats(sources.subject);
+  const light = cutRepeats(sources.light);
+  const lens = cutRepeats(sources.lens);
+  const environment = cutRepeats(sources.environment);
+  const grade = cutRepeats(sources.grade);
+
+  return {
+    sources: { outputContract, identityLock, subject, light, lens, environment, grade },
+    lines: removed,
+    chars,
+  };
 }
 
 /**
  * The one call the pipeline makes: analysis output in, the eight-block script out.
  *
  * The reserved zone comes from the composition artifact when the caller did not
- * state one, because the artifact owns it.
+ * state one, because the artifact owns it. BLOCK 8 is built twice -- once here to
+ * dedupe the other blocks against it, once inside `compileOpticalScript` -- which
+ * is free: the builder is pure, so the second call returns the same text.
  */
 export function compileOnePassPrompt(input: OnePassInput): OnePassScript {
   const route = routePromptSections(input);
   const zone = input.zone ?? input.plan?.typography_zone?.value ?? null;
-  const script = compileOpticalScript({ ...input, zone, sources: route.sources });
-  return { ...script, route };
+  const typography = buildTypographyBlock({ ...input, zone });
+  const deduped = dedupeSources(route.sources, typography.text, input.idea || "");
+  const script = compileOpticalScript({ ...input, zone, sources: deduped.sources });
+  // The finish speaks for its own topic, so the audit sees `FinishLayer` rather
+  // than attributing a medium decision to whoever owns the block it sits in.
+  const sections = route.finishSection ? [...script.sections, route.finishSection] : script.sections;
+  return { ...script, sections, route, deduped: { lines: deduped.lines, chars: deduped.chars } };
 }

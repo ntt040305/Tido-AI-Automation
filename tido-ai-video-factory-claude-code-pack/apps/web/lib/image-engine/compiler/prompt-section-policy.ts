@@ -108,8 +108,28 @@ export const PROMPT_SECTION_POLICY: SectionPolicyRule[] = [
   { match: /^COMMERCIAL LAYOUT$/i, tier: TIER_CREATIVE, note: "Layout reasoning — attention budget, reading order and reserved space. Was priority 6, the first casualty of every oversized prompt." },
   { match: /^CREATIVE & RENDER CONSTRAINTS$/i, tier: TIER_CREATIVE, note: "The execution constraints that come with the creative decision. Was priority 6." },
 
+  // ── 2 — ordinary content ───────────────────────────────────────────────
+  //
+  // Moved out of tier 3 after measuring what tier 3 cost it: `signalMix` counts
+  // every section at TIER_SUPPORTING or below as "generic", and the optimizer
+  // drops P1 sections while `generic / creative > 0.15`. Knowledge is ~5,000
+  // characters against a creative tier of ~8,000, so that ratio can never be
+  // satisfied with knowledge present -- and the loop removed BRAND KNOWLEDGE,
+  // OUTPUT CONTEXT and PROFESSIONAL KNOWLEDGE on EVERY render. Measured on the
+  // twelve-case benchmark: 0 of 12 sent prompts carried a knowledge section,
+  // while the prompt's own ROLE line promised "knowledge supplied below" and its
+  // conflict rule cited "professional knowledge physical principles". The library
+  // is 540 authored cards and the renderer received none of them.
+  //
+  // Tier 2 keeps it countable but not "dilution": it stays droppable through
+  // `P1_DROP_ORDER` when a prompt genuinely exceeds the hard limit, which is the
+  // case the earlier revert was actually about. That revert's reasoning -- "the
+  // prompt's non-knowledge content is already ~21,600 against a 20,000 limit" --
+  // no longer holds: the limit is `PROMPT_HARD_MAXIMUM_CHARS` (32,000 here) and
+  // the one-pass router removes ~6,900 characters after compilation.
+  { match: /^PROFESSIONAL KNOWLEDGE$/i, tier: TIER_ORDINARY, note: "Retrieved craft knowledge. Divisible: the compiler already trims it block by block before this table is consulted. Not counted as dilution -- see the note above." },
+
   // ── 3 — useful, not load-bearing ───────────────────────────────────────
-  { match: /^PROFESSIONAL KNOWLEDGE$/i, tier: TIER_SUPPORTING, note: "Retrieved craft knowledge. Divisible: the compiler already trims it block by block before this table is consulted." },
   { match: /^OUTPUT CONTEXT$/i, tier: TIER_SUPPORTING, note: "Use case and aspect ratio, both stated elsewhere too." },
   { match: /^CREATIVE EXECUTION$/i, tier: TIER_SUPPORTING, note: "Execution notes downstream of the decision." },
 

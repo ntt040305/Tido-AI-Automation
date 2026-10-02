@@ -504,7 +504,10 @@ check("REGRESSION: the same child under a different parent takes that parent's r
   const pb = b.removals.find((x: any) => x.section === "RESOLVED ART DIRECTION");
   assert.ok(pa && pb, "the child was not reached under both parents");
   assert.strictEqual(pa.priority, TIER_CREATIVE);
-  assert.strictEqual(pb.priority, TIER_SUPPORTING);
+  // Asserted against the table rather than against a literal: the subject of this
+  // test is INHERITANCE, and pinning the parent's own tier here made it fail when
+  // `PROFESSIONAL KNOWLEDGE` legitimately moved from tier 3 to tier 2.
+  assert.strictEqual(pb.priority, tierFor("PROFESSIONAL KNOWLEDGE"));
   assert.notStrictEqual(pa.priority, pb.priority, "the child stopped following its parent");
 });
 

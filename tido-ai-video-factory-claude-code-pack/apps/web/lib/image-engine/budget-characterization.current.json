@@ -63,7 +63,7 @@
     "blocks_removed": [
       "BRAND KNOWLEDGE:p4",
       "OUTPUT CONTEXT:p3",
-      "PROFESSIONAL KNOWLEDGE:p3"
+      "PROFESSIONAL KNOWLEDGE:p2"
     ]
   },
   "clean_sub_threshold_prompt": {

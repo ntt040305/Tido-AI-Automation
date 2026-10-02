@@ -68,8 +68,21 @@ import {
 } from "./experiment/TypographyPlan";
 import { composeEditable, editableTelemetry, type ComposeResult } from "./experiment/EditableDesign";
 import { buildTypographyDNA, categoryHint, renderDnaForImagePrompt } from "./experiment/TypographyDNA";
-import { compileOnePassPrompt, opticalTelemetry, type OnePassScript } from "./experiment/OpticalCompiler";
+import { TYPOGRAPHY_REQUIREMENTS, compileOnePassPrompt, opticalTelemetry, type OnePassScript } from "./experiment/OpticalCompiler";
 import { buildTextLedgers, ledgerTelemetry } from "./experiment/TextLedgerSystem";
+import { finishTelemetry, renderFinishForPrompt, resolveFinish } from "./experiment/FinishLayer";
+import { ideaTelemetry, renderIdeaForPrompt, resolveIdea } from "./experiment/IdeaLayer";
+import { copyFitsChannel, profileFor, profileTelemetry } from "./experiment/AssetProfile";
+import {
+  cinematographyTelemetry,
+  projectToSetup,
+  renderEnvironmentForPrompt,
+  renderLensForPrompt,
+  renderLightForPrompt,
+  renderSurfaceForPrompt,
+  resolveOpticalAxes,
+} from "./experiment/CinematographyLayer";
+import { gradePrompt, promptGradeTelemetry } from "../benchmark/PromptGrader";
 import { TypographyDesignContractService } from "./experiment/TypographyDesignContract";
 import type { CreativeDocument } from "./experiment/CreativeDocument";
 import type { BrandKit } from "./experiment/BrandKit";
@@ -504,9 +517,17 @@ export class ExperimentPipeline {
             ...opticalTelemetry(optical),
             dropped: optical.route.dropped,
             unrouted: optical.route.unrouted,
+            knowledge_cards: optical.route.knowledgeCards,
+            deduped_lines: optical.deduped.lines,
+            deduped_chars: optical.deduped.chars,
             chars_legacy_assembly: withBlueprint.length + (directive ? directive.length + 2 : 0),
             chars_sent: finalPrompt.length,
           });
+          // How specific the script actually is, measured on the string being
+          // sent. Deterministic and free, so it rides on every render instead of
+          // waiting for a vision judge that costs 100 VND and cannot separate
+          // small differences. It grades DECISIVENESS, never quality.
+          console.log("[OPTICAL][GRADE]", promptGradeTelemetry(gradePrompt(finalPrompt)));
           if (!optical.ok) {
             console.warn("[OPTICAL][SCRIPT] invariant failed", {
               failed: optical.invariants.filter((x) => !x.ok).map((x) => `${x.id}: ${x.because}`),
@@ -1195,17 +1216,87 @@ export class ExperimentPipeline {
               brandKit: decision.brandKit ?? null,
               copyLines: textRequirement.lines.length,
             });
+            // What kind of photograph this is. Nothing decided this before: the
+            // `finish` domain measured 0 of 12 on the benchmark, and it is where a
+            // render gives itself away.
+            const finish = resolveFinish({
+              assetType: assetCtx?.asset_type || request.useCase || null,
+              category: categoryHint(capturedBlueprint),
+              personality: capturedPlan?.style?.personality ?? null,
+              evidence: [
+                capturedCompositionPlan?.atmosphere?.value,
+                capturedCompositionPlan?.lighting_quality?.value,
+                capturedCompositionPlan?.environment?.value,
+                capturedCompositionPlan?.storytelling_intent?.value,
+                request.concept,
+                (decision.brandKit?.style?.preferred || []).join(" "),
+              ],
+              copyLines: textRequirement.lines.length,
+            });
+            // The setup that produces the picture. This is the layer that owns
+            // camera, lighting and the scene environment: the composition's prose
+            // about those three is read here as evidence and does not reach the
+            // renderer twice.
+            const axes = resolveOpticalAxes({
+              assetType: assetCtx?.asset_type || request.useCase || null,
+              brand: [
+                decision.brandKit?.name ? (decision.brandKit.style?.preferred || []).join(" ") : null,
+                capturedPlan?.style?.personality ?? null,
+              ],
+              evidence: [
+                request.concept,
+                capturedCompositionPlan?.atmosphere?.value,
+                capturedCompositionPlan?.lighting_quality?.value,
+                capturedCompositionPlan?.lighting_direction?.value,
+                capturedCompositionPlan?.environment?.value,
+                capturedCompositionPlan?.storytelling_intent?.value,
+                capturedCompositionPlan?.camera_lens_behavior?.value,
+                categoryHint(capturedBlueprint),
+              ],
+            });
+            const setup = projectToSetup(axes.values, {
+              product_share: capturedCompositionPlan?.product_scale?.value?.share ?? null,
+              requires: TYPOGRAPHY_REQUIREMENTS,
+              drawing_type: textRequirement.lines.length > 0,
+            });
+            // The one line the rest of the script serves. It states the idea once,
+            // names the directions it beat, and reports when the brief supplied a
+            // mood instead of an idea -- the measured cause of the judge's weakest
+            // dimension, `creative_concept` at 4.6.
+            const idea = resolveIdea({
+              concept: (capturedBlueprint as { concept?: Parameters<typeof resolveIdea>[0]["concept"] } | null)?.concept ?? null,
+              judgment,
+              brief: request.concept,
+            });
+            const assetType = assetCtx?.asset_type || request.useCase || null;
+            const profile = profileFor(assetType);
+            const fit = copyFitsChannel(profile, textRequirement.lines.length);
+            if (!fit.fits) console.warn("[OPTICAL][CHANNEL] copy exceeds what this channel carries", { note: fit.note });
             const script = compileOnePassPrompt({
+              assetType,
               compiled: composedPrompt,
               blueprint: blueprintText ?? null,
+              idea: renderIdeaForPrompt(idea),
               plan: capturedCompositionPlan,
               brand: brandKitDirective(decision.brandKit, textRequirement.mode),
+              finish: renderFinishForPrompt(finish),
+              optics: {
+                light: renderLightForPrompt(setup),
+                lens: renderLensForPrompt(setup),
+                environment: renderEnvironmentForPrompt(setup),
+                surface: renderSurfaceForPrompt(setup),
+              },
               ledgers,
               treatment: dna.treatment,
               avoidRules: dna.avoid_rules,
               accentInk: Boolean(dna.accent),
             });
             console.log("[OPTICAL][LEDGERS]", ledgerTelemetry(ledgers));
+            console.log("[OPTICAL][IDEA]", ideaTelemetry(idea));
+            console.log("[OPTICAL][CHANNEL]", profileTelemetry(profile, textRequirement.lines.length));
+            console.log("[OPTICAL][FINISH]", finishTelemetry(finish));
+            console.log("[OPTICAL][SETUP]", cinematographyTelemetry(setup));
+            console.log("[OPTICAL][AXES]", { reconciled: axes.reconciled, low_confidence: Object.entries(axes.confidence).filter(([, c]) => c < 0.25).map(([k]) => k) });
             return script;
           } catch (err: any) {
             console.warn("[OPTICAL][SCRIPT] compile failed; the legacy assembly was sent instead", {
@@ -1649,7 +1740,11 @@ export class ExperimentPipeline {
             const own = (topic: PromptTopic, text: string | undefined) => {
               if (text) executionSections.push({ topic, owner: TOPIC_OWNER[topic], text });
             };
-            own("composition", renderCompositionPlan(capturedCompositionPlan, { sceneOnly: editableActive && typographyPlanOn }));
+            // `omitOptics`: the camera, the light and the environment are stated as
+            // parameters by `CinematographyLayer`, which read this plan as its
+            // evidence. The plan's prose about them would be the same decision a
+            // second time, in the vaguer vocabulary.
+            own("composition", renderCompositionPlan(capturedCompositionPlan, { sceneOnly: editableActive && typographyPlanOn, omitOptics: true }));
             if (editableActive) {
               own("render_constraints", NO_TEXT_DIRECTIVE);
             } else {
