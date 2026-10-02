@@ -558,8 +558,28 @@ export class ExperimentPipeline {
             ? `${withBlueprint}\n\n${directive}`
             : withBlueprint;
         if (v2) {
-          console.log("[PROMPT_V2]", { ...simpleTelemetry(v2), chars_sent: finalPrompt.length });
-          if (!v2.ok) console.warn("[PROMPT_V2] falling back to v1", { reason: v2.reason });
+          // Logged as ONE STRING, not an object.
+          //
+          // Next 16's dev-server log file writes every object argument as `{}`, so
+          // the object form of this line told a reader only that v2 ran -- not
+          // whether it reached the model, which check rejected it, or why it fell
+          // back. That is the whole diagnostic value of the line. A measured case:
+          // `[PROMPT_V2] {}` / `[PROMPT_V2] falling back to v1 {}` was the entire
+          // record of a failed build.
+          const t = simpleTelemetry(v2);
+          console.log(
+            `[PROMPT_V2] ok=${t.ok} calls=${t.llm_calls} tpl=${t.template_version} playbook=${t.playbook} ` +
+              `policy=${t.copy_policy} words=${t.prompt_words} copy=${t.copy_strings} adapted=${t.copy_adapted} ` +
+              `checks=[${(t.check_codes || []).join(",")}] missing_tags=[${(t.missing_tags || []).join(",")}] ` +
+              `warnings=${t.warnings} chars_sent=${finalPrompt.length}`,
+          );
+          if (!v2.ok) {
+            console.warn(`[PROMPT_V2] falling back to v1 — ${v2.reason || "no reason given"}`);
+            // Every failure message, each on its own line, so the fix is readable
+            // rather than inferred from a code.
+            for (const f of v2.checks?.failures || []) console.warn(`[PROMPT_V2][${f.code}] ${f.message}`);
+            if (v2.reply?.stray) console.warn(`[PROMPT_V2][stray] ${v2.reply.stray.slice(0, 300)}`);
+          }
         }
         if (optical) {
           console.log("[OPTICAL][SCRIPT]", {
@@ -1298,7 +1318,7 @@ export class ExperimentPipeline {
             capturedV2 = built;
             return built;
           } catch (err: any) {
-            console.warn("[PROMPT_V2] build threw; v1 will produce the prompt", { error: err?.message });
+            console.warn(`[PROMPT_V2] build threw; v1 will produce the prompt — ${err?.message || err}`);
             return null;
           }
         };
