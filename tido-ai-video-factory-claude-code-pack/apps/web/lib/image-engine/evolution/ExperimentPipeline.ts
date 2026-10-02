@@ -73,6 +73,9 @@ import { buildTextLedgers, ledgerTelemetry } from "./experiment/TextLedgerSystem
 import { finishTelemetry, renderFinishForPrompt, resolveFinish } from "./experiment/FinishLayer";
 import { ideaTelemetry, renderIdeaForPrompt, resolveIdea } from "./experiment/IdeaLayer";
 import { copyFitsChannel, profileFor, profileTelemetry } from "./experiment/AssetProfile";
+import { includeLabelText, isV2 } from "../prompt-v2/engine-selector";
+import { buildV2Prompt, v2Telemetry, type V2BuildResult } from "../prompt-v2/build";
+import type { AspectRatio } from "../prompt-v2/playbooks";
 import {
   cinematographyTelemetry,
   projectToSetup,
@@ -387,6 +390,28 @@ export class ExperimentPipeline {
    * aspect ratio, same model, same manifest. Only `prompt` differs, and only
    * when a judgment was produced.
    */
+  /**
+   * The v2 record, on the result the API returns.
+   *
+   * Additive and additive only: the response keeps every field it had, and gains
+   * `promptV2` when the v2 engine ran. The vision review reads `copy_final` from
+   * here, because under `adapt` the words the renderer was asked to draw are not
+   * the words the client typed -- and a gate that compares the wrong list would
+   * report a correct render as wrong.
+   */
+  private static attachV2<T extends object>(result: T, v2: V2BuildResult | null): T {
+    if (!v2) return result;
+    Object.assign(result as Record<string, unknown>, {
+      promptV2: {
+        ...v2Telemetry(v2),
+        copy_original: v2.copy_original,
+        copy_final: v2.copy_final,
+        warnings: v2.warnings,
+      },
+    });
+    return result;
+  }
+
   private static wrapProvider(
     inner: ImageGenerationProvider,
     /**
@@ -465,7 +490,17 @@ export class ExperimentPipeline {
      * the blueprint's typography and layout directions, the old text directive --
      * is dropped by the router instead of being appended here.
      */
-    opticalScriptFor?: (composed: string, blueprintText?: string) => OnePassScript | null
+    opticalScriptFor?: (composed: string, blueprintText?: string) => OnePassScript | null,
+    /**
+     * The v2 engine, when `PROMPT_ENGINE=v2`.
+     *
+     * Async because it makes a model call, and awaited here rather than at the
+     * call site because this is where the prompt is decided. Returning null --
+     * for a timeout, broken JSON, a schema violation or a linter failure the one
+     * repair did not fix -- leaves v1 to produce the prompt, which is the whole
+     * point of keeping v1.
+     */
+    v2For?: () => Promise<V2BuildResult | null>
   ): ImageGenerationProvider {
     return {
       async generateImage(input: ProviderImageGenerationInput) {
@@ -506,12 +541,19 @@ export class ExperimentPipeline {
         // One-pass: the eight-block script IS the prompt. The legacy assembly
         // below it survives only as the path a failed compile falls back to, which
         // is also the editable path -- nothing else reaches the provider.
+        const v2 = v2For ? await v2For() : null;
         const optical = opticalScriptFor ? opticalScriptFor(composed, blueprintText) : null;
-        const finalPrompt = optical
+        const finalPrompt = v2?.ok && v2.prompt
+          ? v2.prompt
+          : optical
           ? optical.prompt
           : directive
             ? `${withBlueprint}\n\n${directive}`
             : withBlueprint;
+        if (v2) {
+          console.log("[PROMPT_V2]", { ...v2Telemetry(v2), chars_sent: finalPrompt.length });
+          if (!v2.ok) console.warn("[PROMPT_V2] falling back to v1", { reason: v2.reason });
+        }
         if (optical) {
           console.log("[OPTICAL][SCRIPT]", {
             ...opticalTelemetry(optical),
@@ -1122,6 +1164,9 @@ export class ExperimentPipeline {
     let capturedCompositionPlan: CompositionPlan | null = null;
     let capturedAssetDna: any = null;
     let capturedPrompt: string | null = null;
+    // The v2 build, when the flag selected it. Null on the v1 path, which is the
+    // default: nothing here runs unless PROMPT_ENGINE=v2.
+    let capturedV2: V2BuildResult | null = null;
     // Phase 5.1: the editable design document, when the execution layer built one.
     let capturedDocument: any = null;
     // The typography plan. Captured for the same reason the geometry is: the
@@ -1200,6 +1245,57 @@ export class ExperimentPipeline {
     // Null in editable mode, where the model renders the scene only, and null on a
     // failed compile -- in both cases the legacy assembly still runs, so a bug here
     // cannot cost a render.
+    // v2: one LLM call that writes the prompt itself. Off unless PROMPT_ENGINE=v2.
+    //
+    // Built here because this is where the request, the asset context and the
+    // product buffers are all in scope. It never throws: `buildV2Prompt` turns
+    // every failure into `ok: false`, and this returns null on anything else so
+    // the v1 assembly below still runs.
+    const v2For = !isV2()
+      ? undefined
+      : async (): Promise<V2BuildResult | null> => {
+          try {
+            const { LLMProviderService } = await import("../llm/llm-provider.service");
+            const llm = new LLMProviderService();
+            const productImages = (request.images || []).filter((i) => {
+              const role = String((i as { role?: string }).role || "").toUpperCase();
+              return !role || role === "PRODUCT" || role === "PRODUCT_REFERENCE";
+            });
+            const ratio = (["1:1", "9:16", "16:9"].includes(String(request.aspectRatio))
+              ? String(request.aspectRatio)
+              : "1:1") as AspectRatio;
+            const built = await buildV2Prompt(
+              {
+                assetType: assetCtx?.asset_type || request.useCase || "Poster",
+                aspectRatio: ratio,
+                concept: request.concept || "",
+                brand: request.brandName || "",
+                productLine: (request as { productLine?: string }).productLine,
+                copy: textRequirement.lines,
+                products: productImages.map((img, i) => {
+                  const buf = (img as { buffer?: Buffer }).buffer;
+                  const mime = (img as { mimeType?: string }).mimeType || "image/png";
+                  return {
+                    ref_index: i + 1,
+                    description: (img as { description?: string }).description,
+                    ...(buf ? { imageUrl: `data:${mime};base64,${buf.toString("base64")}` } : {}),
+                  };
+                }),
+                includeLabelText: includeLabelText(),
+              },
+              {
+                chat: (messages, purpose) =>
+                  llm.generateChatCompletion(messages as never, purpose, { temperature: 0.7, max_tokens: 4000, timeoutMs: 90000 }),
+              },
+            );
+            capturedV2 = built;
+            return built;
+          } catch (err: any) {
+            console.warn("[PROMPT_V2] build threw; v1 will produce the prompt", { error: err?.message });
+            return null;
+          }
+        };
+
     const opticalScriptFor = editableActive
       ? undefined
       : (composedPrompt: string, blueprintText?: string): OnePassScript | null => {
@@ -2089,7 +2185,8 @@ ${text || ""}`,
             blueprintFor,
             finalDirective,
             editableHooks,
-            opticalScriptFor
+            opticalScriptFor,
+            v2For
           ),
         });
 
@@ -2102,7 +2199,8 @@ ${text || ""}`,
         // failed immediately, leaving the loop enabled and unreachable on the
         // common path. It now runs once in PipelineRouter, above both
         // pipelines, where there is exactly one place to forget.
-        return ExperimentPipeline.attachDesignContext(
+        return ExperimentPipeline.attachV2(
+          ExperimentPipeline.attachDesignContext(
           capturedIntelligence ? { ...generated, creativeIntelligence: capturedIntelligence } : generated,
           capturedBlueprint,
           capturedTypography,
@@ -2118,6 +2216,8 @@ ${text || ""}`,
           capturedDocument?.editable?.typography_dna ?? null,
           industryLandscape,
           creativeOpportunity,
+          ),
+          capturedV2,
         );
       } catch (err: any) {
         console.error("[EVOLUTION][EXPERIMENT] generation failed", {
@@ -2295,7 +2395,8 @@ ${text || ""}`,
           blueprintFor,
           finalDirective,
           editableHooks,
-          opticalScriptFor
+          opticalScriptFor,
+          v2For
         ),
       });
 
@@ -2343,7 +2444,7 @@ ${text || ""}`,
           nextStage: "VisionReviewLayer.reviewRender",
         });
       }
-      return attached;
+      return ExperimentPipeline.attachV2(attached, capturedV2);
     } catch (err: any) {
       console.error("[EVOLUTION][EXPERIMENT] generation failed", {
         error: err?.message || String(err),

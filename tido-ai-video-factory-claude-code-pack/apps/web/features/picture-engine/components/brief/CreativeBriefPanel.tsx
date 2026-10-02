@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   CreativeBrief,
   AssetType,
@@ -117,6 +117,23 @@ export function CreativeBriefPanel({
       onUpdateCreativeDirection({ aspect_ratio: ratio });
     }
   };
+
+  // With PROMPT_ENGINE=v2 the creative director runs on every render, so this
+  // button would pay for a second opinion nobody reads. Asked once, server-side,
+  // because the flag lives on the server.
+  const [ideationAvailable, setIdeationAvailable] = useState(true);
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/image/concept-professionalize")
+      .then((r) => (r.ok ? r.json() : { available: true }))
+      .then((d) => {
+        if (alive && d && typeof d.available === "boolean") setIdeationAvailable(d.available);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const handleProfessionalize = async () => {
     if (!currentConcept || !currentConcept.trim() || isProfessionalizing) return;
@@ -297,7 +314,7 @@ export function CreativeBriefPanel({
         />
 
         {/* Concept Professionalizer Button */}
-        <div className="pt-1 space-y-1.5">
+        <div className="pt-1 space-y-1.5" hidden={!ideationAvailable}>
           <button
             type="button"
             disabled={!currentConcept.trim() || isGenerating || isProfessionalizing}

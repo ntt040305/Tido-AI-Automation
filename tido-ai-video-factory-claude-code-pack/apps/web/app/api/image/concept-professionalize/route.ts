@@ -3,6 +3,18 @@ import { ConceptProfessionalizerService } from "@/lib/image-engine/service/Conce
 
 export const runtime = "nodejs";
 
+/**
+ * Whether the manual "ý tưởng hóa" step is still worth offering.
+ *
+ * With `PROMPT_ENGINE=v2` the creative director runs on every render, so the
+ * button would pay for a second opinion nobody reads. The UI asks this once and
+ * hides the button on `false`. Server-side, so the flag has one source of truth.
+ */
+export async function GET() {
+  const { isV2 } = await import("@/lib/image-engine/prompt-v2/engine-selector");
+  return NextResponse.json({ available: !isV2(), engine: isV2() ? "v2" : "v1" });
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));

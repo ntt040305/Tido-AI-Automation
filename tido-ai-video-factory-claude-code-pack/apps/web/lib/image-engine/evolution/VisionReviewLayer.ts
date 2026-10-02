@@ -272,7 +272,16 @@ export async function reviewRender(
     // old list read `copyItems` only, so the content field's text was never
     // checked, and "no text" was never checked at all.
     const { resolveTextRequirement } = await import("../compiler/ExactCopyIntegrityValidator");
-    const textRequirement = resolveTextRequirement(request);
+    // On the v2 path the renderer was asked to draw `copy_final`, which differs
+    // from what the client typed whenever the copy had to be shortened to fit the
+    // channel. Comparing the original list there would report a correct render as
+    // wrong. Absent -- which is every v1 render -- this reads the request exactly
+    // as it always did.
+    const v2Copy = (result as unknown as { promptV2?: { copy_final?: unknown } }).promptV2?.copy_final;
+    const textRequirement =
+      Array.isArray(v2Copy) && v2Copy.length
+        ? ({ mode: "exact", lines: v2Copy.map((l) => String(l)) } as ReturnType<typeof resolveTextRequirement>)
+        : resolveTextRequirement(request);
     const expectedCopy = textRequirement.lines;
 
     const visionStart = Date.now();
