@@ -1,0 +1,17 @@
+ASSET: poster at {{ASPECT_RATIO}}.
+The viewer gives it three to ten seconds, standing still.
+
+What it has to win: one idea a viewer could still describe three seconds after
+looking away, and a hierarchy the eye follows without being told the order.
+
+Subject: the subject fills roughly half the frame and is unmistakably the thing the
+picture is about.
+
+Layout for this ratio: {{LAYOUT}}
+
+Copy budget: at most 3 separate lines of text — a headline of at most 8 words, a
+supporting line of at most 15 words, and an action line of at most 4 words.
+
+- The words sit inside the scene, in a quiet area the light leaves, never on a panel
+  laid over the picture.
+- One element dominates; nothing else competes for attention with it.

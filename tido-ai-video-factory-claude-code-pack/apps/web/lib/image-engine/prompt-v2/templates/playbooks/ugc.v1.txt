@@ -1,0 +1,16 @@
+ASSET: user-generated style at {{ASPECT_RATIO}}.
+The viewer gives it a second, and must believe a person took it.
+
+What it has to win: a frame that looks taken by someone who owns the product, not
+made for a campaign.
+
+Subject: the product is held or placed in a real room, slightly off centre, at a
+handheld angle.
+
+Layout for this ratio: {{LAYOUT}}
+
+Copy budget: at most ONE line of text, no longer than 6 words, and only if the brief
+gave one. It reads as a caption, never as a headline.
+
+- No studio: real room light, ordinary surfaces, the kind of clutter a real room has.
+- The framing is a little imperfect, as a phone held in one hand would be.

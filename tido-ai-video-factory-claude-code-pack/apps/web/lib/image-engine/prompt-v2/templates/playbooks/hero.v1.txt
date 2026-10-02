@@ -1,0 +1,17 @@
+ASSET: product hero at {{ASPECT_RATIO}}.
+The viewer gives it ten seconds or more, often enlarged.
+
+What it has to win: surface truth. The product's material, edges and markings hold
+up to inspection at twice this size.
+
+Subject: the product fills the frame confidently and is shown at the angle that
+explains its form.
+
+Layout for this ratio: {{LAYOUT}}
+
+Copy budget: at most ONE line of text, no longer than 5 words. None at all if the
+brief gave none.
+
+- No prop competes with the product; the surface it stands on is plain.
+- Nothing is cropped, nothing is tilted, no reflection falls where a real one would
+  not.
