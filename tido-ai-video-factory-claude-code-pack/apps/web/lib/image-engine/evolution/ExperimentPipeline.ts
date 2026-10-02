@@ -573,6 +573,16 @@ export class ExperimentPipeline {
               `checks=[${(t.check_codes || []).join(",")}] missing_tags=[${(t.missing_tags || []).join(",")}] ` +
               `warnings=${t.warnings} chars_sent=${finalPrompt.length}`,
           );
+          // The warnings, printed. These are the things a human has to know and
+          // cannot see in the image: copy that was shortened, a claim that may need
+          // review, a label the model could not read. Measured case: a render came
+          // back with `adapted=true` and the only record of WHICH words were changed
+          // was a warning nobody printed.
+          for (const w of v2.warnings) console.warn(`[PROMPT_V2][warning] ${w}`);
+          if (v2.copyPolicy === "adapt" && v2.copy_original.join("\u0001") !== v2.copy_final.join("\u0001")) {
+            console.warn(`[PROMPT_V2][copy] the client typed: ${JSON.stringify(v2.copy_original)}`);
+            console.warn(`[PROMPT_V2][copy] the render was asked for: ${JSON.stringify(v2.copy_final)}`);
+          }
           if (!v2.ok) {
             console.warn(`[PROMPT_V2] falling back to v1 — ${v2.reason || "no reason given"}`);
             // Every failure message, each on its own line, so the fix is readable

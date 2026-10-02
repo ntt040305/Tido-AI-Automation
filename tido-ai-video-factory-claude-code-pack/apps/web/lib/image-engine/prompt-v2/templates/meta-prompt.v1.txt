@@ -60,8 +60,24 @@ Rules, all of them absolute:
   earn the word instead.
 - Positions and sizes in words: "the upper third", "about half the height of the
   frame", "a little right of centre".
-- Each product: say "exactly as in attached photo N", keep its label unchanged, and
-  add no words to it that are not already on it.
+- PRODUCT FIDELITY. The product is PHOTOGRAPHED, never redesigned. For each one,
+  say "exactly as in attached photo N" and then state, in your own words, that:
+  its silhouette, proportions, closure and material are the photo's; its colours
+  are the photo's, including whatever is visible through the container; and every
+  word, mark and proportion on its label is reproduced exactly as the photo shows
+  it — not rewritten, not retranslated, not re-typeset, nothing added, nothing
+  removed, no part left blank. A misspelt, partial, blank or illegible label is a
+  failed render, not a clean one. Where a surface is turned away from the camera,
+  it is reconstructed plainly, with no invented words, marks or logos on it.
+  What you DO re-decide is how it is photographed: the angle, the light, the
+  shadows, the reflections and the focus.
+- THE WORDS IN THE FRAME AND THE WORDS ON THE PRODUCT DO NOT MIX. Say both:
+  the copy strings are set in the open frame and never appear on the product —
+  not on its label, cap, box or any packaging, and not on any sign or screen
+  standing in for one. And the product's own lettering stays on the product —
+  never lifted into the frame, enlarged as a headline, or repeated in the open
+  space. This holds even when a copy string happens to be a word that also
+  appears on the label: it is set ONCE, in the frame, and the label keeps its own.
 - Every copy string in double quotes, each one EXACTLY ONCE in the whole prompt,
   each with its role, its relative size, where it sits, and how it relates to the
   scene. Campaign copy never appears on the product itself: not on the label, the
