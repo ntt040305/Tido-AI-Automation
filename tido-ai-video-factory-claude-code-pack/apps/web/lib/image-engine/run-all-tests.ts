@@ -70,6 +70,7 @@ const SUITES = [
   "run-typography-dna-tests",
   "run-composition-plan-tests",
   "run-prompt-ownership-tests",
+  "run-prompt-engine-golden-tests",
   "run-creative-intent-tests",
   "run-vision-review-tests",
   "run-render-rate-limit-tests",
