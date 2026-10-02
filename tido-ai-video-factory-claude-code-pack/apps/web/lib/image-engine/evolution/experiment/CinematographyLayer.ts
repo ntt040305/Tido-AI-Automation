@@ -516,7 +516,14 @@ export function projectToSetup(axes: OpticalAxisValues, context: ProjectionConte
   // ── lens ─────────────────────────────────────────────────────────────────
   const focalTarget = 60 + 50 * gravity + 30 * intimacy - 25 * (1 - stillness);
   let focal_mm = snap(focalTarget, FOCALS);
-  const shareFromPlan = typeof context.product_share === "number" ? Math.round(context.product_share * 100) : null;
+  // Both units accepted, for the reason stated in `OpticalCompiler.sharePercent`:
+  // the composition stores this as a percentage and multiplying it by 100 again
+  // produced `subject_share_pct` 3800 -- which also pushed `distance_class` to
+  // `macro` on every brief, since its threshold is 45.
+  const shareFromPlan =
+    typeof context.product_share === "number"
+      ? Math.round(context.product_share <= 1 ? context.product_share * 100 : context.product_share)
+      : null;
   // The share the composition decided IS the framing, and it outranks the axes:
   // a product filling 38% of the frame is a close frame whatever the brief's own
   // intimacy reads. Only where nobody decided a share do the axes choose.

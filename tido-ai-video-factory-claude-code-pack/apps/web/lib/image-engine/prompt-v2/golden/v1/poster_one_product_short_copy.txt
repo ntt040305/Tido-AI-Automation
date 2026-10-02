@@ -20,7 +20,7 @@ THE FRAME, AS DECIDED
 - what the frame is of: the product, alone, as the frame's reason
 - the product's role: hero
 - where the product sits: 52%, 30% from the frame's top-left corner, 30% wide and 55% tall — centre right
-- how much of the frame it fills: about 3800% — large
+- how much of the frame it fills: about 38% — large
 - what the story is: an unhurried morning, before anything has started
 - what the empty part of the frame is for: the calm beside it
 - read 1: the product
@@ -34,9 +34,9 @@ Speculars: none. No highlight on the product competes with its form.
 Air: clear. No haze, no atmospheric veiling, no light shafts.
 
 BLOCK 5 — LENS
-LENS — 100mm at f/8, macro framing.
+LENS — 100mm at f/8, close framing.
 Camera: 7 degrees above the product's centre, looking slightly down. No tilt; the vertical edges of the frame stay vertical.
-The product fills about 3800% of the frame and sits wholly inside it, never cropped.
+The product fills about 38% of the frame and sits wholly inside it, never cropped.
 Depth of field at f/8 holds the product's full depth sharp; everything behind it falls away without becoming an abstraction.
 Movement: nothing in the frame is moving; the air is still.
 

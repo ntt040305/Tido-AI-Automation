@@ -165,6 +165,22 @@ function main(): void {
     }
   });
 
+  check("the product's share is a share, in either unit the callers hold", () => {
+    // The composition stores this as a percentage (`distanceShare` returns 55, 38,
+    // 20, 9). The read multiplied it by 100, and the prompt told the renderer the
+    // product filled 3800% of the frame.
+    const asPercent = buildV1Prompt(GOLDEN_FIXTURES[0]);
+    assert.ok(/fills: about 38%/.test(asPercent), "a share of 38 did not render as 38%");
+    assert.ok(!/\d{3,}%/.test(asPercent), `a percentage above 99 survived: ${/\d{3,}%/.exec(asPercent)?.[0]}`);
+
+    // And a caller holding it as a fraction gets the same answer.
+    const fraction = { ...PLAN, product_scale: { value: { share: 0.38, label: "large" } } };
+    const text = renderLensForPrompt(
+      projectToSetup(resolveOpticalAxes({ assetType: "Poster" }).values, { product_share: fraction.product_scale.value.share }),
+    );
+    assert.ok(/about 38% of the frame/.test(text), `fraction form rendered as: ${text.slice(0, 160)}`);
+  });
+
   check("the client's copy reaches the prompt exactly once per line", () => {
     for (const fx of GOLDEN_FIXTURES) {
       const prompt = buildV1Prompt(fx);

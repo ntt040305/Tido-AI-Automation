@@ -1057,6 +1057,22 @@ export interface PlanBlocks {
   environment: string;
 }
 
+/**
+ * A product share as a percentage, whichever unit the caller holds it in.
+ *
+ * `CompositionPlan.product_scale.value.share` is a PERCENTAGE: `distanceShare()`
+ * returns 55, 38, 20 or 9. This read multiplied it by 100 and the prompt told the
+ * renderer the product "fills about 3800% of the frame" -- measured on a real
+ * render, in the one line that decides how big the product is.
+ *
+ * Accepting both units rather than picking one: a value at or below 1 can only be
+ * a fraction, and a value above 1 can only already be a percentage. A share of
+ * exactly 1% is not a product, so the boundary costs nothing.
+ */
+function sharePercent(share: number): number {
+  return Math.round(share <= 1 ? share * 100 : share);
+}
+
 /** A plan field as one line, or nothing when the plan had nothing to say. */
 function field(label: string, value: unknown): string {
   const v = typeof value === "string" ? value.trim() : "";
@@ -1106,7 +1122,7 @@ export function blocksFromCompositionPlan(plan: PlanShape): PlanBlocks {
         )}% wide and ${Math.round(pos.height)}% tall${pos.label ? ` — ${pos.label}` : ""}`
       : "",
     typeof share === "number"
-      ? `- how much of the frame it fills: about ${Math.round(share * 100)}%${
+      ? `- how much of the frame it fills: about ${sharePercent(share)}%${
           plan.product_scale?.value?.label ? ` — ${plan.product_scale.value.label}` : ""
         }`
       : "",
