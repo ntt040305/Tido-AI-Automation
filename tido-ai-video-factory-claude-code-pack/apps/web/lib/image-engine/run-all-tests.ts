@@ -77,8 +77,20 @@ const SUITES = [
   "run-evolution-tests",
 ];
 
+/**
+ * `--keep-going` runs every suite even after one fails.
+ *
+ * The default stays as it was -- stop at the first red suite -- because for a CI
+ * step the first failure is the answer. The flag exists for the one job the
+ * default cannot do: measuring a BASELINE. Stopping at suite 27 of 51 leaves 24
+ * suites unmeasured, and a refactor cannot be checked against numbers that were
+ * never taken.
+ */
+const KEEP_GOING = process.argv.includes("--keep-going");
+
 const here = path.dirname(__filename);
 let failedSuite = "";
+const failedSuites: string[] = [];
 const results: { suite: string; line: string }[] = [];
 
 for (const suite of SUITES) {
@@ -102,8 +114,9 @@ for (const suite of SUITES) {
     // number after it uninterpretable.
     const detail = out.slice(out.indexOf("Failures:"));
     if (detail.startsWith("Failures:")) console.log(detail.trim());
-    failedSuite = suite;
-    break;
+    failedSuite = failedSuite || suite;
+    failedSuites.push(suite);
+    if (!KEEP_GOING) break;
   }
 }
 
@@ -124,6 +137,10 @@ console.log(`${results.length}/${SUITES.length} suites · ${total.passed} passed
 console.log("=".repeat(56));
 
 if (failedSuite) {
-  console.log(`\nStopped at ${failedSuite}.`);
+  if (KEEP_GOING) {
+    console.log(`\nFailing suites (${failedSuites.length}): ${failedSuites.join(", ")}`);
+  } else {
+    console.log(`\nStopped at ${failedSuite}. Re-run with --keep-going to measure every suite.`);
+  }
   process.exit(1);
 }
