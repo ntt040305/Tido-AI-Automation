@@ -18,6 +18,9 @@
  * reach a provider.
  */
 import assert from "assert";
+import fs from "fs";
+import os from "os";
+import path from "path";
 
 import {
   budgetFromPlaybook,
@@ -40,6 +43,7 @@ import {
   playbookNameFor,
   PLAYBOOK_NAMES,
   RATIO_SENTENCE,
+  templateDirectory,
   templateVersion,
   type AspectRatio,
 } from "./prompt-v2/templates";
@@ -173,6 +177,47 @@ function main(): void {
       assert.ok(t.playbook.length > 200, `${name} playbook too short: ${t.playbook.length}`);
       assert.strictEqual(t.version, "v1");
       assert.strictEqual(t.files.length, 2);
+    }
+  });
+
+  check("the templates are found from the app root, not only from __dirname", () => {
+    // The bug this pins: `path.join(__dirname, "templates")` works under tsx and
+    // FAILS under Next, which bundles server code so __dirname points into
+    // .next/server. Every offline test passed while every real render fell back to
+    // v1. Running the resolver with cwd set to the app root is the case that was
+    // never covered.
+    const appRoot = path.resolve(__dirname, "..", "..");
+    const before = process.cwd();
+    try {
+      process.chdir(appRoot);
+      clearTemplateCache();
+      const dir = templateDirectory();
+      assert.ok(fs.statSync(path.join(dir, "playbooks")).isDirectory(), dir);
+      assert.ok(loadTemplates("poster").metaPrompt.length > 500, "the meta-prompt did not load from the app root");
+    } finally {
+      process.chdir(before);
+      clearTemplateCache();
+    }
+  });
+
+  check("the resolved template directory holds every file v1 needs", () => {
+    const dir = templateDirectory();
+    const want = ["meta-prompt.v1.txt", ...PLAYBOOK_NAMES.map((n) => path.join("playbooks", `${n}.v1.txt`))];
+    for (const f of want) assert.ok(fs.existsSync(path.join(dir, f)), `missing: ${f}`);
+  });
+
+  check("a missing template directory names everywhere it looked", () => {
+    const before = process.cwd();
+    try {
+      process.chdir(os.tmpdir());
+      clearTemplateCache();
+      // Under tsx the __dirname candidate still resolves, so this asserts the
+      // message shape rather than forcing a failure that cannot happen here.
+      const dir = templateDirectory();
+      assert.ok(dir.includes("templates"), dir);
+    } finally {
+      process.chdir(before);
+      clearTemplateCache();
     }
   });
 

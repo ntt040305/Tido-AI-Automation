@@ -28,7 +28,56 @@ export type AspectRatio = "1:1" | "9:16" | "16:9";
 export const PLAYBOOK_NAMES = ["poster", "banner", "social", "hero", "ugc"] as const;
 export type PlaybookName = (typeof PLAYBOOK_NAMES)[number];
 
-const TEMPLATE_DIR = path.join(__dirname, "templates");
+/**
+ * Where the template files are, resolved at runtime rather than assumed.
+ *
+ * `path.join(__dirname, "templates")` is wrong under Next, and wrong in a way that
+ * only shows up in a real render: Next BUNDLES server code, so `__dirname` inside a
+ * route points into `.next/server/...`, where no `templates/` directory exists. The
+ * same line works perfectly under `tsx`, where `__dirname` IS the source folder --
+ * so every offline test passed while every real render failed with ENOENT, fell back
+ * to v1 and produced an image that looked exactly like v1 because it WAS v1.
+ *
+ * Measured: `[PROMPT_V2] falling back to v1`, zero model calls, on a live render.
+ *
+ * So: try the candidates, in order, and accept the first one that actually holds a
+ * `playbooks/` directory. A wrong path now fails loudly, naming everywhere it looked.
+ */
+const TEMPLATE_CANDIDATES = (): string[] => {
+  const cwd = process.cwd();
+  return [
+    // Under tsx / ts-node, and in any runtime that does not rewrite __dirname.
+    path.join(__dirname, "templates"),
+    // Next, dev and production: cwd is the app root (`apps/web`).
+    path.join(cwd, "lib", "image-engine", "prompt-v2", "templates"),
+    // Run from the repo root, or from the pack root.
+    path.join(cwd, "apps", "web", "lib", "image-engine", "prompt-v2", "templates"),
+    path.join(cwd, "tido-ai-video-factory-claude-code-pack", "apps", "web", "lib", "image-engine", "prompt-v2", "templates"),
+  ];
+};
+
+let resolvedDir: string | null = null;
+
+function templateDir(): string {
+  if (resolvedDir) return resolvedDir;
+  const tried = TEMPLATE_CANDIDATES();
+  for (const dir of tried) {
+    try {
+      // `playbooks/` is the marker: it is distinctive enough that a directory
+      // holding it is this directory and not some other `templates` folder.
+      if (fs.statSync(path.join(dir, "playbooks")).isDirectory()) {
+        resolvedDir = dir;
+        return dir;
+      }
+    } catch {
+      // Not this one. Try the next.
+    }
+  }
+  throw new Error(
+    `the prompt-v2 template directory was not found. Looked in: ${tried.join(" | ")}. ` +
+      `cwd=${process.cwd()} __dirname=${__dirname}`,
+  );
+}
 
 /** The version suffix on the files this process reads. */
 export function templateVersion(env: Record<string, string | undefined> = process.env): string {
@@ -80,6 +129,12 @@ function read(file: string): string {
 /** Forget the cache. For tests that write a template and read it back. */
 export function clearTemplateCache(): void {
   cache.clear();
+  resolvedDir = null;
+}
+
+/** Where the templates were found. For a startup check and for the record. */
+export function templateDirectory(): string {
+  return templateDir();
 }
 
 export interface LoadedTemplates {
@@ -93,8 +148,9 @@ export interface LoadedTemplates {
 
 export function loadTemplates(assetType: string, version = templateVersion()): LoadedTemplates {
   const playbookName = playbookNameFor(assetType);
-  const metaFile = path.join(TEMPLATE_DIR, `meta-prompt.${version}.txt`);
-  const playbookFile = path.join(TEMPLATE_DIR, "playbooks", `${playbookName}.${version}.txt`);
+  const dir = templateDir();
+  const metaFile = path.join(dir, `meta-prompt.${version}.txt`);
+  const playbookFile = path.join(dir, "playbooks", `${playbookName}.${version}.txt`);
   return {
     metaPrompt: read(metaFile),
     playbook: read(playbookFile),
