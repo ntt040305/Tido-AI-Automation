@@ -312,3 +312,117 @@ Suite cũ `run-prompt-engine-v2-tests` vẫn **38/38** — đường JSON vẫn 
 3. **Chưa có render nào qua engine này.** Chất lượng prompt thật vẫn **CHƯA XÁC MINH**,
    kể cả khung 200–500 từ có đúng hay không.
 4. **Mặc định vẫn là `v1`.** Không đổi cho đến khi anh duyệt.
+
+---
+
+## 10. Copy là của khách, logo không được rơi (lượt này)
+
+### A. Mặc định `exact` — KHÔNG tự rút gọn
+
+Lỗi đã đo được: một render trả về với **câu của khách bị xóa**. `decidePolicy` thấy copy
+vượt ngân sách của playbook, **tự** chuyển sang `adapt`, model cắt. Rồi cổng hậu-render
+đọc `copy_final` — tức **bản đã cắt** — so ảnh với bản đó, và báo `compliant: true`.
+Khách gõ một thứ, nhận một thứ ngắn hơn, và **mọi tín hiệu trong hệ thống nói là đúng**.
+
+| Biến | Giá trị | Hành vi |
+|---|---|---|
+| `V2_COPY_POLICY` | `exact` **(mặc định)** | ngân sách chữ của playbook **không còn là lý do để cắt**. Copy dài là vấn đề bố cục |
+| | `adapt_when_over_budget` | hành vi cũ, phải tự bật |
+
+Log ghi rõ nguồn: `copy_policy=exact(default)` hay `exact(env)`. Một biến gõ sai thì về
+policy **không** chạm vào copy, không phải policy chạm vào.
+
+`system.v1.md` thêm khối **COPY RULES**: từng ký tự theo đúng thứ tự gốc, chỉ được chia
+tier ở ranh giới câu/mệnh đề, không bịa CTA, và *"long copy is a layout problem, not a
+reason to cut"*. Bước 4 của HOW YOU WORK đổi từ "quyết định text" thành "quyết định cách
+**chia tier và set** text".
+
+`request.v1.md` thay dòng ngân sách bằng **đo lường**: `- Text: N words, N sentences, N
+characters.` Trên 25 từ thì thêm hình học theo từng tỷ lệ để dành tới nửa khung cho chữ.
+Ngân sách là lý do để xóa; đo lường là lý do để thiết kế.
+
+`measureCopy` tính mỗi dòng khách gõ là một câu khi không có dấu kết thúc — đó là cách
+gần như mọi brief tiếng Việt được viết, và đếm 0 câu sẽ sai ở ca phổ biến nhất.
+
+### B. Kiểm tra copy: so **toàn văn**, và bắt chuỗi bịa
+
+Kiểm tra cũ hỏi "mọi chuỗi trong `copy_final` có nằm trong copy gốc không" — **một reply
+xóa cả một câu vẫn qua**, vì những câu nó giữ đều có mặt. Nối lại là phép so duy nhất bắt
+được **thiếu, đảo thứ tự và thêm** cùng lúc: các tier ghép lại phải **bằng** copy gốc sau
+NFC + gộp khoảng trắng.
+
+Chỉ nới khoảng trắng và NFC. Dấu câu, chữ hoa/thường, số, dấu thanh đều phải sống sót.
+Chỗ **cắt tier ở đâu** là quyết định bố cục, kiểm tra không can thiệp — test chứng minh
+một lát cắt giữa mệnh đề vẫn được chấp nhận nếu ghép lại đúng.
+
+Thông báo lỗi nói **lệch chiều nào**: *"the end was cut: the client's text continues ..."*
+
+**Chuỗi bịa:** mọi chuỗi trong ngoặc kép của `<image_prompt>` phải là một lát cắt của
+copy gốc. Đây là kiểm tra bắt `"MUA NGAY"` — một CTA không ai viết, đọc vào tưởng là chủ ý.
+
+Nhưng nó **xung đột** với `system.v1.md`, vốn bảo director trích chữ in trên nhãn. Nên
+prompt sẽ hợp pháp chứa chữ khách không gõ, và **repo không có danh sách chữ nhãn nào**
+để đối chiếu (`promptV2.labels` rỗng trên đường này). Không giả vờ là có: khi
+`V2_INCLUDE_LABEL_TEXT` bật, một chuỗi lạ chỉ **FAIL khi câu chứa nó không gắn với bề mặt
+sản phẩm**. Nhãn được trích thì qua; CTA lơ lửng thì không. Test cả hai chiều.
+
+**`adapt` giữ lại các con số:** mọi dãy chữ số và mọi token VIẾT HOA / mã sản phẩm —
+`500`, `100`, `K70`, `XXL` — phải còn. Đó đúng là thứ một cái máy rút gọn bỏ trước nhất.
+
+**Cổng hậu-render đọc lại copy GỐC.** `VisionReviewLayer` chỉ thay bằng `copy_final` khi
+policy thật sự là `adapt`. Đọc nó vô điều kiện chính là nửa sau của lỗi cắt-âm-thầm.
+
+### C. Logo không được rơi
+
+v2 **lọc** ảnh xuống chỉ còn role PRODUCT trước khi gửi cho director. Một logo người dùng
+cung cấp vì thế đến **renderer** dưới dạng ảnh đính kèm, trong khi prompt nói *"no extra
+logos or brand marks"* — nên **chỉ dẫn duy nhất nhắc tới logo lại bảo model bỏ nó đi**.
+
+Giờ mọi ảnh đều đi, đúng thứ tự provider nhận, kèm role và tên file:
+
+```
+references (photos attached in this order):
+  photo 1: PRODUCT (Corsair-Keyboard.jpg)
+  photo 2: LOGO (Corsair-logo.png)
+```
+
+`system.v1.md` thêm **REFERENCE ROLES**. Luật cuối prompt đổi từ *"no extra logos or brand
+marks"* thành *"no logos or brand marks **other than the supplied logo photo** and what is
+printed on the products"* — câu cũ cấm đúng cái thứ khách vừa đưa.
+
+### D. Quan sát được
+
+```
+[PROMPT_V2][version] system=system.v1.md@a1b2c3d4 request=request.v1.md@e5f6a7b8
+                     playbook=poster@1:1 gold=poster.md copy_policy=exact(default)
+                     refs_sent_to_director=[PRODUCT,LOGO]
+[PROMPT_V2][assumption] ...   (tối đa 8 dòng, rút gọn)
+[PROMPT_V2][plan] ...         (tối đa 8 dòng, rút gọn)
+[PROMPT_V2][warning] ...
+```
+
+Có **sha256 8 ký tự của nội dung file**, nên nó trả lời được cả khi ai đó sửa template tại
+chỗ mà không bump version.
+
+**File template được cache theo process** (`read()` trong `templates.ts`). Đúng cho server,
+sai cho một buổi chiều sửa meta-prompt: không có cache-bust thì sửa file phải restart mới
+có tác dụng. `V2_TEMPLATE_RELOAD=true` để đọc lại mỗi job.
+
+### E. Input v1 nhận mà v2 VẪN chưa nhận
+
+| Trường | `types.ts` | Ghi chú |
+|---|---|---|
+| `brandInfo` | 1168 | mô tả brand; chỉ tên brand được gửi |
+| `marketingContext.*` | 1174–1179 | `request.v1.md` bảo director **suy ra** audience/occasion/offer. Nếu khách đã khai `target_audience` thật thì ta đang bảo nó đi đoán |
+| `salesContext.*` | 1191–1196 | product_name, offer_text, benefit, cta_text. **CHƯA XÁC MINH** UI có điền |
+| `inspirationStyleManifest` | 1197 | đọc style từ ảnh tham chiếu |
+| `copyItems[].role` | 1170 | **cố ý** gộp thành chuỗi phẳng — director tự gán role |
+| `description` từng ảnh | — | **cố ý** — director đọc sản phẩm từ ảnh |
+
+### F. CHƯA XÁC MINH
+
+1. **Chưa render lần nào** với bộ sửa này. Không gọi API trả phí.
+2. Heuristic `readsAsLabel` (câu có nhắc label/bottle/printed...) chưa đo trên prompt thật
+   — có thể vẫn bắt oan chữ nhãn, hoặc tha một CTA được mô tả cạnh sản phẩm.
+3. `salesContext` / `marketingContext` có dữ liệu thật hay không.
+4. Model nào tốt cho `V2_DIRECTOR_MODEL`.
