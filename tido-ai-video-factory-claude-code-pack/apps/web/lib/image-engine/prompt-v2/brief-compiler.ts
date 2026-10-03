@@ -46,8 +46,23 @@ export interface BriefInput {
   compositionLayout?: string | null;
   /** Lines the client marked as non-negotiable. v1 reads these; v2 now does too. */
   hardRequirements?: string[] | null;
-  /** How many photos are attached, in the order the provider receives them. */
-  productCount: number;
+  /**
+   * EVERY reference the provider will receive, in the order it receives them.
+   *
+   * All of them, not just the products. A supplied LOGO was reaching the renderer as an
+   * attached image while the prompt said "no extra logos or brand marks", so the one
+   * instruction that mentioned it told the model to leave it out. The director has to be
+   * told what each photo IS.
+   */
+  references: BriefReference[];
+}
+
+export interface BriefReference {
+  /** 1-based, and the same order the provider appends the files in. */
+  index: number;
+  /** PRODUCT, LOGO, or whatever the repo's own classifier decided. */
+  role: string;
+  filename?: string;
 }
 
 export interface CompiledBrief {
@@ -79,7 +94,9 @@ export function textLanguage(copy: string[], concept: string): string {
   // was being reported as Vietnamese. What is distinctive is the seven extra letters,
   // and the hook-above and dot-below marks.
   const decomposed = sample.normalize("NFD");
-  if (/[ăâêôơưđĂÂÊÔƠƯĐ]/.test(sample) || /[̣̉]/.test(decomposed)) return "Vietnamese";
+  // The marks are written as escapes: a combining mark pasted literally into a
+  // character class is invisible in an editor and gets deleted by accident.
+  if (/[ăâêôơưđĂÂÊÔƠƯĐ]/.test(sample) || /[\u0309\u0323]/.test(decomposed)) return "Vietnamese";
   if (/^[\x00-\x7F\s]*$/.test(sample)) return "English";
   return "same language as the client's copy";
 }
@@ -149,11 +166,54 @@ export function clientPreferences(input: BriefInput): { block: string; used: str
   };
 }
 
-/** The text budget sentence, read out of the asset's own playbook. */
-export function textBudget(playbook: string): string {
-  const squashed = nfc(playbook).replace(/\s+/g, " ");
-  const m = /Copy budget:\s*([^.]+\.)/i.exec(squashed);
-  return m ? m[1].trim() : "as many lines as this asset can carry legibly; fewer is better";
+/**
+ * What the copy actually measures.
+ *
+ * This replaces the playbook's copy budget under the `exact` policy. The budget was a
+ * reason to CUT, and the client's text is not the engine's to cut; the measurement is a
+ * reason to DESIGN. A director told "61 words, 4 sentences" lays out a text-forward
+ * piece; one told "at most 3 lines, headline at most 8 words" deletes two sentences.
+ */
+export function measureCopy(copy: string[]): { words: number; sentences: number; chars: number } {
+  const joined = copy.map(nfc).join(" ").replace(/\s+/g, " ").trim();
+  if (!joined) return { words: 0, sentences: 0, chars: 0 };
+  // A sentence ends at . ! ? or at a line the client chose to break. Vietnamese copy is
+  // often written as separate lines with no terminal punctuation at all, so a count of
+  // zero would be wrong on the most common input.
+  const terminators = (joined.match(/[.!?]+/g) || []).length;
+  const sentences = Math.max(terminators, copy.filter((c) => nfc(c).trim()).length);
+  return {
+    words: joined.split(" ").filter(Boolean).length,
+    sentences,
+    chars: [...joined].length,
+  };
+}
+
+/** The threshold above which the text drives the layout rather than decorating it. */
+export const LONG_COPY_WORDS = 25;
+
+/**
+ * What to do about long text. Empty when the copy is short enough not to need saying.
+ *
+ * Per-ratio because "give the text half the frame" means different geometry in a square
+ * and in a 9:16, and a director given one sentence for all three ratios picks the wrong
+ * one twice.
+ */
+export function textLayoutNote(words: number): string {
+  if (words <= LONG_COPY_WORDS) return "";
+  return (
+    "The client's text is long and fixed. Build the layout around it: in 1:1 give the text " +
+    "block about two fifths to one half of the frame; in 9:16 the top half; in 16:9 one side " +
+    "up to about half the width."
+  );
+}
+
+/** The reference list, exactly as the director must read it. */
+export function renderReferences(refs: BriefReference[]): string {
+  if (!refs.length) return "  (none attached)";
+  return refs
+    .map((r) => `  photo ${r.index}: ${r.role}${r.filename ? ` (${r.filename})` : ""}`)
+    .join("\n");
 }
 
 export interface CompileOptions {
@@ -167,13 +227,15 @@ export interface CompileOptions {
 export function compileBrief(input: BriefInput, options: CompileOptions): CompiledBrief {
   const copy = input.copy.map(nfc).filter((c) => c.trim());
   const prefs = clientPreferences(input);
+  const measured = measureCopy(copy);
 
   const slots: Record<string, string> = {
     asset_type: trim(input.assetType) || "poster",
     aspect_ratio: trim(input.aspectRatio),
     text_language: textLanguage(copy, input.concept),
     brand: trim(input.brand) || "(not stated by the client)",
-    n_products: String(input.productCount),
+    references: renderReferences(input.references),
+    n_products: String(input.references.filter((r) => /PRODUCT/i.test(r.role)).length),
     // Verbatim, inside the fences the template provides. Not squashed, not trimmed
     // of its internal line breaks: how the client laid their copy out is information.
     concept: nfc(input.concept).trim() || "(not stated)",
@@ -181,17 +243,23 @@ export function compileBrief(input: BriefInput, options: CompileOptions): Compil
     client_preferences_block: prefs.block,
     copy_policy: options.policy,
     copy_policy_rules: COPY_POLICY_RULES[options.policy],
-    text_budget: textBudget(options.playbook),
+    n_words: String(measured.words),
+    n_sentences: String(measured.sentences),
+    n_chars: String(measured.chars),
+    text_layout_note: textLayoutNote(measured.words),
     playbook_for_asset_and_ratio: options.playbook.trim(),
     gold_example_block: goldExampleBlock(options.goldExample),
   };
 
-  return {
-    slots,
-    policy: options.policy,
-    warnings: [...(options.policyWarnings || []), ...claimWarnings(copy)],
-    preferencesUsed: prefs.used,
-  };
+  const warnings = [...(options.policyWarnings || []), ...claimWarnings(copy)];
+  if (measured.words > LONG_COPY_WORDS) {
+    warnings.push(
+      `the copy runs to ${measured.words} words in ${measured.sentences} sentence(s); long text raises ` +
+        `rendering risk, and under the exact policy all of it is rendered rather than cut`,
+    );
+  }
+
+  return { slots, policy: options.policy, warnings, preferencesUsed: prefs.used };
 }
 
 /**
@@ -231,6 +299,8 @@ export function briefTelemetry(b: CompiledBrief | null | undefined) {
     preferences: b.preferencesUsed,
     gold_example: Boolean(b.slots.gold_example_block),
     language: b.slots.text_language,
+    copy_words: Number(b.slots.n_words),
+    refs: b.slots.references.split("\n").length,
     warnings: b.warnings.length,
   };
 }

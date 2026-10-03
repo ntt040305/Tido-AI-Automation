@@ -90,6 +90,47 @@ export function fallbackToV1(env: EnvLike = process.env): boolean {
 }
 
 /**
+ * What may happen to the client's copy. Default: nothing.
+ *
+ * `exact` -- the default -- means the copy is never shortened, whatever the playbook's
+ * budget says. The engine used to flip to `adapt` on its own when the copy ran over,
+ * and a measured render came back with the client's words silently cut: they typed one
+ * thing and got a shorter thing, with the only trace in a warning nobody printed.
+ * Worse, the post-render gate then compared the image against the SHORTENED list and
+ * reported it compliant.
+ *
+ * Long copy is a layout problem. The old behaviour is still available as
+ * `adapt_when_over_budget` for whoever wants it, and it has to be asked for.
+ */
+export type CopyPolicyMode = "exact" | "adapt_when_over_budget";
+
+export interface CopyPolicyChoice {
+  mode: CopyPolicyMode;
+  /** Where the value came from. Logged, so a surprising policy is traceable. */
+  source: "default" | "env";
+}
+
+export function copyPolicyMode(env: EnvLike = process.env): CopyPolicyChoice {
+  const raw = String(env.V2_COPY_POLICY || "").trim().toLowerCase();
+  if (raw === "adapt_when_over_budget") return { mode: "adapt_when_over_budget", source: "env" };
+  // Anything else, including a typo, is the policy that does not touch the copy.
+  if (raw === "exact") return { mode: "exact", source: "env" };
+  return { mode: "exact", source: "default" };
+}
+
+/**
+ * Whether the templates are re-read from disk on every job.
+ *
+ * Off by default: the files do not change while a server runs, and a read per job is a
+ * syscall per job for nothing. `V2_TEMPLATE_RELOAD=true` turns it on, which is what you
+ * want while editing a meta-prompt — otherwise an edit needs a server restart to take
+ * effect and it is very easy to spend an afternoon testing the previous version.
+ */
+export function templateReload(env: EnvLike = process.env): boolean {
+  return String(env.V2_TEMPLATE_RELOAD || "").trim().toLowerCase() === "true";
+}
+
+/**
  * The model that writes the prompt. Empty means "whatever the provider defaults to".
  *
  * A separate variable because this one call has a different job from every other call
@@ -111,6 +152,8 @@ export function engineTelemetry(env: EnvLike = process.env) {
   return {
     prompt_engine: promptEngineVersion(env),
     v2_director_model: directorModel(env) || "(provider default)",
+    v2_copy_policy: `${copyPolicyMode(env).mode}(${copyPolicyMode(env).source})`,
+    v2_template_reload: templateReload(env),
     v2_include_label_text: includeLabelText(env),
     v2_label_check: labelCheckEnabled(env),
     v2_fallback_to_v1: fallbackToV1(env),

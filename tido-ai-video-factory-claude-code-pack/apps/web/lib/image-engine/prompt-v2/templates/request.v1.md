@@ -3,7 +3,8 @@ asset_type: {{asset_type}}
 aspect_ratio: {{aspect_ratio}}
 text_language: {{text_language}}
 brand: {{brand}}
-products (photos attached in this order): {{n_products}} photo(s), photo 1 to photo {{n_products}}
+references (photos attached in this order):
+{{references}}
 concept (client's words, verbatim): """{{concept}}"""
 copy (client's words, verbatim): """{{copy}}"""
 {{client_preferences_block}}
@@ -17,9 +18,10 @@ sharper, more specific idea while keeping everything they asked for.
 # CONSTRAINTS
 - Aspect ratio: {{aspect_ratio}} (end the prompt with it exactly).
 - Copy policy: {{copy_policy}}. {{copy_policy_rules}}
-- Text budget for this asset: {{text_budget}}
+- Text: {{n_words}} words, {{n_sentences}} sentences, {{n_chars}} characters. {{text_layout_note}}
 - Products are exactly as in the attached photos. Do not redesign, recolour or add writing
-  to them. Campaign text never touches a product.
+  to them. Campaign text never touches a product. Any LOGO photo is placed exactly as
+  supplied, per REFERENCE ROLES.
 - No invented claims, numbers, certifications or logos.
 
 # ASSET PLAYBOOK ({{asset_type}} at {{aspect_ratio}})
