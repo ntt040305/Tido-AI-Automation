@@ -1,19 +1,35 @@
 /**
- * The meta-prompt and the playbooks, loaded from text files.
+ * The meta-prompt, the playbooks and the gold examples, loaded from text files.
  *
  * WHY FILES AND NOT CODE
  * ----------------------
- * These two are the things that get tuned after looking at renders, by whoever is
- * looking at them. A string literal inside a TypeScript module makes that a code
- * change, a build and a deploy; a `.txt` file makes it an edit. Nothing in here
- * interprets the text -- it substitutes `{{SLOTS}}` and hands the result over.
+ * These are the things that get tuned after looking at renders, by whoever is looking
+ * at them. A string literal inside a TypeScript module makes that a code change, a
+ * build and a deploy; a text file makes it an edit. Nothing in here interprets the
+ * text -- it substitutes `{{slots}}` and hands the result over.
+ *
+ * FOUR FILES, FOR FOUR DIFFERENT RATES OF CHANGE
+ * ----------------------------------------------
+ *   system.v{N}.md    what an agency-standard prompt must contain. Changes rarely,
+ *                     and never because of one job. NO SLOTS.
+ *   request.v{N}.md   this job's brief. All the slots live here.
+ *   playbooks/*.txt   what a poster asks of a frame that a banner does not.
+ *   gold-examples/    a proven prompt per asset type, as a quality bar.
+ *
+ * One file holding all four would mean editing the standing instructions to add a
+ * slot, and rewriting the quality bar to fix a typo in the role description.
  *
  * VERSIONS ARE IN THE FILENAME
  * ----------------------------
- * `meta-prompt.v1.txt`, `playbooks/poster.v1.txt`. A new version is a new file, so
- * the old one is still on disk and still runnable: `PROMPT_V2_TEMPLATE_VERSION=v2`
- * switches both. The version used is reported on every build, because "which
- * meta-prompt produced this image" is the first question a bad render raises.
+ * `system.v1.md`, `request.v1.md`, `playbooks/poster.v1.txt`. A new version is a new
+ * file, so the old one is still on disk and still runnable:
+ * `PROMPT_V2_TEMPLATE_VERSION=v2` switches all of them together. The version used is
+ * reported on every build, because "which meta-prompt produced this image" is the
+ * first question a bad render raises.
+ *
+ * The gold examples are NOT versioned: a prompt that produced a good image produced
+ * it whatever the meta-prompt said, and versioning them would mean copying every one
+ * on every bump.
  *
  * SLOTS
  * -----
@@ -138,25 +154,62 @@ export function templateDirectory(): string {
 }
 
 export interface LoadedTemplates {
-  metaPrompt: string;
+  /**
+   * The Creative Director's standing instructions. Carries no slots: nothing about
+   * one job belongs in it, which is why it can be edited without regard to any job.
+   */
+  system: string;
+  /** The per-job brief. All the slots live here. */
+  request: string;
   playbook: string;
+  /** The proven prompt for this asset type, or "" when there is none yet. */
+  goldExample: string;
   version: string;
   playbookName: PlaybookName;
   /** The files actually read, for the record. */
   files: string[];
 }
 
+/**
+ * The gold example's filename for an asset type.
+ *
+ * Deliberately NOT the playbook name: `social` the playbook is `social_ad.md` the
+ * example, because the author named the files and the files are the interface.
+ */
+const GOLD_FILE: Record<PlaybookName, string> = {
+  poster: "poster.md",
+  banner: "banner.md",
+  social: "social_ad.md",
+  hero: "product_hero.md",
+  ugc: "ugc.md",
+};
+
+/** A file that may legitimately not exist. Missing is "", not a throw. */
+function readOptional(file: string): string {
+  try {
+    return read(file);
+  } catch {
+    return "";
+  }
+}
+
 export function loadTemplates(assetType: string, version = templateVersion()): LoadedTemplates {
   const playbookName = playbookNameFor(assetType);
   const dir = templateDir();
-  const metaFile = path.join(dir, `meta-prompt.${version}.txt`);
+  const systemFile = path.join(dir, `system.${version}.md`);
+  const requestFile = path.join(dir, `request.${version}.md`);
   const playbookFile = path.join(dir, "playbooks", `${playbookName}.${version}.txt`);
+  const goldFile = path.join(dir, "gold-examples", GOLD_FILE[playbookName]);
   return {
-    metaPrompt: read(metaFile),
+    system: read(systemFile),
+    request: read(requestFile),
     playbook: read(playbookFile),
+    // Not versioned: a proven prompt is proven whatever the meta-prompt version, and
+    // versioning it would mean copying it on every bump.
+    goldExample: readOptional(goldFile),
     version,
     playbookName,
-    files: [metaFile, playbookFile],
+    files: [systemFile, requestFile, playbookFile, ...(readOptional(goldFile) ? [goldFile] : [])],
   };
 }
 
@@ -169,11 +222,14 @@ export function loadTemplates(assetType: string, version = templateVersion()): L
  * a placeholder, which is how "BUSINESS GOAL: in beauty_skincare" reached a render.
  */
 export function fillSlots(template: string, slots: Record<string, string>): string {
-  const out = template.replace(/\{\{([A-Z_]+)\}\}/g, (whole, name: string) => {
+  // Either case: the playbooks use `{{ASPECT_RATIO}}` and the request template uses
+  // `{{aspect_ratio}}`, because each was written by whoever owns that file. Accepting
+  // both costs nothing and beats renaming someone's file to suit a regex.
+  const out = template.replace(/\{\{([A-Za-z_]+)\}\}/g, (whole, name: string) => {
     const value = slots[name];
     return value === undefined ? whole : value;
   });
-  const leftover = [...new Set((out.match(/\{\{[A-Z_]+\}\}/g) || []))];
+  const leftover = [...new Set((out.match(/\{\{[A-Za-z_]+\}\}/g) || []))];
   if (leftover.length) throw new Error(`template slots not filled: ${leftover.join(", ")}`);
   return out;
 }
@@ -185,7 +241,9 @@ export function templateTelemetry(t: LoadedTemplates | null | undefined) {
     templates: true,
     version: t.version,
     playbook: t.playbookName,
-    meta_chars: t.metaPrompt.length,
+    system_chars: t.system.length,
+    request_chars: t.request.length,
     playbook_chars: t.playbook.length,
+    gold_example: Boolean(t.goldExample.trim()),
   };
 }

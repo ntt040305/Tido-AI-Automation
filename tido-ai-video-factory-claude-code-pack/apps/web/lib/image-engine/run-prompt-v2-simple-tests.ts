@@ -24,16 +24,15 @@ import path from "path";
 
 import {
   budgetFromPlaybook,
-  buildMetaPrompt,
+  buildDirectorMessages,
   buildSimplePrompt,
   claimWarnings,
   decidePolicy,
   simpleTelemetry,
-  WORD_MAX,
-  WORD_MIN,
   type SimpleInput,
 } from "./prompt-v2/build-simple";
 import { checkPrompt, FORBIDDEN_WORDS } from "./prompt-v2/checks";
+import { goldExampleBlock, textLanguage } from "./prompt-v2/brief-compiler";
 import { parseTaggedReply, TAGS } from "./prompt-v2/tags";
 import {
   clearTemplateCache,
@@ -108,9 +107,18 @@ function baseInput(over: Partial<SimpleInput> = {}): SimpleInput {
   };
 }
 
+/** The text of the user turn — where the brief lives now that system.md has no slots. */
+function userText(built: { user: { content: unknown } }): string {
+  return (built.user.content as Array<Record<string, unknown>>)
+    .filter((part) => part.type === "text")
+    .map((part) => String(part.text))
+    .join("\n");
+}
+
 /** A model reply, assembled from parts so each test can break exactly one. */
-function reply(parts: { plan?: string; copy?: string[]; warnings?: string[]; prompt?: string }): string {
+function reply(parts: { plan?: string; copy?: string[]; warnings?: string[]; prompt?: string; assumptions?: string[] }): string {
   return [
+    `<assumptions>\n${(parts.assumptions ?? ["industry: skincare", "audience: women 25-35"]).join("\n")}\n</assumptions>`,
     `<plan>${parts.plan ?? "One idea: the skin calms. The eye reads the bottle, then the headline."}</plan>`,
     `<copy_final>\n${(parts.copy ?? COPY).join("\n")}\n</copy_final>`,
     `<warnings>\n${(parts.warnings ?? []).join("\n")}\n</warnings>`,
@@ -173,10 +181,12 @@ function main(): void {
     for (const name of PLAYBOOK_NAMES) {
       const t = loadTemplates(name === "hero" ? "product hero" : name === "social" ? "social ad" : name);
       assert.strictEqual(t.playbookName, name);
-      assert.ok(t.metaPrompt.length > 500, `meta-prompt too short: ${t.metaPrompt.length}`);
+      assert.ok(t.system.length > 1000, `system.md too short: ${t.system.length}`);
+      assert.ok(t.request.length > 300, `request.md too short: ${t.request.length}`);
       assert.ok(t.playbook.length > 200, `${name} playbook too short: ${t.playbook.length}`);
       assert.strictEqual(t.version, "v1");
-      assert.strictEqual(t.files.length, 2);
+      // system + request + playbook, plus the gold example where one exists.
+      assert.ok(t.files.length === 3 || t.files.length === 4, String(t.files.length));
     }
   });
 
@@ -193,7 +203,7 @@ function main(): void {
       clearTemplateCache();
       const dir = templateDirectory();
       assert.ok(fs.statSync(path.join(dir, "playbooks")).isDirectory(), dir);
-      assert.ok(loadTemplates("poster").metaPrompt.length > 500, "the meta-prompt did not load from the app root");
+      assert.ok(loadTemplates("poster").system.length > 1000, "system.md did not load from the app root");
     } finally {
       process.chdir(before);
       clearTemplateCache();
@@ -230,41 +240,180 @@ function main(): void {
     assert.strictEqual(fillSlots("{{COPY}}", { COPY: "Giá chỉ $9.99 — $& $1" }), "Giá chỉ $9.99 — $& $1");
   });
 
-  check("every asset type x ratio fills the whole meta-prompt", () => {
+  check("every asset type x ratio fills every slot, and the system half stays identical", () => {
+    const systems = new Set<string>();
     for (const name of PLAYBOOK_NAMES) {
       for (const ratio of RATIOS) {
-        const { system } = buildMetaPrompt(baseInput({ assetType: name, aspectRatio: ratio }), "exact");
-        assert.ok(!/\{\{[A-Z_]+\}\}/.test(system), `${name} ${ratio} left a slot`);
-        assert.ok(system.includes(LAYOUT_BY_RATIO[ratio]), `${name} ${ratio} lost the layout`);
-        assert.ok(system.includes(RATIO_SENTENCE[ratio]), `${name} ${ratio} lost the ratio sentence`);
+        const built = buildDirectorMessages(baseInput({ assetType: name, aspectRatio: ratio }), "exact", []);
+        const text = userText(built);
+        systems.add(built.system);
+        assert.ok(!/\{\{[A-Za-z_]+\}\}/.test(text), `${name} ${ratio} left a slot`);
+        assert.ok(text.includes(LAYOUT_BY_RATIO[ratio]), `${name} ${ratio} lost the layout`);
+        assert.ok(text.includes(ratio), `${name} ${ratio} lost the ratio`);
+      }
+    }
+    // The whole point of the split: the standing instructions do not vary by job, so a
+    // reader comparing two jobs sees only what actually differed.
+    assert.strictEqual(systems.size, 1, "system.v1.md varied between jobs");
+  });
+
+  check("the brief reaches the director verbatim, diacritics and all", () => {
+    const text = userText(buildDirectorMessages(baseInput(), "exact", []));
+    for (const line of COPY) assert.ok(text.includes(line), line);
+    assert.ok(text.includes("Làn da dịu lại sau hai tuần"), "the concept was altered");
+    // Inside the fences the template provides, so the director can tell the client's
+    // words from the engine's framing.
+    assert.ok(/"""[^"]*Làn da dịu lại sau hai tuần/.test(text), "the concept lost its fences");
+  });
+
+  check("the forbidden words the check enforces are EXACTLY the ones the director is shown", () => {
+    // Both directions. A word enforced but not stated is a trap; a word stated but not
+    // enforced is a rule with no teeth.
+    const { system } = buildDirectorMessages(baseInput(), "exact", []);
+    const stated = /empty praise words \(([^)]+)\)/.exec(system);
+    assert.ok(stated, "system.v1.md no longer names the praise words");
+    const named = stated![1].split(",").map((w) => w.trim());
+    for (const w of FORBIDDEN_WORDS) {
+      // `luxurious` is the inflection of a word that IS named.
+      assert.ok(named.some((n) => w.startsWith(n) || n.startsWith(w)), `${w} is rejected but never stated`);
+    }
+    for (const n of named) {
+      assert.ok(FORBIDDEN_WORDS.some((w) => w.startsWith(n)), `${n} is stated but never enforced`);
+    }
+  });
+
+  check("V2_INCLUDE_LABEL_TEXT is INERT on this path, and the templates always protect the label", () => {
+    // The author's templates carry no label-text slot: system.v1.md says "Transcribe
+    // printed label text exactly as seen; never invent label text" unconditionally. So
+    // the flag no longer changes anything here, and a test that claimed otherwise would
+    // describe a feature that is gone. Pinned rather than quietly dropped.
+    const on = buildDirectorMessages(baseInput({ includeLabelText: true }), "exact", []);
+    const off = buildDirectorMessages(baseInput({ includeLabelText: false }), "exact", []);
+    assert.strictEqual(on.system, off.system);
+    assert.strictEqual(userText(on), userText(off));
+    assert.ok(/never invent label text/i.test(on.system), "the label protection was lost");
+    assert.ok(/Do not redesign, recolour or add writing/i.test(userText(on)), "the product rule was lost");
+  });
+
+  check("a brief with no copy and no products still briefs cleanly", () => {
+    const text = userText(buildDirectorMessages(baseInput({ copy: [], products: [] }), "exact", []));
+    assert.ok(!/\\{\\{/.test(text), "a slot was left unfilled");
+    assert.ok(text.includes("this frame carries no words"), text.slice(0, 200));
+    assert.ok(/0 photo\(s\)/.test(text), "the photo count is wrong");
+  });
+
+  // ── 1b. the Brief Compiler ──────────────────────────────────────────────
+  console.log("\n1b — the Brief Compiler hands fields over, it does not write prose");
+
+  check("GOLDEN — every asset type x ratio compiles with no slot left behind", () => {
+    for (const name of PLAYBOOK_NAMES) {
+      for (const ratio of RATIOS) {
+        const text = userText(buildDirectorMessages(baseInput({ assetType: name, aspectRatio: ratio }), "exact", []));
+        assert.ok(!/\{\{/.test(text), `${name} ${ratio}: a slot survived`);
+        // The four things the director cannot work without.
+        assert.ok(text.includes(`aspect_ratio: ${ratio}`), `${name} ${ratio}: no ratio`);
+        assert.ok(/# ASSET PLAYBOOK/.test(text), `${name} ${ratio}: no playbook`);
+        assert.ok(/# CONSTRAINTS/.test(text), `${name} ${ratio}: no constraints`);
+        assert.ok(/Return the five tags/.test(text), `${name} ${ratio}: no output instruction`);
       }
     }
   });
 
-  check("the brief reaches the meta-prompt verbatim, diacritics and all", () => {
-    const { system } = buildMetaPrompt(baseInput(), "exact");
-    for (const line of COPY) assert.ok(system.includes(line), line);
-    assert.ok(system.includes("Làn da dịu lại sau hai tuần"), "the concept was altered");
-    assert.ok(system.includes("chai serum thủy tinh mờ 100ml"), "the product description was altered");
+  check("the client's visual-direction choices arrive as binding preferences", () => {
+    const text = userText(
+      buildDirectorMessages(
+        baseInput({
+          visualControls: { camera: "low_angle", lighting: "auto", composition: "rule_of_thirds" },
+          visualStyle: "tối giản, nhiều khoảng trống",
+          hardRequirements: ["Không dùng người mẫu"],
+        }),
+        "exact",
+        [],
+      ),
+    );
+    assert.ok(/# CLIENT PREFERENCES/.test(text), "the preferences block is missing");
+    assert.ok(/outrank your/.test(text), "the preferences are not marked as binding");
+    // The panel's own professional instruction, verbatim.
+    assert.ok(/low-angle hero perspective/.test(text), "the camera instruction was not carried through");
+    assert.ok(/tối giản, nhiều khoảng trống/.test(text), "the free-text style was dropped");
+    assert.ok(/Không dùng người mẫu/.test(text), "a hard requirement was dropped");
+    // "auto" means the client did not choose, so it must not appear as a preference.
+    const block = /# CLIENT PREFERENCES[\s\S]*?(?=\nNot provided)/.exec(text);
+    assert.ok(block, "could not isolate the block");
+    assert.ok(!/lighting|Ánh sáng/i.test(block![0]), "a control left on auto was reported as a choice");
   });
 
-  check("the forbidden words the check enforces are the ones the model is shown", () => {
-    const { system } = buildMetaPrompt(baseInput(), "exact");
-    for (const w of FORBIDDEN_WORDS) assert.ok(system.includes(w), `${w} is rejected but never stated`);
+  check("no preference chosen means no preferences block at all", () => {
+    const text = userText(buildDirectorMessages(baseInput({ visualControls: { camera: "auto" } }), "exact", []));
+    assert.ok(!/# CLIENT PREFERENCES/.test(text), "an empty block was emitted");
   });
 
-  check("the label rule flips with the flag, and both modes keep the reference", () => {
-    const on = buildMetaPrompt(baseInput({ includeLabelText: true }), "exact").system;
-    const off = buildMetaPrompt(baseInput({ includeLabelText: false }), "exact").system;
-    assert.ok(/quote it in the prompt/i.test(on));
-    assert.ok(/Do not quote any label lettering/i.test(off));
-    for (const s of [on, off]) assert.ok(s.includes("exactly as in attached photo"), "the reference instruction was lost");
+  check("the gold example is included for poster and DROPPED where the file is a TODO", () => {
+    const poster = userText(buildDirectorMessages(baseInput({ assetType: "poster" }), "exact", []));
+    assert.ok(/# GOLD EXAMPLE \(quality bar; do not copy its content\)/.test(poster), "poster lost its gold example");
+    assert.ok(/honey-amber cleansing oil/.test(poster), "the gold example body is missing");
+    for (const asset of ["banner", "social ad", "product hero", "ugc"]) {
+      const text = userText(buildDirectorMessages(baseInput({ assetType: asset }), "exact", []));
+      assert.ok(!/# GOLD EXAMPLE/.test(text), `${asset}: a TODO placeholder was shown as a quality bar`);
+      assert.ok(!/TODO/.test(text), `${asset}: the word TODO reached the director`);
+    }
   });
 
-  check("a brief with no copy and no products still briefs cleanly", () => {
-    const { system } = buildMetaPrompt(baseInput({ copy: [], products: [] }), "exact");
-    assert.ok(system.includes("this frame carries no words"));
-    assert.ok(system.includes("(none attached)"));
+  check("goldExampleBlock drops a TODO whatever surrounds it", () => {
+    assert.strictEqual(goldExampleBlock(""), "");
+    assert.strictEqual(goldExampleBlock(null), "");
+    assert.strictEqual(goldExampleBlock("TODO: paste a proven prompt here"), "");
+    assert.strictEqual(goldExampleBlock("\n  TODO: paste a proven prompt here  \n"), "");
+    assert.ok(goldExampleBlock("A real prompt.").startsWith("# GOLD EXAMPLE"));
+  });
+
+  check("the copy policy rules reach the director in full, per policy", () => {
+    const exact = userText(buildDirectorMessages(baseInput(), "exact", []));
+    assert.ok(/Copy policy: exact/.test(exact));
+    assert.ok(/character for character, every accent and punctuation mark/.test(exact));
+    const adapt = userText(buildDirectorMessages(baseInput(), "adapt", []));
+    assert.ok(/Copy policy: adapt/.test(adapt));
+    assert.ok(/shorten to fit the budget, keep perfect accents/.test(adapt));
+    assert.ok(/add no new claims, numbers or promises/.test(adapt));
+  });
+
+  check("the text budget is read out of the asset's own playbook", () => {
+    const poster = userText(buildDirectorMessages(baseInput({ assetType: "poster" }), "exact", []));
+    assert.ok(/Text budget for this asset: at most 3 separate lines/.test(poster), poster.slice(0, 0) || "poster budget");
+    const hero = userText(buildDirectorMessages(baseInput({ assetType: "product hero" }), "exact", []));
+    assert.ok(/Text budget for this asset: at most ONE line/.test(hero), "hero budget");
+  });
+
+  check("the language is named from the copy, and never guessed", () => {
+    assert.strictEqual(textLanguage(["Dịu da sau 14 ngày"], ""), "Vietnamese");
+    assert.strictEqual(textLanguage([], "Làn da dịu lại"), "Vietnamese");
+    assert.strictEqual(textLanguage(["Soft skin in 14 days"], ""), "English");
+    assert.strictEqual(textLanguage([], ""), "same language as the client's copy");
+    // French shares the Latin-1 accents, so it must NOT be called Vietnamese.
+    assert.strictEqual(textLanguage(["Crème hydratante"], ""), "same language as the client's copy");
+  });
+
+  check("NFC: decomposed Vietnamese is normalised before it reaches the director", () => {
+    const decomposed = COPY.map((c) => c.normalize("NFD"));
+    const text = userText(buildDirectorMessages(baseInput({ copy: decomposed }), "exact", []));
+    for (const line of COPY) assert.ok(text.includes(line), `${line} did not arrive in NFC`);
+  });
+
+  check("the photos are numbered in the order the provider receives them", () => {
+    const text = userText(
+      buildDirectorMessages(
+        baseInput({
+          products: [
+            { ref_index: 1, imageUrl: "data:image/png;base64,ONE" },
+            { ref_index: 2, imageUrl: "data:image/png;base64,TWO" },
+            { ref_index: 3, imageUrl: "data:image/png;base64,THREE" },
+          ],
+        }),
+        "exact",
+        [],
+      ),
+    );
+    assert.ok(/3 photo\(s\), photo 1 to photo 3/.test(text), text.slice(0, 300));
   });
 
   // ── 2. the copy policy ──────────────────────────────────────────────────
@@ -355,7 +504,7 @@ function main(): void {
     const raw = `<plan>p</plan>\n<copy_final>\nMua ngay\n</copy_final>\n<warnings></warnings>\n<image_prompt>${goodPrompt(["Mua ngay"])}`;
     const r = parseTaggedReply(raw);
     assert.ok(r.image_prompt.endsWith("Square 1:1 frame."), r.image_prompt.slice(-40));
-    assert.deepStrictEqual(r.missing, []);
+    assert.deepStrictEqual(r.missing, ["assumptions"]);
   });
 
   check("an unclosed tag stops at the next opening tag", () => {
@@ -363,7 +512,7 @@ function main(): void {
     assert.strictEqual(r.plan, "thinking out loud");
     assert.deepStrictEqual(r.copy_final, ["Mua ngay"]);
     assert.strictEqual(r.image_prompt, "P");
-    assert.deepStrictEqual(r.missing, ["warnings"]);
+    assert.deepStrictEqual(r.missing, ["assumptions", "warnings"]);
   });
 
   check("the tags may arrive in any order", () => {
@@ -386,8 +535,11 @@ function main(): void {
   });
 
   check("an empty copy_final and an empty warnings are legitimate", () => {
-    const r = parseTaggedReply("<plan>p</plan><copy_final>\n\n</copy_final><warnings></warnings><image_prompt>P</image_prompt>");
+    const r = parseTaggedReply(
+      "<assumptions></assumptions><plan>p</plan><copy_final>\n\n</copy_final><warnings>none</warnings><image_prompt>P</image_prompt>",
+    );
     assert.deepStrictEqual(r.copy_final, []);
+    // "none" is the template's own way of saying there is nothing to report.
     assert.deepStrictEqual(r.warnings, []);
     assert.deepStrictEqual(r.missing, []);
   });
@@ -404,7 +556,7 @@ function main(): void {
     for (const raw of ["<<<>>>", "<image_prompt", "</image_prompt>", "<plan>".repeat(500), "\u0000"]) {
       assert.doesNotThrow(() => parseTaggedReply(raw), raw.slice(0, 20));
     }
-    assert.strictEqual(TAGS.length, 4);
+    assert.strictEqual(TAGS.length, 5);
   });
 
   // ── 4. the three checks ─────────────────────────────────────────────────
@@ -415,7 +567,7 @@ function main(): void {
   check("the control prompt passes everything", () => {
     const r = checkPrompt(goodPrompt(COPY), baseOpts);
     assert.strictEqual(r.ok, true, JSON.stringify(r.failures));
-    assert.ok(r.stats.words >= WORD_MIN && r.stats.words <= WORD_MAX, String(r.stats.words));
+    assert.ok(r.stats.words > 0, "the word count is still measured");
   });
 
   check("exact: a changed copy string is caught", () => {
@@ -478,11 +630,35 @@ function main(): void {
     }
   });
 
-  check("too short and too long are both caught", () => {
+  check("there is NO word limit: a short prompt and a very long one both pass", () => {
+    // Length is decided by the design. The old 200-500 window was a target dressed up
+    // as a check, and it would have truncated a three-product layered scene.
     const short = checkPrompt(prose(40) + ` "${COPY[0]}" "${COPY[1]}" "${COPY[2]}" Square 1:1 frame.`, baseOpts);
-    assert.ok(short.failures.some((f) => f.code === "shape" && /must be between/.test(f.message)));
-    const long = checkPrompt(goodPrompt(COPY) + " " + prose(400), baseOpts);
-    assert.ok(long.failures.some((f) => f.code === "shape" && /must be between/.test(f.message)));
+    assert.strictEqual(short.ok, true, JSON.stringify(short.failures));
+    const long = checkPrompt(prose(1200) + " " + COPY.map((c) => `"${c}"`).join(" ") + " Square 1:1 frame.", baseOpts);
+    assert.ok(long.stats.words > 500, String(long.stats.words));
+    assert.strictEqual(long.ok, true, JSON.stringify(long.failures));
+  });
+
+  check("an empty prompt fails", () => {
+    for (const empty of ["", "   ", "\n\n"]) {
+      const r = checkPrompt(empty, { ...baseOpts, copyOriginal: [], copyFinal: [] });
+      assert.ok(r.failures.some((f) => f.code === "shape" && /empty/.test(f.message)), JSON.stringify(r.failures));
+    }
+  });
+
+  check("over the provider's ceiling fails, and the message says to condense without dropping decisions", () => {
+    const r = checkPrompt(goodPrompt(COPY) + " " + prose(6000), { ...baseOpts, maxChars: 2000 });
+    const f = r.failures.find((x) => x.code === "shape" && /ceiling/.test(x.message));
+    assert.ok(f, JSON.stringify(r.failures));
+    assert.ok(/keep every decision/.test(f!.message), f!.message);
+  });
+
+  check("the ratio must be at the END, not merely present", () => {
+    const buried = `Square 1:1 frame. ${prose(200)} ${COPY.map((c) => `"${c}"`).join(" ")} The scene is calm.`;
+    const r = checkPrompt(buried, baseOpts);
+    assert.ok(r.failures.some((f) => f.code === "ratio" && /not at the end/.test(f.message)), JSON.stringify(r.failures));
+    assert.strictEqual(checkPrompt(goodPrompt(COPY), baseOpts).ok, true);
   });
 
   check("a word that grades the picture is caught in the prose", () => {
@@ -572,12 +748,17 @@ function main(): void {
     assert.ok(String(parts[0].text).includes("photo 1 to photo 2"));
   });
 
-  check("a product with no image is described but attaches nothing", async () => {
+  check("a product with no image attaches nothing, and per-photo descriptions are NOT sent", async () => {
+    // request.v1.md lists "per-photo product descriptions" among the things the client
+    // did not provide and the director must read off the photo. The description field is
+    // deliberately unused on this path; the count is all that is stated.
     const s = stub([reply({})]);
     await buildSimplePrompt(baseInput({ products: [{ ref_index: 1, description: "chai serum" }] }), s.deps);
-    const parts = (s.calls[0].messages[1].content as Array<Record<string, unknown>>);
+    const parts = s.calls[0].messages[1].content as Array<Record<string, unknown>>;
     assert.strictEqual(parts.filter((p) => p.type === "image_url").length, 0);
-    assert.ok(String(s.calls[0].messages[0].content).includes("chai serum"));
+    const sent = JSON.stringify(s.calls[0].messages);
+    assert.ok(!sent.includes("chai serum"), "a per-photo description reached the director");
+    assert.ok(sent.includes("1 photo(s)"), "the photo count was not stated");
   });
 
   check("a failing first reply is repaired, and that is the second and last call", async () => {
@@ -701,7 +882,7 @@ function main(): void {
     assert.strictEqual(t.playbook, "poster");
     assert.strictEqual(t.llm_calls, 1);
     assert.strictEqual(t.copy_adapted, false);
-    assert.ok((t.prompt_words as number) >= WORD_MIN);
+    assert.ok((t.prompt_words as number) > 0, "the word count is still reported");
     const blob = JSON.stringify(t);
     for (const line of COPY) assert.ok(!blob.includes(line), `telemetry leaked ${line}`);
     assert.ok(!blob.includes("limestone") && !blob.includes("shadow"), "telemetry leaked the prompt");

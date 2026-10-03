@@ -3,10 +3,14 @@
  *
  * THE WHOLE FLOW
  * --------------
- *   1. gather the input verbatim -- nothing paraphrased, nothing inferred
- *   2. load the meta-prompt and the asset's playbook from disk, fill the slots
- *   3. ONE model call, with the product photos attached
- *   4. parse four tags, tolerantly
+ *   1. the Brief Compiler gathers the input verbatim -- nothing paraphrased,
+ *      nothing inferred, and the client's own visual-direction choices carried
+ *      through as binding preferences
+ *   2. load `system.v{N}.md`, `request.v{N}.md`, the playbook and the gold example
+ *      from disk; fill the request's slots
+ *   3. ONE model call: system = the standing instructions, user = the brief and the
+ *      product photos
+ *   4. parse five tags, tolerantly
  *   5. three checks
  *   6. at most ONE repair call, then stop
  *
@@ -35,6 +39,7 @@ import {
   type CopyPolicy,
 } from "./checks";
 import { parseTaggedReply, type TaggedReply } from "./tags";
+import { briefTelemetry, compileBrief, type BriefInput, type CompiledBrief } from "./brief-compiler";
 import {
   LAYOUT_BY_RATIO,
   RATIO_SENTENCE,
@@ -44,10 +49,6 @@ import {
   type AspectRatio,
   type LoadedTemplates,
 } from "./templates";
-
-/** Word bounds, in one place because both the meta-prompt and the check read them. */
-export const WORD_MIN = 200;
-export const WORD_MAX = 500;
 
 export interface SimpleProduct {
   /** 1-based, and the same order the provider receives the files in. */
@@ -73,6 +74,20 @@ export interface SimpleInput {
   /** Whether the prompt should quote the lettering read off the label. */
   includeLabelText: boolean;
   /**
+   * The visual direction panel, as the client left it. Option ids; "auto" or absent
+   * means they did not choose.
+   *
+   * v1 has consumed this since the panel shipped and v2 did not, which meant a client
+   * who picked "Góc thấp" got whatever angle the director felt like. A control the
+   * client set is binding.
+   */
+  visualControls?: Record<string, string> | null;
+  visualStyle?: string | null;
+  emotionalTone?: string | null;
+  compositionLayout?: string | null;
+  /** Lines the client marked non-negotiable. v1 reads these; so does v2 now. */
+  hardRequirements?: string[] | null;
+  /**
    * Which template version to read. Defaults to the environment's.
    *
    * Passed in rather than read here so that comparing two versions is a parameter
@@ -91,6 +106,13 @@ export interface SimpleResult {
   prompt?: string;
   /** The model's own thinking. Kept for the record, never sent to the renderer. */
   plan?: string;
+  /**
+   * What the director filled in that the client never said.
+   *
+   * On the job because it is the one output a human may want to overrule: the client
+   * gave a topic and some copy, and audience, occasion and tone were decided for them.
+   */
+  assumptions: string[];
   reply?: TaggedReply;
   checks?: CheckResult;
   reason?: string;
@@ -172,55 +194,67 @@ export function claimWarnings(copy: string[]): string[] {
   return [...new Set(out)];
 }
 
-/** The system prompt: the meta-prompt file with the playbook and the brief in it. */
-export function buildMetaPrompt(input: SimpleInput, policy: CopyPolicy): { system: string; templates: LoadedTemplates } {
+/**
+ * The two messages the director is sent.
+ *
+ * system = `system.v{N}.md`, unchanged. It has no slots, which is the point: the
+ * standing instructions are identical on every job, so a reader comparing two jobs
+ * sees only what actually differed.
+ *
+ * user = `request.v{N}.md` with this job's slots filled, then the product photos in
+ * reference order. The brief goes in the USER turn rather than the system turn
+ * because that is what it is: this request, not a standing rule.
+ */
+export function buildDirectorMessages(
+  input: SimpleInput,
+  policy: CopyPolicy,
+  policyWarnings: string[],
+): { system: string; user: { role: "user"; content: unknown }; templates: LoadedTemplates; brief: CompiledBrief } {
   const templates = loadTemplates(input.assetType, input.templateVersion ?? templateVersion());
+
   const playbook = fillSlots(templates.playbook, {
     ASPECT_RATIO: input.aspectRatio,
     LAYOUT: LAYOUT_BY_RATIO[input.aspectRatio],
   });
 
-  const system = fillSlots(templates.metaPrompt, {
-    PLAYBOOK: playbook,
-    ASSET_TYPE: clean(input.assetType) || "poster",
-    ASPECT_RATIO: input.aspectRatio,
-    BRAND: clean(input.brand) || "(not given)",
-    PRODUCT_LINE: clean(input.productLine) || "(none — the brand name is not a product line)",
-    CONCEPT: clean(input.concept) || "(not given)",
-    NOTES: clean(input.notes) || "(none)",
-    COPY_COUNT: String(input.copy.length),
-    COPY: input.copy.length ? input.copy.map((c, i) => `  ${i + 1}. ${nfc(c)}`).join("\n") : "  (none — this frame carries no words)",
-    COPY_POLICY: policy,
-    PRODUCT_COUNT: String(input.products.length),
-    PRODUCTS: input.products.length
-      ? input.products.map((p) => `  photo ${p.ref_index}: ${clean(p.description) || "(no description given — describe what you see)"}`).join("\n")
-      : "  (none attached)",
-    LABEL_TEXT_RULE: input.includeLabelText
-      ? "Where you can READ the lettering on a label, quote it in the prompt so the renderer reproduces it rather than inventing it. If you cannot read it, say nothing about it and never guess a brand name."
-      : "Do not quote any label lettering. Say only \"exactly as in attached photo N\" and let the reference carry the label.",
-    WORD_MIN: String(WORD_MIN),
-    WORD_MAX: String(WORD_MAX),
-    FORBIDDEN_WORDS: FORBIDDEN_WORDS.join(", "),
-    RATIO_SENTENCE: `"${RATIO_SENTENCE[input.aspectRatio]}"`,
+  const brief = compileBrief(briefInputFrom(input), {
+    playbook,
+    goldExample: templates.goldExample,
+    policy,
+    policyWarnings,
   });
 
-  return { system, templates };
+  const requestText = fillSlots(templates.request, brief.slots);
+
+  const parts: Array<Record<string, unknown>> = [{ type: "text", text: requestText }];
+  for (const product of input.products) {
+    if (product.imageUrl) parts.push({ type: "image_url", image_url: { url: product.imageUrl, detail: "high" } });
+  }
+  if (input.products.length) {
+    parts.push({
+      type: "text",
+      text: `The ${input.products.length} photo(s) above are, in order, photo 1 to photo ${input.products.length}. Return the five tags now.`,
+    });
+  }
+
+  return { system: templates.system, user: { role: "user", content: parts }, templates, brief };
 }
 
-/** The user turn: the photos, in reference order. The brief is in the system prompt. */
-function userMessage(input: SimpleInput): { role: "user"; content: unknown } {
-  const parts: Array<Record<string, unknown>> = [
-    {
-      type: "text",
-      text: input.products.length
-        ? `The ${input.products.length} attached photo(s) are, in order, photo 1 to photo ${input.products.length}. Write the four tags now.`
-        : "No product photos are attached. Write the four tags now.",
-    },
-  ];
-  for (const p of input.products) {
-    if (p.imageUrl) parts.push({ type: "image_url", image_url: { url: p.imageUrl, detail: "high" } });
-  }
-  return { role: "user", content: parts };
+/** The request's fields, narrowed to what the Brief Compiler reads. */
+function briefInputFrom(input: SimpleInput): BriefInput {
+  return {
+    assetType: input.assetType,
+    aspectRatio: input.aspectRatio,
+    concept: input.concept,
+    copy: input.copy,
+    brand: input.brand,
+    visualControls: input.visualControls ?? null,
+    visualStyle: input.visualStyle ?? null,
+    emotionalTone: input.emotionalTone ?? null,
+    compositionLayout: input.compositionLayout ?? null,
+    hardRequirements: input.hardRequirements ?? null,
+    productCount: input.products.length,
+  };
 }
 
 /** The repair turn: the same reply, the failures, one more attempt. */
@@ -231,7 +265,7 @@ function repairMessage(previous: string, failures: string[]): { role: "user"; co
       {
         type: "text",
         text: [
-          "Your reply was rejected. Fix exactly these problems and return all four tags again, unchanged except for the fixes:",
+          "Your reply was rejected. Fix exactly these problems and return all five tags again, unchanged except for the fixes:",
           ...failures.map((f) => `- ${f}`),
           "",
           "Keep the same idea, the same layout and the same copy strings. Add no new text.",
@@ -247,20 +281,25 @@ function repairMessage(previous: string, failures: string[]): { role: "user"; co
 export async function buildSimplePrompt(input: SimpleInput, deps: SimpleDeps): Promise<SimpleResult> {
   const copy_original = input.copy.map(nfc).filter((c) => c.trim());
   let templates: LoadedTemplates | undefined;
+  let brief: CompiledBrief | undefined;
   let system: string;
+  let user: { role: "user"; content: unknown };
   let policyDecision: { policy: CopyPolicy; warnings: string[] };
 
   try {
     const probe = loadTemplates(input.assetType, input.templateVersion ?? templateVersion());
     policyDecision = decidePolicy(copy_original, probe.playbook, input.copyPolicy ?? "exact");
-    const built = buildMetaPrompt(input, policyDecision.policy);
+    const built = buildDirectorMessages(input, policyDecision.policy, policyDecision.warnings);
     system = built.system;
+    user = built.user;
     templates = built.templates;
+    brief = built.brief;
   } catch (e) {
     return {
       ok: false,
       reason: `the templates did not load: ${(e as Error).message.slice(0, 160)}`,
       warnings: [],
+      assumptions: [],
       llmCalls: 0,
       copyPolicy: input.copyPolicy ?? "exact",
       copy_original,
@@ -268,9 +307,11 @@ export async function buildSimplePrompt(input: SimpleInput, deps: SimpleDeps): P
     };
   }
 
-  const warnings = [...policyDecision.warnings, ...claimWarnings(copy_original)];
+  // The compiler already folded the policy warnings and the claim warnings together.
+  const warnings = [...(brief?.warnings || [])];
   const base = {
     warnings,
+    assumptions: [] as string[],
     llmCalls: 0,
     copyPolicy: policyDecision.policy,
     copy_original,
@@ -280,7 +321,7 @@ export async function buildSimplePrompt(input: SimpleInput, deps: SimpleDeps): P
 
   const messages: Array<{ role: "system" | "user" | "assistant"; content: unknown }> = [
     { role: "system", content: system },
-    userMessage(input),
+    user,
   ];
 
   let raw: string;
@@ -318,7 +359,17 @@ export async function buildSimplePrompt(input: SimpleInput, deps: SimpleDeps): P
   const allWarnings = [...warnings, ...reply.warnings];
 
   if (!reply.image_prompt) {
-    return { ...base, ok: false, llmCalls: calls, warnings: allWarnings, copy_final, reply, checks, reason: "the reply carried no <image_prompt> after one repair" };
+    return {
+      ...base,
+      ok: false,
+      llmCalls: calls,
+      warnings: allWarnings,
+      assumptions: reply.assumptions,
+      copy_final,
+      reply,
+      checks,
+      reason: "the reply carried no <image_prompt> after one repair",
+    };
   }
   if (!checks.ok) {
     return {
@@ -326,6 +377,7 @@ export async function buildSimplePrompt(input: SimpleInput, deps: SimpleDeps): P
       ok: false,
       llmCalls: calls,
       warnings: allWarnings,
+      assumptions: reply.assumptions,
       copy_final,
       reply,
       checks,
@@ -337,6 +389,7 @@ export async function buildSimplePrompt(input: SimpleInput, deps: SimpleDeps): P
     ok: true,
     prompt: reply.image_prompt,
     plan: reply.plan,
+    assumptions: reply.assumptions,
     reply,
     checks,
     warnings: allWarnings,
@@ -354,8 +407,6 @@ function runChecks(reply: TaggedReply, input: SimpleInput, policy: CopyPolicy, o
     copyFinal: reply.copy_final.length ? reply.copy_final : original,
     policy,
     aspectRatio: input.aspectRatio,
-    minWords: WORD_MIN,
-    maxWords: WORD_MAX,
   });
 }
 
@@ -375,6 +426,7 @@ export interface SimpleTelemetry {
   copy_policy?: CopyPolicy;
   copy_strings?: number;
   copy_adapted?: boolean;
+  assumptions?: number;
   prompt_words?: number;
   missing_tags?: string[];
   check_codes?: string[];

@@ -11,10 +11,13 @@
  *
  *   1. COPY   the client's words, intact and used once. Nothing downstream can fix
  *             a prompt that lost a string or asked for it twice.
- *   2. RATIO  the frame the user chose, stated in the prompt. The provider is told
- *             separately, and a prompt that describes a different shape fights it.
- *   3. SHAPE  length, and the forbidden vocabulary. Scanned AFTER quoted strings are
- *             removed, because the client's own words are not the engine's prose.
+ *   2. RATIO  the frame the user chose, stated at the END of the prompt. The provider
+ *             is told separately, and a prompt that describes a different shape
+ *             fights it.
+ *   3. SHAPE  not empty, inside the provider's character ceiling, and free of the
+ *             forbidden vocabulary — scanned AFTER quoted strings are removed,
+ *             because the client's own words are not the engine's prose.
+ *             There is deliberately NO WORD LIMIT: see the note at the check.
  *
  * Everything else -- placeholders, ellipses, impossible percentages -- was a symptom
  * of a template assembling text. A model writing prose does not produce them, and a
@@ -48,39 +51,30 @@ export interface CheckOptions {
   copyFinal: string[];
   policy: CopyPolicy;
   aspectRatio: AspectRatio;
-  /** Word bounds for the prompt. */
-  minWords?: number;
-  maxWords?: number;
   /** The provider's hard character ceiling. */
   maxChars?: number;
 }
 
-const DEFAULT_MIN_WORDS = 200;
-const DEFAULT_MAX_WORDS = 500;
 
 /**
  * Words that grade a picture instead of describing one.
  *
- * Also written into the meta-prompt, from one place: `FORBIDDEN_WORDS` is a slot, so
- * the model is told exactly what the check will reject. A rule the model cannot see
- * is a trap rather than a specification.
+ * THIS LIST IS EXACTLY THE WORDS `system.v1.md` NAMES, and it is narrower than it was
+ * on purpose. It used to hold fourteen -- gorgeous, exquisite, breathtaking,
+ * eye-catching, high-end, world-class, striking, sophisticated -- while the director
+ * was only ever shown five, which made nine of them traps: a reply rejected for a word
+ * nobody asked it to avoid, costing a repair call and sometimes a fallback to v1.
+ *
+ * A check may only enforce what the instructions state. To forbid another word, add it
+ * to the sentence in `system.v1.md` that lists the praise words AND add it here, in
+ * that order. The test asserts the two lists agree in both directions, so forgetting
+ * one half fails rather than drifting.
+ *
+ * KNOWN GAP: `luxurious` slips through, because the matcher is `\bluxury\b` and the
+ * instructions name `luxury`. Closing it means adding the word to `system.v1.md`,
+ * which is the author's file, so it is reported rather than assumed.
  */
-export const FORBIDDEN_WORDS = [
-  "premium",
-  "luxury",
-  "luxurious",
-  "cinematic",
-  "stunning",
-  "beautiful",
-  "gorgeous",
-  "exquisite",
-  "breathtaking",
-  "eye-catching",
-  "high-end",
-  "world-class",
-  "striking",
-  "sophisticated",
-];
+export const FORBIDDEN_WORDS = ["premium", "luxury", "cinematic", "stunning", "beautiful"];
 
 /**
  * Measurements the renderer does not act on. One pattern, not nine.
@@ -129,8 +123,6 @@ function scannable(prompt: string, copy: string[], ratio: AspectRatio): string {
 export function checkPrompt(prompt: string, opts: CheckOptions): CheckResult {
   const text = nfc(prompt);
   const failures: CheckFailure[] = [];
-  const minWords = opts.minWords ?? DEFAULT_MIN_WORDS;
-  const maxWords = opts.maxWords ?? DEFAULT_MAX_WORDS;
   const maxChars = opts.maxChars ?? Number(process.env.PROMPT_HARD_MAXIMUM_CHARS || 32000);
 
   const words = squash(text).split(" ").filter(Boolean).length;
@@ -174,11 +166,21 @@ export function checkPrompt(prompt: string, opts: CheckOptions): CheckResult {
     failures.push({ code: "copy", message: "copy_final is empty although the client supplied copy" });
   }
 
-  // ── 2. the ratio ────────────────────────────────────────────────────────
+  // ── 2. the ratio, and at the END ────────────────────────────────────────
+  //
+  // Position is part of the requirement, not pedantry. The ratio is the last thing
+  // the renderer should read, and a prompt that mentions it in passing halfway
+  // through has usually described a different shape around it.
+  const tail = squash(text).slice(-120);
   if (!text.includes(opts.aspectRatio)) {
     failures.push({
       code: "ratio",
       message: `the prompt must state the frame the user chose; end it with "${RATIO_SENTENCE[opts.aspectRatio]}"`,
+    });
+  } else if (!tail.includes(opts.aspectRatio)) {
+    failures.push({
+      code: "ratio",
+      message: `the prompt states ${opts.aspectRatio} but not at the end; the last sentence must be the frame, "${RATIO_SENTENCE[opts.aspectRatio]}"`,
     });
   }
   for (const other of Object.keys(RATIO_SENTENCE) as AspectRatio[]) {
@@ -188,12 +190,25 @@ export function checkPrompt(prompt: string, opts: CheckOptions): CheckResult {
   }
 
   // ── 3. the shape ────────────────────────────────────────────────────────
+  //
+  // NO WORD LIMIT. There used to be a 200-500 word window, and it was a target
+  // masquerading as a check: length is decided by the design. A poster with one
+  // product and one line needs a few paragraphs; three products, a layered scene and
+  // four strings need many, and truncating the second to satisfy a number throws away
+  // decisions the renderer then makes for itself. The word count is still measured and
+  // still reported -- it is a thing to watch, not a thing to fail.
+  //
+  // What remains is the pair of limits that are real: the prompt must say something,
+  // and it must fit the provider.
   const scan = scannable(text, final, opts.aspectRatio);
-  if (words < minWords || words > maxWords) {
-    failures.push({ code: "shape", message: `the prompt is ${words} words; it must be between ${minWords} and ${maxWords}` });
+  if (!squash(text)) {
+    failures.push({ code: "shape", message: "the prompt is empty" });
   }
   if (text.length > maxChars) {
-    failures.push({ code: "shape", message: `the prompt is ${text.length} characters, over the provider's ceiling of ${maxChars}` });
+    failures.push({
+      code: "shape",
+      message: `the prompt is ${text.length} characters, over the provider's ceiling of ${maxChars}: condense it but keep every decision — drop no element, no position, no colour and no line of text`,
+    });
   }
   const found = FORBIDDEN_WORDS.filter((w) => new RegExp(`\\b${w.replace("-", "[- ]?")}\\b`, "i").test(scan));
   if (found.length) {

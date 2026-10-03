@@ -89,10 +89,28 @@ export function fallbackToV1(env: EnvLike = process.env): boolean {
   return String(env.V2_FALLBACK || "").trim().toLowerCase() !== "off";
 }
 
+/**
+ * The model that writes the prompt. Empty means "whatever the provider defaults to".
+ *
+ * A separate variable because this one call has a different job from every other call
+ * in the system: it is a creative director, not a classifier or a judge, and the model
+ * that is best at writing a brief is not necessarily the one configured for vision
+ * review. Changing it must not change any other call, which is exactly what reusing
+ * `LLM_MODEL` would do.
+ *
+ * It selects a model within the provider already configured. It is NOT a provider
+ * switch, and nothing here may become one.
+ */
+export function directorModel(env: EnvLike = process.env): string | undefined {
+  const raw = String(env.V2_DIRECTOR_MODEL || "").trim();
+  return raw || undefined;
+}
+
 /** Counts and names only. Never a key, never a prompt. */
 export function engineTelemetry(env: EnvLike = process.env) {
   return {
     prompt_engine: promptEngineVersion(env),
+    v2_director_model: directorModel(env) || "(provider default)",
     v2_include_label_text: includeLabelText(env),
     v2_label_check: labelCheckEnabled(env),
     v2_fallback_to_v1: fallbackToV1(env),

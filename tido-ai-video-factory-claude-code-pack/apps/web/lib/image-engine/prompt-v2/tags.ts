@@ -25,10 +25,19 @@
  * Pure. No model call, no I/O.
  */
 
-export const TAGS = ["plan", "copy_final", "warnings", "image_prompt"] as const;
+export const TAGS = ["assumptions", "plan", "copy_final", "warnings", "image_prompt"] as const;
 export type TagName = (typeof TAGS)[number];
 
 export interface TaggedReply {
+  /**
+   * What the director filled in that the client never said.
+   *
+   * A separate tag rather than a line inside `<plan>` because it is the one output a
+   * human has to be able to disagree with: the client gave a topic and some copy, and
+   * everything about audience, occasion and tone was decided for them. Kept on the
+   * job so that decision is reviewable rather than buried in a prompt.
+   */
+  assumptions: string[];
   plan: string;
   /** One string per line, blank lines dropped. */
   copy_final: string[];
@@ -71,6 +80,28 @@ function extract(raw: string, tag: TagName): { value: string; found: boolean; sp
   return { value: raw.slice(start, end), found: true, span: [open.index, end] };
 }
 
+/**
+ * `role | exact text` -> `exact text`.
+ *
+ * The template asks for the role so the director has to decide one, and the role is
+ * the director's label rather than the client's words. Everything downstream compares
+ * `copy_final` against what the client typed character for character, so the label
+ * has to come off -- otherwise every string fails the copy check for carrying a
+ * prefix the client never wrote.
+ *
+ * Split on the FIRST pipe only, and only when the part before it looks like a role:
+ * short, no sentence punctuation. A client's own line containing a pipe survives.
+ */
+function stripRole(line: string): string {
+  const at = line.indexOf("|");
+  if (at < 0) return line;
+  const role = line.slice(0, at).trim();
+  const text = line.slice(at + 1).trim();
+  if (!text) return line;
+  if (role.length > 24 || /[.!?,;:"]/.test(role)) return line;
+  return text;
+}
+
 const lines = (s: string): string[] =>
   nfc(s)
     .split(/\r?\n/)
@@ -99,9 +130,10 @@ export function parseTaggedReply(raw: string): TaggedReply {
   stray += text.slice(cursor);
 
   return {
+    assumptions: lines(got.assumptions.value),
     plan: got.plan.value.trim(),
-    copy_final: lines(got.copy_final.value),
-    warnings: lines(got.warnings.value),
+    copy_final: lines(got.copy_final.value).map(stripRole),
+    warnings: lines(got.warnings.value).filter((w) => w.toLowerCase() !== "none"),
     image_prompt: got.image_prompt.value.trim(),
     missing: TAGS.filter((t) => !got[t].found),
     stray: stray.replace(/\s+/g, " ").trim(),
@@ -114,6 +146,7 @@ export function tagTelemetry(r: TaggedReply | null | undefined) {
   return {
     tags: true,
     missing: r.missing,
+    assumptions: r.assumptions.length,
     copy_lines: r.copy_final.length,
     warnings: r.warnings.length,
     prompt_chars: r.image_prompt.length,

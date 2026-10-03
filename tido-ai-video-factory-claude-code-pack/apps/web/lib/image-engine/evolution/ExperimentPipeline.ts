@@ -73,7 +73,7 @@ import { buildTextLedgers, ledgerTelemetry } from "./experiment/TextLedgerSystem
 import { finishTelemetry, renderFinishForPrompt, resolveFinish } from "./experiment/FinishLayer";
 import { ideaTelemetry, renderIdeaForPrompt, resolveIdea } from "./experiment/IdeaLayer";
 import { copyFitsChannel, profileFor, profileTelemetry } from "./experiment/AssetProfile";
-import { includeLabelText, isV2 } from "../prompt-v2/engine-selector";
+import { directorModel, includeLabelText, isV2 } from "../prompt-v2/engine-selector";
 import { buildSimplePrompt, simpleTelemetry, type SimpleResult } from "../prompt-v2/build-simple";
 import type { AspectRatio } from "../prompt-v2/templates";
 import {
@@ -407,6 +407,12 @@ export class ExperimentPipeline {
         copy_original: v2.copy_original,
         copy_final: v2.copy_final,
         warnings: v2.warnings,
+        // What the director filled in that the client never said, and the plan it
+        // worked to. On the job because they are the two outputs a human may want to
+        // overrule, and neither is visible in the image.
+        assumptions: v2.assumptions,
+        plan: v2.plan,
+        template_version: v2.templates?.version,
         // Empty under the simplified engine, and deliberately so: the model returns
         // four tags and none of them is a per-product label list. The post-render
         // label check (`V2_LABEL_CHECK`, default off) reads this, and with an empty
@@ -1319,10 +1325,25 @@ export class ExperimentPipeline {
                   };
                 }),
                 includeLabelText: includeLabelText(),
+                // Everything the client chose in the visual direction panel. v1 has
+                // consumed these since the panel shipped; v2 was ignoring them, so a
+                // client who picked "Góc thấp" got whatever angle the director liked.
+                visualControls: request.creativeDirection?.visual_controls ?? null,
+                visualStyle: request.creativeDirection?.visual_style ?? null,
+                emotionalTone: request.creativeDirection?.emotional_tone ?? null,
+                compositionLayout: request.creativeDirection?.composition_layout ?? null,
+                hardRequirements: (request as { hardRequirements?: string[] }).hardRequirements ?? null,
               },
               {
                 chat: (messages, purpose) =>
-                  llm.generateChatCompletion(messages as never, purpose, { temperature: 0.7, max_tokens: 4000, timeoutMs: 90000 }),
+                  llm.generateChatCompletion(messages as never, purpose, {
+                    temperature: 0.7,
+                    max_tokens: 8000,
+                    timeoutMs: 120000,
+                    // A model chosen for THIS call only. Undefined leaves the provider
+                    // on its default, which is the behaviour before this option existed.
+                    ...(directorModel() ? { model: directorModel() } : {}),
+                  }),
               },
             );
             capturedV2 = built;
