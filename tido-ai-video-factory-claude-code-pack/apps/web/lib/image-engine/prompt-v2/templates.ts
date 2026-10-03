@@ -132,10 +132,20 @@ export const RATIO_SENTENCE: Record<AspectRatio, string> = {
   "16:9": "Wide 16:9 frame.",
 };
 
-/** Read once per path per process. These files do not change while the server runs. */
+/** `V2_TEMPLATE_RELOAD=true`. Read here rather than imported, to keep this module leaf-level. */
+function reloadEveryRead(): boolean {
+  return String(process.env.V2_TEMPLATE_RELOAD || "").trim().toLowerCase() === "true";
+}
+
+/**
+ * Read once per path per process, because these files do not change while the server
+ * runs -- unless somebody is editing them, which `V2_TEMPLATE_RELOAD=true` is for.
+ */
 const cache = new Map<string, string>();
 function read(file: string): string {
-  const hit = cache.get(file);
+  // Dev mode re-reads. Without it an edit to a meta-prompt needs a server restart to
+  // take effect, and it is very easy to spend an afternoon testing the old version.
+  const hit = reloadEveryRead() ? undefined : cache.get(file);
   if (hit !== undefined) return hit;
   const text = fs.readFileSync(file, "utf8");
   cache.set(file, text);

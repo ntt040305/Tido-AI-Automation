@@ -73,7 +73,7 @@ import { buildTextLedgers, ledgerTelemetry } from "./experiment/TextLedgerSystem
 import { finishTelemetry, renderFinishForPrompt, resolveFinish } from "./experiment/FinishLayer";
 import { ideaTelemetry, renderIdeaForPrompt, resolveIdea } from "./experiment/IdeaLayer";
 import { copyFitsChannel, profileFor, profileTelemetry } from "./experiment/AssetProfile";
-import { directorModel, includeLabelText, isV2 } from "../prompt-v2/engine-selector";
+import { copyPolicyMode, directorModel, includeLabelText, isV2, templateReload } from "../prompt-v2/engine-selector";
 import { buildSimplePrompt, simpleTelemetry, type SimpleResult } from "../prompt-v2/build-simple";
 import type { AspectRatio } from "../prompt-v2/templates";
 import {
@@ -413,6 +413,8 @@ export class ExperimentPipeline {
         assumptions: v2.assumptions,
         plan: v2.plan,
         template_version: v2.templates?.version,
+        copy_policy_source: copyPolicyMode().source,
+        reference_roles: v2.referenceRoles,
         // Empty under the simplified engine, and deliberately so: the model returns
         // four tags and none of them is a per-product label list. The post-render
         // label check (`V2_LABEL_CHECK`, default off) reads this, and with an empty
@@ -572,6 +574,28 @@ export class ExperimentPipeline {
           // back. That is the whole diagnostic value of the line. A measured case:
           // `[PROMPT_V2] {}` / `[PROMPT_V2] falling back to v1 {}` was the entire
           // record of a failed build.
+          // Which files produced this image. The first question a bad render raises, and
+          // a content hash answers it even when somebody edited a template in place
+          // without bumping the version.
+          if (v2.templates) {
+            const digest = (text: string) => crypto.createHash("sha256").update(text, "utf8").digest("hex").slice(0, 8);
+            console.log(
+              `[PROMPT_V2][version] system=system.${v2.templates.version}.md@${digest(v2.templates.system)} ` +
+                `request=request.${v2.templates.version}.md@${digest(v2.templates.request)} ` +
+                `playbook=${v2.templates.playbookName}@${input.aspectRatio || "?"} ` +
+                `gold=${v2.templates.goldExample.trim() ? `${v2.templates.playbookName}.md` : "none"} ` +
+                `copy_policy=${v2.copyPolicy}(${copyPolicyMode().source}) ` +
+                `refs_sent_to_director=[${(v2.referenceRoles || []).join(",")}]`,
+            );
+          }
+          // What the director assumed and planned. Abridged, because the point is that a
+          // human can glance at it, and the full text is on the job.
+          for (const line of v2.assumptions.slice(0, 8)) console.log(`[PROMPT_V2][assumption] ${line.slice(0, 160)}`);
+          if (v2.plan) {
+            for (const line of v2.plan.split(/\r?\n/).filter(Boolean).slice(0, 8)) {
+              console.log(`[PROMPT_V2][plan] ${line.slice(0, 160)}`);
+            }
+          }
           const t = simpleTelemetry(v2);
           console.log(
             `[PROMPT_V2] ok=${t.ok} calls=${t.llm_calls} tpl=${t.template_version} playbook=${t.playbook} ` +
@@ -1300,10 +1324,17 @@ export class ExperimentPipeline {
           try {
             const { LLMProviderService } = await import("../llm/llm-provider.service");
             const llm = new LLMProviderService();
-            const productImages = (request.images || []).filter((i) => {
-              const role = String((i as { role?: string }).role || "").toUpperCase();
-              return !role || role === "PRODUCT" || role === "PRODUCT_REFERENCE";
-            });
+            // EVERY reference, in the order the provider appends them -- not just the
+            // products. A supplied LOGO used to reach the renderer as an attached image
+            // while the prompt said "no extra logos or brand marks", so the only
+            // instruction that mentioned it told the model to leave it out. The director
+            // now sees each photo and what it IS.
+            const allReferences = (request.images || []).map((img, i) => ({
+              img,
+              index: i + 1,
+              role: String((img as { role?: string }).role || "").toUpperCase() || "PRODUCT",
+              filename: (img as { filename?: string }).filename,
+            }));
             const ratio = (["1:1", "9:16", "16:9"].includes(String(request.aspectRatio))
               ? String(request.aspectRatio)
               : "1:1") as AspectRatio;
@@ -1315,12 +1346,14 @@ export class ExperimentPipeline {
                 brand: request.brandName || "",
                 productLine: (request as { productLine?: string }).productLine,
                 copy: textRequirement.lines,
-                products: productImages.map((img, i) => {
-                  const buf = (img as { buffer?: Buffer }).buffer;
-                  const mime = (img as { mimeType?: string }).mimeType || "image/png";
+                products: allReferences.map((ref) => {
+                  const buf = (ref.img as { buffer?: Buffer }).buffer;
+                  const mime = (ref.img as { mimeType?: string }).mimeType || "image/png";
                   return {
-                    ref_index: i + 1,
-                    description: (img as { description?: string }).description,
+                    ref_index: ref.index,
+                    role: ref.role,
+                    filename: ref.filename,
+                    description: (ref.img as { description?: string }).description,
                     ...(buf ? { imageUrl: `data:${mime};base64,${buf.toString("base64")}` } : {}),
                   };
                 }),

@@ -31,8 +31,8 @@ import {
   simpleTelemetry,
   type SimpleInput,
 } from "./prompt-v2/build-simple";
-import { checkPrompt, FORBIDDEN_WORDS } from "./prompt-v2/checks";
-import { goldExampleBlock, textLanguage } from "./prompt-v2/brief-compiler";
+import { checkPrompt, exactCopyFailures, FORBIDDEN_WORDS, lostTokens, quotedStrings } from "./prompt-v2/checks";
+import { goldExampleBlock, measureCopy, renderReferences, textLanguage, textLayoutNote } from "./prompt-v2/brief-compiler";
 import { parseTaggedReply, TAGS } from "./prompt-v2/tags";
 import {
   clearTemplateCache,
@@ -46,7 +46,7 @@ import {
   templateVersion,
   type AspectRatio,
 } from "./prompt-v2/templates";
-import { fallbackToV1 } from "./prompt-v2/engine-selector";
+import { copyPolicyMode, fallbackToV1, templateReload } from "./prompt-v2/engine-selector";
 
 let passed = 0;
 let failed = 0;
@@ -101,7 +101,7 @@ function baseInput(over: Partial<SimpleInput> = {}): SimpleInput {
     brand: "SKIN1004",
     productLine: "Madagascar Centella",
     copy: [...COPY],
-    products: [{ ref_index: 1, description: "chai serum thủy tinh mờ 100ml", imageUrl: "data:image/png;base64,AAA" }],
+    products: [{ ref_index: 1, role: "PRODUCT", filename: "serum.jpg", description: "chai serum thủy tinh mờ 100ml", imageUrl: "data:image/png;base64,AAA" }],
     includeLabelText: true,
     ...over,
   };
@@ -299,7 +299,8 @@ function main(): void {
     const text = userText(buildDirectorMessages(baseInput({ copy: [], products: [] }), "exact", []));
     assert.ok(!/\\{\\{/.test(text), "a slot was left unfilled");
     assert.ok(text.includes("this frame carries no words"), text.slice(0, 200));
-    assert.ok(/0 photo\(s\)/.test(text), "the photo count is wrong");
+    assert.ok(/\(none attached\)/.test(text), "the empty reference list is not stated");
+    assert.ok(/- Text: 0 words, 0 sentences, 0 characters/.test(text), /- Text:[^\n]*/.exec(text)?.[0]);
   });
 
   // ── 1b. the Brief Compiler ──────────────────────────────────────────────
@@ -377,11 +378,43 @@ function main(): void {
     assert.ok(/add no new claims, numbers or promises/.test(adapt));
   });
 
-  check("the text budget is read out of the asset's own playbook", () => {
-    const poster = userText(buildDirectorMessages(baseInput({ assetType: "poster" }), "exact", []));
-    assert.ok(/Text budget for this asset: at most 3 separate lines/.test(poster), poster.slice(0, 0) || "poster budget");
-    const hero = userText(buildDirectorMessages(baseInput({ assetType: "product hero" }), "exact", []));
-    assert.ok(/Text budget for this asset: at most ONE line/.test(hero), "hero budget");
+  check("the copy is MEASURED for the director, not budgeted at it", () => {
+    // The playbook's budget was a reason to CUT. The measurement is a reason to DESIGN.
+    const text = userText(buildDirectorMessages(baseInput(), "exact", []));
+    // Computed, not hard-coded: a literal here would pin a typo in the fixture rather
+    // than the behaviour.
+    const m = measureCopy(COPY);
+    assert.ok(
+      text.includes(`- Text: ${m.words} words, ${m.sentences} sentences, ${m.chars} characters`),
+      /- Text:[^\n]*/.exec(text)?.[0],
+    );
+    assert.strictEqual(m.sentences, COPY.length, "each client line counts as a sentence");
+    assert.ok(!/Text budget/.test(text), "the old cut-it budget is still being sent");
+  });
+
+  check("short copy gets no layout note; long copy gets per-ratio geometry", () => {
+    assert.strictEqual(textLayoutNote(12), "");
+    assert.strictEqual(textLayoutNote(25), "");
+    const note = textLayoutNote(61);
+    assert.ok(/long and fixed/.test(note));
+    for (const ratio of RATIOS) assert.ok(note.includes(ratio), `${ratio} has no geometry in the note`);
+  });
+
+  check("measureCopy counts lines as sentences when the client wrote no full stops", () => {
+    // The most common Vietnamese input: separate lines, no terminal punctuation. A count
+    // of zero sentences would be wrong on nearly every real brief.
+    assert.deepStrictEqual(measureCopy(["Dịu da", "Mua ngay"]), { words: 4, sentences: 2, chars: 15 });
+    assert.strictEqual(measureCopy(["A. B! C?"]).sentences, 3);
+    assert.deepStrictEqual(measureCopy([]), { words: 0, sentences: 0, chars: 0 });
+  });
+
+  check("long copy is warned about and NOT cut", () => {
+    const long = ["Góc setup đỉnh cao cùng Corsair K70! Bàn phím cơ switch quang học, RGB 16.8 triệu màu, khung nhôm nguyên khối bền bỉ. Giảm ngay 500.000đ cho 100 khách đầu tiên, bảo hành 24 tháng chính hãng. Nhanh tay chốt đơn sớm nhất."];
+    const built = buildDirectorMessages(baseInput({ copy: long }), "exact", []);
+    const text = userText(built);
+    assert.ok(/long and fixed/.test(text), "no layout note for a 36-word brief");
+    assert.ok(built.brief.warnings.some((w) => /long text raises/.test(w)), JSON.stringify(built.brief.warnings));
+    assert.ok(text.includes(long[0]), "the copy was altered");
   });
 
   check("the language is named from the copy, and never guessed", () => {
@@ -399,21 +432,48 @@ function main(): void {
     for (const line of COPY) assert.ok(text.includes(line), `${line} did not arrive in NFC`);
   });
 
-  check("the photos are numbered in the order the provider receives them", () => {
+  check("EVERY reference reaches the director with its role and filename, in order", () => {
+    // The bug: a supplied LOGO was sent to the renderer as an attached image while the
+    // prompt said "no extra logos or brand marks", so the brand mark vanished.
     const text = userText(
       buildDirectorMessages(
         baseInput({
           products: [
-            { ref_index: 1, imageUrl: "data:image/png;base64,ONE" },
-            { ref_index: 2, imageUrl: "data:image/png;base64,TWO" },
-            { ref_index: 3, imageUrl: "data:image/png;base64,THREE" },
+            { ref_index: 1, role: "PRODUCT", filename: "Corsair-Keyboard.jpg", imageUrl: "data:image/png;base64,ONE" },
+            { ref_index: 2, role: "LOGO", filename: "Corsair-logo.png", imageUrl: "data:image/png;base64,TWO" },
           ],
         }),
         "exact",
         [],
       ),
     );
-    assert.ok(/3 photo\(s\), photo 1 to photo 3/.test(text), text.slice(0, 300));
+    assert.ok(/photo 1: PRODUCT \(Corsair-Keyboard\.jpg\)/.test(text), text.slice(0, 400));
+    assert.ok(/photo 2: LOGO \(Corsair-logo\.png\)/.test(text), text.slice(0, 400));
+    assert.ok(text.indexOf("photo 1:") < text.indexOf("photo 2:"), "the references are out of order");
+  });
+
+  check("a brief with no references says so rather than leaving a gap", () => {
+    const text = userText(buildDirectorMessages(baseInput({ products: [] }), "exact", []));
+    assert.ok(/\(none attached\)/.test(text), text.slice(0, 300));
+  });
+
+  check("renderReferences omits a filename it does not have", () => {
+    assert.strictEqual(renderReferences([{ index: 1, role: "PRODUCT" }]), "  photo 1: PRODUCT");
+    assert.strictEqual(renderReferences([]), "  (none attached)");
+  });
+
+  check("the LOGO rules reach the director, and the final rule permits the supplied logo", () => {
+    const { system } = buildDirectorMessages(baseInput(), "exact", []);
+    assert.ok(/# REFERENCE ROLES/.test(system));
+    assert.ok(/A LOGO photo is the brand's mark/.test(system));
+    assert.ok(/If no LOGO photo is supplied, do not create any logo/.test(system));
+    // Squashed, because the rule is hard-wrapped in the file.
+    assert.ok(
+      /no logos or brand marks other than the supplied logo photo and what is printed on the products/.test(
+        system.replace(/\s+/g, " "),
+      ),
+      "the closing rule still forbids the logo the client supplied",
+    );
   });
 
   // ── 2. the copy policy ──────────────────────────────────────────────────
@@ -450,17 +510,38 @@ function main(): void {
     assert.deepStrictEqual(d.warnings, []);
   });
 
-  check("three strings on a product hero become adapt, and say why", () => {
-    const d = decidePolicy(COPY, loadTemplates("product hero").playbook);
+  check("THE DEFAULT NEVER SHORTENS, however far over the playbook's budget the copy runs", () => {
+    // The measured failure this closes: a render came back with sentences silently
+    // removed, and the post-render gate compared the image against the shortened list
+    // and called it compliant.
+    const hero = loadTemplates("product hero").playbook;
+    assert.strictEqual(decidePolicy(COPY, hero).policy, "exact");
+    assert.deepStrictEqual(decidePolicy(COPY, hero).warnings, []);
+    const long = ["Phục hồi hàng rào bảo vệ da chỉ sau mười bốn ngày sử dụng đều đặn mỗi tối"];
+    assert.strictEqual(decidePolicy(long, loadTemplates("poster").playbook).policy, "exact");
+  });
+
+  check("the old shortening behaviour is still available, and has to be asked for", () => {
+    const hero = loadTemplates("product hero").playbook;
+    const d = decidePolicy(COPY, hero, "exact", "adapt_when_over_budget");
     assert.strictEqual(d.policy, "adapt");
     assert.strictEqual(d.warnings.length, 1);
     assert.ok(/longer than this asset carries/.test(d.warnings[0]));
+    // Still exact when it actually fits.
+    assert.strictEqual(decidePolicy(["Dịu da"], loadTemplates("poster").playbook, "exact", "adapt_when_over_budget").policy, "exact");
   });
 
-  check("one over-long headline is enough to force adapt", () => {
-    const long = ["Phục hồi hàng rào bảo vệ da chỉ sau mười bốn ngày sử dụng đều đặn mỗi tối"];
-    assert.strictEqual(decidePolicy(long, loadTemplates("poster").playbook).policy, "adapt");
-    assert.strictEqual(decidePolicy(["Dịu da"], loadTemplates("poster").playbook).policy, "exact");
+  check("the copy policy defaults to exact, and the log can say where it came from", () => {
+    assert.deepStrictEqual(copyPolicyMode({}), { mode: "exact", source: "default" });
+    assert.deepStrictEqual(copyPolicyMode({ V2_COPY_POLICY: "exact" }), { mode: "exact", source: "env" });
+    assert.deepStrictEqual(copyPolicyMode({ V2_COPY_POLICY: "adapt_when_over_budget" }), {
+      mode: "adapt_when_over_budget",
+      source: "env",
+    });
+    // A typo must not quietly licence cutting the client's words.
+    assert.deepStrictEqual(copyPolicyMode({ V2_COPY_POLICY: "adapt" }), { mode: "exact", source: "default" });
+    assert.strictEqual(templateReload({}), false);
+    assert.strictEqual(templateReload({ V2_TEMPLATE_RELOAD: "true" }), true);
   });
 
   check("a caller that asked for adapt is not argued with", () => {
@@ -564,6 +645,118 @@ function main(): void {
 
   const baseOpts = { copyOriginal: COPY, copyFinal: COPY, policy: "exact" as const, aspectRatio: "1:1" as AspectRatio };
 
+  // ── 4b. the copy is the client's ────────────────────────────────────────
+  console.log("\n4b — exact means exact: the tiers joined back together ARE the client's text");
+
+  // The two real briefs this was built for.
+  const CORSAIR = [
+    "Góc setup đỉnh cao cùng Corsair K70!",
+    "Bàn phím cơ switch quang học, RGB 16.8 triệu màu, khung nhôm nguyên khối bền bỉ.",
+    "Giảm ngay 500.000đ cho 100 khách đầu tiên, bảo hành 24 tháng chính hãng.",
+    "Nhanh tay chốt đơn sớm nhất.",
+  ];
+  const CENTELLA = [
+    "Bộ đôi chân ái từ rau má Madagascar",
+    "Đánh thức vẻ đẹp nguyên bản của làn da, dịu nhẹ cho cả da nhạy cảm nhất, phục hồi hàng rào bảo vệ da sau 14 ngày sử dụng đều đặn mỗi tối trước khi đi ngủ",
+  ];
+
+  check("GOLDEN Corsair: 61-word copy re-tiered into four slices passes", () => {
+    const tiers = [
+      "Góc setup đỉnh cao cùng Corsair K70!",
+      "Bàn phím cơ switch quang học, RGB 16.8 triệu màu,",
+      "khung nhôm nguyên khối bền bỉ. Giảm ngay 500.000đ cho 100 khách đầu tiên,",
+      "bảo hành 24 tháng chính hãng. Nhanh tay chốt đơn sớm nhất.",
+    ];
+    assert.deepStrictEqual(exactCopyFailures(CORSAIR, tiers), [], "a legal re-tiering was rejected");
+  });
+
+  check("GOLDEN Corsair: a dropped sentence is caught and the message says what is missing", () => {
+    const short = CORSAIR.slice(0, 3);
+    const fs2 = exactCopyFailures(CORSAIR, short);
+    assert.strictEqual(fs2.length, 1, JSON.stringify(fs2));
+    assert.ok(/the end was cut/.test(fs2[0].message), fs2[0].message);
+    assert.ok(/Nhanh tay chốt đơn/.test(fs2[0].message), "the message does not say which words are missing");
+  });
+
+  check("GOLDEN Centella: the 326-character brief survives being split mid-clause", () => {
+    const joined = CENTELLA.join(" ");
+    const cut = Math.floor(joined.length / 2);
+    // A split that is NOT at a sentence boundary. Permitted, because the rule is that
+    // the pieces rejoin exactly -- not that the engine polices where a designer cuts.
+    assert.deepStrictEqual(exactCopyFailures(CENTELLA, [joined.slice(0, cut), joined.slice(cut)]), []);
+  });
+
+  check("a paraphrase, a reorder and a changed accent are all caught", () => {
+    assert.ok(exactCopyFailures(CORSAIR, ["Góc setup đỉnh cao với Corsair K70!", ...CORSAIR.slice(1)]).length, "a reworded tier passed");
+    assert.ok(exactCopyFailures(CENTELLA, [...CENTELLA].reverse()).length, "a reordered pair passed");
+    assert.ok(exactCopyFailures(["Dịu da"], ["Diu da"]).length, "a stripped accent passed");
+  });
+
+  check("whitespace and NFD are not differences", () => {
+    assert.deepStrictEqual(exactCopyFailures(CORSAIR, [CORSAIR.join("\n\n   ")]), []);
+    assert.deepStrictEqual(exactCopyFailures(CENTELLA, CENTELLA.map((c) => c.normalize("NFD"))), []);
+  });
+
+  check('an invented "MUA NGAY" in the prompt is caught', () => {
+    const prompt = goodPrompt(COPY) + ' A small button reads "MUA NGAY" in the lower right. Square 1:1 frame.';
+    const r = checkPrompt(prompt, baseOpts);
+    const f = r.failures.find((x) => x.code === "copy" && /MUA NGAY/.test(x.message));
+    assert.ok(f, JSON.stringify(r.failures));
+    assert.ok(/the client never wrote it/.test(f!.message));
+  });
+
+  check("transcribed label lettering is allowed when the label flag is on, and only then", () => {
+    const prompt =
+      prose(120) +
+      ' The label on the bottle reads "MADAGASCAR CENTELLA". ' +
+      COPY.map((c) => `The line "${c}" sits above.`).join(" ") +
+      " Square 1:1 frame.";
+    const off = checkPrompt(prompt, baseOpts);
+    assert.ok(off.failures.some((x) => /MADAGASCAR CENTELLA/.test(x.message)), "unlisted text passed with the flag off");
+    const on = checkPrompt(prompt, { ...baseOpts, allowUnlistedLabelText: true });
+    assert.strictEqual(on.ok, true, JSON.stringify(on.failures));
+  });
+
+  check("the label exemption does NOT cover a floating call to action", () => {
+    // Same flag on, but nothing in the sentence ties the words to a product surface.
+    const prompt =
+      prose(120) + ' Centred beneath everything, "MUA NGAY" is set in heavy capitals. ' +
+      COPY.map((c) => `The line "${c}" sits above.`).join(" ") + " Square 1:1 frame.";
+    const r = checkPrompt(prompt, { ...baseOpts, allowUnlistedLabelText: true });
+    assert.ok(r.failures.some((x) => /MUA NGAY/.test(x.message)), JSON.stringify(r.failures));
+  });
+
+  check("an explicit label whitelist is honoured", () => {
+    const prompt = prose(120) + ' It says "SKIN1004" there. ' + COPY.map((c) => `"${c}"`).join(" ") + " Square 1:1 frame.";
+    const r = checkPrompt(prompt, { ...baseOpts, labelText: ["SKIN1004 MADAGASCAR CENTELLA"] });
+    assert.strictEqual(r.ok, true, JSON.stringify(r.failures));
+  });
+
+  check("quotedStrings finds straight and curly quotes and nothing else", () => {
+    assert.deepStrictEqual(quotedStrings('a "one" b \u201ctwo\u201d c'), ["one", "two"]);
+    assert.deepStrictEqual(quotedStrings("no quotes here"), []);
+  });
+
+  check("adapt: numbers, model codes and caps must survive the shortening", () => {
+    const shortened = ["Corsair K70 giảm 500.000đ", "bảo hành 24 tháng"];
+    assert.deepStrictEqual(lostTokens(CORSAIR, [CORSAIR.join(" ")]), []);
+    const lost = lostTokens(CORSAIR, shortened);
+    assert.ok(lost.includes("100"), JSON.stringify(lost));
+    assert.ok(lost.includes("16.8") || lost.includes("16"), JSON.stringify(lost));
+    assert.ok(!lost.includes("K70"), "a token that IS present was reported lost");
+  });
+
+  check("adapt: a dropped number is a copy failure with an actionable message", () => {
+    const r = checkPrompt(
+      prose(150) + ' "Corsair K70 giảm 500.000đ" Square 1:1 frame.',
+      { ...baseOpts, policy: "adapt", copyOriginal: CORSAIR, copyFinal: ["Corsair K70 giảm 500.000đ"] },
+    );
+    const f = r.failures.find((x) => x.code === "copy" && /facts rather than wording/.test(x.message));
+    assert.ok(f, JSON.stringify(r.failures));
+    assert.ok(/100/.test(f!.message));
+  });
+
+
   check("the control prompt passes everything", () => {
     const r = checkPrompt(goodPrompt(COPY), baseOpts);
     assert.strictEqual(r.ok, true, JSON.stringify(r.failures));
@@ -577,10 +770,13 @@ function main(): void {
     assert.ok(r.failures.some((f) => f.code === "copy" && /character for character/.test(f.message)));
   });
 
-  check("exact: a string the client never wrote is caught", () => {
+  check("exact: a tier the client never wrote is caught", () => {
     const added = [...COPY, "Giảm 50% hôm nay"];
     const r = checkPrompt(goodPrompt(added), { ...baseOpts, copyFinal: added });
-    assert.ok(r.failures.some((f) => f.code === "copy" && /did not write/.test(f.message)));
+    assert.ok(
+      r.failures.some((f) => f.code === "copy" && /do not reproduce the client's text exactly/.test(f.message)),
+      JSON.stringify(r.failures),
+    );
   });
 
   check("a copy string drawn twice is caught, and so is one drawn never", () => {
@@ -745,7 +941,11 @@ function main(): void {
     const parts = user.content as Array<Record<string, unknown>>;
     const images = parts.filter((p) => p.type === "image_url").map((p) => (p.image_url as { url: string }).url);
     assert.deepStrictEqual(images, ["data:image/png;base64,ONE", "data:image/png;base64,TWO"]);
-    assert.ok(String(parts[0].text).includes("photo 1 to photo 2"));
+    const texts = parts.filter((p) => p.type === "text").map((p) => String(p.text)).join("\n");
+    assert.ok(texts.includes("photo 1 to photo 2"), "the director is not told the photo order");
+    // The brief comes before the images, the ordering reminder after them.
+    assert.strictEqual(parts[0].type, "text");
+    assert.strictEqual(parts[parts.length - 1].type, "text");
   });
 
   check("a product with no image attaches nothing, and per-photo descriptions are NOT sent", async () => {
@@ -853,15 +1053,30 @@ function main(): void {
     for (const line of COPY) assert.strictEqual(r.prompt!.split(line).length - 1, 1, line);
   });
 
-  check("a shortened-copy build keeps the original and warns", async () => {
+  check("a shortened-copy build needs the env flag, keeps the original, and warns", async () => {
     const short = ["Dịu da 14 ngày"];
     const s = stub([reply({ copy: short, prompt: goodPrompt(short) })]);
-    const r = await buildSimplePrompt(baseInput({ assetType: "product hero" }), s.deps);
+    const r = await buildSimplePrompt(
+      baseInput({ assetType: "product hero", copyPolicyMode: "adapt_when_over_budget" }),
+      s.deps,
+    );
     assert.strictEqual(r.ok, true, r.reason);
     assert.strictEqual(r.copyPolicy, "adapt");
     assert.deepStrictEqual(r.copy_original, COPY);
     assert.deepStrictEqual(r.copy_final, short);
     assert.ok(r.warnings.some((w) => /longer than this asset carries/.test(w)));
+  });
+
+  check("WITHOUT the flag, the same shortened reply is REJECTED rather than accepted", async () => {
+    const short = ["Dịu da 14 ngày"];
+    const bad = reply({ copy: short, prompt: goodPrompt(short) });
+    const s = stub([bad, bad]);
+    const r = await buildSimplePrompt(baseInput({ assetType: "product hero" }), s.deps);
+    assert.strictEqual(r.ok, false, "a silently shortened copy was accepted");
+    assert.strictEqual(r.copyPolicy, "exact");
+    assert.deepStrictEqual(r.copy_original, COPY);
+    assert.ok(r.checks!.failures.some((f) => f.code === "copy"), JSON.stringify(r.checks!.failures));
+    assert.strictEqual(r.llmCalls, 2, "the repair was not attempted");
   });
 
   check("the model's own warnings are kept alongside the engine's", async () => {
