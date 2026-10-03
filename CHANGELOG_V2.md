@@ -22,6 +22,15 @@ PROMPT_V2_TEMPLATE_VERSION=v1
 
 # khi v2 lỗi: mặc định render bằng v1. "off" để lỗi hiện ra thay vì bị che
 V2_FALLBACK=off
+
+# copy của khách: exact (mặc định, KHÔNG BAO GIỜ cắt) | adapt_when_over_budget (hành vi cũ)
+V2_COPY_POLICY=exact
+
+# model riêng cho call viết prompt (mặc định: model hiện tại của provider)
+V2_DIRECTOR_MODEL=
+
+# đọc lại file template mỗi job — bật khi đang sửa meta-prompt
+V2_TEMPLATE_RELOAD=true
 ```
 
 ```bash
@@ -39,7 +48,7 @@ npx tsx --env-file=.env.local lib/image-engine/run-prompt-v2-eval-live.ts   # IN
 # chỉ khi anh đồng ý tốn tiền:
 npx tsx --env-file=.env.local lib/image-engine/run-prompt-v2-eval-live.ts --yes-i-approve-spending
 
-npx tsx lib/image-engine/run-prompt-v2-simple-tests.ts          # engine đã đơn giản hoá, 67 test
+npx tsx lib/image-engine/run-prompt-v2-simple-tests.ts          # engine đã đơn giản hoá, 103 test
 npx tsx lib/image-engine/run-prompt-engine-golden-tests.ts --update  # cập nhật golden, CÓ Ý THỨC
 ```
 
