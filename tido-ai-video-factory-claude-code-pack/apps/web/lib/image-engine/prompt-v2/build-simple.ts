@@ -40,6 +40,7 @@ import {
 } from "./checks";
 import { parseTaggedReply, type TaggedReply } from "./tags";
 import { briefTelemetry, compileBrief, type BriefInput, type CompiledBrief } from "./brief-compiler";
+import { copyPolicyMode, type CopyPolicyMode } from "./engine-selector";
 import {
   LAYOUT_BY_RATIO,
   RATIO_SENTENCE,
@@ -50,9 +51,21 @@ import {
   type LoadedTemplates,
 } from "./templates";
 
+/**
+ * One attached reference. Named `SimpleProduct` for history; it is any reference now.
+ *
+ * ALL of them reach the director, not just the products. A supplied LOGO was being sent
+ * to the renderer as an attached image while the prompt said "no extra logos or brand
+ * marks" -- so the only instruction that mentioned the logo told the model to leave it
+ * out, and the brand mark vanished from frames that had one attached.
+ */
 export interface SimpleProduct {
   /** 1-based, and the same order the provider receives the files in. */
   ref_index: number;
+  /** PRODUCT, LOGO, or whatever the repo's own classifier decided. */
+  role?: string;
+  /** The file's name, so the director can tell two references apart. */
+  filename?: string;
   /** What the client said this product is. Verbatim; never the campaign concept. */
   description?: string;
   /** A data URL or https URL the LLM client can read. */
@@ -88,6 +101,13 @@ export interface SimpleInput {
   /** Lines the client marked non-negotiable. v1 reads these; so does v2 now. */
   hardRequirements?: string[] | null;
   /**
+   * Whether the engine may shorten over-budget copy. Defaults to the environment's,
+   * which defaults to `exact` -- never.
+   */
+  copyPolicyMode?: CopyPolicyMode;
+  /** Lettering printed on the products, when the label-text flag is on. */
+  labelText?: string[];
+  /**
    * Which template version to read. Defaults to the environment's.
    *
    * Passed in rather than read here so that comparing two versions is a parameter
@@ -122,6 +142,8 @@ export interface SimpleResult {
   copy_original: string[];
   copy_final: string[];
   templates?: LoadedTemplates;
+  /** The roles of the references actually sent, in order. For the log. */
+  referenceRoles?: string[];
 }
 
 const nfc = (s: string) => String(s ?? "").normalize("NFC");
@@ -162,8 +184,15 @@ export function decidePolicy(
   copy: string[],
   playbook: string,
   requested: CopyPolicy = "exact",
+  mode: CopyPolicyMode = "exact",
 ): { policy: CopyPolicy; warnings: string[] } {
   if (requested === "adapt") return { policy: "adapt", warnings: [] };
+  // THE DEFAULT NEVER SHORTENS. Under `exact` the playbook's copy budget stops being a
+  // reason to cut: long copy is a layout problem, and the client's words are the
+  // client's. A measured render came back with sentences silently removed and the
+  // post-render gate comparing the image against the shortened list, reporting it
+  // compliant. `adapt_when_over_budget` restores the old behaviour for whoever wants it.
+  if (mode === "exact") return { policy: "exact", warnings: [] };
   const lines = copy.map((c) => nfc(c).trim()).filter(Boolean);
   const { maxStrings, headlineMaxWords } = budgetFromPlaybook(playbook);
   const tooMany = maxStrings !== null && lines.length > maxStrings;
@@ -253,7 +282,11 @@ function briefInputFrom(input: SimpleInput): BriefInput {
     emotionalTone: input.emotionalTone ?? null,
     compositionLayout: input.compositionLayout ?? null,
     hardRequirements: input.hardRequirements ?? null,
-    productCount: input.products.length,
+    references: input.products.map((p) => ({
+      index: p.ref_index,
+      role: p.role || "PRODUCT",
+      filename: p.filename,
+    })),
   };
 }
 
@@ -288,7 +321,12 @@ export async function buildSimplePrompt(input: SimpleInput, deps: SimpleDeps): P
 
   try {
     const probe = loadTemplates(input.assetType, input.templateVersion ?? templateVersion());
-    policyDecision = decidePolicy(copy_original, probe.playbook, input.copyPolicy ?? "exact");
+    policyDecision = decidePolicy(
+      copy_original,
+      probe.playbook,
+      input.copyPolicy ?? "exact",
+      input.copyPolicyMode ?? copyPolicyMode().mode,
+    );
     const built = buildDirectorMessages(input, policyDecision.policy, policyDecision.warnings);
     system = built.system;
     user = built.user;
@@ -312,6 +350,7 @@ export async function buildSimplePrompt(input: SimpleInput, deps: SimpleDeps): P
   const base = {
     warnings,
     assumptions: [] as string[],
+    referenceRoles: input.products.map((p) => p.role || "PRODUCT"),
     llmCalls: 0,
     copyPolicy: policyDecision.policy,
     copy_original,
@@ -390,6 +429,7 @@ export async function buildSimplePrompt(input: SimpleInput, deps: SimpleDeps): P
     prompt: reply.image_prompt,
     plan: reply.plan,
     assumptions: reply.assumptions,
+    referenceRoles: input.products.map((p) => p.role || "PRODUCT"),
     reply,
     checks,
     warnings: allWarnings,
@@ -407,6 +447,10 @@ function runChecks(reply: TaggedReply, input: SimpleInput, policy: CopyPolicy, o
     copyFinal: reply.copy_final.length ? reply.copy_final : original,
     policy,
     aspectRatio: input.aspectRatio,
+    labelText: input.labelText,
+    // `system.v1.md` tells the director to transcribe label lettering whenever this flag
+    // is on, so the prompt will legally quote words the client never typed.
+    allowUnlistedLabelText: input.includeLabelText,
   });
 }
 
