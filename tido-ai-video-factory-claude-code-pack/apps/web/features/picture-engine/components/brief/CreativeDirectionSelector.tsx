@@ -44,7 +44,7 @@ export const CREATIVE_STYLE_OPTIONS: CreativeStyleOption[] = [
   },
 ];
 
-export const ASPECT_RATIOS: AspectRatioType[] = ["1:1", "4:5", "9:16", "16:9"];
+export const ASPECT_RATIOS: AspectRatioType[] = ["1:1", "9:16", "16:9"];
 
 export interface CreativeDirectionSelectorProps {
   direction: CreativeDirection;

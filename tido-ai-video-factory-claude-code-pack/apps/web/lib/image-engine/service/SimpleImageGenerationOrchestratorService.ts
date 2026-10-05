@@ -125,7 +125,7 @@ export class SimpleImageGenerationOrchestratorService {
           generationId,
           status: "VALIDATION_FAILED",
           useCase: request.useCase || "Poster",
-          aspectRatio: request.aspectRatio || "4:5",
+          aspectRatio: request.aspectRatio || "1:1",
           diagnostics: {
             routerDurationMs: 0,
             adapterDurationMs: 0,
@@ -277,7 +277,7 @@ export class SimpleImageGenerationOrchestratorService {
             generationId,
             status: "INTERPRETATION_FAILED",
             useCase: request.useCase || "Poster",
-            aspectRatio: request.aspectRatio || "4:5",
+            aspectRatio: request.aspectRatio || "1:1",
             diagnostics: {
               routerDurationMs,
               adapterDurationMs: 0,
@@ -342,7 +342,7 @@ export class SimpleImageGenerationOrchestratorService {
           generationId,
           status: "VALIDATION_FAILED",
           useCase: adapted.useCase || request.useCase || "Poster",
-          aspectRatio: adapted.aspectRatio || request.aspectRatio || "4:5",
+          aspectRatio: adapted.aspectRatio || request.aspectRatio || "1:1",
           diagnostics: {
             routerDurationMs,
             adapterDurationMs,
@@ -382,7 +382,7 @@ export class SimpleImageGenerationOrchestratorService {
           generationId,
           status: "NO_PRODUCT_REFERENCE",
           useCase: adapted.useCase || "Poster",
-          aspectRatio: adapted.aspectRatio || "4:5",
+          aspectRatio: adapted.aspectRatio || "1:1",
           diagnostics: {
             routerDurationMs,
             adapterDurationMs,
@@ -438,7 +438,7 @@ export class SimpleImageGenerationOrchestratorService {
           generationId,
           status: "COMPILATION_FAILED",
           useCase: adapted.useCase || "Poster",
-          aspectRatio: adapted.aspectRatio || "4:5",
+          aspectRatio: adapted.aspectRatio || "1:1",
           diagnostics: {
             routerDurationMs,
             adapterDurationMs,
@@ -492,7 +492,7 @@ export class SimpleImageGenerationOrchestratorService {
           concept: request.concept,
           assetType: (adapted.useCase as any) || request.useCase || "poster",
           productCount: adapted.resolvedProductCount,
-          aspectRatio: adapted.aspectRatio || request.aspectRatio || "4:5",
+          aspectRatio: adapted.aspectRatio || request.aspectRatio || "1:1",
           referenceAnalysis: adapted.resolvedRoutingResult,
           productIdentity: adapted.resolvedRoutingResult.products?.[0],
           retrievedKnowledge: (retrievalRes.package?.selected_blocks || []).map((b) => b.title),
@@ -617,7 +617,7 @@ export class SimpleImageGenerationOrchestratorService {
           generationId,
           status: "COMPILATION_FAILED",
           useCase: adapted.useCase || "Poster",
-          aspectRatio: adapted.aspectRatio || "4:5",
+          aspectRatio: adapted.aspectRatio || "1:1",
           diagnostics: {
             routerDurationMs,
             adapterDurationMs,
@@ -700,7 +700,7 @@ export class SimpleImageGenerationOrchestratorService {
           generationId,
           status: "EXACT_COPY_FAILED",
           useCase: adapted.useCase || "Poster",
-          aspectRatio: adapted.aspectRatio || "4:5",
+          aspectRatio: adapted.aspectRatio || "1:1",
           diagnostics: {
             routerDurationMs,
             adapterDurationMs,
@@ -745,7 +745,7 @@ export class SimpleImageGenerationOrchestratorService {
           generationId,
           status: "PROMPT_BUDGET_EXCEEDED",
           useCase: adapted.useCase || "Poster",
-          aspectRatio: adapted.aspectRatio || "4:5",
+          aspectRatio: adapted.aspectRatio || "1:1",
           diagnostics: {
             routerDurationMs,
             adapterDurationMs,
@@ -813,7 +813,7 @@ export class SimpleImageGenerationOrchestratorService {
           generationId,
           status: "REFERENCE_ORDER_MISMATCH",
           useCase: adapted.useCase || "Poster",
-          aspectRatio: adapted.aspectRatio || "4:5",
+          aspectRatio: adapted.aspectRatio || "1:1",
           diagnostics: {
             routerDurationMs,
             adapterDurationMs,
@@ -867,7 +867,7 @@ export class SimpleImageGenerationOrchestratorService {
         model: "flow-nano-banana-2",
         prompt: masterPrompt,
         references: attachedReferences,
-        aspectRatio: adapted.aspectRatio || "4:5",
+        aspectRatio: adapted.aspectRatio || "1:1",
         imageSize: "1K",
         mimeType: "image/png",
         generationId,

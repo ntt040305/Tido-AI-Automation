@@ -33,7 +33,7 @@ export const SalesContextSchema = z.object({
 export const CreativeDirectionSchema = z.object({
   visual_style: z.string().optional(),
   emotional_tone: z.string().optional(),
-  aspect_ratio: z.enum(["1:1", "4:5", "9:16", "16:9"]),
+  aspect_ratio: z.enum(["1:1", "9:16", "16:9"]),
   composition_layout: z.string().optional(),
 });
 

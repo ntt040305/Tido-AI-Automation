@@ -30,7 +30,7 @@ export type CampaignObjective =
   | "promotion"
   | "branding";
 
-export type AspectRatioType = "1:1" | "4:5" | "9:16" | "16:9";
+export type AspectRatioType = "1:1" | "9:16" | "16:9";
 
 export interface UIState {
   activePanel: "brief" | "canvas" | "strategy";

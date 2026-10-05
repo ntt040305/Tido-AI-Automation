@@ -125,7 +125,7 @@ export const IMAGE_ENGINE_CONFIG = {
 
   // Stage 5 Nano Banana 2 Generation Configuration
   TIDO_IMAGE_MODEL: process.env.TIDO_IMAGE_MODEL || "gemini-3.1-flash-image",
-  TIDO_IMAGE_OUTPUT_SIZE: process.env.TIDO_IMAGE_OUTPUT_SIZE || "2K",
+  TIDO_IMAGE_OUTPUT_SIZE: process.env.TIDO_IMAGE_OUTPUT_SIZE || "1K",
   TIDO_IMAGE_OUTPUT_MIME: process.env.TIDO_IMAGE_OUTPUT_MIME || "image/png",
   GENERATED_DIR: typeof window === "undefined" ? require("path").resolve(process.cwd(), "data/generated/image-renders") : "data/generated/image-renders",
   GENERATION_TIMEOUT_MS: 160000,

@@ -51,7 +51,7 @@ export function CreativeBriefPanel({
 }: CreativeBriefPanelProps) {
   const currentConcept = brief.creative_concept || brief.user_notes || "";
   const currentProductCount = brief.creative_direction?.target_product_count ?? 1;
-  const currentAspectRatio = brief.creative_direction?.aspect_ratio ?? "4:5";
+  const currentAspectRatio = brief.creative_direction?.aspect_ratio ?? "1:1";
   const currentIndustry = brief.marketing_context?.industry || "";
 
   const [isProfessionalizing, setIsProfessionalizing] = useState(false);
@@ -86,7 +86,7 @@ export function CreativeBriefPanel({
     { label: "Nhiều sản phẩm", value: "multiple" },
   ];
 
-  const ASPECT_RATIO_OPTIONS: AspectRatioType[] = ["1:1", "4:5", "9:16", "16:9"];
+  const ASPECT_RATIO_OPTIONS: AspectRatioType[] = ["1:1", "9:16", "16:9"];
 
   const handleConceptChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const val = e.target.value;

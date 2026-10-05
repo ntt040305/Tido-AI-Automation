@@ -49,7 +49,7 @@ const SPECS: Record<CreativeFormat, Spec> = {
     text_zones:
       "Headline in the lower third; logo bottom-right or bottom-centre; no text within the safe margin of any edge.",
     safe_margin_percent: 8,
-    default_ratio: "4:5",
+    default_ratio: "1:1",
   },
   banner: {
     viewing_model:

@@ -103,7 +103,7 @@ export const defaultCreativeBrief: CreativeBrief = {
   creative_direction: {
     visual_style: "",
     emotional_tone: "",
-    aspect_ratio: "4:5",
+    aspect_ratio: "1:1",
     composition_layout: "",
     product_composition_mode: "single",
     product_identity_strength: "strict",
