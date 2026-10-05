@@ -160,7 +160,7 @@ interface CallSpec {
   quality?: string;
   references?: RefImage[];
   /** Extra form/JSON fields, to test whether the API accepts them. */
-  extra?: Record<string, string>;
+  extra?: Record<string, string | number>;
 }
 
 interface CallResult {
@@ -183,6 +183,10 @@ interface CallResult {
   errorBody?: string;
   /** Any field in the response that hints at an async job. */
   jobHints?: string[];
+  /** Top-level keys of the JSON response, to record its shape. */
+  responseKeys?: string[];
+  /** How the image came back: a URL to fetch, inline base64, or a job to poll. */
+  imageTransport?: string;
 }
 
 const results: CallResult[] = [];
@@ -194,7 +198,7 @@ async function call(spec: CallSpec): Promise<CallResult> {
   const refs = spec.references || [];
   const endpoint = `${BASE_URL}/api/v1/images/${refs.length ? "edit" : "generate"}`;
   const idempotencyKey = `probe-${RUN_ID}-${n}-${crypto.randomBytes(4).toString("hex")}`;
-  const fields: Record<string, string> = {
+  const fields: Record<string, string | number> = {
     prompt: spec.prompt,
     provider_id: spec.providerId,
     aspect_ratio: spec.aspectRatio,
@@ -210,7 +214,7 @@ async function call(spec: CallSpec): Promise<CallResult> {
   let body: FormData | string;
   if (refs.length) {
     const fd = new FormData();
-    for (const [k, v] of Object.entries(fields)) fd.append(k, v);
+    for (const [k, v] of Object.entries(fields)) fd.append(k, String(v));
     for (const r of refs) fd.append("images", new Blob([new Uint8Array(r.buffer)], { type: r.mime }), r.name);
     body = fd;
   } else {
@@ -257,6 +261,11 @@ async function call(spec: CallSpec): Promise<CallResult> {
       if (typeof json.cost_vnd === "number") result.costVnd = json.cost_vnd;
       if (typeof json.balance_vnd === "number") result.balanceVnd = json.balance_vnd;
       result.jobHints = Object.keys(json).filter((k) => /job|task|queue|poll|status_url|eta/i.test(k));
+      result.responseKeys = Object.keys(json);
+      const inlineB64 = Object.entries(json).some(
+        ([k, v]) => /b64|base64|image_data/i.test(k) || (typeof v === "string" && v.length > 2000 && /^[A-Za-z0-9+/=]+$/.test(v.slice(0, 200))),
+      );
+      result.imageTransport = typeof json.url === "string" ? "url" : inlineB64 ? "base64" : result.jobHints.length ? "job" : "unknown";
     }
 
     // Money first, before anything else can throw.
@@ -385,18 +394,23 @@ async function dominantIn(file: string, region: { left: number; top: number; wid
 const LATENCY_PROMPT =
   "A photorealistic product photograph of a plain white ceramic coffee cup on a light oak table beside a window, soft morning daylight from the left, shallow background blur. No text anywhere in the image.";
 
+/**
+ * The settings the ImgStudio web UI sent for this model, minus the two fields under
+ * test. Every latency sample uses exactly these.
+ */
+const BASE = { aspectRatio: "1:1", resolution: "1K", quality: "high" } as const;
+
 async function main() {
   const summary: Record<string, unknown> = { run: RUN_ID, max_vnd: maxVnd, endpoint_base: BASE_URL };
   let sunburst: string | null = option("--provider-id") ?? null;
 
   try {
-    // 1. Discover the Sunburst id. The discovery call doubles as the 1:1 sample and
-    //    latency sample #1, at the exact settings the latency samples repeat.
     if (!sunburst) {
+      // Discovery, kept for the record. Not used when the id is supplied.
       const attempts: unknown[] = [];
       for (const candidate of SUNBURST_CANDIDATES) {
-        const r = await call({ label: `discover-${candidate}`, providerId: candidate, prompt: LATENCY_PROMPT, aspectRatio: "1:1" });
-        const confirmed = r.ok && /sunburst/i.test(`${r.providerName ?? ""} ${r.model ?? ""}`);
+        const r = await call({ label: `discover-${candidate}`, providerId: candidate, prompt: LATENCY_PROMPT, ...BASE });
+        const confirmed = r.ok && /sunburst/i.test(r.providerName ?? "");
         attempts.push({ candidate, ok: r.ok, http: r.httpStatus, provider_name: r.providerName, model: r.model, confirmed });
         if (confirmed) {
           sunburst = candidate;
@@ -404,29 +418,66 @@ async function main() {
         }
       }
       summary.discovery = attempts;
+      if (!sunburst) throw new BudgetStop("no Sunburst id confirmed; nothing further to probe");
     } else {
       summary.discovery = { supplied: sunburst };
     }
     summary.sunburst_provider_id = sunburst;
-    if (!sunburst) throw new BudgetStop("no Sunburst id confirmed; nothing further to probe");
 
-    // 2. Ratios at the 1K tier, with measured pixel dimensions. 1:1 is already in hand
-    //    unless the id was supplied. 4:5 once, only to record whether it is accepted.
-    const ratioCalls: Array<[string, string]> = [["9:16", "ratio-9x16"], ["16:9", "ratio-16x9"]];
-    if (option("--provider-id")) ratioCalls.unshift(["1:1", "ratio-1x1"]);
-    for (const [ratio, label] of ratioCalls) {
-      await call({ label, providerId: sunburst, prompt: LATENCY_PROMPT, aspectRatio: ratio });
+    // 1. Text-only, 1:1, 1K, quality high, WITHOUT background and count. This call is
+    //    also latency sample #1. Its provider_name must say Sunburst, or nothing else runs.
+    const first = await call({ label: "1-first-high", providerId: sunburst, prompt: LATENCY_PROMPT, ...BASE });
+    summary.first_call = {
+      ok: first.ok,
+      http: first.httpStatus,
+      provider_name: first.providerName,
+      model: first.model,
+      response_keys: first.responseKeys,
+      image_transport: first.imageTransport,
+      job_hints: first.jobHints,
+      cost_vnd: first.costVnd,
+      balance_vnd: first.balanceVnd,
+      request_ms: first.requestMs,
+      dims: first.width && first.height ? `${first.width}x${first.height}` : null,
+    };
+    if (!first.ok) throw new BudgetStop(`first call failed (HTTP ${first.httpStatus}); stopping`);
+    if (!/sunburst/i.test(first.providerName ?? "")) {
+      throw new BudgetStop(`provider_name is "${first.providerName ?? "(absent)"}", not Sunburst; stopping as instructed`);
     }
-    await call({ label: "ratio-4x5-acceptance", providerId: sunburst, prompt: LATENCY_PROMPT, aspectRatio: "4:5" });
 
-    // 3. Vietnamese poster, with the product as a reference.
+    // 2. Quality: the same call at "standard".
+    await call({ label: "2-quality-standard", providerId: sunburst, prompt: LATENCY_PROMPT, ...BASE, quality: "standard" });
+
+    // 3. The two fields the web UI sends and the adapter does not.
+    await call({
+      label: "3-extra-background-count",
+      providerId: sunburst,
+      prompt: LATENCY_PROMPT,
+      ...BASE,
+      extra: { background: "opaque", count: 1 },
+    });
+
+    // 4. Ratios. 1:1 is call 1. 4:5 once, only to record whether it is accepted.
+    const ratios: Array<[string, string]> = [
+      ["9:16", "4-ratio-9x16"],
+      ["16:9", "4-ratio-16x9"],
+      ["4:5", "4-ratio-4x5-acceptance"],
+    ];
+    for (const [ratio, label] of ratios) {
+      await call({ label, providerId: sunburst, prompt: LATENCY_PROMPT, ...BASE, aspectRatio: ratio });
+    }
+
+    // 5. Vietnamese poster, with the product as a reference.
     const productPath = option("--product");
     const product = productPath ? await loadProduct(productPath) : await syntheticProduct();
     fs.writeFileSync(path.join(OUT_DIR, `input-${product.name}`), product.buffer);
-    summary.product_reference = productPath ? { file: productPath } : { synthetic: true, label_text: ["COLD BREW", "ARABICA", "250 ML"] };
+    summary.product_reference = productPath
+      ? { file: productPath }
+      : { synthetic: true, label_text: ["COLD BREW", "ARABICA", "250 ML"] };
     await call({
-      label: "vietnamese-poster",
+      label: "5-vietnamese-poster",
       providerId: sunburst,
+      ...BASE,
       aspectRatio: "9:16",
       references: [product],
       prompt: [
@@ -439,12 +490,12 @@ async function main() {
       ].join("\n"),
     });
 
-    // 4. Reference order: roles assigned by number, checked by colour in each region.
+    // 6. Reference order: roles assigned by number, checked by colour in each region.
     const order = [await shape("square", "#e01b1b"), await shape("circle", "#1b3fe0"), await shape("triangle", "#16a33a")];
     const orderResult = await call({
-      label: "reference-order",
+      label: "6-reference-order",
       providerId: sunburst,
-      aspectRatio: "1:1",
+      ...BASE,
       references: order,
       prompt:
         "A flat illustration on a plain white background. Image 1 is a red square, Image 2 is a blue circle, Image 3 is a green triangle. " +
@@ -460,58 +511,48 @@ async function main() {
       };
     }
 
-    // 5. Latency: two more calls at the discovery settings, for three identical samples.
+    // 7. Latency: two more calls identical to call 1, for three samples.
     for (const i of [2, 3]) {
-      await call({ label: `latency-${i}`, providerId: sunburst, prompt: LATENCY_PROMPT, aspectRatio: "1:1" });
+      await call({ label: `7-latency-${i}`, providerId: sunburst, prompt: LATENCY_PROMPT, ...BASE });
     }
 
-    // 6a. Reference count beyond three.
+    // 8a. Reference count beyond three.
     const four = [...order, await shape("star", "#d4b000")];
     await call({
-      label: "reference-count-4",
+      label: "8-reference-count-4",
       providerId: sunburst,
-      aspectRatio: "1:1",
+      ...BASE,
       references: four,
       prompt: "Image 1, Image 2, Image 3 and Image 4 are four shapes. Arrange all four in a row on a white background. No text.",
     });
 
-    // 6b. Quality values other than "standard".
-    for (const q of ["low", "medium", "high"]) {
-      await call({ label: `quality-${q}`, providerId: sunburst, prompt: LATENCY_PROMPT, aspectRatio: "1:1", quality: q });
-    }
-
-    // 6c. A pixel-size field, deliberately at odds with the aspect ratio so the effect shows.
+    // 8b. A pixel-size field, deliberately at odds with the aspect ratio so its effect shows.
     await call({
-      label: "pixel-size-1280x720-with-ratio-1x1",
+      label: "8-pixel-size-1280x720-with-ratio-1x1",
       providerId: sunburst,
       prompt: LATENCY_PROMPT,
-      aspectRatio: "1:1",
+      ...BASE,
       extra: { size: "1280x720" },
     });
-
-    // 7. Quality-Slow comparison, only with a supplied id. No guessing.
-    const slow = option("--quality-slow-id");
-    if (slow) {
-      await call({ label: "quality-slow-compare", providerId: slow, prompt: LATENCY_PROMPT, aspectRatio: "1:1" });
-    }
   } catch (e) {
     if (!(e instanceof BudgetStop)) throw e;
     summary.stopped = (e as Error).message;
   }
 
   const latency = results
-    .filter((r) => r.ok && r.providerId === sunburst && (/^discover-|^latency-|^ratio-1x1$/.test(r.label)))
+    .filter((r) => r.ok && r.providerId === sunburst && /^1-first-high$|^7-latency-/.test(r.label))
     .map((r) => r.requestMs)
     .sort((a, b) => a - b);
   summary.latency_request_ms = {
+    settings: BASE,
     samples: latency,
     p50: latency.length ? latency[Math.floor((latency.length - 1) / 2)] : null,
     max: latency.length ? latency[latency.length - 1] : null,
   };
   summary.spent_vnd = spent();
   summary.cost_sum_vnd = ledger.costSum;
-  summary.balance_first_vnd = ledger.firstBalance;
-  summary.balance_last_vnd = ledger.lastBalance;
+  summary.balance_before_vnd = ledger.firstBalance;
+  summary.balance_after_vnd = ledger.lastBalance;
   summary.stopped_because = ledger.stoppedBecause ?? summary.stopped ?? null;
   summary.results = results;
   save("summary.json", summary);
