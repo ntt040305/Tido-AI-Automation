@@ -116,7 +116,11 @@ function guardBudget(providerId: string, label: string) {
 
 // ── redaction and recording ──────────────────────────────────────────────────
 
-const SECRET_KEY = /key|token|secret|password|authorization|cookie/i;
+/**
+ * Names that carry credentials. Anchored on purpose: a bare /key/ also matched the
+ * probe's own `response_keys` field and redacted the very shape it was recording.
+ */
+const SECRET_KEY = /^(authorization|cookie|set-cookie|key|token)$|api[-_]?key|access[-_]?token|secret|password/i;
 
 function redactHeaders(h: Headers | Record<string, string>): Record<string, string> {
   const out: Record<string, string> = {};
@@ -400,9 +404,62 @@ const LATENCY_PROMPT =
  */
 const BASE = { aspectRatio: "1:1", resolution: "1K", quality: "high" } as const;
 
+/**
+ * `--order-test-two`: reference binding at the provider's real limit of two images.
+ *
+ * The three-shape test cannot run on a provider that edits at most two images. This
+ * one does not describe the shapes in the prompt at all — it only says where Image 1
+ * and Image 2 go — and runs twice with the attachments swapped. If the colours follow
+ * the swap, the model binds "Image N" to the Nth attached file, which is the binding
+ * the master prompt relies on.
+ */
+async function orderTestTwo(providerId: string, summary: Record<string, unknown>) {
+  const red = await shape("square", "#e01b1b");
+  const blue = await shape("circle", "#1b3fe0");
+  const prompt =
+    "A flat illustration on a plain white background. Place the object from Image 1 in the top-left corner " +
+    "and the object from Image 2 in the bottom-right corner. Keep each object's exact color and shape. " +
+    "Nothing else in the image. No text.";
+  const runs: Array<[string, RefImage[], { top_left: string; bottom_right: string }]> = [
+    ["order2-red-then-blue", [red, blue], { top_left: "red", bottom_right: "blue" }],
+    ["order2-blue-then-red", [blue, red], { top_left: "blue", bottom_right: "red" }],
+  ];
+  const checks: unknown[] = [];
+  for (const [label, refs, expected] of runs) {
+    const r = await call({ label, providerId, ...BASE, references: refs, prompt });
+    if (r.ok && r.imageFile) {
+      const got = {
+        top_left: await dominantIn(r.imageFile, { left: 0, top: 0, width: 0.4, height: 0.4 }),
+        bottom_right: await dominantIn(r.imageFile, { left: 0.6, top: 0.6, width: 0.4, height: 0.4 }),
+      };
+      checks.push({ label, attached: refs.map((x) => x.name), expected, got, binds_by_number: got.top_left === expected.top_left && got.bottom_right === expected.bottom_right });
+    } else {
+      checks.push({ label, ok: false, http: r.httpStatus, error: r.errorBody?.slice(0, 200) });
+    }
+  }
+  summary.reference_order_two = checks;
+}
+
 async function main() {
   const summary: Record<string, unknown> = { run: RUN_ID, max_vnd: maxVnd, endpoint_base: BASE_URL };
   let sunburst: string | null = option("--provider-id") ?? null;
+
+  if (flag("--order-test-two")) {
+    if (!sunburst) throw new Error("--order-test-two needs --provider-id");
+    try {
+      await orderTestTwo(sunburst, summary);
+    } catch (e) {
+      if (!(e instanceof BudgetStop)) throw e;
+      summary.stopped = (e as Error).message;
+    }
+    summary.spent_vnd = spent();
+    summary.balance_before_vnd = ledger.firstBalance;
+    summary.balance_after_vnd = ledger.lastBalance;
+    summary.results = results;
+    save("summary.json", summary);
+    console.log(`[probe] order-test-two done: spent ${spent()} VND, output ${OUT_DIR}`);
+    return;
+  }
 
   try {
     if (!sunburst) {
