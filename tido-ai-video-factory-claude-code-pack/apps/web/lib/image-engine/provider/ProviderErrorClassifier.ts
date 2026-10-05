@@ -13,7 +13,9 @@
  * The distinction that matters is not client-versus-server. It is whether
  * retrying the *same request* could plausibly produce a different answer:
  *
- *   429, 5xx, timeouts    the request is fine, the server was not. Retry.
+ *   429, 5xx              the request is fine, the server was not. Retry.
+ *   timeout               NOT retried: the server may still be working on, and
+ *                         billing for, the request we stopped waiting for.
  *   413                   the request is the problem, and it is fixable here.
  *                         Do not retry it — change it, then retry once.
  *   400, 401, 403         the request is the problem and this layer cannot fix
@@ -160,8 +162,11 @@ export class ProviderErrorClassifier {
     return {
       status: 0,
       classification: "NETWORK_ERROR",
-      action: "RETRY_WITH_BACKOFF",
-      retryable: true,
+      // A timeout is final. The reseller may already be rendering -- and billing --
+      // the request we stopped waiting for, so a retry can pay for one image twice.
+      // A connection that never opened reached nobody and is still worth retrying.
+      action: timedOut ? "STOP" : "RETRY_WITH_BACKOFF",
+      retryable: !timedOut,
       error_code: timedOut ? "PROVIDER_TIMEOUT" : "PROVIDER_NETWORK_ERROR",
       stage: "IMG_PROVIDER",
       suggestion: timedOut

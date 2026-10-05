@@ -677,6 +677,21 @@ export class ImgStudioImageGenerationProvider implements ImageGenerationProvider
         // No response arrived, so the upstream may still be holding the original
         // request. The key is deliberately NOT rotated here: reusing it lets ImgStudio
         // deduplicate rather than start (and bill) a second render.
+        //
+        // The classifier decides whether a retry is allowed at all. This branch used to
+        // retry every thrown error on its own, so a timeout went out three times even
+        // though the classifier is the one place that knows a timeout is final.
+        const thrownVerdict = ProviderErrorClassifier.classifyThrown(err);
+        if (!thrownVerdict.retryable) {
+          return {
+            success: false,
+            error: {
+              code: thrownVerdict.error_code,
+              message: `ImgStudio did not answer within ${timeoutMs}ms. Not retried: the provider may still be rendering, and charging for, this request.`,
+              details: String(err),
+            },
+          };
+        }
         if (attempt <= maxRetries) {
           const backoffMs = attempt === 1 ? 1000 : 2000;
           const remainingBudgetMs = deadlineAt - Date.now() - backoffMs;
