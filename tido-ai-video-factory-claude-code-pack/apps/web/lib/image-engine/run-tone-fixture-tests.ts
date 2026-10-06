@@ -22,6 +22,8 @@
  * fails the suite.
  */
 import assert from "assert";
+import fs from "fs";
+import path from "path";
 
 import { toneSignal } from "./director/CreativeApproach";
 import {
@@ -364,8 +366,6 @@ function main() {
     // The guarantee that matters: a term added to `TONES` later cannot quietly
     // start, or stop, driving the creative approach. Read from the source so the
     // table itself is the reference.
-    const fs = require("fs") as typeof import("fs");
-    const path = require("path") as typeof import("path");
     const src = fs.readFileSync(
       path.join(__dirname, "director", "ConceptStructuringLayer.ts"),
       "utf8",

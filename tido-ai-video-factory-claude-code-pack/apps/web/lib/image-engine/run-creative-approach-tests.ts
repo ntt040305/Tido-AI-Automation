@@ -633,6 +633,57 @@ function main() {
     assert.ok(/<option value="">/.test(src), "no empty option for the unset state");
   });
 
+  check("the badge cannot contradict the server: brand style reaches the client", () => {
+    // L1 of the Step 1 report. The brief carries only `brand_kit_id` and the
+    // fetched kits lived in BrandKitPanel's own state, so the browser could not
+    // see `style.preferred` and the badge disagreed with the server for any kit
+    // whose style said something the concept did not.
+    const kit = read("features/picture-engine/components/brief/BrandKitPanel.tsx");
+    assert.ok(/onSelectedStyleChange\?:\s*\(preferred: string\[\] \| null\) => void/.test(kit), "the kit panel does not report its style upward");
+    assert.ok(/onSelectedStyleChange\?\.\(/.test(kit), "the callback is never invoked");
+
+    const panel = read(PANEL);
+    assert.ok(/onSelectedStyleChange=\{handleBrandStyle\}/.test(panel), "the brief panel does not receive it");
+    const ctrl = /<CreativeApproachControl\b[\s\S]*?\/>/.exec(panel);
+    assert.ok(ctrl, "the approach control element was not found");
+    assert.ok(/brandStylePreferred=\{brandStylePreferred\}/.test(ctrl![0]), "the control is not given the brand style");
+  });
+
+  check("a kit saying tối giản with a silent concept yields restrained", () => {
+    // The exact case from the report, now computed from the same inputs on both
+    // sides.
+    const d = decide({
+      choice: "auto",
+      concept: "Chai dầu gội đặt trên bệ đá, ánh sáng từ bên phải",
+      brandStylePreferred: ["tối giản"],
+      assetType: "poster",
+    });
+    assert.strictEqual(d.level, "restrained");
+    assert.strictEqual(d.source, "brand_style");
+    assert.strictEqual(LEVEL_LABEL_VI[d.level], "Tối giản & sang trọng");
+  });
+
+  check("the client result is a PREVIEW: the server recomputes from its own kit", () => {
+    // Authority, stated in code rather than assumed. The route loads the kit
+    // itself and the browser's conclusion is never transmitted: `creative_approach`
+    // carries the user's CHOICE, and nothing carries the inferred level or the
+    // brand style that produced it.
+    const api = read("features/picture-engine/services/picture-engine.api.ts");
+    const m = /const creativeDirection = compact\(\{[\s\S]*?\}\);/.exec(api);
+    assert.ok(m, "the creativeDirection compact() call was not found");
+    for (const leaked of ["brandStylePreferred", "brand_style", "inferredApproach", "approach_source", "reason_vi"]) {
+      assert.ok(!m![0].includes(leaked), `the client is sending ${leaked}; the inference is the server's to make`);
+    }
+    const route = read("app/api/image/generate-simple/route.ts");
+    assert.ok(/brandKitId/.test(route), "the route no longer receives the kit id it must load from");
+
+    // And the preview channel is documented as one, so the next reader does not
+    // mistake it for input.
+    const kit = read("features/picture-engine/components/brief/BrandKitPanel.tsx");
+    assert.ok(/preview/i.test(kit), "the kit panel does not say this is a preview channel");
+    assert.ok(/recomputes/i.test(read(PANEL)), "the brief panel does not record that the server recomputes");
+  });
+
   check("the campaign-context block is collapsed and optional", () => {
     const panel = read(PANEL);
     assert.ok(/Bối cảnh chiến dịch \(không bắt buộc\)/.test(panel), "the title is missing");

@@ -73,9 +73,23 @@ function draftOf(k: KitSummary): Draft {
 export interface BrandKitPanelProps {
   brandIdentity: BrandIdentity;
   onChange: (updates: Partial<BrandIdentity>) => void;
+  /**
+   * The selected kit's `style.preferred`, reported upward as it changes.
+   *
+   * The brief carries only `brand_kit_id`, and the fetched kits live in this
+   * component's own state, so nothing else in the browser could see this list.
+   * `CreativeApproachControl` needs it: brand style is step 3 of the
+   * creative-approach precedence, and without it the badge under the control
+   * would say "Cân bằng" for a kit that says "tối giản" while the server, which
+   * loads the kit at `generate-simple/route.ts:94`, inferred restrained.
+   *
+   * This is a preview channel only. The server never trusts it and never reads
+   * it — it recomputes the whole decision from the kit it loaded itself.
+   */
+  onSelectedStyleChange?: (preferred: string[] | null) => void;
 }
 
-export function BrandKitPanel({ brandIdentity, onChange }: BrandKitPanelProps) {
+export function BrandKitPanel({ brandIdentity, onChange, onSelectedStyleChange }: BrandKitPanelProps) {
   const { user, loading } = useAuth();
   const authedFetch = useAuthedFetch();
   const [kits, setKits] = useState<KitSummary[]>([]);
@@ -105,9 +119,18 @@ export function BrandKitPanel({ brandIdentity, onChange }: BrandKitPanelProps) {
     if (!loading && !user && selectedId) onChange({ brand_kit_id: undefined });
   }, [loading, user, selectedId, onChange]);
 
-  if (loading) return null;
-
+  // Computed before the early return below, because the effect that reports it
+  // upward is a hook and cannot sit after one.
   const selected = kits.find((k) => k.id === selectedId) || null;
+
+  // Joined, so the dependency is a string rather than a fresh array identity on
+  // every render.
+  const preferredKey = (selected?.kit.style.preferred || []).join("|");
+  useEffect(() => {
+    onSelectedStyleChange?.(preferredKey ? preferredKey.split("|") : null);
+  }, [preferredKey, onSelectedStyleChange]);
+
+  if (loading) return null;
 
   async function save() {
     if (!editing) return;

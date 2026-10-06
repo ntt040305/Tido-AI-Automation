@@ -68,6 +68,19 @@ export function CreativeBriefPanel({
     [brief.content_message],
   );
 
+  // The selected Brand Kit's preferred styles, lifted out of BrandKitPanel.
+  //
+  // Step 3 of the creative-approach precedence reads brand style, and the brief
+  // carries only `brand_kit_id` — so without this the badge under the control
+  // would disagree with the server for any kit whose style says something the
+  // concept does not. A preview only: the server recomputes the decision from the
+  // kit it loads itself (`generate-simple/route.ts:94`) and never reads this.
+  const [brandStylePreferred, setBrandStylePreferred] = useState<string[] | undefined>(undefined);
+  const handleBrandStyle = React.useCallback(
+    (preferred: string[] | null) => setBrandStylePreferred(preferred || undefined),
+    [],
+  );
+
   // Collapsed by default. Objective and audience are worth 0.40 of the route
   // score (`DirectionEvaluator.ts:137-144`) and were unreachable because this
   // panel never mounted the form that writes them — but they are still optional
@@ -312,6 +325,7 @@ export function CreativeBriefPanel({
       <BrandKitPanel
         brandIdentity={brief.brand_identity}
         onChange={onUpdateBrandIdentity}
+        onSelectedStyleChange={handleBrandStyle}
       />
 
       {/* 5. Creative Concept (Large Textarea) */}
@@ -461,6 +475,7 @@ export function CreativeBriefPanel({
         assetType={brief.asset_type}
         objective={brief.marketing_context?.objective}
         copyStrings={contentMessageLines}
+        brandStylePreferred={brandStylePreferred}
       />
 
       {/* 5c. Campaign context — the form that existed and was never mounted.
