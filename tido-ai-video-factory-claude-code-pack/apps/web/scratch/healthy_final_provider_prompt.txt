@@ -1,21 +1,23 @@
-A square skincare advertising poster for Lunar New Year in Sài Gòn, captured in clean editorial photography.
+A vertical skincare poster at 9:16 aspect ratio, presenting a weightless zero-gravity composition.
 
-The two skincare products are exactly as shown in the attached photos: photo 1 is the tall cylindrical bottle of golden-amber cleansing oil with its white pump dispenser, and photo 2 is the clear glass dropper bottle containing the tone brightening capsule ampoule with visible micro-capsules and a white rubber-bulb dropper top. Both bottles maintain their exact packaging silhouettes, clear labels, and printed typography with no additions or alterations.
+The two products are exactly the ones in the attached photos: photo 1 is the tall amber bottle of cleansing oil with a white pump, and photo 2 is the clear glass dropper bottle containing micro-capsules with a white rubber dropper top. Their forms, colours, cap designs and printed labels stay identical to the reference photos, with no added markings.
 
-The scene is set on a minimalist ivory-lacquered wooden pedestal against a warm off-white stucco wall. A single slender branch of golden yellow apricot blossoms (hoa mai) leans softly from the top right, casting delicate botanical shadow patterns across the surface. Warm, bright morning sunlight reminiscent of a sunny Saigon Tết day enters from the right side, illuminating the amber liquid of the oil bottle so it glows like warm honey and refracting crisp, luminous highlights through the clear glass and suspended beads of the ampoule. A single fallen yellow petal rests beside the base of the ampoule on the smooth surface.
+The idea: weightless purity in orbit. Both bottles float weightlessly in mid-air in the lower-middle half of the poster, tilted slightly at dynamic complementary angles as if drifting in microgravity. A continuous, perfectly sculpted ring of crystal-clear water splashes in an elliptical orbit around both bottles, forming an ethereal splash ring reminiscent of the rings of Saturn, complete with suspended micro-droplets frozen in space. Four vibrant, fresh green centella asiatica leaves drift gracefully along the water ring's trajectory, some catching crisp reflections and one softly blurred in the near foreground.
 
-The composition places the product duo in the lower-right half, sharp and crisp in detail. The upper-left area of the frame is an open, calm expanse of wall bathed in soft diffused light, serving as the dedicated surface for the typography. The background shows gentle optical depth with smooth focus falloff.
+Lighting: bright, diffuse studio light from the upper-left, sending crisp refractions through the clear water splash, casting a warm honey-amber glow through the oil bottle, and highlighting the transparent micro-beads inside the glass ampoule. The background is a seamless, serene vertical gradient flowing softly from pure bright white at the top to a delicate, pale aqua-jade at the bottom, kept entirely free of clutter.
 
-Color palette: Warm amber gold as the dominant luminous tone, creamy ivory lacquer as support, and delicate cinnabar red accents in the lettering.
+Typography is set in a modern, clean geometric sans-serif in deep slate-teal (#1A3835), arranged with clear hierarchy on the calm upper white background:
+At the top, the primary headline in bold, large capital letters:
+"VƯỢT KHỎI MỌI GIỚI HẠN - CHẠM ĐẾN SỰ TINH KHIẾT TỐI THƯỢNG."
+Directly beneath it, in medium-weight lettering:
+"Trải nghiệm cảm giác nhẹ tựa lông hồng với bộ đôi quyền năng từ Madagascar."
+Below that, in slightly smaller, regular-weight body text:
+"Kết cấu mỏng nhẹ lướt trên da, cuốn trôi mọi bụi bẩn mà không để lại cảm giác nhờn rít."
+Followed by:
+"Giải phóng làn da của bạn khỏi áp lực khói bụi thành thị ngay hôm nay."
+At the very bottom of the poster, centered over the soft pale aqua gradient:
+"Freeship mọi đơn hàng từ 500k!"
 
-The typography sits cleanly in the upper-left quadrant, set in an elegant high-contrast serif typeface. It never touches the products. First, at the top in small spaced capitals in warm gold:
-"Centella"
-Directly below, the main headline in two balanced, prominent lines in deep cinnabar red:
-"Da mềm mịn"
-"Trắng hồng"
-Beneath the headline, a supporting line in smaller, refined medium weight:
-"Cao cấp nhất dành cho quý bà"
+Colours: pale aquamarine and pure white as dominant background tones, honey amber and clear glass as support, and fresh leaf green as the vibrant accent.
 
-Natural editorial lighting with clean glass reflections and soft organic shadows, tactile material textures, not a CGI render.
-
-No other text, no additional logos, no human figures. Each text string appears exactly once. 1:1 aspect ratio.
+Finish: hyper-clean commercial skincare studio photography, sharp liquid optics, crisp typography, no extra text, no added logos, no people. 9:16 aspect ratio.
