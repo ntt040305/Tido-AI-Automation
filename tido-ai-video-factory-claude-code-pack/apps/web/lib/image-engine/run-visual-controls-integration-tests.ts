@@ -97,7 +97,10 @@ check("The panel sits at the end of the flow, just before Generate", () => {
   const panel = read("features/picture-engine/components/brief/CreativeBriefPanel.tsx");
   const panelAt = panel.indexOf("<VisualDirectionControlPanel");
   const uploaderAt = panel.indexOf("<BrandIdentityUploader");
-  const ctaAt = panel.indexOf("{/* Submit CTA */}");
+  // The comment is now "{/* 8. Submit CTA */}", so the exact-match lookup returned
+  // -1 and "the panel is before Generate" was asserted against nothing. Matched on
+  // the stable part of the comment instead; the ordering asserted is unchanged.
+  const ctaAt = panel.indexOf("Submit CTA */}");
   assert.ok(panelAt > uploaderAt, "the panel still sits before the reference uploads");
   assert.ok(ctaAt > panelAt, "the panel is not before the Generate button");
 });
