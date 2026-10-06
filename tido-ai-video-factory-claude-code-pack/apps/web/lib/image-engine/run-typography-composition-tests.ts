@@ -406,6 +406,103 @@ async function main() {
     assert.strictEqual(typographyCritiqueTelemetry(c).blocking, 1);
   });
 
+  // ── 7b. the review fails closed ──────────────────────────────────────────
+  //
+  // Migration task 0.2. `worst()` returned 10 for an area with no findings, and a
+  // vision call that failed produced no findings — so a review that saw nothing
+  // scored a flawless 10/10 and called the frame shippable. "Never checked" and
+  // "checked and clean" rendered identically, which is the one pair of states this
+  // system most needed to keep apart.
+
+  await check("a vision call that returned nothing scores null, not 10", () => {
+    const c = critiqueTypography({});
+    assert.strictEqual(c.verdict, "unverified");
+    for (const [area, score] of Object.entries(c.scores)) {
+      assert.strictEqual(score, null, `${area} scored ${score} on a review that saw nothing`);
+    }
+    assert.strictEqual(c.shippable, false, "a review that saw nothing called the frame shippable");
+    assert.deepStrictEqual(c.findings, [], "findings were invented from no observation");
+  });
+
+  await check("a design with no vision call is unverified, but keeps its measured findings", () => {
+    // The arithmetic over the design is still real and is still reported. What is
+    // withheld is the verdict, because the half that reads pixels never ran.
+    const c = critiqueTypography({
+      design: {
+        canvas: { width: 1000, height: 1000 },
+        layers: [
+          { kind: "text", id: "h", role: "headline", content: "a", lines: ["a"], font_size: 35, x: 100, y: 100, width: 200, height: 40, color: "#111", z: 1 },
+          { kind: "text", id: "s", role: "subheadline", content: "b", lines: ["b"], font_size: 41, x: 100, y: 300, width: 200, height: 45, color: "#111", z: 2 },
+        ],
+      } as any,
+    });
+    assert.strictEqual(c.verdict, "unverified");
+    assert.ok(c.findings.some((f: any) => f.area === "hierarchy"), "the measured finding was dropped");
+    assert.strictEqual(c.scores.hierarchy, null, "an unverified review still scored a dimension");
+    assert.strictEqual(c.shippable, false);
+  });
+
+  await check("an empty visibleText array IS an observation and is scored", () => {
+    // A model reporting that it read no text is a real answer about a real frame.
+    // Only a null or absent list means the call did not happen.
+    const c = critiqueTypography({ visibleText: [] });
+    assert.strictEqual(c.verdict, "verified");
+    assert.strictEqual(c.scores.duplicate_free, 10);
+    assert.strictEqual(c.shippable, true);
+  });
+
+  await check("a textCheck alone is also an observation", () => {
+    const c = critiqueTypography({
+      textCheck: { mode: "exact", required: ["a"], missing: [], incorrect: [], case_styled: [], unwanted: [], compliant: true } as any,
+    });
+    assert.strictEqual(c.verdict, "verified");
+    assert.strictEqual(c.scores.readability, 10);
+  });
+
+  await check("an unverified review can never be shippable, even with no findings", () => {
+    for (const input of [{}, { visibleText: null }, { textCheck: null }, { visibleText: null, textCheck: null }]) {
+      const c = critiqueTypography(input as any);
+      assert.strictEqual(c.shippable, false, `shippable on ${JSON.stringify(input)}`);
+      assert.strictEqual(c.verdict, "unverified");
+    }
+  });
+
+  await check("telemetry says which verdict it is, so a log of 10s cannot be misread", () => {
+    const blind = typographyCritiqueTelemetry(critiqueTypography({}));
+    assert.strictEqual(blind.verdict, "unverified");
+    assert.strictEqual(blind.shippable, false);
+    const seen = typographyCritiqueTelemetry(critiqueTypography({ visibleText: [] }));
+    assert.strictEqual(seen.verdict, "verified");
+  });
+
+  await check("an unverified critique must not recommend a re-render", () => {
+    // Paying for a second render because our own vision call failed would charge
+    // the user for an outage. Source-level, because the guard is the point.
+    const review = read("lib/image-engine/evolution/experiment/VisionReview.ts");
+    assert.ok(
+      /critique\?\.verdict === "unverified" \? \[\]/.test(review),
+      "judgeTypography does not short-circuit on an unverified critique",
+    );
+    assert.ok(/re-render/.test(review), "the re-render recommendation path is no longer here to guard");
+  });
+
+  await check("the UI shows 'Chưa kiểm tra được' instead of a score or a tick", () => {
+    const panel = read("features/picture-engine/components/strategy/CreativeDirectionPanel.tsx");
+    assert.ok(/Chưa kiểm tra được/.test(panel), "the panel has no unverified state");
+    assert.ok(
+      /typography_critique\?\.verdict === "unverified"/.test(panel),
+      "the panel does not read the verdict",
+    );
+    // The ticks are the fabrication risk: praise printed for a review that never
+    // happened.
+    const m = /const strengths = [^;]*;/.exec(panel);
+    assert.ok(m, "the strengths derivation was not found");
+    assert.ok(/!reviewUnverified/.test(m![0]), "strengths are still shown on an unverified review");
+    // And the verdict has to survive the trip to the browser.
+    const types = read("features/picture-engine/types/picture-engine.types.ts");
+    assert.ok(/typography_critique\?: \{/.test(types), "the client type cannot see the critique");
+  });
+
   await check("the vision review attaches the critique and the analyzer asks for what it needs", () => {
     const review = read("lib/image-engine/evolution/VisionReviewLayer.ts");
     assert.ok(/critiqueTypography/.test(review), "the review never runs the critique");

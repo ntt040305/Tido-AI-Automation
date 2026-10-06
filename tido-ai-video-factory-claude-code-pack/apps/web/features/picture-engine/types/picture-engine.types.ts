@@ -222,6 +222,20 @@ export interface VisionAnalysis {
   product_accuracy: VisionNote[];
   improvement_actions: { action: string; because?: string; area?: string; scope: string }[];
   unavailable_reason?: string;
+  /**
+   * The typographic critique, as the engine attached it
+   * (`evolution/VisionReviewLayer.ts:313`). The whole analysis is passed through
+   * to the client by `generate-simple/route.ts:413`, so this already travelled;
+   * only the declaration was missing.
+   *
+   * `verdict` is the field the UI must respect: on "unverified" the vision call
+   * failed or returned nothing, every score is null, and the panel shows "Chưa
+   * kiểm tra được" rather than a score or a tick.
+   */
+  typography_critique?: {
+    verdict?: "verified" | "unverified";
+    shippable?: boolean;
+  };
 }
 
 export interface CreativeIntelligence {

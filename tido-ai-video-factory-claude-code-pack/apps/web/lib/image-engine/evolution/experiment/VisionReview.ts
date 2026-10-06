@@ -350,8 +350,15 @@ function judgeTypography(
   // draw none -- and this function called typography "aligned" because the
   // composited layer matched its decision perfectly. It did. The picture was
   // still wrong, and the existing critique had already said so.
-  const critique = analysis?.typography_critique as { findings?: Array<{ area?: string; blocking?: boolean; what?: string }> } | undefined;
-  const blocking = (critique?.findings ?? []).filter((f) => f.blocking);
+  const critique = analysis?.typography_critique as
+    | { findings?: Array<{ area?: string; blocking?: boolean; what?: string }>; verdict?: string }
+    | undefined;
+  // An unverified critique is one where the vision call failed or returned
+  // nothing. It has no observed findings to act on, and it must not be allowed to
+  // recommend a re-render: "we could not look" is not evidence that the pixels
+  // are wrong, and paying for a second render on the strength of it would charge
+  // the user for our own outage.
+  const blocking = critique?.verdict === "unverified" ? [] : (critique?.findings ?? []).filter((f) => f.blocking);
   if (blocking.length) {
     const duplicated = blocking.filter((f) => f.area === "duplicate_text");
     for (const f of duplicated.length ? duplicated : blocking) {
