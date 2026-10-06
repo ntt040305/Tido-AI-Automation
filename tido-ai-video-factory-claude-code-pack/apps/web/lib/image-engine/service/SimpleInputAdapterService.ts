@@ -347,6 +347,12 @@ export class SimpleInputAdapterService {
         purpose,
         discount: intent.discount || null,
         roles: copyItems.map((c) => c.type),
+        // The detector has always computed this and nothing ever read it
+        // (06-creative-direction-analysis.md, F3). `CreativeApproach` reads the
+        // same table for its own decision, so recording what the register looked
+        // like here is what makes a surprising level traceable in one log line.
+        // Copy roles above are untouched — this is observability, not a signal.
+        tone: intent.tone,
       });
     }
 

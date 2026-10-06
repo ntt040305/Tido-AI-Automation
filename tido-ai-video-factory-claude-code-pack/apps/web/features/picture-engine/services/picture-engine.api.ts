@@ -97,6 +97,14 @@ export async function createPictureAsset(
       // Phase 4.1.5. Only sent when the user actually chose something; an
       // untouched panel adds no field to the request.
       visual_controls: brief.creative_direction?.visual_controls,
+      // `creative_direction` is NOT serialised whole — this is an allow-list, so a
+      // field absent from it never leaves the browser. `compact` then drops it
+      // again when it is empty, and "auto" is dropped deliberately: it means "you
+      // decide", which is what the server does with no field at all.
+      creative_approach:
+        brief.creative_direction?.creative_approach && brief.creative_direction.creative_approach !== "auto"
+          ? brief.creative_direction.creative_approach
+          : undefined,
     });
     const salesContext = compact(brief.sales_context as any);
 

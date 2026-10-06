@@ -61,6 +61,10 @@ export interface SalesContext {
 }
 
 import { ProductCompositionMode, ProductIdentityStrength } from "@tido/contracts";
+// Type-only, and the union is declared where the decision is made rather than
+// here, so the browser control and the server's recomputation cannot drift apart.
+// Erased at compile time, so this adds nothing to the client bundle.
+import type { ApproachChoice } from "@/lib/image-engine/director/CreativeApproach";
 
 export interface CreativeDirection {
   /**
@@ -68,6 +72,15 @@ export interface CreativeDirection {
    * the value "auto" means the user left it on Tự chọn and the engine decides.
    */
   visual_controls?: Record<string, string>;
+  /**
+   * How daring the frame should be. Absent or "auto" means the user left it on
+   * "Để AI quyết định" and `director/CreativeApproach.ts` infers it from the
+   * concept, the Brand Kit and the campaign objective.
+   *
+   * Optional, and absent by default, so a brief nobody touched behaves exactly as
+   * it did before this field existed.
+   */
+  creative_approach?: ApproachChoice;
   visual_style: string;
   emotional_tone: string;
   aspect_ratio: AspectRatioType;

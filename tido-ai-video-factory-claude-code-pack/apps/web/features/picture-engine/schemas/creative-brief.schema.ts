@@ -35,6 +35,11 @@ export const CreativeDirectionSchema = z.object({
   emotional_tone: z.string().optional(),
   aspect_ratio: z.enum(["1:1", "9:16", "16:9"]),
   composition_layout: z.string().optional(),
+  // How daring the frame should be. Optional, because "Để AI quyết định" is the
+  // default and an absent field is what every brief saved before this existed
+  // carries. "auto" is accepted as well, so a user who selects it explicitly
+  // validates the same as one who never touched the control.
+  creative_approach: z.enum(["restrained", "balanced", "bold", "auto"]).optional(),
 });
 
 export const BrandAssetSchema = z.object({
