@@ -35,11 +35,13 @@ import path from "path";
 import {
   inferCreativeApproach,
   toneSignal,
+  copyIsDense,
   APPROACH_LEVELS,
   LEVEL_LABEL_VI,
   type ApproachInput,
 } from "./director/CreativeApproach";
 import { ConceptStructuringLayer } from "./director/ConceptStructuringLayer";
+import { copyFitsChannel, countCopyWords, profileFor } from "./evolution/experiment/AssetProfile";
 
 let passed = 0;
 let failed = 0;
@@ -358,6 +360,108 @@ function main() {
     assert.strictEqual(decide({ choice: "restrained", assetType: "banner", copyStrings: strings(3) }).level, "balanced");
     assert.strictEqual(decide({ choice: "restrained", assetType: "product_hero", copyStrings: strings(1) }).level, "restrained");
     assert.strictEqual(decide({ choice: "restrained", assetType: "product_hero", copyStrings: strings(2) }).level, "balanced");
+  });
+
+  check("ANCHOR DENSE: three strings but 69 words on a poster is dense", () => {
+    // The case the string rule could not see. Three strings is INSIDE a poster's
+    // allowance of three, so only the word budget catches it.
+    const copy = [
+      "VƯỢT KHỎI MỌI GIỚI HẠN - CHẠM ĐẾN SỰ TINH KHIẾT TỐI THƯỢNG.",
+      "Trải nghiệm cảm giác nhẹ tựa lông hồng với bộ đôi quyền năng từ Madagascar. Kết cấu mỏng nhẹ lướt trên da, cuốn trôi mọi bụi bẩn mà không để lại cảm giác nhờn rít. Giải phóng làn da của bạn khỏi áp lực khói bụi thành thị ngay hôm nay.",
+      "Freeship mọi đơn hàng từ 500k!",
+    ];
+    assert.strictEqual(copy.length, 3, "the fixture is no longer three strings");
+    assert.ok(copyFitsChannel(profileFor("poster"), copy.length).fits, "the string rule already caught it, so this proves nothing");
+    assert.strictEqual(countCopyWords(copy), 69);
+    assert.ok(copyIsDense("poster", copy), "69 words on a poster was not dense");
+
+    const d = decide({ choice: "restrained", assetType: "poster", copyStrings: copy });
+    assert.strictEqual(d.level, "balanced");
+    assert.strictEqual(d.adjustments.length, 1);
+    assert.strictEqual(d.adjustments[0].reason_vi, VETO_VI);
+  });
+
+  check("ANCHOR OK: a headline and a CTA, 8-12 words, is not dense", () => {
+    const samples: string[][] = [
+      ["Slow mornings", "Cold brew, done properly", "Đặt ngay"], // 8 words, 3 strings
+      ["Khởi động ngày mới", "Mua ngay"], // 6
+      ["Thời gian của bạn", "Meridian 1904"], // 6
+      ["Nghỉ một chút", "Đặt lịch"], // 5
+      // 12 words, the top of the range the brief named.
+      ["Trải nghiệm cold brew nguyên bản đậm vị mỗi sáng", "Mua ngay"],
+    ];
+    for (const copy of samples) {
+      const words = countCopyWords(copy);
+      assert.ok(words >= 5 && words <= 12, `${copy.join(" / ")} is ${words} words, outside the anchor`);
+      assert.ok(!copyIsDense("poster", copy), `${words} words tripped the veto: ${copy.join(" / ")}`);
+      const d = decide({ choice: "restrained", assetType: "poster", copyStrings: copy });
+      assert.strictEqual(d.level, "restrained", `${copy.join(" / ")} was demoted`);
+      assert.deepStrictEqual(d.adjustments, []);
+    }
+  });
+
+  check("the string rule still works on its own, unchanged", () => {
+    // Four short strings: 10 words, far inside the word budget, so the only thing
+    // that can fire is the original string rule.
+    const copy = ["Khởi động ngày mới", "Cold brew đậm vị", "Giảm 20%", "Mua ngay"];
+    assert.ok(countCopyWords(copy) <= profileFor("poster").max_words, "this fixture no longer isolates the string rule");
+    assert.ok(!copyFitsChannel(profileFor("poster"), copy.length).fits, "4 strings should break a poster");
+    assert.ok(copyIsDense("poster", copy));
+  });
+
+  check("the word budget is the sum of the playbook budgets it was derived from", () => {
+    // The number in AssetProfile is not an independent judgement: it is
+    // headline + subline + cta from `prompt-v2/playbooks.ts`. If either file
+    // moves, this fails instead of the two drifting apart.
+    const profileSrc = read("lib/image-engine/evolution/experiment/AssetProfile.ts");
+    const playbookSrc = read("lib/image-engine/prompt-v2/playbooks.ts");
+
+    const declared = (family: string) => {
+      const m = new RegExp(`${family}:\\s*\\{[^}]*?max_words:\\s*(\\d+)`, "s").exec(profileSrc);
+      assert.ok(m, `${family} max_words not found`);
+      return Number(m![1]);
+    };
+    const summed = (id: string) => {
+      const m = new RegExp(
+        `${id}:\\s*\\{[\\s\\S]*?copy_budget:\\s*\\{\\s*headline_max_words:\\s*(\\d+),\\s*subline_max_words:\\s*(\\d+),\\s*cta_max_words:\\s*(\\d+)`,
+      ).exec(playbookSrc);
+      assert.ok(m, `${id} copy_budget not found in playbooks.ts`);
+      return Number(m![1]) + Number(m![2]) + Number(m![3]);
+    };
+
+    for (const family of ["poster", "banner", "social", "hero"]) {
+      assert.strictEqual(
+        declared(family),
+        summed(family),
+        `${family}: AssetProfile says ${declared(family)}, playbooks sum to ${summed(family)}`,
+      );
+    }
+    // The measured values, pinned so a silent change to both files is still caught.
+    assert.strictEqual(declared("poster"), 27);
+    assert.strictEqual(declared("banner"), 22);
+    assert.strictEqual(declared("social"), 19);
+    assert.strictEqual(declared("hero"), 5);
+  });
+
+  check("the word veto fires per family, at that family's own budget", () => {
+    const words = (n: number) => [Array.from({ length: n }, (_, i) => `t${i}`).join(" ")];
+    // One string each time, so only the word rule can fire.
+    assert.ok(!copyIsDense("poster", words(27)), "27 words is the poster budget, not over it");
+    assert.ok(copyIsDense("poster", words(28)));
+    assert.ok(!copyIsDense("banner", words(22)));
+    assert.ok(copyIsDense("banner", words(23)));
+    assert.ok(!copyIsDense("social_ad", words(19)));
+    assert.ok(copyIsDense("social_ad", words(20)));
+    assert.ok(!copyIsDense("product_hero", words(5)));
+    assert.ok(copyIsDense("product_hero", words(6)));
+  });
+
+  check("word counting: punctuation does not inflate it, Vietnamese syllables count", () => {
+    assert.strictEqual(countCopyWords(["Freeship mọi đơn hàng từ 500k!"]), 6);
+    assert.strictEqual(countCopyWords(["VƯỢT KHỎI MỌI GIỚI HẠN - CHẠM ĐẾN SỰ TINH KHIẾT TỐI THƯỢNG."]), 12);
+    assert.strictEqual(countCopyWords(["  spaced   out  "]), 2);
+    assert.strictEqual(countCopyWords([]), 0);
+    assert.strictEqual(countCopyWords(null), 0);
   });
 
   check("veto: those thresholds are the ones AssetProfile actually declares", () => {

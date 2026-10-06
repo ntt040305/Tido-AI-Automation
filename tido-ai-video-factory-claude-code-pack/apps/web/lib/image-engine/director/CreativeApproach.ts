@@ -34,7 +34,13 @@
 import type { CampaignObjective } from "@/features/picture-engine/types/picture-engine.types";
 
 import { strongTonesIn, RESTRAINED_TONES, BOLD_TONES } from "./tone-strength";
-import { copyFitsChannel, profileFor, assetFamilyOf } from "../evolution/experiment/AssetProfile";
+import {
+  copyFitsChannel,
+  copyWordsFitChannel,
+  countCopyWords,
+  profileFor,
+  assetFamilyOf,
+} from "../evolution/experiment/AssetProfile";
 
 /** The three levels a frame can be directed at. */
 export type ApproachLevel = "restrained" | "balanced" | "bold";
@@ -166,16 +172,25 @@ export function toneSignal(text: string | null | undefined): ToneSignal | null {
 }
 
 /**
- * Whether the copy is denser than the channel can carry.
+ * Whether the copy is denser than the channel can carry — by strings OR by words.
  *
- * The threshold is not chosen here. `AssetProfile` already declares how many
- * strings each channel supports — poster 3, social 3, banner 2, hero 1 — and
- * `copyFitsChannel` already decides when that is exceeded.
+ * Neither threshold is chosen here. `AssetProfile` declares both: `max_strings`
+ * (poster 3, social 3, banner 2, hero 1) and `max_words`, which is the sum of the
+ * per-role word budgets `prompt-v2/playbooks.ts` has always declared for the same
+ * channels (poster 27, banner 22, social 19, hero 5). This asks those two existing
+ * questions rather than inventing a third answer.
+ *
+ * The word half exists because the string half could not see the real case: a
+ * headline, a 51-word paragraph and a CTA is **three strings** — inside a poster's
+ * allowance — and **69 words**. Either limit alone is enough to make a restrained
+ * layout impossible, so either is enough to fire.
  */
 export function copyIsDense(assetType: string | null | undefined, copyStrings: string[] | null | undefined): boolean {
   const kept = (copyStrings || []).filter((s) => String(s || "").trim().length > 0);
   if (kept.length === 0) return false;
-  return !copyFitsChannel(profileFor(assetType), kept.length).fits;
+  const profile = profileFor(assetType);
+  if (!copyFitsChannel(profile, kept.length).fits) return true;
+  return !copyWordsFitChannel(profile, countCopyWords(kept)).fits;
 }
 
 /**
