@@ -101,6 +101,22 @@ export const LEVEL_HINT_VI: Record<ApproachChoice, string> = {
 
 export const AUTO_LABEL_VI = "Để AI quyết định";
 
+/**
+ * Where the level came from, in the user's words.
+ *
+ * Deliberately the same vocabulary as `VisualDirectionPlanner.SOURCE_LABELS:40-47`
+ * — "User điều chỉnh" and "Phát hiện từ Concept" already mean these things on
+ * this screen, and inventing a second phrasing for the same idea would teach the
+ * user that two badges mean two different things when they do not.
+ */
+export const APPROACH_SOURCE_LABEL_VI: Record<ApproachSource, string> = {
+  user_selected: "User điều chỉnh",
+  concept_tone: "Phát hiện từ Concept",
+  brand_style: "Từ Brand Kit",
+  objective: "Từ mục tiêu chiến dịch",
+  default: "Tự chọn",
+};
+
 /** The two messages the user sees when the system overrules the level. */
 export const ADJUSTMENT_VI = {
   /** Legibility beats taste, so this one overrules an explicit choice too. */

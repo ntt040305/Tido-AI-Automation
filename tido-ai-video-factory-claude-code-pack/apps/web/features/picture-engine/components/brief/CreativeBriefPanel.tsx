@@ -14,7 +14,9 @@ import { AssetTypeSelector } from "./AssetTypeSelector";
 import { VisualDirectionControlPanel } from "@/components/VisualDirectionControlPanel";
 import { BrandIdentityUploader } from "./BrandIdentityUploader";
 import { BrandKitPanel } from "./BrandKitPanel";
-import { Sparkles, FileText, Package, Ratio, Lightbulb, Check } from "lucide-react";
+import { CreativeApproachControl } from "./CreativeApproachControl";
+import { MarketingContextForm } from "./MarketingContextForm";
+import { Sparkles, FileText, Package, Ratio, Lightbulb, Check, ChevronDown, Target } from "lucide-react";
 import { VmcButton, VmcTallyDot, VmcBadge } from "@/components/vmc";
 
 export interface CreativeBriefPanelProps {
@@ -53,6 +55,24 @@ export function CreativeBriefPanel({
   const currentProductCount = brief.creative_direction?.target_product_count ?? 1;
   const currentAspectRatio = brief.creative_direction?.aspect_ratio ?? "1:1";
   const currentIndustry = brief.marketing_context?.industry || "";
+
+  // Split exactly as `SimpleInputAdapterService.ts:311-315` splits it, so the
+  // veto the browser shows is computed from the same string count the server will
+  // see.
+  const contentMessageLines = React.useMemo(
+    () =>
+      String(brief.content_message || "")
+        .split(/\r?\n/)
+        .map((l) => l.trim())
+        .filter(Boolean),
+    [brief.content_message],
+  );
+
+  // Collapsed by default. Objective and audience are worth 0.40 of the route
+  // score (`DirectionEvaluator.ts:137-144`) and were unreachable because this
+  // panel never mounted the form that writes them — but they are still optional
+  // context, and must not become a wall between the user and the render button.
+  const [isCampaignContextOpen, setIsCampaignContextOpen] = useState(false);
 
   const [isProfessionalizing, setIsProfessionalizing] = useState(false);
   const [professionalResult, setProfessionalResult] = useState<{
@@ -428,6 +448,57 @@ export function CreativeBriefPanel({
                 [ Giữ ý tưởng ban đầu ]
               </VmcButton>
             </div>
+          </div>
+        )}
+      </div>
+
+      {/* 5b. Creative Approach
+           Directly under the concept, because it modifies the concept. */}
+      <CreativeApproachControl
+        value={brief.creative_direction?.creative_approach}
+        onChange={(next) => onUpdateCreativeDirection({ creative_approach: next })}
+        concept={currentConcept}
+        assetType={brief.asset_type}
+        objective={brief.marketing_context?.objective}
+        copyStrings={contentMessageLines}
+      />
+
+      {/* 5c. Campaign context — the form that existed and was never mounted.
+           `MarketingContextForm` has carried the objective and audience controls
+           since Phase 4.1 (`MarketingContextForm.tsx:26-30`, `:97-98`) and this
+           panel never imported it, so `AIStrategyPanel.tsx:73` always printed
+           "Chưa nhập đối tượng cụ thể". Industry is excluded: this panel renders
+           its own selector for it at the top. */}
+      <div className="space-y-2">
+        <button
+          type="button"
+          onClick={() => setIsCampaignContextOpen((v) => !v)}
+          className="w-full flex items-center justify-between gap-2 text-left cursor-pointer outline-none group"
+        >
+          <span className="font-mono text-[11px] uppercase tracking-wider text-text-telemetry flex items-center gap-1.5 group-hover:text-text">
+            <Target size={13} />
+            <span>Bối cảnh chiến dịch (không bắt buộc)</span>
+          </span>
+          <ChevronDown
+            size={14}
+            className={`text-text-telemetry transition-transform ${isCampaignContextOpen ? "rotate-180" : ""}`}
+          />
+        </button>
+
+        {!isCampaignContextOpen && (
+          <p className="text-[11.5px] text-text3 leading-relaxed px-1">
+            Mục tiêu và đối tượng giúp AI chọn hướng sáng tạo sát hơn. Bỏ trống cũng được.
+          </p>
+        )}
+
+        {isCampaignContextOpen && (
+          <div className="border border-borderStrong rounded-xl p-4 bg-surface2/30">
+            <MarketingContextForm
+              context={brief.marketing_context}
+              onChange={onUpdateMarketingContext}
+              fields={["objective", "target_audience"]}
+              showHeader={false}
+            />
           </div>
         )}
       </div>
