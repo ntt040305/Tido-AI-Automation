@@ -115,23 +115,45 @@ function main() {
     assert.strictEqual(ConceptStructuringLayer.parse("bàn gỗ").tone, null);
   });
 
-  check("RECORDED BEHAVIOUR: unaccented Vietnamese does not match", () => {
-    // Not a wish — a record. The table spells its Vietnamese terms with
-    // diacritics ("sang\\s?trọng"), so "sang trong" matches nothing. Left
-    // exactly as it is: changing the table would change what every other layer
-    // reading `intent.tone` sees, which is out of this task's scope.
+  check("RECORDED BEHAVIOUR: the TABLE still ignores unaccented Vietnamese", () => {
+    // Unchanged, and deliberately so. The table spells its Vietnamese terms with
+    // diacritics ("sang\\s?trọng"), so "sang trong" matches nothing here. Editing
+    // it would change what every other layer reading `intent.tone` sees.
+    //
+    // The inference no longer depends on this: accent folding was added to
+    // `tone-strength.ts` instead, for multi-syllable strong terms only, and the
+    // test below pins that. So an unaccented brief now reaches a level while
+    // `intent.tone` still reports nothing — the two are different questions.
     assert.deepStrictEqual(ConceptStructuringLayer.tonesIn("sang trong").map((t) => t.tone), []);
     assert.deepStrictEqual(ConceptStructuringLayer.tonesIn("toi gian").map((t) => t.tone), []);
     assert.deepStrictEqual(ConceptStructuringLayer.tonesIn("nang dong").map((t) => t.tone), []);
-    // The English half of the same table is unaffected, so an unaccented brief
-    // that happens to use an English word still reaches a signal.
+    // The English half of the same table is unaffected either way.
     assert.deepStrictEqual(ConceptStructuringLayer.tonesIn("luxury").map((t) => t.tone), ["premium"]);
+  });
+
+  check("unaccented Vietnamese now reaches the INFERENCE, for safe terms only", () => {
+    // Multi-syllable strong terms fold.
+    assert.strictEqual(toneSignal("phong cach sang trong")?.level, "restrained");
+    assert.strictEqual(toneSignal("bo cuc toi gian")?.level, "restrained");
+    assert.strictEqual(toneSignal("y tuong tao bao")?.level, "bold");
+    assert.strictEqual(toneSignal("hinh anh nang dong")?.level, "bold");
+    // Single syllables never fold, so age and freshness cannot be mistaken for a
+    // request: "tuoi" must reach neither "tươi" nor "tuổi".
+    assert.strictEqual(toneSignal("do tuoi 25-34"), null);
+    assert.strictEqual(toneSignal("nuoc rau ma tuoi mat"), null);
+    assert.strictEqual(toneSignal("cong thuc manh"), null);
+    // And the collision that folding creates is guarded: "sang" + "trong suốt"
+    // is a transparent background, not a luxury register.
+    assert.strictEqual(toneSignal("nen chuyen tu trang sang trong suot"), null);
+    // The accented forms behave exactly as before.
+    assert.strictEqual(toneSignal("phong cách sang trọng")?.level, "restrained");
+    assert.strictEqual(toneSignal("độ tuổi 25-34"), null);
   });
 
   check("toneSignal groups premium|minimal restrained and bold|energetic bold", () => {
     assert.strictEqual(toneSignal("chai serum sang trọng")?.level, "restrained");
     assert.strictEqual(toneSignal("poster tối giản")?.level, "restrained");
-    assert.strictEqual(toneSignal("poster ấn tượng")?.level, "bold");
+    assert.strictEqual(toneSignal("poster táo bạo")?.level, "bold");
     assert.strictEqual(toneSignal("poster năng động")?.level, "bold");
   });
 
@@ -144,7 +166,7 @@ function main() {
     // NOTE: the brief's example phrase "bùng nổ" is not in the real keyword
     // table and matches nothing, so "năng động" is used as the energetic term.
     assert.strictEqual(toneSignal("sang trọng nhưng năng động"), null);
-    assert.strictEqual(toneSignal("tối giản nhưng ấn tượng"), null);
+    assert.strictEqual(toneSignal("tối giản nhưng táo bạo"), null);
   });
 
   check("toneSignal: warm alone, and no tone at all, are no signal", () => {
@@ -190,14 +212,14 @@ function main() {
 
   check("step 2: concept tone beats brand style and objective", () => {
     const d = decide({
-      concept: "poster ấn tượng",
+      concept: "poster táo bạo",
       brandStylePreferred: ["luxury"],
       objective: "branding",
       assetType: "poster",
     });
     assert.strictEqual(d.level, "bold");
     assert.strictEqual(d.source, "concept_tone");
-    assert.ok(d.reason_vi.includes("ấn tượng"), `reason did not quote the match: ${d.reason_vi}`);
+    assert.ok(d.reason_vi.includes("táo bạo"), `reason did not quote the match: ${d.reason_vi}`);
   });
 
   check("step 3: brand style is read when the concept is silent", () => {
@@ -291,7 +313,7 @@ function main() {
   });
 
   check("ceiling: it caps an inferred bold too", () => {
-    const d = decide({ concept: "poster ấn tượng", assetType: "product_hero" });
+    const d = decide({ concept: "poster táo bạo", assetType: "product_hero" });
     assert.strictEqual(d.level, "balanced");
     assert.strictEqual(d.source, "concept_tone");
     assert.strictEqual(d.adjustments[0].reason_vi, CEILING_VI);

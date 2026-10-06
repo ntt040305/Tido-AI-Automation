@@ -33,7 +33,7 @@
  */
 import type { CampaignObjective } from "@/features/picture-engine/types/picture-engine.types";
 
-import { ConceptStructuringLayer } from "./ConceptStructuringLayer";
+import { strongTonesIn, RESTRAINED_TONES, BOLD_TONES } from "./tone-strength";
 import { copyFitsChannel, profileFor, assetFamilyOf } from "../evolution/experiment/AssetProfile";
 
 /** The three levels a frame can be directed at. */
@@ -124,16 +124,6 @@ export const ADJUSTMENT_VI = {
   productHero: "Product Hero cần sản phẩm rõ ràng nên mức táo bạo bị giới hạn.",
 } as const;
 
-/**
- * Which tones argue for which level.
- *
- * `warm` appears in neither on purpose: a warm brief says something about
- * temperature, not about how much the frame should dare. Reading it either way
- * would be inventing a signal.
- */
-const RESTRAINED_TONES = ["premium", "minimal"] as const;
-const BOLD_TONES = ["bold", "energetic"] as const;
-
 export interface ToneSignal {
   level: ApproachLevel;
   /** The tone group that matched, for the reason line. */
@@ -153,7 +143,11 @@ export interface ToneSignal {
  * turn.
  */
 export function toneSignal(text: string | null | undefined): ToneSignal | null {
-  const hits = ConceptStructuringLayer.tonesIn(String(text || ""));
+  // Strong terms only. The full `TONES` table scored product attributes as
+  // treatment requests — "cao cấp", "tươi", "nổi bật" — so the inference reads the
+  // strong/weak split in `tone-strength.ts` instead. `parse()` and its table are
+  // untouched.
+  const hits = strongTonesIn(String(text || ""));
   if (hits.length === 0) return null;
 
   const restrained = hits.filter((h) => (RESTRAINED_TONES as readonly string[]).includes(h.tone));
@@ -174,21 +168,14 @@ export function toneSignal(text: string | null | undefined): ToneSignal | null {
 /**
  * Whether the copy is denser than the channel can carry.
  *
- * The threshold is not a number chosen here. `AssetProfile` already declares how
- * many strings each channel supports — poster 3, social 3, banner 2, hero 1
- * (`evolution/experiment/AssetProfile.ts:58-92`) — and `copyFitsChannel` already
- * decides when that is exceeded. This asks that existing question rather than
- * inventing a second answer to it.
- *
- * Strings only. `AssetProfile` declares no word budget, so none is assumed here:
- * a single very long headline is one string and does not trip the veto. Recorded
- * as a known limit in `docs/migration/07-creative-direction-result.md` rather
- * than papered over with a guessed word count.
+ * The threshold is not chosen here. `AssetProfile` already declares how many
+ * strings each channel supports — poster 3, social 3, banner 2, hero 1 — and
+ * `copyFitsChannel` already decides when that is exceeded.
  */
 export function copyIsDense(assetType: string | null | undefined, copyStrings: string[] | null | undefined): boolean {
-  const strings = (copyStrings || []).filter((s) => String(s || "").trim().length > 0).length;
-  if (strings === 0) return false;
-  return !copyFitsChannel(profileFor(assetType), strings).fits;
+  const kept = (copyStrings || []).filter((s) => String(s || "").trim().length > 0);
+  if (kept.length === 0) return false;
+  return !copyFitsChannel(profileFor(assetType), kept.length).fits;
 }
 
 /**
