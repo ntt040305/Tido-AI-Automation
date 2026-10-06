@@ -138,6 +138,31 @@ const DISCOUNT_PATTERNS: RegExp[] = [
 ];
 
 export class ConceptStructuringLayer {
+  /**
+   * Every tone group present in the text, not only the first.
+   *
+   * `parse()` breaks on its first match (see the loop below), so it reports a
+   * single tone chosen by table order: "sang trọng nhưng năng động" comes back
+   * as `premium` and the tension between the two words is invisible. That is the
+   * right contract for `intent.tone`, which names the dominant register, and the
+   * wrong one for deciding how bold a frame should be — there, a brief that says
+   * both has not asked for either, and `CreativeApproach` has to be able to see
+   * that it said both.
+   *
+   * Additive on purpose. The same `TONES` table, read a second way; `parse()` is
+   * untouched, so every layer already reading `intent.tone` sees exactly what it
+   * saw before.
+   */
+  public static tonesIn(text: string): { tone: string; match: string }[] {
+    const subject = String(text || "");
+    const found: { tone: string; match: string }[] = [];
+    for (const t of TONES) {
+      const m = subject.match(t.pattern);
+      if (m) found.push({ tone: t.tone, match: m[0] });
+    }
+    return found;
+  }
+
   public static parse(concept: string): CommercialIntent {
     const text = String(concept || "");
     const evidence: string[] = [];
