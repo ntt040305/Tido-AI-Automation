@@ -31,6 +31,14 @@ import {
   profileTelemetry,
 } from "./models/image-model-profiles";
 import {
+  promptDialect,
+  engineForActiveModel,
+  gptDialectAvailable,
+  PromptDialectNotBuiltError,
+  promptEngineVersion,
+  engineTelemetry,
+} from "./prompt-v2/engine-selector";
+import {
   allocateReferences,
   smallPanels,
   gridForPanels,
@@ -444,6 +452,71 @@ function main() {
         }
       }
     }
+  });
+
+  // ── 5. Dialect routing ──────────────────────────────────────────────────
+  console.log("\n-- dialect routing --");
+
+  const SUN_ENV = { IMGSTUDIO_PROVIDER_ID: SUNBURST.providerId };
+  const NB2_ENV = { IMGSTUDIO_PROVIDER_ID: NANO_BANANA_2.providerId };
+
+  check("the dialect follows the model, not the PROMPT_ENGINE flag", () => {
+    assert.strictEqual(promptDialect(SUN_ENV), "gpt-image");
+    assert.strictEqual(promptDialect(NB2_ENV), "gemini");
+    // A flag asking for v1 cannot make a GPT model read a Gemini prompt.
+    assert.strictEqual(promptDialect({ ...SUN_ENV, PROMPT_ENGINE: "v1" }), "gpt-image");
+    assert.strictEqual(promptDialect({ ...SUN_ENV, PROMPT_ENGINE: "v2" }), "gpt-image");
+  });
+
+  check("Nano Banana 2 keeps today's behaviour exactly", () => {
+    assert.deepStrictEqual(engineForActiveModel(NB2_ENV), { dialect: "gemini", engine: "v1" });
+    assert.deepStrictEqual(engineForActiveModel({ ...NB2_ENV, PROMPT_ENGINE: "v2" }), {
+      dialect: "gemini",
+      engine: "v2",
+    });
+    // And the flag's own default is untouched.
+    assert.strictEqual(promptEngineVersion({}), "v1");
+  });
+
+  check("Sunburst throws rather than silently using a prompt written for another model", () => {
+    assert.strictEqual(gptDialectAvailable(), false, "Phase 3 exists now; update this test deliberately");
+    let thrown: unknown = null;
+    try {
+      engineForActiveModel(SUN_ENV);
+    } catch (e) {
+      thrown = e;
+    }
+    assert.ok(thrown instanceof PromptDialectNotBuiltError, `expected a typed error, got ${thrown}`);
+    const err = thrown as PromptDialectNotBuiltError;
+    assert.strictEqual(err.code, "PROMPT_DIALECT_NOT_BUILT");
+    assert.strictEqual(err.dialect, "gpt-image");
+    assert.strictEqual(err.model, "GPT-Image-2.5-Sunburst");
+    // The message has to tell an operator how to get working again.
+    assert.ok(/IMGSTUDIO_PROVIDER_ID=flow-nano-banana-2/.test(err.message), "no rollback instruction");
+    assert.ok(/not built yet/i.test(err.message));
+  });
+
+  check("it throws for the GPT dialect whatever PROMPT_ENGINE says", () => {
+    for (const flag of ["v1", "v2", "", "V2", "nonsense"]) {
+      assert.throws(() => engineForActiveModel({ ...SUN_ENV, PROMPT_ENGINE: flag }), PromptDialectNotBuiltError);
+    }
+  });
+
+  check("there is no v1 fallback path for the GPT dialect", () => {
+    // The standing rule: NEVER fall back to engine v1 for the GPT dialect. Returning
+    // "v1" would be exactly that, so the function has to throw instead.
+    const src = read("lib/image-engine/prompt-v2/engine-selector.ts");
+    const fn = /export function engineForActiveModel[\s\S]*?\n\}/.exec(src);
+    assert.ok(fn, "engineForActiveModel not found");
+    assert.ok(/throw new PromptDialectNotBuiltError/.test(fn![0]), "the GPT branch does not throw");
+    assert.ok(!/engine: "v1"/.test(fn![0]), "a v1 fallback exists on the GPT path");
+  });
+
+  check("telemetry names the dialect, so a log makes the routing visible", () => {
+    const t = engineTelemetry(SUN_ENV);
+    assert.strictEqual(t.prompt_dialect, "gpt-image");
+    assert.strictEqual(t.gpt_dialect_available, false);
+    assert.strictEqual(engineTelemetry(NB2_ENV).prompt_dialect, "gemini");
   });
 
   console.log(`\n${passed} passed, ${failed} failed\n`);

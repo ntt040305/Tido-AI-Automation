@@ -1,5 +1,6 @@
 import sharp from "sharp";
 import { IMAGE_ENGINE_CONFIG } from "../config";
+import { activeProfile } from "../models/image-model-profiles";
 import {
   ImageNormalizationService,
   NormalizedImage,
@@ -66,15 +67,28 @@ export class ImgStudioImageGenerationProvider implements ImageGenerationProvider
 
   /**
    * Generates or edits an image using ImgStudio REST API (/api/v1/images/edit)
-   * Model / Provider ID: flow-nano-banana-2
+   * Model / Provider ID: from the active row in `models/image-model-profiles.ts`.
    * Includes 90,000ms timeout, network error retries (3 attempts total), and detailed telemetry.
    */
   async generateImage(input: ProviderImageGenerationInput): Promise<ImgStudioProviderOutput> {
     const baseUrl = (process.env.IMGSTUDIO_BASE_URL || "https://imgstudio.site").replace(/\/+$/, "");
     const apiKey = process.env.IMGSTUDIO_API_KEY;
-    const providerId = process.env.IMGSTUDIO_PROVIDER_ID || "flow-nano-banana-2";
-    const resolution = process.env.TIDO_IMAGE_OUTPUT_RESOLUTION || input.imageSize || "1K";
-    const quality = process.env.TIDO_IMAGE_OUTPUT_QUALITY || "standard";
+    // The model's own facts, from its one row in `models/image-model-profiles.ts`.
+    //
+    // These three used to be literals here, and the literals were wrong for the
+    // model that is now active: the default provider id named Nano Banana 2, and
+    // `quality` defaulted to "standard" where the ImgStudio web UI sends "high" for
+    // Sunburst. An explicit environment override still wins, because a value set by
+    // hand is a decision and this is not the place to overrule one.
+    const profile = activeProfile();
+    const providerId = process.env.IMGSTUDIO_PROVIDER_ID || profile.providerId;
+    const resolution = process.env.TIDO_IMAGE_OUTPUT_RESOLUTION || input.imageSize || profile.resolutionTier;
+    const quality = process.env.TIDO_IMAGE_OUTPUT_QUALITY || profile.quality;
+    // The hard per-call ceiling. `config.ts:172-175` declared 3 for every ImgStudio
+    // model; Sunburst refuses a third (03 §2.2), so the number belongs to the row.
+    const referenceLimit = Number(process.env.IMGSTUDIO_MAX_REFERENCE_IMAGES) > 0
+      ? Number(process.env.IMGSTUDIO_MAX_REFERENCE_IMAGES)
+      : profile.maxReferences;
     // Measurement only; neither value changes any decision below.
     let apiRequestMs = 0;
     let downloadMs = 0;
@@ -93,9 +107,10 @@ export class ImgStudioImageGenerationProvider implements ImageGenerationProvider
     }
 
     // 2. Pre-call Aspect Ratio Validation (Non-retryable)
-    const supportedRatios = IMAGE_ENGINE_CONFIG.IMGSTUDIO_SUPPORTED_ASPECT_RATIOS || [
-      "1:1", "9:16", "16:9",
-    ];
+    // The active model's own list. `config.ts:157` held one list for every
+    // ImgStudio model; a per-model row is what lets Sunburst refuse 4:5 while a
+    // future model that accepts it does not have to.
+    const supportedRatios = profile.ratios;
 
     if (!input.aspectRatio || !supportedRatios.includes(input.aspectRatio)) {
       return {
@@ -147,14 +162,14 @@ export class ImgStudioImageGenerationProvider implements ImageGenerationProvider
     const packing = await ReferencePackingService.pack({
       references: candidateReferences,
       manifest: input.reference_manifest,
-      options: { limit: IMAGE_ENGINE_CONFIG.IMGSTUDIO_MAX_REFERENCE_IMAGES },
+      options: { limit: referenceLimit, maxCells: profile.maxPanelsPerSheet, sheetSize: profile.sheetSizePx },
     });
 
     if (packing.status === "IMPOSSIBLE") {
       console.error("[ImgStudioProvider][REFERENCE_CAPACITY_BLOCKED]", {
         status: packing.status,
         received: candidateReferences.length,
-        limit: IMAGE_ENGINE_CONFIG.IMGSTUDIO_MAX_REFERENCE_IMAGES,
+        limit: referenceLimit,
         products_in: packing.products_in.length,
         reason: packing.reason,
       });
@@ -163,13 +178,13 @@ export class ImgStudioImageGenerationProvider implements ImageGenerationProvider
         error: {
           code: "REFERENCE_LIMIT_EXCEEDED",
           message:
-            `Nhà cung cấp chỉ nhận tối đa ${IMAGE_ENGINE_CONFIG.IMGSTUDIO_MAX_REFERENCE_IMAGES} ` +
+            `Nhà cung cấp chỉ nhận tối đa ${referenceLimit} ` +
             `ảnh tham chiếu, và ${packing.products_in.length} sản phẩm này không gộp được vào một ảnh. ` +
             `Hãy tách brief thành nhiều lần tạo.`,
           details: {
             error_code: "REFERENCE_LIMIT_EXCEEDED",
             stage: "PROVIDER_CAPABILITY_CHECK",
-            provider_limit: IMAGE_ENGINE_CONFIG.IMGSTUDIO_MAX_REFERENCE_IMAGES,
+            provider_limit: referenceLimit,
             received: candidateReferences.length,
             distinct_products: packing.products_in,
             shed_without_loss: packing.dropped,

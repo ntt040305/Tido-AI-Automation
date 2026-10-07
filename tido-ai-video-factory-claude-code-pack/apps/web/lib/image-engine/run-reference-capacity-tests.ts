@@ -358,13 +358,28 @@ check("The ceiling is declared as a capability, not written into the call", () =
     path.join(process.cwd(), "lib", "image-engine", "provider", "ImgStudioImageGenerationProvider.ts"),
     "utf-8"
   );
+  // The capability moved from one global constant to a per-MODEL row.
+  //
+  // `config.ts:172-175` declared 3 for every ImgStudio model, quoting the
+  // provider's "maximum 3 images per edit request". That is true of Nano Banana 2
+  // and false of GPT-Image-2.5-Sunburst, which refuses a THIRD image with HTTP 400
+  // (`docs/migration/03-provider-capabilities.md` §2.2). One number could not be
+  // right for both, so each model now declares its own in
+  // `models/image-model-profiles.ts`.
+  //
+  // The property this test exists for is unchanged: the ceiling is read from a
+  // declaration, never written into the call.
   assert.ok(
-    /IMAGE_ENGINE_CONFIG\.IMGSTUDIO_MAX_REFERENCE_IMAGES/.test(src),
-    "the limit is not read from the provider capability"
+    /profile\.maxReferences/.test(src),
+    "the limit is not read from the active model's declared capability"
   );
   assert.ok(
-    !/limit:\s*3\b/.test(src),
-    "a literal 3 is being passed as the limit, so the capability declaration is decorative"
+    /const referenceLimit\b/.test(src) && /limit: referenceLimit/.test(src),
+    "the limit is not resolved once and passed by name"
+  );
+  assert.ok(
+    !/limit:\s*\d+\b/.test(src),
+    "a literal number is being passed as the limit, so the capability declaration is decorative"
   );
 });
 

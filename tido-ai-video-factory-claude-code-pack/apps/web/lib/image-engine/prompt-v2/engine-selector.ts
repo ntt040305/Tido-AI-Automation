@@ -25,6 +25,8 @@
  */
 
 /** Just enough of an environment to read. Keeps the tests free of casts. */
+import { activeProfile, type PromptDialect } from "../models/image-model-profiles";
+
 export type EnvLike = Record<string, string | undefined>;
 
 export type PromptEngineVersion = "v1" | "v2";
@@ -147,10 +149,82 @@ export function directorModel(env: EnvLike = process.env): string | undefined {
   return raw || undefined;
 }
 
+/**
+ * Which prompt dialect the ACTIVE MODEL requires — not which engine a flag asked for.
+ *
+ * The distinction matters because the two are different kinds of decision.
+ * `PROMPT_ENGINE` is a preference about how to write a Gemini prompt; the dialect is
+ * a fact about the model that will read it. A GPT-Image model cannot be sent a
+ * Gemini-dialect prompt just because a flag says `v1`.
+ */
+export function promptDialect(env: EnvLike = process.env): PromptDialect {
+  return activeProfile(env).promptDialect;
+}
+
+/**
+ * Raised when a render needs the GPT dialect and it does not exist yet.
+ *
+ * Deliberately a hard failure. The two silent alternatives are both worse than
+ * stopping: falling back to engine v1 would send Sunburst a ~26,000-character
+ * Gemini-dialect prompt built for a different model, and falling back to the Gemini
+ * v2 would send it a shorter prompt built for the same wrong model. Either produces
+ * an image that looks like a result, costs 150-250 VND, and tells nobody that the
+ * dialect the model needed was never written. That is exactly how the `__dirname`
+ * failure stayed invisible for a whole phase.
+ */
+export class PromptDialectNotBuiltError extends Error {
+  readonly code = "PROMPT_DIALECT_NOT_BUILT";
+  readonly dialect: PromptDialect;
+  readonly model: string;
+
+  constructor(dialect: PromptDialect, model: string) {
+    super(
+      `GPT dialect not built yet: the active model is ${model}, which requires the ` +
+        `"${dialect}" prompt dialect, and Phase 3 has not been built. Refusing to send a ` +
+        `prompt written for a different model. Roll back by setting ` +
+        `IMGSTUDIO_PROVIDER_ID=flow-nano-banana-2 and restarting.`,
+    );
+    this.name = "PromptDialectNotBuiltError";
+    this.dialect = dialect;
+    this.model = model;
+  }
+}
+
+/**
+ * Whether the GPT dialect exists.
+ *
+ * One place, so the day Phase 3 lands this flips once and every caller follows.
+ * Checked by file presence rather than a flag: a flag can be on while the files are
+ * missing, which is the state that produced a silent v1 fallback before.
+ */
+export function gptDialectAvailable(): boolean {
+  // Phase 3 has not been built. `prompt-v2/gpt-brief.ts` does not exist.
+  return false;
+}
+
+/**
+ * The engine to use for the active model, or a thrown error rather than a guess.
+ *
+ * Gemini models keep today's behaviour exactly — `PROMPT_ENGINE` decides, v1 by
+ * default — so the rollback path is untouched.
+ */
+export function engineForActiveModel(env: EnvLike = process.env):
+  | { dialect: "gemini"; engine: PromptEngineVersion }
+  | { dialect: "gpt-image"; engine: "v2-gpt" } {
+  const dialect = promptDialect(env);
+  if (dialect === "gemini") return { dialect, engine: promptEngineVersion(env) };
+  if (!gptDialectAvailable()) {
+    throw new PromptDialectNotBuiltError(dialect, activeProfile(env).displayName);
+  }
+  return { dialect, engine: "v2-gpt" };
+}
+
 /** Counts and names only. Never a key, never a prompt. */
 export function engineTelemetry(env: EnvLike = process.env) {
   return {
     prompt_engine: promptEngineVersion(env),
+    prompt_dialect: promptDialect(env),
+    gpt_dialect_available: gptDialectAvailable(),
     v2_director_model: directorModel(env) || "(provider default)",
     v2_copy_policy: `${copyPolicyMode(env).mode}(${copyPolicyMode(env).source})`,
     v2_template_reload: templateReload(env),
