@@ -30,6 +30,8 @@ import {
   profileForProviderId,
   profileTelemetry,
 } from "./models/image-model-profiles";
+import { IMAGE_ENGINE_CONFIG } from "./config";
+import { checkIntake } from "./service/intake-limits";
 import {
   promptDialect,
   engineForActiveModel,
@@ -452,6 +454,111 @@ function main() {
         }
       }
     }
+  });
+
+  // ── 4b. Intake caps ─────────────────────────────────────────────────────
+  //
+  // Separate from the provider's ceiling on purpose: what a person may ATTACH and
+  // what travels in one call are two different numbers, and before this there was no
+  // cap on either side — neither the uploader nor the route counted or measured
+  // anything, so eight 12-megapixel photographs were accepted and buffered.
+  console.log("\n-- intake caps --");
+
+  const L = IMAGE_ENGINE_CONFIG.INTAKE_LIMITS;
+  const file = (size: number, type = "image/png", name = "x.png") => ({ size, type, name });
+  const channel = (items: unknown[], max: number, types: readonly string[]) => ({
+    label: "ảnh sản phẩm",
+    items,
+    max,
+    types,
+  });
+
+  check("the caps are the ones asked for: 8 products, 1 logo, 1 style", () => {
+    assert.strictEqual(L.maxProductImages, 8);
+    assert.strictEqual(L.maxLogoImages, 1);
+    assert.strictEqual(L.maxStyleImages, 1);
+    assert.ok(L.maxBytesPerImage > 0 && L.maxTotalBytes >= L.maxBytesPerImage);
+  });
+
+  check("the intake cap is bigger than the provider's ceiling, deliberately", () => {
+    // The whole point of packing: a person may attach more than the model takes.
+    assert.ok(
+      L.maxProductImages > SUNBURST.maxReferences,
+      "the intake cap collapsed onto the provider limit; packing would be pointless",
+    );
+    // And the allocator can actually carry that many on this model.
+    const a = allocateReferences(inputs(L.maxProductImages, false), OPTS(SUNBURST.maxReferences, SUNBURST.maxPanelsPerSheet, SUNBURST.sheetSizePx));
+    assert.ok(!a.impossible, "the intake cap allows more products than the allocator can pack");
+  });
+
+  check("eight products are accepted, nine are refused with the number", () => {
+    assert.strictEqual(checkIntake([channel(Array.from({ length: 8 }, () => file(1000)), 8, L.acceptedMimeTypes)], L), null);
+    const p = checkIntake([channel(Array.from({ length: 9 }, () => file(1000)), 8, L.acceptedMimeTypes)], L);
+    assert.ok(p, "a ninth product image was accepted");
+    assert.strictEqual(p!.code, "TOO_MANY_IMAGES");
+    assert.ok(/9/.test(p!.message_vi) && /8/.test(p!.message_vi), `the message hides the numbers: ${p!.message_vi}`);
+  });
+
+  check("an oversize file and an oversize total are each refused", () => {
+    const big = checkIntake([channel([file(L.maxBytesPerImage + 1)], 8, L.acceptedMimeTypes)], L);
+    assert.strictEqual(big?.code, "IMAGE_TOO_LARGE");
+    // Eight files each just under the per-file cap exceed the total.
+    const many = Array.from({ length: 8 }, () => file(L.maxBytesPerImage - 1));
+    const total = checkIntake([channel(many, 8, L.acceptedMimeTypes)], L);
+    assert.strictEqual(total?.code, "UPLOAD_TOO_LARGE");
+  });
+
+  check("type validation is kept, and an absent type is tolerated", () => {
+    const bad = checkIntake([channel([file(1000, "image/gif")], 8, L.acceptedMimeTypes)], L);
+    assert.strictEqual(bad?.code, "UNSUPPORTED_IMAGE_TYPE");
+    // Some clients omit the type; the bytes are read during normalisation anyway.
+    assert.strictEqual(checkIntake([channel([file(1000, "")], 8, L.acceptedMimeTypes)], L), null);
+    // A logo may be a vector, and only a logo.
+    assert.strictEqual(
+      checkIntake([{ label: "ảnh logo", items: [file(1000, "image/svg+xml")], max: 1, types: L.acceptedLogoMimeTypes }], L),
+      null,
+    );
+    assert.ok(checkIntake([channel([file(1000, "image/svg+xml")], 8, L.acceptedMimeTypes)], L));
+  });
+
+  check("every refusal is in Vietnamese and names its limit", () => {
+    const problems = [
+      checkIntake([channel(Array.from({ length: 9 }, () => file(1000)), 8, L.acceptedMimeTypes)], L),
+      checkIntake([channel([file(L.maxBytesPerImage + 1)], 8, L.acceptedMimeTypes)], L),
+      checkIntake([channel(Array.from({ length: 8 }, () => file(L.maxBytesPerImage - 1)), 8, L.acceptedMimeTypes)], L),
+      checkIntake([channel([file(1000, "image/gif")], 8, L.acceptedMimeTypes)], L),
+    ];
+    for (const p of problems) {
+      assert.ok(p, "a case that should be refused was accepted");
+      assert.ok(
+        /[àáâãèéêìíòóôõùúăđĩũơưạảấầẩẫậắằẳẵặẹẻẽếềểễệỉịọỏốồổỗộớờởỡợụủứừửữựỳỵỷỹ]/i.test(p!.message_vi),
+        `not Vietnamese: ${p!.message_vi}`,
+      );
+      assert.ok(!/undefined|NaN/.test(p!.message_vi), `broken message: ${p!.message_vi}`);
+      // Counts only, never a buffer.
+      assert.ok(!JSON.stringify(p!.detail).includes("buffer"));
+    }
+  });
+
+  check("the server is never stricter than the client: one constant, read by both", () => {
+    const route = read("app/api/image/generate-simple/route.ts");
+    const uploader = read("features/picture-engine/components/brief/BrandIdentityUploader.tsx");
+    for (const [label, src] of [["route", route], ["uploader", uploader]] as const) {
+      assert.ok(/INTAKE_LIMITS/.test(src), `the ${label} does not read the shared constant`);
+      assert.ok(/checkIntake/.test(src), `the ${label} does not run the shared check`);
+      // No second copy of the numbers.
+      assert.ok(!/maxProductImages:\s*\d+/.test(src), `the ${label} restates a cap`);
+    }
+    // The route refuses rather than trimming.
+    assert.ok(/TOO_MANY_IMAGES|intakeProblem/.test(route), "the route does not act on the check");
+    assert.ok(!/rawImages\.slice\(/.test(route), "the route trims the attachment list instead of refusing");
+  });
+
+  check("the uploader tells the user when packing will happen", () => {
+    const uploader = read("features/picture-engine/components/brief/BrandIdentityUploader.tsx");
+    assert.ok(/sẽ được ghép thành/.test(uploader), "no packing notice");
+    // The number comes from the profile, so it cannot become a lie on screen.
+    assert.ok(/activeProfile\(\)\.maxReferences/.test(uploader), "the notice hardcodes the ceiling");
   });
 
   // ── 5. Dialect routing ──────────────────────────────────────────────────

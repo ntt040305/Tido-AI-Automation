@@ -9,6 +9,8 @@ import { recordGeneration } from "@/lib/persistence/record-generation";
 import { loadBrandKitForRender, type LoadedBrandKit } from "@/lib/brand-kit/brand-kit-store";
 import { SimpleInputRequestV1, AssetRoleV1 } from "@/lib/image-engine/types";
 import { RenderTracer } from "@/lib/image-engine/observability/RenderTracer";
+import { checkIntake } from "@/lib/image-engine/service/intake-limits";
+import { IMAGE_ENGINE_CONFIG } from "@/lib/image-engine/config";
 
 export const runtime = "nodejs";
 
@@ -136,6 +138,30 @@ export async function POST(req: NextRequest) {
       // Phase 5.4: a logo arrives under its own key with an explicit role. In
       // "images" it defaulted to PRODUCT and could be read as the product.
       const rawLogoImages = formData.getAll("logoImages");
+
+      // Intake limits, enforced here because this is the only place that cannot be
+      // skipped. The uploader applies the same numbers from the same constant, but a
+      // request can arrive without going through it at all, and before this there was
+      // no cap on either side: any number of files of any size were buffered.
+      //
+      // Refused, never trimmed. Silently dropping the ninth photograph a person
+      // chose is the behaviour this whole packing effort exists to avoid.
+      const intake = IMAGE_ENGINE_CONFIG.INTAKE_LIMITS;
+      const intakeProblem = checkIntake(
+        [
+          { label: "ảnh sản phẩm", items: rawImages, max: intake.maxProductImages, types: intake.acceptedMimeTypes },
+          { label: "ảnh logo", items: rawLogoImages, max: intake.maxLogoImages, types: intake.acceptedLogoMimeTypes },
+          { label: "ảnh phong cách", items: rawInspirationImages, max: intake.maxStyleImages, types: intake.acceptedMimeTypes },
+        ],
+        intake,
+      );
+      if (intakeProblem) {
+        console.warn("[INTAKE][REJECTED]", intakeProblem.detail);
+        return NextResponse.json(
+          { success: false, error: { code: intakeProblem.code, message: intakeProblem.message_vi, details: intakeProblem.detail } },
+          { status: 400 },
+        );
+      }
       tExtractDone = Date.now();
       const parsedImages: {
         reference_id: string;
