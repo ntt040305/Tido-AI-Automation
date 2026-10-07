@@ -1,4 +1,5 @@
 import { SimpleImageGenerationResultV1, SimpleInputRequestV1 } from "../types";
+import { activeProfile as activeImageProfile } from "./../models/image-model-profiles";
 import { ImgStudioImageGenerationProvider } from "../provider/ImgStudioImageGenerationProvider";
 import type { ImageGenerationProvider, ProviderImageGenerationInput } from "../provider/ImageGenerationProvider";
 // Phase 5.5.5: the render core, called directly. It was reached through a
@@ -710,14 +711,14 @@ export class ExperimentPipeline {
             file: "apps/web/lib/image-engine/evolution/ExperimentPipeline.ts",
             func: "wrapProvider -> inner.generateImage",
             input: {
-              model: input.model || "flow-nano-banana-2",
+              model: input.model || activeImageProfile().providerId,
               aspectRatio: input.aspectRatio,
               referenceCount: input.references?.length ?? 0,
               promptChars: finalPrompt.length,
             },
             decision: {
               provider: "ImgStudioImageGenerationProvider",
-              model: "flow-nano-banana-2",
+              model: activeImageProfile().providerId,
               endpoint: (input.references?.length ?? 0) > 0 ? "/api/v1/images/edit" : "/api/v1/images/generate",
             },
             output: "calling provider...",

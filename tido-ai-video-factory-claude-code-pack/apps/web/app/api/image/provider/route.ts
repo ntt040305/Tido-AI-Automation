@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { activeProfile } from "@/lib/image-engine/models/image-model-profiles";
 
 export const dynamic = "force-dynamic";
 
@@ -6,7 +7,7 @@ export async function GET() {
   const providerEnv = (process.env.TIDO_IMAGE_PROVIDER || "imgstudio").toLowerCase();
   
   if (providerEnv === "imgstudio") {
-    const providerId = process.env.IMGSTUDIO_PROVIDER_ID || "flow-nano-banana-2";
+    const providerId = activeProfile().providerId;
     return NextResponse.json({
       provider: "imgstudio",
       providerName: "ImgStudio",

@@ -512,6 +512,37 @@ function main() {
     assert.ok(!/engine: "v1"/.test(fn![0]), "a v1 fallback exists on the GPT path");
   });
 
+  check("no model name or resolution tier is hardcoded on the live path", () => {
+    // The defect this closes: the provider id defaulted to "flow-nano-banana-2" in
+    // six places and the resolution tier defaulted to "1K" in one and "2K" in
+    // another (config.ts:128 vs CampaignOrchestratorService.ts:218). A model switch
+    // that has to be made in seven places is a model switch that will be made in
+    // six.
+    const LIVE = [
+      "lib/image-engine/provider/ImgStudioImageGenerationProvider.ts",
+      "lib/image-engine/service/ImageGenerationService.ts",
+      "lib/image-engine/service/SimpleImageGenerationOrchestratorService.ts",
+      "lib/image-engine/campaign/CampaignOrchestratorService.ts",
+      "lib/image-engine/evolution/ExperimentPipeline.ts",
+      "app/api/campaign/render-asset/route.ts",
+      "app/api/image/provider/route.ts",
+    ];
+    for (const rel of LIVE) {
+      const src = read(rel);
+      assert.ok(
+        !/"flow-nano-banana-2"/.test(src),
+        `${rel} still names a model; it belongs in models/image-model-profiles.ts`,
+      );
+      assert.ok(
+        !/OUTPUT_RESOLUTION\s*\|\|\s*"2K"/.test(src),
+        `${rel} still defaults the resolution tier to 2K`,
+      );
+    }
+    // And the one file that is allowed to name them does.
+    const profiles = read("lib/image-engine/models/image-model-profiles.ts");
+    assert.ok(/"flow-nano-banana-2"/.test(profiles), "the rollback id is not declared anywhere");
+  });
+
   check("telemetry names the dialect, so a log makes the routing visible", () => {
     const t = engineTelemetry(SUN_ENV);
     assert.strictEqual(t.prompt_dialect, "gpt-image");

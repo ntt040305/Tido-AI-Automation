@@ -1,4 +1,5 @@
 import { MasterPromptCompilerService } from "../compiler/MasterPromptCompilerService";
+import { activeProfile } from "../models/image-model-profiles";
 import { PromptBudgetValidator } from "../compiler/PromptBudgetValidator";
 import { RenderTracer } from "../observability/RenderTracer";
 import { IMAGE_ENGINE_CONFIG } from "../config";
@@ -864,7 +865,7 @@ export class SimpleImageGenerationOrchestratorService {
       const generationProvider = options?.generationProvider || new ImgStudioImageGenerationProvider();
 
       const providerInput: ProviderImageGenerationInput = {
-        model: "flow-nano-banana-2",
+        model: activeProfile().providerId,
         prompt: masterPrompt,
         references: attachedReferences,
         aspectRatio: adapted.aspectRatio || "1:1",
@@ -974,7 +975,7 @@ export class SimpleImageGenerationOrchestratorService {
               prompt_chars_compiled: masterPrompt.length,
               prompt_chars_sent: (providerRes.finalPrompt || masterPrompt).length,
               provider: providerRes.remoteDetails?.provider_name || "imgstudio",
-              model: providerRes.remoteDetails?.model || "flow-nano-banana-2",
+              model: providerRes.remoteDetails?.model || activeProfile().providerId,
               aspect_ratio: adapted.aspectRatio || "1:1",
               remote_details: providerRes.remoteDetails,
             },

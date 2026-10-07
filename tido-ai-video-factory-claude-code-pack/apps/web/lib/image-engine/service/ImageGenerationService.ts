@@ -12,6 +12,7 @@ import {
 } from "../types";
 
 import { ImgStudioImageGenerationProvider } from "../provider/ImgStudioImageGenerationProvider";
+import { activeProfile } from "../models/image-model-profiles";
 
 export interface ResolvedProviderInfo {
   provider: ImageGenerationProvider;
@@ -27,7 +28,7 @@ export function resolveActiveProvider(customProvider?: ImageGenerationProvider):
       provider: customProvider,
       name: isImgStudio ? "imgstudio" : isCloudflare ? "cloudflare-workers-ai" : "google-gemini",
       model: isImgStudio
-        ? (process.env.IMGSTUDIO_PROVIDER_ID || "flow-nano-banana-2")
+        ? activeProfile().providerId
         : isCloudflare
           ? (process.env.TIDO_CLOUDFLARE_IMAGE_MODEL || "@cf/black-forest-labs/flux-2-klein-4b")
           : (process.env.TIDO_GEMINI_IMAGE_MODEL || process.env.TIDO_IMAGE_MODEL || "gemini-3.1-flash-image"),
@@ -36,7 +37,8 @@ export function resolveActiveProvider(customProvider?: ImageGenerationProvider):
 
   const providerEnv = (process.env.TIDO_IMAGE_PROVIDER || "imgstudio").toLowerCase();
   if (providerEnv === "imgstudio") {
-    const model = process.env.IMGSTUDIO_PROVIDER_ID || "flow-nano-banana-2";
+    // The active row, so this name and the id the transport sends can never differ.
+    const model = activeProfile().providerId;
     return {
       provider: new ImgStudioImageGenerationProvider(),
       name: "imgstudio",
