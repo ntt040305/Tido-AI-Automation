@@ -434,10 +434,10 @@ async function main() {
           { kind: "text", id: "h", role: "headline", content: "a", lines: ["a"], font_size: 35, x: 100, y: 100, width: 200, height: 40, color: "#111", z: 1 },
           { kind: "text", id: "s", role: "subheadline", content: "b", lines: ["b"], font_size: 41, x: 100, y: 300, width: 200, height: 45, color: "#111", z: 2 },
         ],
-      } as any,
+      },
     });
     assert.strictEqual(c.verdict, "unverified");
-    assert.ok(c.findings.some((f: any) => f.area === "hierarchy"), "the measured finding was dropped");
+    assert.ok(c.findings.some((f: { area: string }) => f.area === "hierarchy"), "the measured finding was dropped");
     assert.strictEqual(c.scores.hierarchy, null, "an unverified review still scored a dimension");
     assert.strictEqual(c.shippable, false);
   });
@@ -453,7 +453,7 @@ async function main() {
 
   await check("a textCheck alone is also an observation", () => {
     const c = critiqueTypography({
-      textCheck: { mode: "exact", required: ["a"], missing: [], incorrect: [], case_styled: [], unwanted: [], compliant: true } as any,
+      textCheck: { mode: "exact", required: ["a"], missing: [], incorrect: [], case_styled: [], unwanted: [], compliant: true },
     });
     assert.strictEqual(c.verdict, "verified");
     assert.strictEqual(c.scores.readability, 10);
@@ -461,7 +461,7 @@ async function main() {
 
   await check("an unverified review can never be shippable, even with no findings", () => {
     for (const input of [{}, { visibleText: null }, { textCheck: null }, { visibleText: null, textCheck: null }]) {
-      const c = critiqueTypography(input as any);
+      const c = critiqueTypography(input);
       assert.strictEqual(c.shippable, false, `shippable on ${JSON.stringify(input)}`);
       assert.strictEqual(c.verdict, "unverified");
     }
