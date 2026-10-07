@@ -74,6 +74,7 @@ const SUITES = [
   "run-prompt-engine-v2-tests",
   "run-prompt-v2-simple-tests",
   "run-ratio-parity-tests",
+  "run-model-profile-tests",
   "run-creative-approach-tests",
   "run-tone-fixture-tests",
   "run-creative-intent-tests",
