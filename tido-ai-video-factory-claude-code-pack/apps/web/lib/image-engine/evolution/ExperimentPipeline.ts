@@ -76,6 +76,7 @@ import { ideaTelemetry, renderIdeaForPrompt, resolveIdea } from "./experiment/Id
 import { copyFitsChannel, profileFor, profileTelemetry } from "./experiment/AssetProfile";
 import { copyPolicyMode, directorModel, includeLabelText, isV2, templateReload } from "../prompt-v2/engine-selector";
 import { buildSimplePrompt, simpleTelemetry, type SimpleResult } from "../prompt-v2/build-simple";
+import { promptDialect } from "../prompt-v2/engine-selector";
 import type { AspectRatio } from "../prompt-v2/templates";
 import {
   cinematographyTelemetry,
@@ -559,6 +560,24 @@ export class ExperimentPipeline {
         // is also the editable path -- nothing else reaches the provider.
         const v2 = v2For ? await v2For() : null;
         const optical = opticalScriptFor ? opticalScriptFor(composed, blueprintText) : null;
+        // NEVER v1 FOR THE GPT DIALECT.
+        //
+        // The ladder below is the Gemini fallback chain: v2, then the optical script,
+        // then the eight-block assembly. Every rung of it writes Gemini prose. For a
+        // GPT-Image model that is the wrong dialect, and the failure would be invisible
+        // from the outside — a ~26,000-character prompt built for Nano Banana 2 returns
+        // an image that looks like a result, costs 150-250 VND and reports nothing
+        // wrong. That is exactly how the `__dirname` template bug hid for a whole phase.
+        //
+        // So when the GPT dialect fails, the render fails. `build-gpt` has already tried
+        // the director, one repair, and a prompt assembled in code from the same brief;
+        // if all three are gone there is nothing honest left to send.
+        if (promptDialect() === "gpt-image" && !(v2?.ok && v2.prompt)) {
+          throw new Error(
+            "the GPT dialect produced no prompt, and there is no Gemini fallback for this model" +
+              (v2?.reason ? ` — ${v2.reason}` : ""),
+          );
+        }
         const finalPrompt = v2?.ok && v2.prompt
           ? v2.prompt
           : optical
@@ -1319,7 +1338,14 @@ export class ExperimentPipeline {
     // product buffers are all in scope. It never throws: `buildSimplePrompt` turns
     // every failure into `ok: false`, and this returns null on anything else so
     // the v1 assembly below still runs.
-    const v2For = !isV2()
+    // The GPT dialect is not optional and not flag-driven.
+    //
+    // `PROMPT_ENGINE` is a preference about how to write a GEMINI prompt. Which dialect
+    // the active model needs is a fact about that model: Sunburst cannot be sent a
+    // Gemini prompt because a flag says v1. So the engine runs whenever the flag asks
+    // for it OR the active model requires the GPT dialect.
+    const dialect = promptDialect();
+    const v2For = !isV2() && dialect !== "gpt-image"
       ? undefined
       : async (): Promise<SimpleResult | null> => {
           try {
@@ -1339,6 +1365,64 @@ export class ExperimentPipeline {
             const ratio = (["1:1", "9:16", "16:9"].includes(String(request.aspectRatio))
               ? String(request.aspectRatio)
               : "1:1") as AspectRatio;
+
+            const chat = (messages: unknown, purpose: string) =>
+              llm.generateChatCompletion(messages as never, purpose, {
+                temperature: 0.7,
+                max_tokens: 8000,
+                timeoutMs: 120000,
+                ...(directorModel() ? { model: directorModel() } : {}),
+              });
+
+            // ── The GPT dialect ──────────────────────────────────────────────
+            //
+            // A different model, a different template set, a different section
+            // contract — and crucially a brief whose section C describes the reference
+            // SHEETS the provider will be handed rather than the photographs the user
+            // uploaded. Measured before this branch existed: a five-product render sent
+            // two packed sheets while the prompt said "exactly as in attached photo 3".
+            if (dialect === "gpt-image") {
+              const { buildGptForPipeline } = await import("../prompt-v2/gpt-pipeline-adapter");
+              const { gptEngineTelemetry } = await import("../prompt-v2/build-gpt");
+              const result = await buildGptForPipeline(
+                {
+                  assetType: assetCtx?.asset_type || request.useCase || "Poster",
+                  aspectRatio: ratio,
+                  concept: request.concept || "",
+                  brand: request.brandName || "",
+                  copy: textRequirement.lines,
+                  references: allReferences.map((ref) => ({
+                    index: ref.index,
+                    role: ref.role,
+                    filename: ref.filename,
+                    description: (ref.img as { description?: string }).description,
+                    buffer: (ref.img as { buffer?: Buffer }).buffer,
+                    mimeType: (ref.img as { mimeType?: string }).mimeType,
+                    productId: (ref.img as { product_id?: string }).product_id ?? null,
+                  })),
+                  industry: request.industry || request.marketingContext?.industry,
+                  intendedUse: assetCtx?.asset_type || request.useCase,
+                  userControls: Object.entries(request.creativeDirection?.visual_controls || {})
+                    .filter(([, v]) => v && v !== "auto")
+                    .map(([k, v]) => ({ label: k, instruction: String(v) })),
+                  productCountRule:
+                    countAttachedProducts(request) > 1
+                      ? "Several products: group them with a clear hierarchy, the main product largest, none deformed or duplicated."
+                      : "One product: one focal point.",
+                },
+                chat,
+              );
+              console.log("[PROMPT_GPT]", JSON.stringify(gptEngineTelemetry(result.gpt)));
+              if (result.gpt?.refusal) {
+                console.warn(`[PROMPT_GPT][REFUSED] ${result.gpt.refusal.code} — ${result.gpt.refusal.message_vi}`);
+              }
+              for (const w of result.simple.warnings.slice(0, 8)) {
+                console.log(`[PROMPT_GPT][warning] ${w.slice(0, 200)}`);
+              }
+              capturedV2 = result.simple;
+              return result.simple;
+            }
+
             const built = await buildSimplePrompt(
               {
                 assetType: assetCtx?.asset_type || request.useCase || "Poster",

@@ -353,34 +353,75 @@ async function main() {
     }
   });
 
-  await check("n=5: the engine REFUSES while the label-lock is unverified, before any spend", async () => {
+  await check("n=5: the default policy RENDERS and warns, and the brief protects the panels", async () => {
     const input = briefFor(5, false);
     assert.ok(smallPanels(input.allocation!, SUNBURST.minPanelLongestSidePx).length > 0);
+    const { templates } = buildGptMessages(input);
 
-    let called = 0;
-    const result = await buildGptPrompt(input, {
-      chat: async () => {
-        called++;
-        return "";
-      },
-    });
+    const warnings: string[] = [];
+    const origWarn = console.warn;
+    console.warn = (...a: unknown[]) => warnings.push(a.map(String).join(" "));
+    let result;
+    try {
+      result = await buildGptPrompt(input, { chat: stubDirector(input, templates.playbook) });
+    } finally {
+      console.warn = origWarn;
+    }
 
-    assert.strictEqual(result.ok, false, "n=5 was sent despite the unverified label-lock");
-    assert.strictEqual(called, 0, "the director was paid for before the gate ran");
-    assert.ok(result.refusal, "the refusal is not reported as a refusal");
-    assert.strictEqual(result.refusal!.code, "PANEL_BELOW_IDENTITY_FLOOR");
-    // Vietnamese, naming the limit and what to do — the same shape as the n=9 refusal.
-    assert.ok(/512px/.test(result.refusal!.message_vi), "the message does not name the floor");
-    assert.ok(/tách thành nhiều lần tạo|ít ảnh sản phẩm hơn/.test(result.refusal!.message_vi));
-    assert.ok(!result.prompt, "a prompt was produced for a refused payload");
+    // It renders — refusing would block the only thing that can settle whether a 466px
+    // panel holds a label, which is looking at a real render of five products.
+    assert.strictEqual(result.ok, true, `n=5 was refused: ${result.refusal?.code || result.reason}`);
+    assert.ok(result.prompt, "no prompt was produced");
+    assert.ok(!result.refusal, "the default policy refused");
+
+    // And it is not silent: the panel count, the smallest size and the floor are logged.
+    // 496px is the ALLOCATOR's planned panel; the sheet renderer draws 466px once the
+    // gutters and the label band are taken out (measured on gen_1791446396500_fjk1e).
+    // Both are below the 512px floor so the decision is the same either way, but the
+    // two numbers are not interchangeable and this asserts the one the warning reports.
+    assert.ok(
+      warnings.some((w) => /SMALL_PANEL/.test(w) && /496px/.test(w) && /512px/.test(w)),
+      `the small-panel warning did not name the numbers: ${warnings.join(" | ")}`,
+    );
+
+    // The protection that replaces the refusal: the brief declares the panels unsafe and
+    // tells the director where the wording comes from instead.
+    assert.ok(result.unsafePanels.length > 0, "the unsafe panels were not reported on the result");
+    assert.ok(/NOT large enough to read reliably/.test(result.brief!.slots.REFERENCES));
+    assert.ok(/take any wording from the product facts/.test(result.brief!.slots.REFERENCES));
   });
 
-  await check("n=8: refused for the same reason, and the logo drop is reported too", async () => {
+  await check("n=8: renders too, with every product panel flagged", async () => {
     const input = briefFor(8, true);
-    const result = await buildGptPrompt(input, { chat: async () => "" });
-    assert.strictEqual(result.ok, false);
-    assert.strictEqual(result.refusal!.code, "PANEL_BELOW_IDENTITY_FLOOR");
+    const { templates } = buildGptMessages(input);
+    const result = await buildGptPrompt(input, { chat: stubDirector(input, templates.playbook) });
+    assert.strictEqual(result.ok, true);
     assert.ok(result.unsafePanels.length >= 8, `expected every product panel flagged, got ${result.unsafePanels.length}`);
+    // The logo image gave up its panel to the eighth product, and the brief says so.
+    assert.ok(/NO LOGO IMAGE IS ATTACHED/.test(result.brief!.slots.REFERENCES));
+  });
+
+  await check("GPT_SMALL_PANEL_POLICY=refuse restores the strict behaviour, before any spend", async () => {
+    const input = briefFor(5, false);
+    const prev = process.env.GPT_SMALL_PANEL_POLICY;
+    process.env.GPT_SMALL_PANEL_POLICY = "refuse";
+    let called = 0;
+    try {
+      const result = await buildGptPrompt(input, {
+        chat: async () => {
+          called++;
+          return "";
+        },
+      });
+      assert.strictEqual(result.ok, false, "the strict policy still rendered");
+      assert.strictEqual(called, 0, "the director was paid for before the gate ran");
+      assert.strictEqual(result.refusal!.code, "PANEL_BELOW_IDENTITY_FLOOR");
+      assert.ok(/512px/.test(result.refusal!.message_vi), "the message does not name the floor");
+      assert.ok(/tách thành nhiều lần tạo|ít ảnh sản phẩm hơn/.test(result.refusal!.message_vi));
+    } finally {
+      if (prev === undefined) delete process.env.GPT_SMALL_PANEL_POLICY;
+      else process.env.GPT_SMALL_PANEL_POLICY = prev;
+    }
   });
 
   await check("n<=4 is NOT refused: the gate is about panel size, not about packing", async () => {
@@ -394,17 +435,25 @@ async function main() {
     }
   });
 
-  await check("the gate opens when the label-lock is verified, and only then", () => {
+  await check("verifying the label-lock silences the warning; the strict gate still obeys it", () => {
     const input = briefFor(5, false);
-    assert.ok(labelLockRefusal(input), "the gate is open while unverified");
-    const prev = process.env.GPT_LABEL_LOCK_VERIFIED;
-    process.env.GPT_LABEL_LOCK_VERIFIED = "true";
+    const prevPolicy = process.env.GPT_SMALL_PANEL_POLICY;
+    const prevVerified = process.env.GPT_LABEL_LOCK_VERIFIED;
     try {
+      // Under the strict policy the gate is shut while unverified...
+      process.env.GPT_SMALL_PANEL_POLICY = "refuse";
+      assert.ok(labelLockRefusal(input), "the strict gate is open while unverified");
+      // ...and verification opens it.
+      process.env.GPT_LABEL_LOCK_VERIFIED = "true";
       assert.strictEqual(labelLockRefusal(input), null, "the gate stayed shut after verification");
     } finally {
-      if (prev === undefined) delete process.env.GPT_LABEL_LOCK_VERIFIED;
-      else process.env.GPT_LABEL_LOCK_VERIFIED = prev;
+      if (prevPolicy === undefined) delete process.env.GPT_SMALL_PANEL_POLICY;
+      else process.env.GPT_SMALL_PANEL_POLICY = prevPolicy;
+      if (prevVerified === undefined) delete process.env.GPT_LABEL_LOCK_VERIFIED;
+      else process.env.GPT_LABEL_LOCK_VERIFIED = prevVerified;
     }
+    // The default policy never refuses, verified or not.
+    assert.strictEqual(labelLockRefusal(input), null);
   });
 
   await check("RECORDED: the 496px label-lock itself is NOT verified by this suite", () => {

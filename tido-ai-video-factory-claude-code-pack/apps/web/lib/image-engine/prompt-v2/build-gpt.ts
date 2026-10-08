@@ -28,7 +28,7 @@ import { loadTemplates, fillSlots, templateVersion, type LoadedTemplates } from 
 import { compileGptBrief, layoutFor, type GptBriefInput, type CompiledGptBrief } from "./gpt-brief";
 import { runGptChecks, gptCheckTelemetry, type GptCheckResult } from "./gpt-checks";
 import { buildGptFallbackPrompt } from "./gpt-fallback";
-import { labelLockVerified, gptBanVerdictWords } from "./engine-selector";
+import { labelLockVerified, gptBanVerdictWords, smallPanelPolicy } from "./engine-selector";
 import { smallPanels } from "../provider/reference-packing/reference-allocation";
 
 export interface GptDeps {
@@ -139,6 +139,10 @@ export function labelLockRefusal(
   input: GptBriefInput,
 ): { code: string; message_vi: string } | null {
   if (labelLockVerified()) return null;
+  // Default policy is to render and warn, not to refuse — see `smallPanelPolicy`. The
+  // brief already forbids label-locking these panels and the checks enforce it, so the
+  // honest thing is to let the render happen and say what the risk is.
+  if (smallPanelPolicy() !== "refuse") return null;
   if (!input.allocation) return null;
   const floor = input.minPanelLongestSidePx ?? 512;
   const small = smallPanels(input.allocation, floor);
@@ -162,6 +166,22 @@ export async function buildGptPrompt(input: GptBriefInput, deps: GptDeps): Promi
 
   // ── The 512px gate, before any spend ───────────────────────────────────
   const refusal = labelLockRefusal(input);
+  // On the default "warn" policy the render proceeds, loudly. The number is the thing
+  // worth seeing: 466px against a 512px floor is a judgement a person can make from the
+  // finished image, and they can only make it if they were told.
+  const smallNow = input.allocation
+    ? smallPanels(input.allocation, input.minPanelLongestSidePx ?? 512)
+    : [];
+  if (!refusal && smallNow.length > 0 && !labelLockVerified()) {
+    const smallest = Math.min(...smallNow.map((s) => s.longestSidePx));
+    console.warn(
+      `[PROMPT_GPT][SMALL_PANEL] ${smallNow.length} product panel(s) are below the ` +
+        `${input.minPanelLongestSidePx ?? 512}px identity floor (smallest ${smallest}px). ` +
+        `The brief forbids label-locking them and the checks enforce it, but a label on ` +
+        `those products may still come back wrong. Set GPT_SMALL_PANEL_POLICY=refuse to ` +
+        `reject these payloads instead.`,
+    );
+  }
   if (refusal) {
     return {
       ok: false,

@@ -234,6 +234,36 @@ export function labelLockVerified(env: EnvLike = process.env): boolean {
  * Off by default: it is a taste rule rather than a correctness one, and a check that
  * fails a prompt for enthusiasm costs a repair call for nothing.
  */
+/**
+ * What to do about a packed product panel below the model's identity floor.
+ *
+ * `"warn"` by DEFAULT, and this is a change from how it first shipped. It used to
+ * refuse, and refusing was right while the brief said nothing about panel size: the
+ * prompt would have claimed a 466px panel was label-lockable and the user would have
+ * got invented lettering on a real product with no warning anywhere.
+ *
+ * That is no longer the situation. Three things now stand between a small panel and a
+ * wrong render, and all three are visible:
+ *   1. section C of the brief states which panels are not large enough to read and tells
+ *      the director to take shape and colour from them and the WORDING from the product
+ *      facts instead;
+ *   2. `gpt-checks` fails a prompt that asks for a small panel's lettering anyway
+ *      (LABEL_LOCK_ON_SMALL_PANEL), so the claim cannot reach the model;
+ *   3. the panel sizes and the floor ride back on the render in
+ *      `remoteDetails.reference_packing.warnings`.
+ *
+ * So the risk is declared, enforced and reported — not silent. Refusing on top of that
+ * blocks the one thing that can actually settle the question, which is looking at a real
+ * render of five products.
+ *
+ * `GPT_SMALL_PANEL_POLICY=refuse` restores the strict behaviour.
+ */
+export type SmallPanelPolicy = "warn" | "refuse";
+
+export function smallPanelPolicy(env: EnvLike = process.env): SmallPanelPolicy {
+  return String(env.GPT_SMALL_PANEL_POLICY || "").trim().toLowerCase() === "refuse" ? "refuse" : "warn";
+}
+
 export function gptBanVerdictWords(env: EnvLike = process.env): boolean {
   return String(env.GPT_BAN_VERDICT_WORDS || "").trim().toLowerCase() === "true";
 }
@@ -264,6 +294,7 @@ export function engineTelemetry(env: EnvLike = process.env) {
     prompt_dialect: promptDialect(env),
     gpt_dialect_available: gptDialectAvailable(),
     gpt_label_lock_verified: labelLockVerified(env),
+    gpt_small_panel_policy: smallPanelPolicy(env),
     v2_director_model: directorModel(env) || "(provider default)",
     v2_copy_policy: `${copyPolicyMode(env).mode}(${copyPolicyMode(env).source})`,
     v2_template_reload: templateReload(env),

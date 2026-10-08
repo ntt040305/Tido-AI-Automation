@@ -254,7 +254,27 @@ export class ImgStudioImageGenerationProvider implements ImageGenerationProvider
     // both exist — packing happens here, and everything upstream finished its
     // work before there was a sheet to describe. Returns the same string when
     // nothing was packed, so every ordinary render is byte-identical.
-    const effectivePrompt = applyPackedReferenceProtocol(input.prompt, packing);
+    // The Gemini-dialect sheet protocol, and why it is skipped for the GPT dialect.
+    //
+    // That block explains what a contact sheet is to a model whose prompt did not
+    // mention one — which is correct for the Gemini path, where the prompt is written
+    // before anything is packed. The GPT brief's section C already describes the exact
+    // slots `allocateReferences` returned, panel by panel, so appending this would say
+    // the same thing twice in two vocabularies.
+    //
+    // Worse than redundant: this block reads only `packing.packed`, the FIRST sheet. On
+    // a two-sheet payload its `companions` branch describes PACKED_PRODUCTS_02 as "a
+    // full-resolution copy of a product already present in the sheet… the same product,
+    // not additional ones" — and sheet 2 holds DIFFERENT products. Measured on
+    // `gen_1791446396500_fjk1e`: five products across two sheets, the second sheet
+    // announced to the model as a duplicate of the first.
+    //
+    // The Gemini path keeps it exactly as it is; that defect is pre-existing there and
+    // fixing it is a separate change to a path that is the rollback.
+    const effectivePrompt =
+      profile.promptDialect === "gpt-image"
+        ? input.prompt
+        : applyPackedReferenceProtocol(input.prompt, packing);
     if (effectivePrompt !== input.prompt) {
       console.log(
         "[REFERENCE_PACKING][PROTOCOL]",
