@@ -1,0 +1,186 @@
+# 13_mood_image_of_another_product
+# The mood image shows a DIFFERENT product. Its light and composition may travel; its objects may not.
+# templates: v1 / poster / gpt-image
+
+=== DIRECTOR REQUEST (the filled request template) ===
+## A — JOB
+
+Deliverable: a finished, publishable Poster
+Asset type: Poster
+Industry: beauty_skincare
+Canvas: square (the ratio travels as a parameter; never write ratio digits)
+Products in frame: 1
+Intended use: (not stated)
+
+## B — CLIENT INPUTS (authoritative, verbatim)
+
+Brand name: Lụa
+Concept, exactly as the client wrote it:
+The bottle lit the way the reference is lit: one side light, deep shadow, matte stone.
+
+Nothing in this section may be paraphrased, translated, corrected or improved. Where it
+conflicts with anything below, it wins.
+
+## C — REFERENCES
+
+  Image 1 is a frosted glass bottle of night cream. Preserve its exact shape, proportions, colours, materials and label layout. Do not redesign it and do not re-letter it.
+  NO LOGO IMAGE IS ATTACHED. Do NOT ask for a logo, brand mark, wordmark or emblem to be drawn anywhere in the picture.
+
+## D — PRODUCT FACTS
+
+  (none)
+
+## E — BRAND KIT
+
+  (none)
+
+## F — COPY
+
+  1. [headline] "Dưỡng ẩm ban đêm"
+  Every string above appears in the image exactly once, verbatim, character for character, in straight double quotes in the TEXT section. Vietnamese keeps every diacritic, in NFC. No string may be added, shortened, translated or corrected.
+
+## G — USER CHOICES (binding)
+
+  (the client set no explicit visual choices)
+
+## H — STRATEGY (advisory)
+
+  (none)
+
+## I — REFERENCE DATA — translate into plain visual description; never copy a number, unit or ratio into the master prompt
+
+  (none)
+
+## J — ASSET PLAYBOOK
+
+POSTER — the viewer is standing still and gives it three to ten seconds.
+
+What it has to win: one idea a person could describe afterwards, and a hierarchy the eye
+follows without being told the order.
+
+Hero: the product holds a little over half the frame — dominant, but not so large that the
+frame has no air. One focal point only.
+Margins: keep a clear breathing margin on every edge; nothing important touches an edge.
+Type: a strict hierarchy. The headline is unmistakably first, the supporting line clearly
+second, the call to action smallest and last. Never two elements competing to be read first.
+Text sits in the calmest area the composition leaves; it is never placed over the product.
+Layout for this canvas: a square frame: the subject centred or just below centre, the words in the calm band above it
+
+
+Industry module: (neutral studio treatment)
+Product-count rule: One product: one focal point.
+
+## K — TARGET MODEL NOTES
+
+(none beyond the standing instructions)
+
+## L — OUTPUT CONTRACT
+
+Write the master prompt in English prose, 1200–3500 characters, as nine
+labelled sections in exactly this order and with exactly these headings:
+
+OUTPUT:
+REFERENCE IMAGES:
+SCENE & CONCEPT:
+SUBJECT ARRANGEMENT:
+COMPOSITION & LAYOUT:
+LIGHT / CAMERA / MATERIALS:
+COLOR & BRAND STYLE:
+TEXT:
+CONSTRAINTS:
+
+**OUTPUT** states the asset type, the brand, the industry, the intended use and the canvas
+ORIENTATION in words. No ratio digits.
+
+**REFERENCE IMAGES** names every attached image by number — "Image 1 is …" — with its role,
+a short visual descriptor, and what must be preserved. For a product: preserve its shape,
+proportions, colours, materials and label layout; do not redesign it and do not re-letter
+it. For a logo: reproduce it as supplied, exactly once, at the stated position, and do not
+redraw or restyle it. For a contact sheet: say that the panel letters, the separating
+borders and the flat grey ground are annotations and must not appear in the image.
+
+**TEXT** sets each required string verbatim inside straight double quotes, with its
+position and how it is set. Vietnamese keeps every diacritic, in NFC. For a brand name
+that is not a dictionary word, spell it letter by letter beside the quoted form, unquoted.
+End with: "No other text, numbers, watermarks or extra logos." If section F says there is
+no copy, the whole TEXT section is exactly: "No text of any kind anywhere in the image."
+
+**CONSTRAINTS** lists concrete exclusions only.
+
+Nowhere in the master prompt may there appear: a colour temperature in Kelvin, an
+f-number, a focal length in millimetres, an aspect ratio as digits, a percentage, or a
+count of stops.
+
+## M — GOLD EXAMPLE (illustrative only)
+
+status: seed - unproven
+
+OUTPUT: A vertical poster for the cold brew brand Origin Blend, food and beverage, for a shop window. Photorealistic, finished and ready to publish.
+
+REFERENCE IMAGES: Image 1 is the product, an amber glass bottle with a turned wood cap. Keep its exact shape, proportions, colours, materials and label layout; do not redesign it and do not re-letter it.
+
+SCENE & CONCEPT: The bottle stands alone on a dark slate counter in the first light of morning. A few coffee beans rest beside it. Cool condensation beads on the glass. The idea is the quiet minute before the day starts.
+
+SUBJECT ARRANGEMENT: One bottle, slightly below centre, filling a little over half the height of the frame. Nothing else competes with it.
+
+COMPOSITION & LAYOUT: The bottle occupies the lower middle. The upper third is a calm, softly lit wall left deliberately empty for the words. Generous margins on every edge.
+
+LIGHT / CAMERA / MATERIALS: A single soft light from the left rakes across the slate and catches the condensation. Deep shadow on the right side of the bottle. Shallow depth of field so the wall behind falls gently out of focus. Amber glass, brushed wood, cold wet stone.
+
+COLOR & BRAND STYLE: Warm amber against cold grey-blue, nothing else. Restrained and expensive.
+
+TEXT: In the upper third, centred, a bold modern sans-serif headline in warm white: "Khoi dong ngay moi" rendered as "Khởi động ngày mới". Directly beneath it, smaller and lighter: "Cold brew đậm vị, tươi mỗi sáng". Near the lower edge, small: "Đặt ngay". Render every Vietnamese accent exactly. No other text, numbers, watermarks or extra logos.
+
+CONSTRAINTS: No people, no second bottle, no cup, no visible brand other than the one on the supplied label.
+
+
+## SELF-CHECK before you answer
+
+- All nine headings present, in order, spelled as above.
+- Every string from section F appears verbatim, in straight double quotes, exactly once.
+- No quoted string that section F did not list.
+- Every attached image named by its number, and no number named that is not attached.
+- No Kelvin, f-number, millimetres, ratio digits, percentage or stop count anywhere.
+- No `{{` left anywhere, and no section letter, heading name or the words "brief",
+  "playbook" or "reference data" leaking into the prompt.
+- Length within the stated bounds.
+- The orientation word matches the canvas in section A.
+- If no logo image was supplied, the prompt does not ask for a logo to be drawn.
+- If a panel was flagged as below the trusted size, the prompt does not ask for its
+  lettering to be reproduced.
+
+## ANSWER FORMAT
+
+<decisions>
+What you chose and why, in a few lines: the route you took, any conflict you resolved and
+which side won, and every default you filled because the brief was silent.
+</decisions>
+<copy_final>
+One line per string, exactly as it must be set. Empty if there is no copy.
+</copy_final>
+<warnings>
+Anything the next person should know. Empty if nothing.
+</warnings>
+<image_prompt>
+The master prompt, and nothing else.
+</image_prompt>
+
+
+=== CODE-BUILT FALLBACK PROMPT ===
+OUTPUT: A square Poster for Lụa, beauty_skincare, for a commercial placement. Photorealistic, finished and ready to publish.
+
+REFERENCE IMAGES: Image 1 is a frosted glass bottle of night cream. Preserve its exact shape, proportions, colours, materials and label layout; do not redesign it and do not re-letter it. No logo image is attached, so no logo, brand mark or emblem is drawn anywhere.
+
+SCENE & CONCEPT: The bottle lit the way the reference is lit: one side light, deep shadow, matte stone.
+
+SUBJECT ARRANGEMENT: One product, one focal point, placed so nothing competes with it.
+
+COMPOSITION & LAYOUT: POSTER — the viewer is standing still and gives it three to ten seconds. What it has to win: one idea a person could describe afterwards, and a hierarchy the eye follows without being told the order. Hero: the product holds a little over half the frame — dominant, but not so large that the frame has no air. One focal point only. Margins: keep a clear breathing margin on every edge; nothing important touches an edge. Type: a strict hierarchy. The headline is unmistakably first, the supporting line clearly second, the call to action smallest and last. Never two elements competing to be read first. Text sits in the calmest area the composition leaves; it is never placed over the product. Layout for this canvas: a square frame: the subject centred or just below centre, the words in the calm band above it Text sits in the calmest area the composition leaves and never over the product.
+
+LIGHT / CAMERA / MATERIALS: Neutral studio lighting: a soft key that models the form, a rim that separates the subject from the background, and a soft contact shadow. Shallow depth of field so the background falls gently out of focus.
+
+COLOR & BRAND STYLE: A restrained palette of two colours, the second almost absent.
+
+TEXT: Set each of the following exactly once, in the upper area, as the headline, large and first to be read: "Dưỡng ẩm ban đêm". Render every Vietnamese diacritic exactly. No other text, numbers, watermarks or extra logos.
+
+CONSTRAINTS: No people other than those described. No second copy of the product. No invented lettering of any kind. No brand mark other than one supplied as an image.
