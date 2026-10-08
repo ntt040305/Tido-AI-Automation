@@ -34,6 +34,8 @@ export interface CreativeBriefPanelProps {
   onUpdateSalesContext: (updates: Partial<SalesContext>) => void;
   onUpdateCreativeDirection: (updates: Partial<CreativeDirection>) => void;
   onUpdateContentMessage: (value: string) => void;
+  /** Per-product on-image text, keyed by the product image's asset_id. */
+  onUpdateProductText?: (assetId: string, text: string) => void;
   onUpdateBrandIdentity: (updates: Partial<BrandIdentity>) => void;
   onGenerate: () => void;
 }
@@ -48,6 +50,7 @@ export function CreativeBriefPanel({
   onUpdateMarketingContext,
   onUpdateCreativeDirection,
   onUpdateContentMessage,
+  onUpdateProductText,
   onUpdateBrandIdentity,
   onGenerate,
 }: CreativeBriefPanelProps) {
@@ -55,6 +58,8 @@ export function CreativeBriefPanel({
   const currentProductCount = brief.creative_direction?.target_product_count ?? 1;
   const currentAspectRatio = brief.creative_direction?.aspect_ratio ?? "1:1";
   const currentIndustry = brief.marketing_context?.industry || "";
+
+  const productAssets = brief.brand_identity?.product_assets || [];
 
   // Split exactly as `SimpleInputAdapterService.ts:311-315` splits it, so the
   // veto the browser shows is computed from the same string count the server will
@@ -531,6 +536,39 @@ export function CreativeBriefPanel({
           placeholder="Nhập chính xác chữ bạn muốn xuất hiện trên ảnh (ví dụ: Ra mắt dòng sản phẩm mới • Khai trương 20%)..."
           className="w-full bg-surface2 border border-border text-text rounded-[2px] text-[12.5px] p-2.5 focus:outline-none focus:border-borderStrong transition-colors resize-none placeholder:text-text-telemetry"
         />
+
+        {/* 6b. Text that belongs to ONE product.
+             The field above is the text for the picture as a whole. This is the case it
+             cannot express: several products in one frame, each needing its own name or
+             price beside it. Only shown when there is more than one product, because with
+             one product the field above already is its text.
+             The number matches the badge on the thumbnail. */}
+        {onUpdateProductText && productAssets.length > 1 && (
+          <div className="pt-1.5 space-y-1.5">
+            <label className="font-mono text-[11px] uppercase tracking-wider text-text-telemetry flex items-center justify-between">
+              <span>CHỮ RIÊNG CHO TỪNG SẢN PHẨM</span>
+              <span className="text-[10px] lowercase text-text-muted">(không bắt buộc)</span>
+            </label>
+            <p className="text-[11px] text-text3 leading-relaxed">
+              Số ở đây khớp với số trên ảnh sản phẩm bạn đã tải lên. Chữ nhập ở đây sẽ được
+              vẽ cạnh đúng sản phẩm đó, nguyên văn.
+            </p>
+            {productAssets.map((asset, index) => (
+              <div key={asset.asset_id} className="flex items-center gap-2">
+                <span className="shrink-0 w-6 h-6 rounded-full bg-surface3 border border-borderStrong text-text text-[11px] font-bold font-mono flex items-center justify-center">
+                  {index + 1}
+                </span>
+                <input
+                  type="text"
+                  value={(brief.product_texts || {})[asset.asset_id] || ""}
+                  onChange={(e) => onUpdateProductText(asset.asset_id, e.target.value)}
+                  placeholder={`Chữ cho sản phẩm ${index + 1} (ví dụ: Cold Brew 250ml • 45.000đ)`}
+                  className="w-full bg-surface2 border border-border text-text rounded-[2px] text-[12.5px] px-2.5 py-2 focus:outline-none focus:border-borderStrong transition-colors placeholder:text-text-telemetry"
+                />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* 7. Visual Direction Controls */}

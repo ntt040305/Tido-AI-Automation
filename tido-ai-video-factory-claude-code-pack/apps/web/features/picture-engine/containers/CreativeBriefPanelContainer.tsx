@@ -14,6 +14,7 @@ export function CreativeBriefPanelContainer() {
   const canGenerate = usePictureEngineStore((state) => state.canGenerate());
 
   const updateBrief = usePictureEngineStore((state) => state.updateBrief);
+  const updateProductText = usePictureEngineStore((state) => state.updateProductText);
   const updateCreativeConcept = usePictureEngineStore(
     (state) => state.updateCreativeConcept
   );
@@ -60,6 +61,7 @@ export function CreativeBriefPanelContainer() {
       onUpdateSalesContext={updateSalesContext}
       onUpdateCreativeDirection={updateCreativeDirection}
       onUpdateContentMessage={(value: string) => updateBrief({ content_message: value })}
+      onUpdateProductText={updateProductText}
       onUpdateBrandIdentity={updateBrandIdentity}
       onGenerate={handleGenerate}
     />

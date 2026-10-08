@@ -122,6 +122,18 @@ export interface CreativeBrief {
    * 20%" here — never "headline" or "CTA".
    */
   content_message?: string;
+  /**
+   * Text that belongs to ONE product, keyed by that product image's `asset_id`.
+   *
+   * `content_message` is the text for the picture as a whole. This is for the case the
+   * whole-picture field cannot express: five bottles in one frame, each needing its own
+   * name or price beside it. Keyed by asset_id rather than by position so removing the
+   * second photograph does not silently move the second product's text onto the third.
+   *
+   * The number a person sees in the uploader ("Sản phẩm 2") is this image's position in
+   * `brand_identity.product_assets`; the key is its id.
+   */
+  product_texts?: Record<string, string>;
   marketing_context: MarketingContext;
   sales_context: SalesContext;
   creative_direction: CreativeDirection;

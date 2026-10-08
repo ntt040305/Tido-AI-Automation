@@ -52,6 +52,8 @@ export interface PictureEngineStoreState {
   updateCreativeDirection: (
     updates: Partial<CreativeBrief["creative_direction"]>
   ) => void;
+  /** Per-product on-image text, keyed by the product image's asset_id. */
+  updateProductText: (assetId: string, text: string) => void;
   updateBrandIdentity: (
     updates: Partial<CreativeBrief["brand_identity"]>
   ) => void;
@@ -218,6 +220,16 @@ export const usePictureEngineStore = create<PictureEngineStoreState>((set, get) 
         },
       },
     })),
+
+  updateProductText: (assetId, text) =>
+    set((state) => {
+      const next = { ...(state.creativeBrief.product_texts || {}) };
+      // An emptied field removes the key rather than storing "", so a brief nobody
+      // typed into is byte-identical to one where somebody typed and deleted.
+      if (text.trim()) next[assetId] = text;
+      else delete next[assetId];
+      return { creativeBrief: { ...state.creativeBrief, product_texts: next } };
+    }),
 
   updateCreativeDirection: (updates) =>
     set((state) => ({

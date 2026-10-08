@@ -182,6 +182,35 @@ export class SimpleInputAdapterService {
       resolvedProductCount = identityPackage.distinctProductCount;
     }
 
+    // Uploaded product photographs vs distinct products resolved.
+    //
+    // These two numbers are allowed to differ — two photographs of one bottle are one
+    // product, which is what `same_product_multi_view` exists for. What is not allowed
+    // is for them to differ WITHOUT anyone being able to see it: five images were
+    // uploaded and three products rendered, and nothing in any log said so, so the
+    // cause had to be guessed. Printed on every render now, with the grouping that
+    // produced it, so the next time it is a lookup rather than an investigation.
+    if (resolvedProductCount !== productCandidates.length) {
+      console.warn("[PRODUCT_COUNT][MERGED]", {
+        product_images_uploaded: productCandidates.length,
+        distinct_products_resolved: resolvedProductCount,
+        groups: (identityPackage?.groups || []).map((g: {
+          product_id: string;
+          reference_ids: string[];
+          is_same_identity_proven: boolean;
+          confidence: number;
+          evidence_type: string;
+        }) => ({
+          product_id: g.product_id,
+          references: g.reference_ids,
+          same_identity_proven: g.is_same_identity_proven,
+          confidence: g.confidence,
+          evidence: g.evidence_type,
+        })),
+        note: "fewer products than images means the router merged references; a merge needs confidence >= 0.85",
+      });
+    }
+
     const hasProductReference = resolvedProductCount > 0;
     const status = hasProductReference ? "READY" : "NO_PRODUCT_REFERENCE";
 

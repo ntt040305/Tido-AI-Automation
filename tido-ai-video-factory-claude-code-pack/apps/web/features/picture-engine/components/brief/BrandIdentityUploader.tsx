@@ -233,20 +233,28 @@ export function BrandIdentityUploader({
         {/* Product Asset Thumbnails */}
         {brandIdentity.product_assets.length > 0 && (
           <div className="grid grid-cols-4 gap-2 mt-3">
-            {brandIdentity.product_assets.map((asset) => (
+            {brandIdentity.product_assets.map((asset, index) => (
               <div
                 key={asset.asset_id}
                 className="relative aspect-square bg-surface border border-borderStrong rounded-lg overflow-hidden group"
               >
                 <img
                   src={asset.file_url}
-                  alt="Product asset"
+                  alt={`Sản phẩm ${index + 1}`}
                   className="w-full h-full object-cover"
                 />
+                {/* The number, shown. It is how the person refers to this product
+                    everywhere else — in the per-product text field below, and as
+                    "Image N" in the prompt the renderer receives. Without it on the
+                    thumbnail there is nothing connecting the two. */}
+                <span className="absolute top-1 left-1 min-w-5 h-5 px-1.5 rounded-full bg-text text-bg text-[11px] font-bold font-mono flex items-center justify-center">
+                  {index + 1}
+                </span>
                 <button
                   type="button"
                   onClick={() => removeProductAsset(asset.asset_id)}
                   className="absolute top-1 right-1 w-5 h-5 rounded-full bg-accent text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                  aria-label={`Xoá sản phẩm ${index + 1}`}
                 >
                   <X size={12} />
                 </button>
