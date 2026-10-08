@@ -27,6 +27,11 @@
  * Pure. No I/O except the template read its caller does, no model call, no clock.
  */
 import type { Allocation, AllocatedSlot } from "../provider/reference-packing/reference-allocation";
+import type { NumericWordsDensity } from "./engine-selector";
+import { artDirectionSlots } from "./art-direction/art-direction-brief";
+import type { ArtDirectionSheet } from "./art-direction/art-direction-sheet";
+import { industryLabel } from "./art-direction/industry-label";
+import type { PrintRule } from "./art-direction/print-rule";
 /** NFC, locally. `brief-compiler` keeps its own copy private, and so does this. */
 const nfc = (s: unknown): string => String(s ?? "").normalize("NFC");
 
@@ -119,6 +124,25 @@ export interface GptBriefInput {
   modelNotes?: string;
   minChars?: number;
   maxChars?: number;
+
+  // ── The art-director path. Every field below is additive and OFF by default ──
+  //
+  // `GPT_ART_DIRECTOR` gates all of it, and the gate is passed in rather than read
+  // here so the compiler stays pure and a test can exercise both paths in one process
+  // without touching `process.env`. (A previous suite learned that the hard way: an
+  // async runner that mutated the environment made its own neighbours fail.)
+  /** When true, the sheet writes the brief. The nine headings are unchanged. */
+  artDirector?: boolean;
+  /** The decisions, with their concrete values. Translated to words on the way out. */
+  sheet?: ArtDirectionSheet | null;
+  /** Exactly one of three branches. Carried into the prompt verbatim. */
+  printRule?: PrintRule | null;
+  /** How precisely layout may be stated. Default `words_only`. */
+  density?: NumericWordsDensity;
+  /** What the client is selling, where the brief said so. Advisory. */
+  salesContext?: { product_name?: string; benefit?: string } | null;
+  /** Where the asset will run, where the brief said so. Advisory. */
+  targetChannel?: string;
 }
 
 export interface CompiledGptBrief {
@@ -129,6 +153,55 @@ export interface CompiledGptBrief {
 }
 
 const NONE = "  (none)";
+
+/**
+ * The length bounds for a master prompt.
+ *
+ * The art-director contract asks for five to seven hundred words, and the existing
+ * 1,200–3,500 character window cannot hold it: seven hundred words of English prose is
+ * roughly 4,300 characters. Left unchanged, the old ceiling would have failed every prompt
+ * that obeyed the brief, spent a repair call on it, and then shipped the code-built
+ * fallback — a quality regression dressed as a check.
+ *
+ * The bounds move ONLY on the art-director path, and an explicit value from the caller
+ * still wins on both.
+ */
+export function gptLengthBounds(input: {
+  artDirector?: boolean;
+  minChars?: number;
+  maxChars?: number;
+}): { minChars: number; maxChars: number } {
+  const wide = Boolean(input.artDirector);
+  return {
+    minChars: input.minChars ?? (wide ? 2800 : 1200),
+    maxChars: input.maxChars ?? (wide ? 4800 : 3500),
+  };
+}
+
+/**
+ * The ceiling for the CODE-BUILT prompt, which is wider, and deliberately.
+ *
+ * The length check exists to police the DIRECTOR: a model that rambles produces the
+ * parameter dump this whole dialect was written to avoid, and five to seven hundred words
+ * is the budget prose needs to say the sheet well.
+ *
+ * `gpt-fallback.ts` is not prose and has no ability to compress. It states the sheet
+ * literally, so its length is a function of how much the client uploaded rather than of
+ * how disciplined it is: measured across the fourteen fixtures it runs 760 to 1,120 words,
+ * with the ceiling set by the Florian case — nine copy strings and five products.
+ *
+ * Holding it to the director's budget would therefore mean one of two things, and both are
+ * worse than a wider bound. Either it fails the check, and since this dialect has NO v1
+ * fallback the render fails outright; or it is starved of content the contract requires —
+ * the realism block, the text manifest, the zones — to fit a budget written for a
+ * different writer.
+ *
+ * So: a bound that catches pathology and nothing else. An explicit `maxChars` still wins.
+ */
+export function gptFallbackMaxChars(input: { artDirector?: boolean; maxChars?: number }): number {
+  const bounds = gptLengthBounds(input);
+  return input.maxChars ?? (input.artDirector ? Math.max(bounds.maxChars, 7500) : bounds.maxChars);
+}
 
 function trim(v: unknown): string {
   return String(v ?? "").trim();
@@ -316,6 +389,18 @@ export function compileGptBrief(input: GptBriefInput): CompiledGptBrief {
         `(${input.inferredApproach.reason}): ${input.inferredApproach.directive}`,
     );
   }
+  // What is being sold and where it runs. Both ride in STRATEGY — the slot that already
+  // exists for labelled advisory lines — rather than in slots of their own: a new slot
+  // would have to be added to the template, filled on every path, and would say nothing
+  // the label does not already say. Art-director path only, so the v1 brief is untouched.
+  if (input.artDirector) {
+    const productName = trim(input.salesContext?.product_name);
+    const benefit = trim(input.salesContext?.benefit);
+    const channel = trim(input.targetChannel);
+    if (productName) strategy.push(`What is being sold: ${productName}`);
+    if (benefit) strategy.push(`The benefit the client leads with: ${benefit}`);
+    if (channel) strategy.push(`Where this will run: ${channel}`);
+  }
 
   const brandKitLines: string[] = [];
   if (input.brandKit) {
@@ -338,7 +423,12 @@ export function compileGptBrief(input: GptBriefInput): CompiledGptBrief {
   const slots: Record<string, string> = {
     DELIVERABLE: `a finished, publishable ${trim(input.assetType) || "poster"}`,
     ASSET_TYPE: trim(input.assetType) || "poster",
-    INDUSTRY: trim(input.industry) || "(not stated)",
+    // The measured leak: a live OUTPUT line read "for the coffee and tea brand Florian,
+    // coffee_tea". A database enum reached the image model as a word to interpret. The raw
+    // id stays in `input.industry` for every internal decision; only the spelling changes.
+    INDUSTRY: input.artDirector
+      ? industryLabel(input.industry)
+      : trim(input.industry) || "(not stated)",
     ORIENTATION: `${orientation} (the ratio travels as a parameter; never write ratio digits)`,
     PRODUCT_COUNT: String(input.productCount ?? input.references.filter((r) => r.role !== "LOGO").length),
     INTENDED_USE: trim(input.intendedUse) || "(not stated)",
@@ -361,8 +451,8 @@ export function compileGptBrief(input: GptBriefInput): CompiledGptBrief {
     INDUSTRY_MODULE: trim(input.industryModule) || "(neutral studio treatment)",
     PRODUCT_COUNT_RULE: trim(input.productCountRule) || "(one focal point)",
     MODEL_NOTES: trim(input.modelNotes) || "(none beyond the standing instructions)",
-    MIN_CHARS: String(input.minChars ?? 1200),
-    MAX_CHARS: String(input.maxChars ?? 3500),
+    MIN_CHARS: String(gptLengthBounds(input).minChars),
+    MAX_CHARS: String(gptLengthBounds(input).maxChars),
     GOLD_EXAMPLE: "", // filled by the caller from the gold file
   };
 
@@ -371,6 +461,24 @@ export function compileGptBrief(input: GptBriefInput): CompiledGptBrief {
       `${refs.unsafePanels.length} product panel(s) are below the ${floor}px identity floor; ` +
         `the brief forbids label-locking from them`,
     );
+  }
+
+  // ── The art-director slots, merged over the v1 set ─────────────────────
+  //
+  // Merged rather than substituted: the v2 request template still reads OUTPUT, CONCEPT,
+  // COPY, REFERENCES and the rest, because those carry the client's own words and the
+  // client's own words do not get a second version. The sheet adds the decisions.
+  //
+  // Nothing happens without both the flag AND a sheet. A flag on with no sheet would
+  // select a v2 template whose new slots have nothing to fill them, and `fillSlots`
+  // throws on an unfilled slot — correctly, but three layers from the cause.
+  if (input.artDirector && input.sheet && input.printRule) {
+    Object.assign(slots, artDirectionSlots(input.sheet, input.printRule, input.density ?? "words_only"));
+    if (input.sheet.conflicts_resolved.length) {
+      warnings.push(
+        `${input.sheet.conflicts_resolved.length} precedence conflict(s) were resolved; see the sheet`,
+      );
+    }
   }
 
   return { slots, warnings, unsafePanels: refs.unsafePanels };

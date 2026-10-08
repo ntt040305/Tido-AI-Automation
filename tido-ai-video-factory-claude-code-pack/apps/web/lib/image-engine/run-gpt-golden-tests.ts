@@ -32,7 +32,12 @@ import assert from "assert";
 import fs from "fs";
 import path from "path";
 
-import { GPT_BRIEF_FIXTURES, briefInputFor, type GptBriefFixture } from "./prompt-v2/gpt-brief-fixtures";
+import {
+  GPT_BRIEF_FIXTURES,
+  artDirectorBriefInputFor,
+  briefInputFor,
+  type GptBriefFixture,
+} from "./prompt-v2/gpt-brief-fixtures";
 import { buildGptMessages } from "./prompt-v2/build-gpt";
 import { buildGptFallbackPrompt } from "./prompt-v2/gpt-fallback";
 import { clearTemplateCache } from "./prompt-v2/templates";
@@ -67,8 +72,8 @@ function check(name: string, fn: () => void) {
  * "what did the director see, and what would it have got without one" wants both on the
  * screen at once.
  */
-function renderFixture(fx: GptBriefFixture): string {
-  const input = briefInputFor(fx);
+function renderFixture(fx: GptBriefFixture, artDirector: boolean): string {
+  const input = artDirector ? artDirectorBriefInputFor(fx) : briefInputFor(fx);
   const built = buildGptMessages(input);
   const fallback = buildGptFallbackPrompt(input, built.templates.playbook);
   return [
@@ -76,6 +81,17 @@ function renderFixture(fx: GptBriefFixture): string {
     `# ${fx.notes}`,
     `# templates: ${built.templates.version} / ${built.templates.playbookName} / ${built.templates.dialect}`,
     "",
+    ...(artDirector
+      ? [
+          "=== ART DIRECTION SHEET (the decisions, with their concrete values) ===",
+          JSON.stringify(input.sheet, null, 2),
+          "",
+          `=== PRINT RULE (${input.printRule?.branch}) ===`,
+          `${input.printRule?.text}`,
+          `reason: ${input.printRule?.reason}`,
+          "",
+        ]
+      : []),
     "=== DIRECTOR REQUEST (the filled request template) ===",
     built.user.content,
     "",
@@ -117,7 +133,7 @@ async function main() {
   delete process.env.GPT_ART_DIRECTOR;
   clearTemplateCache();
   for (const fx of GPT_BRIEF_FIXTURES) {
-    check(`off/${fx.id}`, () => compare("gpt", fx, renderFixture(fx)));
+    check(`off/${fx.id}`, () => compare("gpt", fx, renderFixture(fx, false)));
   }
 
   // ── Flag ON: the art-director output ──────────────────────────────────
@@ -131,7 +147,7 @@ async function main() {
     process.env.GPT_ART_DIRECTOR = "true";
     clearTemplateCache();
     for (const fx of GPT_BRIEF_FIXTURES) {
-      check(`on/${fx.id}`, () => compare("gpt-ad", fx, renderFixture(fx)));
+      check(`on/${fx.id}`, () => compare("gpt-ad", fx, renderFixture(fx, true)));
     }
     delete process.env.GPT_ART_DIRECTOR;
     clearTemplateCache();

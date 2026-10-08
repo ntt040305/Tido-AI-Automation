@@ -1405,6 +1405,48 @@ export class ExperimentPipeline {
                   userControls: Object.entries(request.creativeDirection?.visual_controls || {})
                     .filter(([, v]) => v && v !== "auto")
                     .map(([k, v]) => ({ label: k, instruction: String(v) })),
+                  // ── What already ran and was being discarded here ───────
+                  //
+                  // Every field below comes from a layer this render has ALREADY executed
+                  // by the time this closure runs, and the audit measured the brief
+                  // reading "(none)" for all of them. The adapter ignores the lot unless
+                  // GPT_ART_DIRECTOR is on, so adding them changes nothing today.
+                  //
+                  // Ordering, which is load-bearing and fragile: `blueprintFor` is called
+                  // at wrapProvider :556, four lines before `v2For()` is awaited at :561,
+                  // so `capturedBlueprint` and `capturedCompositionPlan` are populated by
+                  // the time this reads them. `earlyStrategy` is awaited at :1184, long
+                  // before. Both are facts about the current call order rather than
+                  // guarantees — if the provider wrapper is ever reordered, these go back
+                  // to null and the sheet falls back to its derived defaults rather than
+                  // breaking.
+                  brandKit: decision.brandKit
+                    ? {
+                        colors: decision.brandKit.colors,
+                        fonts: decision.brandKit.fonts,
+                        stylePreferred: decision.brandKit.style?.preferred,
+                        styleForbidden: decision.brandKit.style?.forbidden,
+                        typographyPreference: decision.brandKit.style?.typography_preference,
+                        hasLogoImage: decision.brandKit.has_logo,
+                      }
+                    : null,
+                  strategy: earlyStrategy
+                    ? [
+                        { label: "Creative angle", text: earlyStrategy.creative_angle || "" },
+                        { label: "Commercial goal", text: earlyStrategy.commercial_goal || "" },
+                        { label: "Audience psychology", text: earlyStrategy.target_customer_psychology || "" },
+                        { label: "Consumer insight", text: earlyStrategy.consumer_insight || "" },
+                        { label: "The one thing the image says", text: earlyStrategy.creative_message || "" },
+                        { label: "What the viewer should feel", text: earlyStrategy.emotional_response || "" },
+                      ].filter((s) => s.text.trim())
+                    : undefined,
+                  // Style read off an inspiration image, when one was analysed FROM the
+                  // image. The adapter drops it otherwise — see `styleWords`.
+                  styleManifest: request.inspirationStyleManifest ?? null,
+                  salesContext: (request as { salesContext?: { product_name?: string; benefit?: string } })
+                    .salesContext ?? null,
+                  targetChannel: request.marketingContext?.target_channel,
+                  productFacts: (request as { hardRequirements?: string[] }).hardRequirements ?? undefined,
                   productCountRule:
                     countAttachedProducts(request) > 1
                       ? "Several products: group them with a clear hierarchy, the main product largest, none deformed or duplicated."

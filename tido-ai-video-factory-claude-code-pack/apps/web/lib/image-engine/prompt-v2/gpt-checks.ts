@@ -18,6 +18,9 @@
  * Pure. No I/O, no model call.
  */
 import { MASTER_SECTIONS, ORIENTATION } from "./gpt-brief";
+import type { NumericWordsDensity } from "./engine-selector";
+import type { ArtDirectionSheet } from "./art-direction/art-direction-sheet";
+import { printRuleBranchesIn, type PrintRuleBranch } from "./art-direction/print-rule";
 
 export type GptCheckCode =
   | "SECTIONS_MISSING"
@@ -36,7 +39,17 @@ export type GptCheckCode =
   | "ORIENTATION_MISMATCH"
   | "NO_TEXT_NOT_DECLARED"
   | "LABEL_LOCK_ON_SMALL_PANEL"
-  | "VERDICT_WORD";
+  | "VERDICT_WORD"
+  // ── The art-director rule set. Dormant unless a sheet is supplied ──────
+  | "UNRESOLVED_AUTO"
+  | "QUOTE_OUTSIDE_MANIFEST"
+  | "PRINT_RULE_BRANCHES"
+  | "PERCENT_WORDS_OUTSIDE_LAYOUT"
+  | "TYPE_FAMILIES"
+  | "TEXT_BELOW_SIZE_FLOOR"
+  | "TEXT_ZONE_OVERLAPS_HERO"
+  | "BACKGROUND_EQUALS_PRODUCT"
+  | "RAW_IDENTIFIER";
 
 export interface GptCheckFailure {
   code: GptCheckCode;
@@ -67,6 +80,24 @@ export interface GptCheckOptions {
    * check that fails a prompt for enthusiasm costs a repair call for nothing.
    */
   banVerdictWords?: boolean;
+
+  /**
+   * The Art Direction Sheet this prompt was written from. Supplying it turns on the
+   * second rule set and nothing else.
+   *
+   * Passed as the whole sheet rather than as a handful of scalars because the sheet IS the
+   * specification the prompt is being checked against — a check that reads a copy of two
+   * of its fields is a check that can disagree with it.
+   *
+   * Absent means the art-director path is off, and then this file behaves exactly as it
+   * did before: the nine original checks, the same codes, the same messages. That is what
+   * makes `GPT_ART_DIRECTOR` a rollback rather than a migration.
+   */
+  sheet?: ArtDirectionSheet | null;
+  /** Which density the brief was written in. Decides whether percentage WORDS are legal. */
+  density?: NumericWordsDensity;
+  /** The one print-rule branch the brief selected. Any other count is the defect. */
+  printRuleBranch?: PrintRuleBranch;
 }
 
 const nfc = (s: unknown): string => String(s ?? "").normalize("NFC");
@@ -96,6 +127,34 @@ const PHYSICAL = new RegExp(
 
 const VERDICT_WORDS = /\b(stunning|beautiful|gorgeous|breathtaking|amazing|perfect|exquisite)\b/i;
 
+/**
+ * Words that say a decision was NOT made.
+ *
+ * The art-director contract is that every decision is resolved before the prompt is
+ * written, so one of these in the finished text means a slot leaked through unresolved —
+ * "lighting: auto" or "a tasteful arrangement" is the renderer being handed the choice
+ * the sheet was built to make.
+ *
+ * `appropriate` is deliberately included and `appropriately` is deliberately not: the
+ * adverb usually modifies a real instruction ("scaled appropriately to the cup"), while
+ * the adjective almost always replaces one.
+ */
+const AUTO_WORDS = /\b(?:auto|AI\s+decides|suitable|tasteful|appropriate|as\s+needed|as\s+you\s+see\s+fit)\b/i;
+
+/** A spelled-out percentage: "about thirty percent", "seven percent". */
+const PERCENT_WORDS = /\b[a-z]+(?:-[a-z]+)?\s+percent\b/i;
+
+/**
+ * A raw snake_case identifier, such as `coffee_tea`.
+ *
+ * The measured leak: a live OUTPUT line read "for the coffee and tea brand Florian,
+ * coffee_tea". A database enum reached the image model as a word to interpret.
+ */
+const RAW_IDENTIFIER = /\b[a-z]{2,}_[a-z]{2,}\b/;
+
+/** The sections in which a spelled-out percentage is permitted. D1. */
+const LAYOUT_SECTIONS = ["SUBJECT ARRANGEMENT:", "COMPOSITION & LAYOUT:", "TEXT:"] as const;
+
 /** Every double-quoted run in the text. Straight quotes only — the contract says so. */
 export function quoted(prompt: string): string[] {
   return [...String(prompt || "").matchAll(/"([^"\n]*)"/g)].map((m) => m[1]);
@@ -108,6 +167,29 @@ export function textSection(prompt: string): string {
   const after = prompt.slice(start + "TEXT:".length);
   const end = after.indexOf("CONSTRAINTS:");
   return end < 0 ? after : after.slice(0, end);
+}
+
+/**
+ * One named section's body, bounded by whichever heading comes next.
+ *
+ * Bounded by the NEXT heading in `MASTER_SECTIONS` order rather than by a fixed successor,
+ * so a prompt that omits a heading still yields a correct body for the ones it has. The
+ * alternative — hard-coding each section's successor, which is what `textSection` does for
+ * the one case that predates this — would read the whole rest of the prompt as the body of
+ * any section whose successor went missing.
+ */
+export function sectionBody(prompt: string, heading: string): string {
+  const text = String(prompt || "");
+  const start = text.indexOf(heading);
+  if (start < 0) return "";
+  const from = start + heading.length;
+  let end = text.length;
+  for (const other of MASTER_SECTIONS) {
+    if (other === heading) continue;
+    const at = text.indexOf(other, from);
+    if (at >= 0 && at < end) end = at;
+  }
+  return text.slice(from, end);
 }
 
 /** Quotes stripped, so a scan for numbers never reads the client's own copy. */
@@ -322,11 +404,190 @@ export function runGptChecks(prompt: string, opts: GptCheckOptions): GptCheckRes
     }
   }
 
+  // ── 10. The art-director rule set ──────────────────────────────────────
+  //
+  // Everything below needs the sheet, so none of it can fire on a prompt written without
+  // one. A check that refuses something the brief never asked for is a repair call with
+  // extra steps, and the repair ladder is unchanged by this block: a failure here blocks
+  // exactly as any other failure does, through the one existing repair call and then the
+  // code-built fallback. No new call is added.
+  if (opts.sheet) {
+    failures.push(...artDirectorChecks(text, scan, allQuotes, opts, opts.sheet));
+  }
+
   return {
     ok: failures.length === 0,
     failures,
     stats: { chars: text.length, quoted: allQuotes.length, sections: MASTER_SECTIONS.length - missing.length },
   };
+}
+
+/**
+ * The second rule set. Only ever called with a sheet.
+ *
+ * Split into its own function rather than inlined for one reason: the nine original checks
+ * must stay readable as the thing they are — the contract the rollback depends on — and a
+ * reader comparing this file against the version before the art-director work should be
+ * able to see at a glance that nothing above this line moved.
+ */
+function artDirectorChecks(
+  text: string,
+  scan: string,
+  allQuotes: string[],
+  opts: GptCheckOptions,
+  sheet: ArtDirectionSheet,
+): GptCheckFailure[] {
+  const failures: GptCheckFailure[] = [];
+  const density = opts.density ?? "words_only";
+
+  // A decision that was never made. The whole point of the sheet is that there are none.
+  const auto = AUTO_WORDS.exec(scan);
+  if (auto) {
+    failures.push({
+      code: "UNRESOLVED_AUTO",
+      message:
+        `"${auto[0]}" leaves the decision to the renderer. Every decision is already made — ` +
+        `write the decision itself, not the fact that one was needed.`,
+    });
+  }
+
+  // A raw enum reaching the image as a word to interpret.
+  const raw = RAW_IDENTIFIER.exec(scan);
+  if (raw) {
+    failures.push({
+      code: "RAW_IDENTIFIER",
+      message: `"${raw[0]}" is an internal identifier, not English. Write the phrase a person would say.`,
+    });
+  }
+
+  // Every quoted string must be in the manifest, and the manifest IS the copy list — so
+  // this is a second, independent statement of the same contract from the sheet's side.
+  // Kept because the two can disagree: a manifest built from a copy list the caller
+  // shortened is exactly the defect that let a client's words be silently cut once before.
+  const manifest = new Set(sheet.text_manifest.map((m) => canonical(m.exact_string)));
+  for (const q of allQuotes) {
+    if (!manifest.has(q)) {
+      failures.push({
+        code: "QUOTE_OUTSIDE_MANIFEST",
+        message: `"${q}" is set in the image but is not in the text manifest. Only manifest strings may be drawn.`,
+      });
+      break;
+    }
+  }
+
+  // Exactly one print rule. Two is the live defect this whole branch exists to fix: a
+  // prompt that said both "keep the branding as photographed" and "draw no brand mark"
+  // handed the renderer a contradiction and let it pick.
+  const branches = printRuleBranchesIn(text);
+  if (branches.length !== 1) {
+    failures.push({
+      code: "PRINT_RULE_BRANCHES",
+      message:
+        branches.length === 0
+          ? `the prompt states no rule about printed branding. It must carry exactly the one supplied${opts.printRuleBranch ? ` (${opts.printRuleBranch})` : ""}.`
+          : `the prompt states ${branches.length} different rules about branding (${branches.join(", ")}). State exactly one.`,
+    });
+  } else if (opts.printRuleBranch && branches[0] !== opts.printRuleBranch) {
+    failures.push({
+      code: "PRINT_RULE_BRANCHES",
+      message: `the prompt states the "${branches[0]}" branding rule, but this job's rule is "${opts.printRuleBranch}". Carry the supplied sentence through.`,
+    });
+  }
+
+  // D1: spelled-out percentages are a layout device. In a lighting or colour sentence they
+  // are a parameter dump that happens to be spelled out.
+  const allowed = new Set<string>(LAYOUT_SECTIONS);
+  for (const heading of MASTER_SECTIONS) {
+    if (allowed.has(heading)) continue;
+    const body = withoutQuotes(sectionBody(text, heading));
+    const hit = PERCENT_WORDS.exec(body);
+    if (hit) {
+      failures.push({
+        code: "PERCENT_WORDS_OUTSIDE_LAYOUT",
+        message:
+          `"${hit[0].trim()}" appears under ${heading} — a spelled-out percentage belongs only in ` +
+          `${LAYOUT_SECTIONS.join(", ")}. Describe the visible effect here instead.`,
+      });
+      break;
+    }
+  }
+  if (density === "words_only") {
+    // The brief never spelled a percentage, so one in the prompt was invented by the
+    // director rather than carried from the sheet.
+    for (const heading of LAYOUT_SECTIONS) {
+      const hit = PERCENT_WORDS.exec(withoutQuotes(sectionBody(text, heading)));
+      if (hit) {
+        failures.push({
+          code: "PERCENT_WORDS_OUTSIDE_LAYOUT",
+          message:
+            `"${hit[0].trim()}" is a percentage, and this job is written in relative language only. ` +
+            `Say it as a share — "about half the height", "the upper third".`,
+        });
+        break;
+      }
+    }
+  }
+
+  // More than two type families is the single most reliable way to make a layout look
+  // amateur, and it is decidable: the sheet named the families it allows.
+  const familyCap = Math.max(1, sheet.typography.families.length || 1);
+  if (familyCap < 3) {
+    const named = sheet.typography.families.filter((f) => f && text.toLowerCase().includes(f.toLowerCase()));
+    if (sheet.typography.families.length > 2 || named.length > 2) {
+      failures.push({
+        code: "TYPE_FAMILIES",
+        message: `the prompt asks for ${named.length} type families. Two is the maximum, and one is usually right.`,
+      });
+    }
+  }
+
+  // ── Sheet invariants ───────────────────────────────────────────────────
+  //
+  // These three are properties of the SHEET rather than of the prose, and they are checked
+  // here rather than inside `buildArtDirectionSheet` on purpose: the sheet's job is to
+  // derive, and a deriver that also audits itself will quietly correct its own bug instead
+  // of reporting it. A failure here means a derivation rule is wrong, which is worth a
+  // blocked render.
+  const z = sheet.canvas_zones;
+  const overlapsVertically =
+    z.text.height_pct > 0 &&
+    z.text.top_pct < z.subject.top_pct + z.subject.height_pct &&
+    z.subject.top_pct < z.text.top_pct + z.text.height_pct;
+  const overlapsHorizontally =
+    z.text.width_pct > 0 &&
+    z.text.left_pct < z.subject.left_pct + z.subject.width_pct &&
+    z.subject.left_pct < z.text.left_pct + z.text.width_pct;
+  if (overlapsVertically && overlapsHorizontally) {
+    failures.push({
+      code: "TEXT_ZONE_OVERLAPS_HERO",
+      message:
+        "the text zone overlaps the subject zone on both axes, so the copy would be set over the product. " +
+        "The zones are derived together precisely so that cannot happen.",
+    });
+  }
+
+  for (const entry of sheet.text_manifest) {
+    if (entry.size_pct < sheet.typography.sizes_pct.small) {
+      failures.push({
+        code: "TEXT_BELOW_SIZE_FLOOR",
+        message: `"${entry.exact_string}" is set below this channel's legibility floor and would not be readable.`,
+      });
+      break;
+    }
+  }
+
+  const background = String(sheet.palette.sixty || "").trim().toLowerCase();
+  const productColour = String(sheet.palette.product_dominant || "").trim().toLowerCase();
+  if (productColour && background === productColour) {
+    failures.push({
+      code: "BACKGROUND_EQUALS_PRODUCT",
+      message:
+        `the field colour is ${sheet.palette.sixty}, which is the product's own dominant colour, so the product ` +
+        `would not separate from the background. The field must differ from the product.`,
+    });
+  }
+
+  return failures;
 }
 
 /** Counts and codes only. Never the prompt, never the client's copy. */

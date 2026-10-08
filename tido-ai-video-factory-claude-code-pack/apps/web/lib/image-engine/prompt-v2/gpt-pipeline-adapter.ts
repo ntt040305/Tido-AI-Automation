@@ -33,6 +33,14 @@ import { buildGptPrompt, type GptEngineResult } from "./build-gpt";
 import type { GptBriefInput, GptReference } from "./gpt-brief";
 import type { SimpleResult } from "./build-simple";
 import { activeProfile } from "../models/image-model-profiles";
+import { gptArtDirector, numericWordsDensity } from "./engine-selector";
+import {
+  buildArtDirectionSheet,
+  printRuleForSheet,
+  sheetTelemetry,
+  type ArtDirectionSheet,
+  type SheetInput,
+} from "./art-direction/art-direction-sheet";
 import {
   allocateReferences,
   type Allocation,
@@ -65,6 +73,27 @@ export interface GptPipelineInput {
   referenceData?: { label: string; value: string }[];
   industryModule?: string;
   productCountRule?: string;
+
+  // ── What already ran upstream and was being discarded ──────────────────
+  //
+  // Each of these is produced by a layer the pipeline ALREADY executes on every render.
+  // The audit measured the cost of not passing them: PRODUCT_FACTS, BRAND_KIT, STRATEGY
+  // and REFERENCE_DATA all read "(none)" in the live brief while MarketingBrainService,
+  // the brand kit and the composition plan had all produced their output and had it
+  // dropped on the floor at the adapter boundary.
+  //
+  // Every one is optional, and the art-director path works with whatever subset arrived:
+  // a brief with no strategy is a brief with no strategy, not an error.
+  brandKit?: GptBriefInput["brandKit"];
+  userApproach?: { label: string; directive: string } | null;
+  inferredApproach?: { label: string; directive: string; reason: string } | null;
+  resolvedControls?: { label: string; value: string; source: string }[];
+  /** Honoured only when `derived_from_image` is true. See `SheetInput.styleManifest`. */
+  styleManifest?: SheetInput["styleManifest"];
+  salesContext?: { product_name?: string; benefit?: string } | null;
+  targetChannel?: string;
+  /** Phase 3's hook. Nothing populates it in this round. */
+  detectedPrintedBranding?: Array<{ product: string; reads: string }> | null;
 }
 
 function roleKind(role: string): AllocationInput["kind"] {
@@ -163,11 +192,79 @@ export function asSimpleResult(gpt: GptEngineResult): SimpleResult {
  * and anything unexpected here is caught and reported the same way, because a bug in
  * this file must not be able to cost a render.
  */
+/**
+ * The style words an inspiration image legitimately contributes.
+ *
+ * Gated on `derived_from_image`, and `types.ts:628` records why: the LLM transport is
+ * text-only, so a manifest can be an inference FROM THE CONCEPT wearing the clothes of an
+ * observation. Injected as authoritative style, such a manifest competes with the real
+ * attached image and reintroduces the generic studio look it was supposed to replace.
+ *
+ * Composition, light direction and colour mood only. Never the reference image's OBJECTS:
+ * a mood photograph of a watch is a lighting instruction for a bottle, not a reason to
+ * draw a watch.
+ */
+function styleWords(manifest: GptPipelineInput["styleManifest"]): { label: string; text: string }[] {
+  if (!manifest || manifest.derived_from_image !== true) return [];
+  const out: { label: string; text: string }[] = [];
+  const add = (label: string, value: unknown) => {
+    const text = String(value ?? "").trim();
+    if (text) out.push({ label, text });
+  };
+  add("Composition read off the mood image", manifest.composition);
+  add("Light direction read off the mood image", manifest.lighting);
+  add("Colour mood read off the mood image", manifest.colorMood);
+  if (out.length) {
+    out.push({
+      label: "How to use the mood image",
+      text:
+        "its composition, light and colour only. None of the objects in it appear in this picture; " +
+        "the products are the attached photographs and nothing else.",
+    });
+  }
+  return out;
+}
+
+/** The sheet's own input, assembled from what the pipeline already has. */
+function sheetInputFor(input: GptPipelineInput, allocation: Allocation | null): SheetInput {
+  return {
+    assetType: input.assetType,
+    aspectRatio: input.aspectRatio,
+    industry: input.industry,
+    concept: input.concept,
+    brand: input.brand,
+    copy: input.copy,
+    products: input.references
+      .filter((r) => roleKind(r.role) === "product")
+      .map((r) => ({
+        id: String(r.index),
+        description: String(r.description || r.filename || `product ${r.index}`),
+        productId: r.productId ?? null,
+      })),
+    allocation,
+    productFacts: input.productFacts,
+    brandKit: input.brandKit ?? null,
+    userControls: input.userControls,
+    userApproach: input.userApproach ?? null,
+    inferredApproach: input.inferredApproach ?? null,
+    strategy: [...(input.strategy || []), ...styleWords(input.styleManifest)],
+    styleManifest: input.styleManifest ?? null,
+    detectedPrintedBranding: input.detectedPrintedBranding ?? null,
+    density: numericWordsDensity(),
+  };
+}
+
 export async function buildGptForPipeline(
   input: GptPipelineInput,
   chat: (messages: Array<{ role: "system" | "user" | "assistant"; content: unknown }>, purpose: string) => Promise<string>,
-): Promise<{ simple: SimpleResult; gpt: GptEngineResult | null; allocation: Allocation | null }> {
+): Promise<{
+  simple: SimpleResult;
+  gpt: GptEngineResult | null;
+  allocation: Allocation | null;
+  sheet: ArtDirectionSheet | null;
+}> {
   const profile = activeProfile();
+  const artDirector = gptArtDirector();
   try {
     const allocation = await allocationForPipeline(input.references);
 
@@ -179,6 +276,17 @@ export async function buildGptForPipeline(
     }));
 
     const productCount = input.references.filter((r) => roleKind(r.role) === "product").length;
+
+    // The sheet, and the print rule it selects. Both pure, both deterministic, neither
+    // costing a model call — so building them before the flag check would be free, but it
+    // would also mean a bug in a derivation rule could end a render that asked for none of
+    // this. They are built only when they will be used.
+    const sheetInput = artDirector ? sheetInputFor(input, allocation) : null;
+    const sheet = sheetInput ? buildArtDirectionSheet(sheetInput) : null;
+    const printRule = sheetInput ? printRuleForSheet(sheetInput) : null;
+    if (sheet) {
+      console.log("[PROMPT_GPT][SHEET]", JSON.stringify(sheetTelemetry(sheet)));
+    }
 
     const briefInput: GptBriefInput = {
       assetType: input.assetType,
@@ -198,10 +306,36 @@ export async function buildGptForPipeline(
       referenceData: input.referenceData,
       industryModule: input.industryModule,
       productCountRule: input.productCountRule,
+      // ── Everything the adapter used to drop ─────────────────────────────
+      //
+      // All of it behind the flag, including the four fields — brandKit, the two
+      // approaches, the resolved controls — that the v1 brief has ALWAYS had slots for and
+      // has never had filled. Filling those unconditionally would be the better change on
+      // its own terms: the slot exists, the layer runs, and `(none)` in the live brief is
+      // a wiring gap rather than a decision.
+      //
+      // It is gated anyway, because the standing rule for this work is that flag OFF
+      // produces a byte-identical prompt, and `run-gpt-golden-tests` enforces that over
+      // fourteen briefs. Populating a slot that was empty yesterday changes the prompt.
+      // Ungating them is a one-line follow-up and a deliberate golden update.
+      ...(artDirector
+        ? {
+            artDirector: true as const,
+            sheet,
+            printRule,
+            density: numericWordsDensity(),
+            brandKit: input.brandKit ?? null,
+            userApproach: input.userApproach ?? null,
+            inferredApproach: input.inferredApproach ?? null,
+            resolvedControls: input.resolvedControls,
+            salesContext: input.salesContext ?? null,
+            targetChannel: input.targetChannel,
+          }
+        : {}),
     };
 
     const gpt = await buildGptPrompt(briefInput, { chat });
-    return { simple: asSimpleResult(gpt), gpt, allocation };
+    return { simple: asSimpleResult(gpt), gpt, allocation, sheet };
   } catch (err) {
     const message = (err as Error)?.message || String(err);
     return {
@@ -217,6 +351,7 @@ export async function buildGptForPipeline(
       },
       gpt: null,
       allocation: null,
+      sheet: null,
     };
   }
 }

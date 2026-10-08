@@ -24,11 +24,23 @@
  * the alternative would be a silent quality regression on exactly the renders a user
  * cares most about.
  */
-import { loadTemplates, fillSlots, templateVersion, type LoadedTemplates } from "./templates";
-import { compileGptBrief, layoutFor, type GptBriefInput, type CompiledGptBrief } from "./gpt-brief";
+import { loadTemplates, fillSlots, type LoadedTemplates } from "./templates";
+import {
+  compileGptBrief,
+  gptFallbackMaxChars,
+  gptLengthBounds,
+  layoutFor,
+  type GptBriefInput,
+  type CompiledGptBrief,
+} from "./gpt-brief";
 import { runGptChecks, gptCheckTelemetry, type GptCheckResult } from "./gpt-checks";
 import { buildGptFallbackPrompt } from "./gpt-fallback";
-import { labelLockVerified, gptBanVerdictWords, smallPanelPolicy } from "./engine-selector";
+import {
+  labelLockVerified,
+  gptBanVerdictWords,
+  smallPanelPolicy,
+  gptTemplateVersion,
+} from "./engine-selector";
 import { smallPanels } from "../provider/reference-packing/reference-allocation";
 
 export interface GptDeps {
@@ -102,7 +114,7 @@ export function parseGptReply(raw: string): GptReply {
 
 export function buildGptMessages(
   input: GptBriefInput,
-  version = templateVersion(),
+  version = gptTemplateVersion(),
 ): { system: string; user: { role: "user"; content: string }; templates: LoadedTemplates; brief: CompiledGptBrief } {
   const hasCopy = input.copy.some((c) => nfc(c).trim());
   const templates = loadTemplates(input.assetType, version, "gpt-image", hasCopy);
@@ -216,15 +228,31 @@ export async function buildGptPrompt(input: GptBriefInput, deps: GptDeps): Promi
 
   const { system, user, templates, brief } = built;
   const referenceCount = input.allocation ? input.allocation.slots.length : input.references.length;
+  const bounds = gptLengthBounds(input);
   const checkOptions = {
     copy: copy_original,
     referenceCount,
     aspectRatio: input.aspectRatio,
-    minChars: input.minChars ?? 1200,
-    maxChars: input.maxChars ?? 3500,
+    minChars: bounds.minChars,
+    maxChars: bounds.maxChars,
     unsafePanels: brief.unsafePanels,
     banVerdictWords: gptBanVerdictWords(),
+    // The second rule set, dormant unless the sheet wrote the brief. Everything it needs
+    // comes from the sheet, so a check can only ever fire against a prompt that had the
+    // information to pass it — a check that refuses what the brief never asked for is
+    // just a repair call with extra steps.
+    ...(input.artDirector && input.sheet && input.printRule
+      ? {
+          sheet: input.sheet,
+          density: input.density ?? ("words_only" as const),
+          printRuleBranch: input.printRule.branch,
+        }
+      : {}),
   };
+
+  // The code-built prompt is checked against its own ceiling. See `gptFallbackMaxChars`:
+  // the director's word budget is a discipline for a writer, and this one is not a writer.
+  const fallbackCheckOptions = { ...checkOptions, maxChars: gptFallbackMaxChars(input) };
 
   const base = {
     warnings: [...brief.warnings],
@@ -248,7 +276,7 @@ export async function buildGptPrompt(input: GptBriefInput, deps: GptDeps): Promi
     // The director never answered. A code-built prompt is the right answer here: it is
     // correct, it is cheap, and it is not Gemini dialect.
     const prompt = buildGptFallbackPrompt(input, templates.playbook);
-    const checks = runGptChecks(prompt, checkOptions);
+    const checks = runGptChecks(prompt, fallbackCheckOptions);
     return {
       ...base,
       ok: true,
@@ -305,7 +333,7 @@ export async function buildGptPrompt(input: GptBriefInput, deps: GptDeps): Promi
 
   if (!reply.image_prompt || !checks.ok) {
     const prompt = buildGptFallbackPrompt(input, templates.playbook);
-    const fallbackChecks = runGptChecks(prompt, checkOptions);
+    const fallbackChecks = runGptChecks(prompt, fallbackCheckOptions);
     return {
       ...base,
       ok: true,

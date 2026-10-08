@@ -22,6 +22,19 @@
 import { MASTER_SECTIONS, ORIENTATION, layoutFor, type GptBriefInput } from "./gpt-brief";
 import { fillSlots } from "./templates";
 import type { Allocation } from "../provider/reference-packing/reference-allocation";
+import { industryLabel } from "./art-direction/industry-label";
+import {
+  renderArrangement,
+  renderCamera,
+  renderColour,
+  renderLayout,
+  renderLighting,
+  renderRealism,
+  renderSet,
+} from "./art-direction/art-direction-brief";
+import type { ArtDirectionSheet } from "./art-direction/art-direction-sheet";
+import type { PrintRule } from "./art-direction/print-rule";
+import type { NumericWordsDensity } from "./engine-selector";
 
 const nfc = (s: unknown): string => String(s ?? "").normalize("NFC");
 
@@ -129,7 +142,128 @@ function textLines(copy: string[]): string {
  * filler: a prompt that fails the length check cannot be sent, and the honest way to make
  * it longer is to say more of what the playbook already decided.
  */
+/**
+ * Bullet lines flattened into prose: dashes removed, each line a sentence.
+ *
+ * Capitalised, because the sheet's clauses are written as clauses — "a clear, even margin
+ * on every side" — and a prompt made of lowercase sentence-starts reads as a dumped list,
+ * which is the thing this whole path exists to stop being.
+ */
+function flatten(block: string): string {
+  return String(block || "")
+    .split("\n")
+    .map((l) => l.replace(/^\s*-\s*/, "").trim())
+    .filter((l) => l && l !== "(none)")
+    .map((l) => (/[.!?]$/.test(l) ? l : `${l}.`))
+    .map((l) => l.charAt(0).toUpperCase() + l.slice(1))
+    .join(" ");
+}
+
+/**
+ * The manifest, as the TEXT section. Every string once, with its part and its place.
+ *
+ * GROUPED by part and place, not one clause per string. Measured on the Florian fixture:
+ * nine strings, six of them price lines sharing one position, produced 1,437 characters of
+ * which about seven hundred were the same placement sentence repeated. The client's words
+ * are untouchable; the scaffolding around them is not.
+ */
+function manifestText(sheet: ArtDirectionSheet): string {
+  if (!sheet.text_manifest.length) return "No text of any kind anywhere in the image.";
+
+  const groups: Array<{ role: string; position: string; strings: string[] }> = [];
+  for (const m of sheet.text_manifest) {
+    const last = groups[groups.length - 1];
+    // Only CONSECUTIVE entries are grouped, so the reading order the manifest states is
+    // the reading order the prompt states.
+    if (last && last.role === m.role && last.position === m.position) last.strings.push(m.exact_string);
+    else groups.push({ role: m.role, position: m.position, strings: [m.exact_string] });
+  }
+
+  const clauses = groups.map((g) => {
+    const quoted = g.strings.map((s) => `"${s}"`).join("; ");
+    return g.strings.length === 1
+      ? `as the ${g.role}, ${g.position}: ${quoted}`
+      : `as ${g.role}s, ${g.position}: ${quoted}`;
+  });
+
+  return (
+    `Set each of the following exactly once, and nothing else — ${clauses.join(". Then ")}. ` +
+    `${sheet.typography.hierarchy.charAt(0).toUpperCase()}${sheet.typography.hierarchy.slice(1)}. ` +
+    `${sheet.typography.treatment_over_texture.charAt(0).toUpperCase()}${sheet.typography.treatment_over_texture.slice(1)}. ` +
+    "Render every Vietnamese diacritic exactly as written. " +
+    "No other text, numbers, watermarks or extra logos."
+  );
+}
+
+/**
+ * The art-director fallback: the same nine sections, written from the sheet.
+ *
+ * It exists for the same reason the plain one does — the director failed twice and
+ * something correct still has to be sent — but it has more to work with, because the sheet
+ * already resolved every decision. So this is not a degraded prompt; it is the sheet
+ * without the prose.
+ *
+ * It must pass `runGptChecks` INCLUDING the art-director rule set, by construction. That
+ * is the reason the industry goes through `industryLabel` here and the print rule is
+ * emitted exactly once: a fallback that fails the checks is a render that fails outright,
+ * since this dialect has no v1 to fall through to.
+ */
+function buildSheetFallbackPrompt(
+  input: GptBriefInput,
+  sheet: ArtDirectionSheet,
+  printRule: PrintRule,
+  density: NumericWordsDensity,
+): string {
+  const floor = input.minPanelLongestSidePx ?? 512;
+  const orientation = ORIENTATION[trim(input.aspectRatio)] || "square";
+  const asset = trim(input.assetType) || "poster";
+  const brand = trim(input.brand) || "the brand";
+  const use = trim(input.intendedUse) || "a commercial placement";
+  const heroProduct = sheet.products.find((p) => p.id === sheet.hero.id);
+
+  const sections: Record<(typeof MASTER_SECTIONS)[number], string> = {
+    // `industryLabel` and not the raw id: the RAW_IDENTIFIER check refuses `coffee_tea`,
+    // and it is right to.
+    "OUTPUT:": `A ${orientation} ${asset} for ${brand}, a ${industryLabel(input.industry)} brand, for ${use}. Photorealistic, finished and ready to publish.`,
+    // `referenceLines` has already named every product, panel by panel, and already said
+    // that each keeps its shape, proportions, colours, materials and label layout. The
+    // first draft repeated the whole product list and the whole fidelity sentence here, at
+    // six hundred characters, and said nothing the renderer had not just been told.
+    // What is NOT already stated is which product leads, and the print rule.
+    "REFERENCE IMAGES:":
+      `${referenceLines(input.allocation, input, floor)} ` +
+      `${heroProduct ? `The hero — the product the picture is about — is ${unquote(heroProduct.description)}. ` : ""}` +
+      `${printRule.text}`,
+    "SCENE & CONCEPT:": `${unquote(sheet.big_idea)} The mood is ${sheet.mood}. ${flatten(renderSet(sheet))}`,
+    "SUBJECT ARRANGEMENT:": flatten(renderArrangement(sheet, density)),
+    "COMPOSITION & LAYOUT:": flatten(renderLayout(sheet, density)),
+    "LIGHT / CAMERA / MATERIALS:":
+      `${flatten(renderCamera(sheet))} ${flatten(renderLighting(sheet))} ${flatten(renderRealism(sheet))}` +
+      (heroProduct && heroProduct.material === "unverified"
+        ? " Take every surface and material from the photographs rather than naming one."
+        : ""),
+    "COLOR & BRAND STYLE:": flatten(renderColour(sheet, density)),
+    "TEXT:": manifestText(sheet),
+    // The print rule is NOT repeated here: exactly one statement about branding is the
+    // whole contract, and the checks count the branches.
+    //
+    // And the fidelity restatement deliberately avoids the words "exactly as photographed".
+    // That phrase is the MARKER for the photographed-branding branch, so on a brief with a
+    // supplied logo this sentence used to raise the branch count to two — caught by
+    // PRINT_RULE_BRANCHES on the brand-kit fixture, which is what the check is for.
+    "CONSTRAINTS:": `${sheet.negatives.join(". ")}.${
+      sheet.set.exclusions.length ? ` ${sheet.set.exclusions.map((e) => unquote(e)).join(". ")}.` : ""
+    } Every product is reproduced as supplied in the reference photographs, and only the strings listed above are set.`,
+  };
+
+  return MASTER_SECTIONS.map((heading) => `${heading} ${sections[heading]}`).join("\n\n");
+}
+
 export function buildGptFallbackPrompt(input: GptBriefInput, playbookText: string): string {
+  // The art-director path, when the sheet exists. Nothing below changes for anyone else.
+  if (input.artDirector && input.sheet && input.printRule) {
+    return buildSheetFallbackPrompt(input, input.sheet, input.printRule, input.density ?? "words_only");
+  }
   const floor = input.minPanelLongestSidePx ?? 512;
   const orientation = ORIENTATION[trim(input.aspectRatio)] || "square";
   const asset = trim(input.assetType) || "poster";

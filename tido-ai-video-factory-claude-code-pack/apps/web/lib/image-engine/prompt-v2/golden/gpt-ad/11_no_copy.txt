@@ -1,0 +1,429 @@
+# 11_no_copy
+# No copy at all: the TEXT section must declare that, and nothing may be quoted.
+# templates: v2 / hero / gpt-image
+
+=== ART DIRECTION SHEET (the decisions, with their concrete values) ===
+{
+  "big_idea": "The watch alone on brushed steel, examined the way a collector examines it.",
+  "mood": "composed and quiet",
+  "audience_tone": "whoever this hero is for, addressed directly and without hype",
+  "products": [
+    {
+      "id": "1",
+      "material": "steel, leather",
+      "size_class": "unverified",
+      "colours": [
+        "black"
+      ],
+      "printed_branding": "unverified",
+      "description": "a stainless steel wristwatch, black dial, leather strap"
+    }
+  ],
+  "hero": {
+    "id": "1",
+    "reason": "the only product"
+  },
+  "canvas_zones": {
+    "safe_margin_pct": 5,
+    "platform_ui": null,
+    "subject": {
+      "top_pct": 5,
+      "left_pct": 5,
+      "width_pct": 90,
+      "height_pct": 90
+    },
+    "text": {
+      "top_pct": 5,
+      "left_pct": 5,
+      "width_pct": 90,
+      "height_pct": 0
+    },
+    "negative_space_pct": 19
+  },
+  "arrangement": {
+    "depth_layers": 3,
+    "overlaps": false,
+    "hero_scale_pct": 38
+  },
+  "camera": {
+    "height": "subject_line",
+    "tilt_deg": 0,
+    "lens_mm": 85,
+    "aperture": 2.8,
+    "focus_rule": "the hero is crisp from its nearest edge through its label, and focus falls away outward from the hero in every direction"
+  },
+  "lighting": {
+    "key_direction": "front_left",
+    "kelvin": 4500,
+    "rim": true,
+    "fill_ratio": 2,
+    "shadow_rule": "one light direction governs every highlight and every shadow in the frame; each object has a contact shadow where it meets the surface, and no object casts a shadow in a direction the others do not"
+  },
+  "set": {
+    "surface": "steel, as the concept states",
+    "background": "a plain field of a warm off-white, close to unbleached paper, falling softly out of focus behind the subject",
+    "props": [],
+    "culture_signals": [],
+    "exclusions": [
+      "no invented ports, buttons, logos or screen content that the photographs do not show"
+    ]
+  },
+  "palette": {
+    "sixty": "#f2efe9",
+    "thirty": "#d8d2c6",
+    "ten": "#111111",
+    "product_dominant": "#111111",
+    "reason": "field from default, secondary from default, accent from product_appearance; the product reads black, so the field is not that colour"
+  },
+  "typography": {
+    "families": [],
+    "hierarchy": "the headline dominant, the supporting line a little over a third of it, the smallest line a third",
+    "sizes_pct": {
+      "headline": 7.700000000000001,
+      "supporting": 2.64,
+      "small": 2.2
+    },
+    "treatment_over_texture": "small text sits on a flat card, a plain panel or an untextured area of the surface — never over the product, never over texture, never over a gradient that crosses it"
+  },
+  "text_manifest": [],
+  "realism_details": [
+    "every object meets the surface with a contact shadow, darkest where they touch and softening outward, plus a faint reflection where the surface is glossy",
+    "focus falls away outward from the hero rather than uniformly across the frame",
+    "micro-imperfections, asymmetric: a droplet or drip that is not mirrored, a crumb out of line, real variation in the material",
+    "true scale between objects — each the size it would really be beside the others",
+    "no waxy, plastic or over-smoothed surfaces, and no HDR halo on any edge"
+  ],
+  "finish": "a gentle S-curve in the tone, highlights rolling off softly rather than clipping, blacks that keep detail, and no sharpening halo on any edge",
+  "negatives": [
+    "no text, numeral, word or character other than the strings listed",
+    "no logo, wordmark, emblem or icon other than the one the print rule allows",
+    "no second or duplicate copy of any product",
+    "no watermark, no signature, no frame or border drawn inside the image"
+  ],
+  "conflicts_resolved": [
+    "palette.ten: product_appearance (the product is black) won over default (nothing named an accent)"
+  ],
+  "provenance": {
+    "asset_family": "hero",
+    "aspect_ratio": "1:1",
+    "approach": "restrained",
+    "approach_reason": "a hero packshot is inspected, so invention costs more than it earns",
+    "industry_label": "consumer electronics",
+    "density": "words_only",
+    "print_rule_branch": "photographed_branding",
+    "concept_specs": []
+  }
+}
+
+=== PRINT RULE (photographed_branding) ===
+Keep any branding already printed on the product photographs exactly as photographed — same artwork, same position, same size. Where it is not clearly legible, leave that area clean rather than guessing at letters. Draw no other logo, wordmark, emblem or icon anywhere in the picture.
+reason: no logo image was supplied, so the photographs are the only authority on branding
+
+=== DIRECTOR REQUEST (the filled request template) ===
+## A — JOB
+
+Deliverable: a finished, publishable Product Hero
+Asset type: Product Hero
+Industry: consumer electronics
+Canvas: square (the ratio travels as a parameter; never write ratio digits)
+Products in frame: 1
+Intended use: a catalogue packshot
+
+## B — CLIENT INPUTS (authoritative, verbatim)
+
+Brand name: Meridian
+Concept, exactly as the client wrote it:
+The watch alone on brushed steel, examined the way a collector examines it.
+
+Nothing in this section may be paraphrased, translated, corrected or improved. Where it
+conflicts with anything below, it wins. Where it names a culture, a region, a festival or
+an occasion, YOU name the exact visual identifiers of it and the nearest confusion to
+exclude — that judgement is yours, not the sheet's.
+
+## C — REFERENCES
+
+  Image 1 is a stainless steel wristwatch, black dial, leather strap. Preserve its exact shape, proportions, colours, materials and label layout. Do not redesign it and do not re-letter it.
+  NO LOGO IMAGE IS ATTACHED. Do NOT ask for a logo, brand mark, wordmark or emblem to be drawn anywhere in the picture.
+
+## C2 — PRINT RULE (exactly one rule; carry this sentence through)
+
+  Keep any branding already printed on the product photographs exactly as photographed — same artwork, same position, same size. Where it is not clearly legible, leave that area clean rather than guessing at letters. Draw no other logo, wordmark, emblem or icon anywhere in the picture.
+
+This is the ONLY statement the master prompt makes about logos or printed branding. Do not
+add a second one anywhere, and do not contradict it in CONSTRAINTS.
+
+## D — PRODUCT MAP
+
+  - HERO — a stainless steel wristwatch, black dial, leather strap; reads black; steel, leather
+
+Hero:   a stainless steel wristwatch, black dial, leather strap — the only product
+
+Raw product facts, where the client supplied any:
+  (none)
+
+## E — BRAND KIT
+
+  (none)
+
+## F — COPY
+
+  NO COPY. The TEXT section of the master prompt must be exactly:
+  "No text of any kind anywhere in the image."
+
+## G — USER CHOICES (binding)
+
+  (the client set no explicit visual choices)
+
+## H — STRATEGY (advisory)
+
+  (none)
+
+## I — REFERENCE DATA — translate into plain visual description; never copy a number, unit or ratio into the master prompt
+
+  (none)
+
+# ═══ THE ART DIRECTION SHEET ═══
+#
+# Already resolved. Write it; do not re-decide it.
+
+## S1 — BIG IDEA
+
+The watch alone on brushed steel, examined the way a collector examines it.
+
+Mood: composed and quiet; addressed to whoever this hero is for, addressed directly and without hype
+
+## S2 — LAYOUT AND ZONES
+
+  - The frame is square.
+  - a clear, even margin on every side, wide enough that nothing important reads as touching an edge — nothing that must be read, and no edge of the hero, crosses into it.
+  - The subject occupies most, in the middle band.
+  - There are no words in this image, so the whole frame is the picture.
+  - Leave roughly a quarter as quiet, uncluttered ground. Negative space is a decision here, not what is left over.
+
+## S3 — ARRANGEMENT AND DEPTH
+
+  - The hero is a stainless steel wristwatch, black dial, leather strap, and it holds roughly a third. Nothing else competes for that share.
+  - three depth layers: something soft in the near foreground, the hero sharp in the middle, and a background that is clearly behind.
+  - No overlap is needed: the subject stands clear of everything else.
+  - Nothing is deformed, mirrored, stretched or duplicated to fill a gap.
+
+## S4 — CAMERA
+
+  - the lens level with the subject's mid-line, the honest eye-level view
+  - the camera level, horizon true, no tilt
+  - a long, gently compressing view that flattens the background towards the subject
+  - shallow focus: the hero is crisp and the background falls away softly
+
+## S5 — LIGHTING
+
+  - the key light from the front left, high, so shadows fall back and to the right
+  - the light is neutral white, neither warm nor cool
+  - soft shadows that keep their detail
+  - a narrow rim or edge light separates the subject from the background along one side
+  - one light direction governs every highlight and every shadow in the frame; each object has a contact shadow where it meets the surface, and no object casts a shadow in a direction the others do not
+
+## S6 — SET AND PROPS
+
+  - Surface: steel, as the concept states.
+  - Background: a plain field of a warm off-white, close to unbleached paper, falling softly out of focus behind the subject.
+  - No added props. If the concept names something, that thing and nothing more; otherwise the subject and the surface are the whole set.
+
+## S7 — COLOUR
+
+  - most of the frame is the field colour — a warm off-white, close to unbleached paper — carrying the background and the surface.
+  - roughly a third is the secondary, a soft putty grey: the supporting surfaces and the larger shapes.
+  - a small part is the accent, a deep black: emphasis only — a single element, a price card, the tightest highlight.
+  - The background is never the product's own dominant colour: the product has to separate from what is behind it.
+
+## S8 — TYPOGRAPHY AND THE TEXT MANIFEST
+
+  No text of any kind anywhere in the image. Nothing is quoted, nothing is set, no numerals.
+
+## S9 — REALISM AND FINISH
+
+  - every object meets the surface with a contact shadow, darkest where they touch and softening outward, plus a faint reflection where the surface is glossy
+  - focus falls away outward from the hero rather than uniformly across the frame
+  - micro-imperfections, asymmetric: a droplet or drip that is not mirrored, a crumb out of line, real variation in the material
+  - true scale between objects — each the size it would really be beside the others
+  - no waxy, plastic or over-smoothed surfaces, and no HDR halo on any edge
+  - Finish: a gentle S-curve in the tone, highlights rolling off softly rather than clipping, blacks that keep detail, and no sharpening halo on any edge.
+
+## S10 — CONSTRAINTS
+
+  - no text, numeral, word or character other than the strings listed
+  - no logo, wordmark, emblem or icon other than the one the print rule allows
+  - no second or duplicate copy of any product
+  - no watermark, no signature, no frame or border drawn inside the image
+  - no invented ports, buttons, logos or screen content that the photographs do not show
+
+## S11 — DERIVED DECISIONS (why the sheet says what it says; never written into the prompt)
+
+  - creative approach: restrained — a hero packshot is inspected, so invention costs more than it earns
+  - asset family: hero; canvas: 1:1
+  - print rule branch: photographed_branding
+  - palette: field from default, secondary from default, accent from product_appearance; the product reads black, so the field is not that colour
+  - the client stated no technical specs in the concept
+  - palette.ten: product_appearance (the product is black) won over default (nothing named an accent)
+
+# ═══ END OF SHEET ═══
+
+## J — ASSET PLAYBOOK (what this channel has to win)
+
+PRODUCT HERO — ten seconds or more, often enlarged, sometimes zoomed into.
+
+What it has to win: surface truth under inspection. The product's material, its edges and
+its markings have to hold when someone looks closely, because someone will.
+
+The hero scale, the margins, the type sizes and the layout for this canvas are already
+decided in the sheet. Do not restate them differently here.
+
+What is still worth saying for this channel: nothing in the frame may be there for
+decoration. A hero shot that has been styled is a hero shot that has been weakened — the
+product is the whole subject, and the set exists only to let it separate and to give it a
+surface to stand on.
+
+
+Industry module: (neutral studio treatment)
+Product-count rule: One product: one focal point.
+
+## K — TARGET MODEL NOTES
+
+(none beyond the standing instructions)
+
+## L — OUTPUT CONTRACT
+
+Write the master prompt in English prose, 2800–4800 characters — aim for
+five hundred to seven hundred words — as nine labelled sections in exactly this order and
+with exactly these headings:
+
+OUTPUT:
+REFERENCE IMAGES:
+SCENE & CONCEPT:
+SUBJECT ARRANGEMENT:
+COMPOSITION & LAYOUT:
+LIGHT / CAMERA / MATERIALS:
+COLOR & BRAND STYLE:
+TEXT:
+CONSTRAINTS:
+
+The sheet maps onto them like this. Keep the headings; put the content where it belongs.
+
+| Sheet | Section |
+|---|---|
+| the job, the canvas, the industry as spelled in A | **OUTPUT** |
+| C, C2, D — references, the print rule, the product map, the hero | **REFERENCE IMAGES** |
+| S1 the big idea, then S6 the set and props | **SCENE & CONCEPT** |
+| S3 arrangement and depth | **SUBJECT ARRANGEMENT** |
+| S2 layout and zones | **COMPOSITION & LAYOUT** |
+| S4 camera, S5 lighting, then S9 realism and finish | **LIGHT / CAMERA / MATERIALS** |
+| S7 colour | **COLOR & BRAND STYLE** |
+| S8 typography and the manifest | **TEXT** |
+| S10 constraints | **CONSTRAINTS** |
+
+**OUTPUT** states the asset type, the brand, the industry as spelled in section A, the
+intended use and the canvas ORIENTATION in words. No ratio digits, and never a raw
+identifier with an underscore in it.
+
+**REFERENCE IMAGES** names every attached image by number — "Image 1 is …" — with its
+role, a short visual descriptor, and what must be preserved. For a product: preserve its
+shape, proportions, colours, materials and label layout; do not redesign it and do not
+re-letter it. For a contact sheet: say that the panel letters, the separating borders and
+the flat grey ground are annotations and must not appear in the image. Then state the
+print rule from C2, once. State the fidelity requirement and the exact-text requirement
+EARLY, here, and restate both briefly in CONSTRAINTS at the end — they are the two things
+a renderer most often drops.
+
+**TEXT** sets every string in the manifest verbatim inside straight double quotes, with
+its position, its size floor and how it is set. Nothing outside the manifest is set.
+Vietnamese keeps every diacritic, in NFC. For a brand name that is not a dictionary word,
+spell it letter by letter beside the quoted form, unquoted. End with: "No other text,
+numbers, watermarks or extra logos." If the manifest is empty, the whole TEXT section is
+exactly: "No text of any kind anywhere in the image."
+
+**CONSTRAINTS** lists concrete exclusions only, and restates fidelity and exact text in
+one line each.
+
+Nowhere in the master prompt may there appear: a colour temperature in Kelvin, an
+f-number, a focal length in millimetres, an aspect ratio as digits, a percentage figure, a
+count of stops, or a raw identifier such as `coffee_tea`.
+
+Nor may any of these words appear: "auto", "AI decides", "suitable", "tasteful",
+"appropriate", "as needed". Every decision is already made; write the decision, not the
+fact that one was required.
+
+## M — GOLD EXAMPLE (illustrative only — the sheet above outranks it)
+
+status: seed - unproven
+
+OUTPUT: A vertical product hero for the fragrance brand Dusk, beauty, for a catalogue. Photorealistic, finished and ready to publish.
+
+REFERENCE IMAGES: Image 1 is the product, a heavy rectangular glass perfume bottle with a dark cap. Keep its exact shape, proportions, colours, materials and label layout; do not redesign it and do not re-letter it.
+
+SCENE & CONCEPT: The bottle stands on polished dark stone against an unbroken ground, examined closely.
+
+SUBJECT ARRANGEMENT: One bottle, centred, upright, filling most of the height.
+
+COMPOSITION & LAYOUT: Centred with generous even space. Nothing else in frame.
+
+LIGHT / CAMERA / MATERIALS: A tall soft light to the left refracts through the glass and throws a bright caustic onto the stone. A rim of light down the right edge separates it from the ground. Thick glass, liquid inside, polished stone.
+
+COLOR & BRAND STYLE: Deep amber through glass against charcoal, with one warm highlight.
+
+TEXT: No text of any kind anywhere in the image.
+
+CONSTRAINTS: No hands, no box, no flowers, no second bottle, no scattered petals.
+
+
+## SELF-CHECK before you answer
+
+- All nine headings present, in order, spelled as above.
+- Every string from the TEXT MANIFEST appears verbatim, in straight double quotes, exactly
+  once, and no quoted string the manifest does not list.
+- Every attached image named by its number, and no number named that is not attached.
+- The print rule appears once. No second statement about logos or printed branding, and no
+  sentence in CONSTRAINTS that contradicts it.
+- No Kelvin, f-number, millimetres, ratio digits, percentage figure or stop count anywhere.
+- No raw identifier with an underscore. No "auto", "AI decides", "suitable" or "tasteful".
+- No `{{` left anywhere, and no section letter, sheet label or the words "brief", "sheet",
+  "manifest", "playbook" or "reference data" leaking into the prompt.
+- Length within the stated bounds.
+- The orientation word matches the canvas in section A.
+- Small text is on a card or a flat area, never over texture and never over the hero.
+- Where a panel was flagged as below the trusted size, the prompt does not ask for its
+  lettering to be reproduced.
+
+## ANSWER FORMAT
+
+<decisions>
+What you chose and why, in a few lines: how you wrote the sheet, the cultural identifiers
+you named and the confusion you excluded, and anything in the sheet you had to reconcile.
+</decisions>
+<copy_final>
+One line per string, exactly as it must be set. Empty if there is no copy.
+</copy_final>
+<warnings>
+Anything the next person should know. Empty if nothing.
+</warnings>
+<image_prompt>
+The master prompt, and nothing else.
+</image_prompt>
+
+
+=== CODE-BUILT FALLBACK PROMPT ===
+OUTPUT: A square Product Hero for Meridian, a consumer electronics brand, for a catalogue packshot. Photorealistic, finished and ready to publish.
+
+REFERENCE IMAGES: Image 1 is a stainless steel wristwatch, black dial, leather strap. Preserve its exact shape, proportions, colours, materials and label layout; do not redesign it and do not re-letter it. No logo image is attached, so no logo, brand mark or emblem is drawn anywhere. The hero — the product the picture is about — is a stainless steel wristwatch, black dial, leather strap. Keep any branding already printed on the product photographs exactly as photographed — same artwork, same position, same size. Where it is not clearly legible, leave that area clean rather than guessing at letters. Draw no other logo, wordmark, emblem or icon anywhere in the picture.
+
+SCENE & CONCEPT: The watch alone on brushed steel, examined the way a collector examines it. The mood is composed and quiet. Surface: steel, as the concept states. Background: a plain field of a warm off-white, close to unbleached paper, falling softly out of focus behind the subject. No added props. If the concept names something, that thing and nothing more; otherwise the subject and the surface are the whole set.
+
+SUBJECT ARRANGEMENT: The hero is a stainless steel wristwatch, black dial, leather strap, and it holds roughly a third. Nothing else competes for that share. Three depth layers: something soft in the near foreground, the hero sharp in the middle, and a background that is clearly behind. No overlap is needed: the subject stands clear of everything else. Nothing is deformed, mirrored, stretched or duplicated to fill a gap.
+
+COMPOSITION & LAYOUT: The frame is square. A clear, even margin on every side, wide enough that nothing important reads as touching an edge — nothing that must be read, and no edge of the hero, crosses into it. The subject occupies most, in the middle band. There are no words in this image, so the whole frame is the picture. Leave roughly a quarter as quiet, uncluttered ground. Negative space is a decision here, not what is left over.
+
+LIGHT / CAMERA / MATERIALS: The lens level with the subject's mid-line, the honest eye-level view. The camera level, horizon true, no tilt. A long, gently compressing view that flattens the background towards the subject. Shallow focus: the hero is crisp and the background falls away softly. The key light from the front left, high, so shadows fall back and to the right. The light is neutral white, neither warm nor cool. Soft shadows that keep their detail. A narrow rim or edge light separates the subject from the background along one side. One light direction governs every highlight and every shadow in the frame; each object has a contact shadow where it meets the surface, and no object casts a shadow in a direction the others do not. Every object meets the surface with a contact shadow, darkest where they touch and softening outward, plus a faint reflection where the surface is glossy. Focus falls away outward from the hero rather than uniformly across the frame. Micro-imperfections, asymmetric: a droplet or drip that is not mirrored, a crumb out of line, real variation in the material. True scale between objects — each the size it would really be beside the others. No waxy, plastic or over-smoothed surfaces, and no HDR halo on any edge. Finish: a gentle S-curve in the tone, highlights rolling off softly rather than clipping, blacks that keep detail, and no sharpening halo on any edge.
+
+COLOR & BRAND STYLE: Most of the frame is the field colour — a warm off-white, close to unbleached paper — carrying the background and the surface. Roughly a third is the secondary, a soft putty grey: the supporting surfaces and the larger shapes. A small part is the accent, a deep black: emphasis only — a single element, a price card, the tightest highlight. The background is never the product's own dominant colour: the product has to separate from what is behind it.
+
+TEXT: No text of any kind anywhere in the image.
+
+CONSTRAINTS: no text, numeral, word or character other than the strings listed. no logo, wordmark, emblem or icon other than the one the print rule allows. no second or duplicate copy of any product. no watermark, no signature, no frame or border drawn inside the image. no invented ports, buttons, logos or screen content that the photographs do not show. Every product is reproduced as supplied in the reference photographs, and only the strings listed above are set.

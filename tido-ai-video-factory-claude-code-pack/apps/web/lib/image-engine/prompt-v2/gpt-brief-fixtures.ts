@@ -25,6 +25,12 @@ import {
 } from "../provider/reference-packing/reference-allocation";
 import { SUNBURST } from "../models/image-model-profiles";
 import type { GptBriefInput, GptReference } from "./gpt-brief";
+import type { NumericWordsDensity } from "./engine-selector";
+import {
+  buildArtDirectionSheet,
+  printRuleForSheet,
+  type SheetInput,
+} from "./art-direction/art-direction-sheet";
 
 export interface FixtureProduct {
   description: string;
@@ -372,6 +378,50 @@ export function briefInputFor(fx: GptBriefFixture): GptBriefInput {
         ? "Several products: group them with a clear hierarchy, the main product largest, none deformed or duplicated."
         : "One product: one focal point.",
   };
+}
+
+/**
+ * The same brief with the Art Direction Sheet attached: the flag-ON shape.
+ *
+ * Separate from `briefInputFor` rather than a parameter on it, so the flag-OFF builder
+ * cannot grow an art-director field by accident. The golden suite's whole argument rests
+ * on those two functions being different functions.
+ */
+export function artDirectorBriefInputFor(
+  fx: GptBriefFixture,
+  density: NumericWordsDensity = "words_only",
+): GptBriefInput {
+  const base = briefInputFor(fx);
+  const sheetInput: SheetInput = {
+    assetType: fx.assetType,
+    aspectRatio: fx.aspectRatio,
+    industry: fx.industry,
+    concept: fx.concept,
+    brand: fx.brand,
+    copy: fx.copy,
+    products: fx.products.map((p, i) => ({
+      id: String(i + 1),
+      description: p.description,
+      productId: p.productId ?? null,
+    })),
+    allocation: base.allocation,
+    productFacts: fx.productFacts,
+    brandKit: fx.brandKit ?? null,
+    strategy: fx.strategy,
+    density,
+  };
+  return {
+    ...base,
+    artDirector: true,
+    sheet: buildArtDirectionSheet(sheetInput),
+    printRule: printRuleForSheet(sheetInput),
+    density,
+  };
+}
+
+/** The sheet a fixture produces. For the tests that assert on derived values. */
+export function sheetFor(fx: GptBriefFixture, density: NumericWordsDensity = "words_only") {
+  return artDirectorBriefInputFor(fx, density).sheet!;
 }
 
 export function fixtureById(id: string): GptBriefFixture {
