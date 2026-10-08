@@ -1,23 +1,28 @@
-A vertical skincare poster at 9:16 aspect ratio, presenting a weightless zero-gravity composition.
+OUTPUT: A square social advertisement for the coffee and tea brand Florian, coffee_tea, for a social media promotional campaign celebrating Lunar New Year (Tết). Photorealistic, finished and ready to publish.
 
-The two products are exactly the ones in the attached photos: photo 1 is the tall amber bottle of cleansing oil with a white pump, and photo 2 is the clear glass dropper bottle containing micro-capsules with a white rubber dropper top. Their forms, colours, cap designs and printed labels stay identical to the reference photos, with no added markings.
+REFERENCE IMAGES: Image 1 is a reference sheet of three product photographs in panels: panel A, panel B, and panel C, each showing a distinct specialty drink cup. Keep each product exact in shape, proportions, colours, and materials; do not redesign them. The lettering on Image 1 panels is not legible enough to read: take shape, proportions, colours, and materials from the panels, and take text solely from the instructions below. Image 2 is a reference sheet of two product photographs in panels: panel A and panel B, showing two specialty drink cups. Preserve each product exact in shape, proportions, colours, and materials; do not redesign them. The panel letters, the separating borders, and the flat grey ground are annotations on the contact sheets and must never appear in the rendered image. No logo image is supplied; do not draw or render any logo, wordmark, or brand icon.
 
-The idea: weightless purity in orbit. Both bottles float weightlessly in mid-air in the lower-middle half of the poster, tilted slightly at dynamic complementary angles as if drifting in microgravity. A continuous, perfectly sculpted ring of crystal-clear water splashes in an elliptical orbit around both bottles, forming an ethereal splash ring reminiscent of the rings of Saturn, complete with suspended micro-droplets frozen in space. Four vibrant, fresh green centella asiatica leaves drift gracefully along the water ring's trajectory, some catching crisp reflections and one softly blurred in the near foreground.
+SCENE & CONCEPT: A warm, inviting festive cafe scene celebrating Tết. The five signature drinks are presented together on a clean, warm wooden cafe tabletop. Subtle festive accents such as delicate yellow apricot blossom sprigs and elegant warm decor sit softly in the background, creating a cozy holiday gathering mood.
 
-Lighting: bright, diffuse studio light from the upper-left, sending crisp refractions through the clear water splash, casting a warm honey-amber glow through the oil bottle, and highlighting the transparent micro-beads inside the glass ampoule. The background is a seamless, serene vertical gradient flowing softly from pure bright white at the top to a delicate, pale aqua-jade at the bottom, kept entirely free of clutter.
+SUBJECT ARRANGEMENT: Five drinks arranged in an attractive, layered group across the lower half of the frame: the taller iced matcha and tea beverages slightly behind, with the iced coffee and specialty fruit tea cups neatly positioned in the front tier. Each drink looks fresh, chilled, with condensation on the clear cups and rich layers of tea, milk, foam, and garnishes clearly visible.
 
-Typography is set in a modern, clean geometric sans-serif in deep slate-teal (#1A3835), arranged with clear hierarchy on the calm upper white background:
-At the top, the primary headline in bold, large capital letters:
-"VƯỢT KHỎI MỌI GIỚI HẠN - CHẠM ĐẾN SỰ TINH KHIẾT TỐI THƯỢNG."
-Directly beneath it, in medium-weight lettering:
-"Trải nghiệm cảm giác nhẹ tựa lông hồng với bộ đôi quyền năng từ Madagascar."
-Below that, in slightly smaller, regular-weight body text:
-"Kết cấu mỏng nhẹ lướt trên da, cuốn trôi mọi bụi bẩn mà không để lại cảm giác nhờn rít."
-Followed by:
-"Giải phóng làn da của bạn khỏi áp lực khói bụi thành thị ngay hôm nay."
-At the very bottom of the poster, centered over the soft pale aqua gradient:
-"Freeship mọi đơn hàng từ 500k!"
+COMPOSITION & LAYOUT: A balanced square composition. The drinks occupy the lower portion of the frame on the tabletop. The upper portion remains clean and softly lit against a tasteful cafe interior background to host the promotional typography.
 
-Colours: pale aquamarine and pure white as dominant background tones, honey amber and clear glass as support, and fresh leaf green as the vibrant accent.
+LIGHT / CAMERA / MATERIALS: Warm, luminous commercial studio lighting highlighting the rich colors of the beverages, ice cubes, clear plastic and glass cups, smooth wooden surface, and crisp liquid textures. Shallow depth of field with the background softly blurred.
 
-Finish: hyper-clean commercial skincare studio photography, sharp liquid optics, crisp typography, no extra text, no added logos, no people. 9:16 aspect ratio.
+COLOR & BRAND STYLE: Warm amber, deep coffee brown, vibrant matcha green, citrus orange, and berry red, accented by natural wood tones and subtle festive warm gold and crimson.
+
+TEXT: Centred in the upper calm area, set in clean, elegant, high-contrast sans-serif typography:
+Headline: "Florian Cafe" (spelled F-l-o-r-i-a-n C-a-f-e).
+Directly below the headline: "Nơi giúp bạn giải tỏa căng thẳng"
+Followed beneath by: "Bằng những ly nước ngọt ngào"
+Prominent promotional highlight: "Chỉ từ 30K"
+Neatly arranged menu pricing lines placed cleanly near the drinks:
+"Caramel coffee - 35K"
+"Trà cam - 40K"
+"Trà việt quất - 40K"
+"Matcha hạt sen - 45K"
+"Matcha Latte - 40K"
+Preserve every Vietnamese diacritic exactly as written. No other text, numbers, watermarks or extra logos.
+
+CONSTRAINTS: No people, no hands, no extra cups beyond the five drinks shown, no floating text bubbles, no cartoon graphics, no drawn logos or invented brand marks.
