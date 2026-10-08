@@ -10,6 +10,7 @@ import {
 } from "../service/ImageNormalizationService";
 import { ProviderErrorClassifier, ProviderErrorVerdict } from "./ProviderErrorClassifier";
 import { ReferencePackingService } from "./reference-packing/ReferencePackingService";
+import { DROP_REASON_VI } from "./reference-capacity";
 import {
   applyPackedReferenceProtocol,
   protocolTelemetry,
@@ -42,6 +43,26 @@ export interface ImgStudioRemoteDetails {
   download_ms?: number;
   download_bytes?: number;
   attempts?: number;
+  /**
+   * What happened to the user's reference images.
+   *
+   * Fix C: nothing is lost silently. If five photographs became two sheets, or an
+   * extra angle did not travel, or a packed panel came out below the identity
+   * floor, that rides back with the render so the response and the strategy panel
+   * can say so instead of the user wondering.
+   *
+   * Counts, ids and reasons. Never a buffer, never the client's filenames.
+   */
+  reference_packing?: {
+    status: string;
+    packed: boolean;
+    slots_sent: number;
+    provider_limit: number;
+    products_in: number;
+    products_out: number;
+    dropped: { what: string; role?: string; reason?: string; reason_vi: string }[];
+    warnings: { code: string; longest_side_px: number; floor_px: number; product_id?: string }[];
+  };
 }
 
 export interface ImgStudioProviderOutput extends ProviderImageGenerationOutput {
@@ -162,7 +183,12 @@ export class ImgStudioImageGenerationProvider implements ImageGenerationProvider
     const packing = await ReferencePackingService.pack({
       references: candidateReferences,
       manifest: input.reference_manifest,
-      options: { limit: referenceLimit, maxCells: profile.maxPanelsPerSheet, sheetSize: profile.sheetSizePx },
+      options: {
+        limit: referenceLimit,
+        maxCells: profile.maxPanelsPerSheet,
+        sheetSize: profile.sheetSizePx,
+        minPanelLongestSidePx: profile.minPanelLongestSidePx,
+      },
     });
 
     if (packing.status === "IMPOSSIBLE") {
@@ -240,6 +266,45 @@ export class ImgStudioImageGenerationProvider implements ImageGenerationProvider
     }
 
     const realReferences = packing.references;
+
+    // ── Count guard ────────────────────────────────────────────────────
+    //
+    // The last check before the wire, and deliberately a hard stop rather than a
+    // trim. The provider answers one image too many with HTTP 400 before it renders
+    // anything, so nothing is lost by refusing here — but something IS lost by
+    // trimming: the prompt upstream already describes "Image 1" and "Image 2", and
+    // sending fewer images than the prompt names leaves the model looking for a
+    // reference that is not there.
+    //
+    // Packing is supposed to have made this impossible. This is here because
+    // "supposed to" is not a guarantee, and a silent mismatch between what the
+    // prompt describes and what the provider received is the hardest class of bug
+    // to see from an image.
+    if (realReferences.length > referenceLimit) {
+      console.error("[ImgStudioProvider][REFERENCE_COUNT_GUARD]", {
+        about_to_send: realReferences.length,
+        limit: referenceLimit,
+        model: profile.displayName,
+        packing_status: packing.status,
+      });
+      return {
+        success: false,
+        error: {
+          code: "REFERENCE_LIMIT_EXCEEDED",
+          message:
+            `Lỗi nội bộ: hệ thống định gửi ${realReferences.length} ảnh nhưng model ` +
+            `${profile.displayName} chỉ nhận ${referenceLimit}. Chưa gửi gì cả.`,
+          details: {
+            error_code: "REFERENCE_COUNT_GUARD",
+            stage: "PRE_DISPATCH",
+            about_to_send: realReferences.length,
+            provider_limit: referenceLimit,
+            packing_status: packing.status,
+          },
+        },
+      };
+    }
+
     const hasRealReferences = realReferences.length > 0;
     const endpoint = this.selectEndpoint(baseUrl, hasRealReferences);
 
@@ -675,6 +740,27 @@ export class ImgStudioImageGenerationProvider implements ImageGenerationProvider
             provider_name: json.provider_name || "Flow",
             model: json.model || providerId,
             url: json.url,
+            // What happened to the user's images, carried with the render.
+            //
+            // Nothing is lost silently (Fix C): if five photographs became two
+            // sheets, or an extra angle did not travel, that fact rides back with
+            // the result so the response and the panel can say so. Counts and
+            // reasons, never a buffer.
+            reference_packing: {
+              status: packing.status,
+              packed: packing.status === "PACKED",
+              slots_sent: realReferences.length,
+              provider_limit: referenceLimit,
+              products_in: packing.products_in.length,
+              products_out: packing.products_out.length,
+              dropped: packing.dropped.map((d) => ({
+                what: d.reference_id || "(unnamed)",
+                role: d.role,
+                reason: d.reason,
+                reason_vi: DROP_REASON_VI[d.reason] || "",
+              })),
+              warnings: packing.warnings || [],
+            },
           },
         };
       } catch (err: any) {
