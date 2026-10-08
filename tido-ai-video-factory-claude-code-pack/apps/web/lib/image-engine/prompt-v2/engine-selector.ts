@@ -269,6 +269,66 @@ export function gptBanVerdictWords(env: EnvLike = process.env): boolean {
 }
 
 /**
+ * Whether the Art Direction Sheet writes the Sunburst brief. Default OFF.
+ *
+ * ONE flag for the whole upgrade, and that is deliberate. The work spans the pipeline
+ * adapter, the brief compiler, a new template set, five new deterministic checks and the
+ * code-built fallback; splitting it across five flags would produce combinations nobody
+ * has looked at — an adapter populating fields a v1 template has no slot for, checks
+ * refusing a prompt the brief could not have written differently. Either the sheet is
+ * driving or it is not.
+ *
+ * With it off the GPT dialect behaves exactly as it does today, which is the rollback.
+ * `run-gpt-golden-tests` pins that byte for byte over fourteen briefs, so the claim is a
+ * file comparison rather than an assurance. Rollback is unsetting one variable.
+ */
+export function gptArtDirector(env: EnvLike = process.env): boolean {
+  return String(env.GPT_ART_DIRECTOR || "").trim().toLowerCase() === "true";
+}
+
+/**
+ * The template version the GPT dialect reads.
+ *
+ * The art-director brief needs slots the v1 request template does not have, so the flag
+ * selects the v2 files. Read here rather than at the two call sites so a reader cannot
+ * find one of them having its own opinion.
+ *
+ * `PROMPT_V2_TEMPLATE_VERSION` still wins when it is set, which is what makes a third
+ * version possible later without touching this function. It does NOT affect the Gemini
+ * set: that path keeps calling `templateVersion()` directly.
+ */
+export function gptTemplateVersion(env: EnvLike = process.env): string {
+  const explicit = String(env.PROMPT_V2_TEMPLATE_VERSION || "").trim().toLowerCase();
+  if (/^v\d+$/.test(explicit)) return explicit;
+  return gptArtDirector(env) ? "v2" : "v1";
+}
+
+/**
+ * How precisely layout may be stated in words. Default `words_only`.
+ *
+ * D1 keeps the ban on digits and units in a master prompt, which the D8/K12 migration
+ * measured: a numeral in a prompt reaches the image as a numeral, and a parameter dump
+ * degrades the render. Layout precision is therefore spelled out — "about thirty percent
+ * of the canvas height", "a seven percent safe margin".
+ *
+ * But whether spelled-out percentages HELP is a hypothesis, not a measured fact. The two
+ * modes exist so it can be A/B'd rather than argued:
+ *
+ *   words_only          relative language only — "the top third", "a narrow margin"
+ *   words_plus_percent  spelled-out percentages as well, in the layout sections
+ *
+ * Nothing in this round runs that A/B; it costs real renders. `scripts/eval-gpt-density.ts`
+ * is the guarded script for it.
+ */
+export type NumericWordsDensity = "words_only" | "words_plus_percent";
+
+export function numericWordsDensity(env: EnvLike = process.env): NumericWordsDensity {
+  return String(env.GPT_NUMERIC_WORDS || "").trim().toLowerCase() === "words_plus_percent"
+    ? "words_plus_percent"
+    : "words_only";
+}
+
+/**
  * The engine to use for the active model, or a thrown error rather than a guess.
  *
  * Gemini models keep today's behaviour exactly — `PROMPT_ENGINE` decides, v1 by
@@ -295,6 +355,9 @@ export function engineTelemetry(env: EnvLike = process.env) {
     gpt_dialect_available: gptDialectAvailable(),
     gpt_label_lock_verified: labelLockVerified(env),
     gpt_small_panel_policy: smallPanelPolicy(env),
+    gpt_art_director: gptArtDirector(env),
+    gpt_template_version: gptTemplateVersion(env),
+    gpt_numeric_words: numericWordsDensity(env),
     v2_director_model: directorModel(env) || "(provider default)",
     v2_copy_policy: `${copyPolicyMode(env).mode}(${copyPolicyMode(env).source})`,
     v2_template_reload: templateReload(env),
