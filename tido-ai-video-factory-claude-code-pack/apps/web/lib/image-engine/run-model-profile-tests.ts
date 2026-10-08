@@ -39,6 +39,7 @@ import {
   PromptDialectNotBuiltError,
   promptEngineVersion,
   engineTelemetry,
+  labelLockVerified,
 } from "./prompt-v2/engine-selector";
 import {
   allocateReferences,
@@ -585,38 +586,51 @@ function main() {
     assert.strictEqual(promptEngineVersion({}), "v1");
   });
 
-  check("Sunburst throws rather than silently using a prompt written for another model", () => {
-    assert.strictEqual(gptDialectAvailable(), false, "Phase 3 exists now; update this test deliberately");
-    let thrown: unknown = null;
-    try {
-      engineForActiveModel(SUN_ENV);
-    } catch (e) {
-      thrown = e;
-    }
-    assert.ok(thrown instanceof PromptDialectNotBuiltError, `expected a typed error, got ${thrown}`);
-    const err = thrown as PromptDialectNotBuiltError;
-    assert.strictEqual(err.code, "PROMPT_DIALECT_NOT_BUILT");
-    assert.strictEqual(err.dialect, "gpt-image");
-    assert.strictEqual(err.model, "GPT-Image-2.5-Sunburst");
-    // The message has to tell an operator how to get working again.
-    assert.ok(/IMGSTUDIO_PROVIDER_ID=flow-nano-banana-2/.test(err.message), "no rollback instruction");
-    assert.ok(/not built yet/i.test(err.message));
+  check("Sunburst now routes to the GPT engine instead of throwing", () => {
+    // Phase 3 is built, so the dialect is available and the "not built" refusal cannot
+    // fire for it any more. The typed error is KEPT for the next dialect that gets named
+    // before it is written.
+    assert.strictEqual(gptDialectAvailable(), true, "Phase 3 is built; this should be true");
+    assert.deepStrictEqual(engineForActiveModel(SUN_ENV), { dialect: "gpt-image", engine: "v2-gpt" });
+    assert.ok(PromptDialectNotBuiltError, "the typed error was deleted rather than kept");
   });
 
-  check("it throws for the GPT dialect whatever PROMPT_ENGINE says", () => {
+  check("it routes to the GPT engine whatever PROMPT_ENGINE says", () => {
+    // The dialect is a fact about the model. A flag cannot send a GPT model a Gemini
+    // prompt, and it cannot send it v1 either.
     for (const flag of ["v1", "v2", "", "V2", "nonsense"]) {
-      assert.throws(() => engineForActiveModel({ ...SUN_ENV, PROMPT_ENGINE: flag }), PromptDialectNotBuiltError);
+      assert.deepStrictEqual(engineForActiveModel({ ...SUN_ENV, PROMPT_ENGINE: flag }), {
+        dialect: "gpt-image",
+        engine: "v2-gpt",
+      });
     }
   });
 
-  check("there is no v1 fallback path for the GPT dialect", () => {
-    // The standing rule: NEVER fall back to engine v1 for the GPT dialect. Returning
-    // "v1" would be exactly that, so the function has to throw instead.
+  check("the label-lock gate is OFF by default and is NOT the availability flag", () => {
+    // Two different questions: "is the dialect written" and "has the one thing it cannot
+    // decide for itself been confirmed against the real model". Conflating them would
+    // mean either refusing every render or shipping an unverified assumption.
+    assert.strictEqual(labelLockVerified({}), false, "the label-lock gate must default to closed");
+    assert.strictEqual(labelLockVerified({ GPT_LABEL_LOCK_VERIFIED: "true" }), true);
+    assert.strictEqual(labelLockVerified({ GPT_LABEL_LOCK_VERIFIED: "yes" }), false, "only an exact true opens it");
+    assert.strictEqual(engineTelemetry(SUN_ENV).gpt_label_lock_verified, false);
+  });
+
+  check("there is STILL no v1 fallback path for the GPT dialect", () => {
+    // The standing rule survives Phase 3: never engine v1 for this dialect. v1 writes
+    // Gemini prose, and handing it to Sunburst costs 150-250 VND for an image that looks
+    // like a result and reports nothing wrong.
     const src = read("lib/image-engine/prompt-v2/engine-selector.ts");
     const fn = /export function engineForActiveModel[\s\S]*?\n\}/.exec(src);
     assert.ok(fn, "engineForActiveModel not found");
-    assert.ok(/throw new PromptDialectNotBuiltError/.test(fn![0]), "the GPT branch does not throw");
     assert.ok(!/engine: "v1"/.test(fn![0]), "a v1 fallback exists on the GPT path");
+    // The engine falls back to CODE, not to a Gemini builder.
+    const engine = read("lib/image-engine/prompt-v2/build-gpt.ts");
+    assert.ok(/buildGptFallbackPrompt/.test(engine), "the GPT engine has no code-built fallback");
+    assert.ok(
+      !/buildSimplePrompt|MasterPromptCompiler/.test(engine),
+      "the GPT engine reaches for a Gemini builder",
+    );
   });
 
   check("no model name or resolution tier is hardcoded on the live path", () => {
@@ -653,7 +667,7 @@ function main() {
   check("telemetry names the dialect, so a log makes the routing visible", () => {
     const t = engineTelemetry(SUN_ENV);
     assert.strictEqual(t.prompt_dialect, "gpt-image");
-    assert.strictEqual(t.gpt_dialect_available, false);
+    assert.strictEqual(t.gpt_dialect_available, true);
     assert.strictEqual(engineTelemetry(NB2_ENV).prompt_dialect, "gemini");
   });
 

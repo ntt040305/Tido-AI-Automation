@@ -176,6 +176,8 @@ export interface LoadedTemplates {
   goldExample: string;
   version: string;
   playbookName: PlaybookName;
+  /** Which dialect's set these came from. */
+  dialect: TemplateDialect;
   /** The files actually read, for the record. */
   files: string[];
 }
@@ -203,13 +205,45 @@ function readOptional(file: string): string {
   }
 }
 
-export function loadTemplates(assetType: string, version = templateVersion()): LoadedTemplates {
+/**
+ * Which dialect's template set to read.
+ *
+ * The Gemini set lives at the root of `templates/` where it has always lived, so
+ * `loadTemplates("Poster")` reads exactly the files it read before and the Nano
+ * Banana 2 path cannot move. The GPT set lives in `templates/gpt/`.
+ *
+ * A subdirectory rather than a filename suffix because the two dialects are whole
+ * instruction sets, not variants of one: a GPT system prompt edited next to a
+ * Gemini one invites an edit meant for one landing in the other.
+ */
+export type TemplateDialect = "gemini" | "gpt-image";
+
+const DIALECT_SUBDIR: Record<TemplateDialect, string> = {
+  gemini: "",
+  "gpt-image": "gpt",
+};
+
+export function loadTemplates(
+  assetType: string,
+  version = templateVersion(),
+  dialect: TemplateDialect = "gemini",
+  /**
+   * Whether this job has copy. The GPT set keeps two gold examples per asset type —
+   * one with copy and one without — because a prompt that must set three strings and a
+   * prompt that must set none are different shapes, and showing the wrong one teaches
+   * the director to add text nobody asked for.
+   */
+  hasCopy = true,
+): LoadedTemplates {
   const playbookName = playbookNameFor(assetType);
-  const dir = templateDir();
+  const sub = DIALECT_SUBDIR[dialect];
+  const dir = sub ? path.join(templateDir(), sub) : templateDir();
   const systemFile = path.join(dir, `system.${version}.md`);
   const requestFile = path.join(dir, `request.${version}.md`);
   const playbookFile = path.join(dir, "playbooks", `${playbookName}.${version}.txt`);
-  const goldFile = path.join(dir, "gold-examples", GOLD_FILE[playbookName]);
+  const goldFile = sub
+    ? path.join(dir, "gold-examples", GOLD_FILE[playbookName].replace(/\.md$/, hasCopy ? ".with-copy.md" : ".no-copy.md"))
+    : path.join(dir, "gold-examples", GOLD_FILE[playbookName]);
   return {
     system: read(systemFile),
     request: read(requestFile),
@@ -219,6 +253,7 @@ export function loadTemplates(assetType: string, version = templateVersion()): L
     goldExample: readOptional(goldFile),
     version,
     playbookName,
+    dialect,
     files: [systemFile, requestFile, playbookFile, ...(readOptional(goldFile) ? [goldFile] : [])],
   };
 }

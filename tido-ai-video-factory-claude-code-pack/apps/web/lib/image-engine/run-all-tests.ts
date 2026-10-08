@@ -77,6 +77,7 @@ const SUITES = [
   "run-model-profile-tests",
   "run-provider-request-fixture-tests",
   "run-reference-sheet-tests",
+  "run-gpt-dialect-tests",
   "run-creative-approach-tests",
   "run-tone-fixture-tests",
   "run-creative-intent-tests",

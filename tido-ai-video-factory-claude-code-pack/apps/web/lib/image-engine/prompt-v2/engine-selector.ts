@@ -198,8 +198,44 @@ export class PromptDialectNotBuiltError extends Error {
  * missing, which is the state that produced a silent v1 fallback before.
  */
 export function gptDialectAvailable(): boolean {
-  // Phase 3 has not been built. `prompt-v2/gpt-brief.ts` does not exist.
-  return false;
+  // Phase 3 is built: `gpt-brief.ts`, `gpt-checks.ts`, `gpt-fallback.ts`, `build-gpt.ts`
+  // and `templates/gpt/` all exist, and `build-gpt.ts` refuses rather than guessing on
+  // the one thing that is still unverified (see `labelLockVerified`).
+  return true;
+}
+
+/**
+ * Whether Sunburst's label-lock has been CONFIRMED at a packed panel size.
+ *
+ * Default FALSE, and that is the point.
+ *
+ * `03-provider-capabilities.md` measured the provider; it did not measure this. The
+ * allocation table's "panels <512px" column is arithmetic — 496px is what a 2x2 grid of a
+ * 1024px sheet produces — and whether a product's LABEL still reads correctly at 496px is
+ * an observation nobody has made against the real model. A mocked render cannot answer it
+ * either: a stub returns a stub image.
+ *
+ * While this is false, `build-gpt.ts` REFUSES a payload whose product panels fall below
+ * the floor, with a Vietnamese message telling the user to send fewer images — mirroring
+ * the way the allocator already refuses nine distinct products. The alternative is to
+ * send it anyway and hope, which is a silent quality regression on exactly the renders
+ * someone cares most about.
+ *
+ * Flip it with `GPT_LABEL_LOCK_VERIFIED=true` ONLY after real Sunburst renders at n=5 and
+ * n=8 have been inspected and the labels are right.
+ */
+export function labelLockVerified(env: EnvLike = process.env): boolean {
+  return String(env.GPT_LABEL_LOCK_VERIFIED || "").trim().toLowerCase() === "true";
+}
+
+/**
+ * Whether the GPT checks refuse verdict words ("stunning", "breathtaking").
+ *
+ * Off by default: it is a taste rule rather than a correctness one, and a check that
+ * fails a prompt for enthusiasm costs a repair call for nothing.
+ */
+export function gptBanVerdictWords(env: EnvLike = process.env): boolean {
+  return String(env.GPT_BAN_VERDICT_WORDS || "").trim().toLowerCase() === "true";
 }
 
 /**
@@ -213,6 +249,8 @@ export function engineForActiveModel(env: EnvLike = process.env):
   | { dialect: "gpt-image"; engine: "v2-gpt" } {
   const dialect = promptDialect(env);
   if (dialect === "gemini") return { dialect, engine: promptEngineVersion(env) };
+  // Kept, rather than deleted, for the next dialect that is named before it is written.
+  // It cannot fire for "gpt-image" any more.
   if (!gptDialectAvailable()) {
     throw new PromptDialectNotBuiltError(dialect, activeProfile(env).displayName);
   }
@@ -225,6 +263,7 @@ export function engineTelemetry(env: EnvLike = process.env) {
     prompt_engine: promptEngineVersion(env),
     prompt_dialect: promptDialect(env),
     gpt_dialect_available: gptDialectAvailable(),
+    gpt_label_lock_verified: labelLockVerified(env),
     v2_director_model: directorModel(env) || "(provider default)",
     v2_copy_policy: `${copyPolicyMode(env).mode}(${copyPolicyMode(env).source})`,
     v2_template_reload: templateReload(env),
