@@ -54,7 +54,7 @@
     "focus_rule": "the hero is crisp from its nearest edge through its label, and focus falls away outward from the hero in every direction"
   },
   "lighting": {
-    "key_direction": "front_left",
+    "key_direction": "side_right",
     "kelvin": 3200,
     "rim": true,
     "fill_ratio": 3,
@@ -68,7 +68,6 @@
     "exclusions": [],
     "mood_reference": [
       "composition read off the mood image: the subject low and left, two thirds of the frame empty above it",
-      "light direction read off the mood image: a single hard light from the right, deep shadow filling the left",
       "colour mood read off the mood image: deep brown and black, one warm highlight",
       "take its composition, light and colour only — none of the objects in the mood image appear in this picture"
     ]
@@ -123,6 +122,7 @@
   ],
   "conflicts_resolved": [
     "lighting.kelvin: concept_text (the concept says candle) won over default (the concept states no temperature)",
+    "lighting.key_direction: mood_reference (the light direction read off the mood image) won over default (the side the words are not on)",
     "palette.text: product_appearance (the accent) offered #c98a2e, which reaches only 2.6 to 1 against the field #f2efe9 — below the 4.5 to 1 type needs, so it is skipped",
     "palette.ten: product_appearance (the product is amber) won over mood_reference (a colour read off the mood image)",
     "palette.ten: product_appearance (the product is amber) won over default (every named colour failed the contrast guard)"
@@ -260,7 +260,7 @@ Mood: warm, assured; addressed to whoever this poster is for, addressed directly
 
 ## S5 — LIGHTING
 
-  - a high key light from the front left, shadows falling back and right
+  - a key light raking from the right, the form described by the shadow edge
   - the light is warm amber, like late afternoon
   - clearly modelled shadows, detail still readable
   - a narrow rim or edge light separates the subject from the background along one side
@@ -271,13 +271,13 @@ Mood: warm, assured; addressed to whoever this poster is for, addressed directly
   - Surface: a plain matte surface a shade darker than the background, with no pattern of its own.
   - Background: a plain field of a warm off-white, close to unbleached paper, softly out of focus.
   - No added props beyond anything the concept names; otherwise the subject and the surface are the whole set.
-  - From the mood image — composition read off the mood image: the subject low and left, two thirds of the frame empty above it; light direction read off the mood image: a single hard light from the right, deep shadow filling the left; colour mood read off the mood image: deep brown and black, one warm highlight; take its composition, light and colour only — none of the objects in the mood image appear in this picture.
+  - From the mood image — composition read off the mood image: the subject low and left, two thirds of the frame empty above it; colour mood read off the mood image: deep brown and black, one warm highlight; take its composition, light and colour only — none of the objects in the mood image appear in this picture.
 
 ## S7 — COLOUR
 
   - most of the frame is the field colour — a warm off-white, close to unbleached paper — carrying the background and the surface.
   - roughly a third is the secondary, a soft putty grey: the supporting surfaces and the larger shapes.
-  - a small part is the accent, a amber: emphasis only — a single element, a price card, the tightest highlight.
+  - a small part is the accent, an amber: emphasis only — a single element, a price card, the tightest highlight.
   - The background is never the product's own dominant colour.
 
 ## S8 — TYPOGRAPHY AND THE TEXT MANIFEST
@@ -317,6 +317,7 @@ Mood: warm, assured; addressed to whoever this poster is for, addressed directly
   - palette: field from default, secondary from default, accent from product_appearance, type from default; the product reads amber, so the field is not that colour
   - the client stated no technical specs in the concept
   - lighting.kelvin: concept_text (the concept says candle) won over default (the concept states no temperature)
+  - lighting.key_direction: mood_reference (the light direction read off the mood image) won over default (the side the words are not on)
   - palette.text: product_appearance (the accent) offered #c98a2e, which reaches only 2.6 to 1 against the field #f2efe9 — below the 4.5 to 1 type needs, so it is skipped
   - palette.ten: product_appearance (the product is amber) won over mood_reference (a colour read off the mood image)
   - palette.ten: product_appearance (the product is amber) won over default (every named colour failed the contrast guard)
@@ -470,15 +471,15 @@ OUTPUT: A square Poster for Trầm, a homeware and lifestyle brand, for a commer
 
 REFERENCE IMAGES: Image 1 is a ribbed amber glass candle with a brass lid. Every product keeps its exact shape, proportions, colours, materials and label layout; none is redesigned or re-lettered. The hero is a ribbed amber glass candle with a brass lid. Keep any branding already printed on the product photographs exactly as photographed — same artwork, same position, same size. Where it is not clearly legible, leave that area clean rather than guessing at letters. Draw no other logo, wordmark, emblem or icon anywhere in the picture.
 
-SCENE & CONCEPT: The candle on a dark table, lit the way the reference is lit, nothing else in the room. The mood is warm, assured. Surface: a plain matte surface a shade darker than the background, with no pattern of its own. Background: a plain field of a warm off-white, close to unbleached paper, softly out of focus. No added props beyond anything the concept names; otherwise the subject and the surface are the whole set. From the mood image — composition read off the mood image: the subject low and left, two thirds of the frame empty above it; light direction read off the mood image: a single hard light from the right, deep shadow filling the left; colour mood read off the mood image: deep brown and black, one warm highlight; take its composition, light and colour only — none of the objects in the mood image appear in this picture.
+SCENE & CONCEPT: The candle on a dark table, lit the way the reference is lit, nothing else in the room. The mood is warm, assured. Surface: a plain matte surface a shade darker than the background, with no pattern of its own. Background: a plain field of a warm off-white, close to unbleached paper, softly out of focus. No added props beyond anything the concept names; otherwise the subject and the surface are the whole set. From the mood image — composition read off the mood image: the subject low and left, two thirds of the frame empty above it; colour mood read off the mood image: deep brown and black, one warm highlight; take its composition, light and colour only — none of the objects in the mood image appear in this picture.
 
 SUBJECT ARRANGEMENT: The hero is a ribbed amber glass candle with a brass lid, holding about half; nothing else competes for that share. Three depth layers: a soft near foreground, the hero sharp, a background clearly behind. No overlap is needed: the subject stands clear of everything else. Nothing is deformed, mirrored, stretched or duplicated to fill a gap.
 
 COMPOSITION & LAYOUT: The frame is square. A clear, even margin on every side, wide enough that nothing important reads as touching an edge; nothing that must be read crosses into it. The subject occupies a little over half, in the middle band. The words live in the top band, and nowhere else. No word is placed over the hero. Leave roughly a quarter as quiet, uncluttered ground.
 
-LIGHT / CAMERA / MATERIALS: The lens a little above the subject's mid-line, looking down. The camera level, no tilt. A long, compressing view, the background flattened towards the subject. Shallow focus: the hero crisp, the background soft. A high key light from the front left, shadows falling back and right. The light is warm amber, like late afternoon. Clearly modelled shadows, detail still readable. A narrow rim or edge light separates the subject from the background along one side. One light direction governs every highlight and shadow in the frame; no object casts a shadow in a direction the others do not. Every object meets the surface with a contact shadow, darkest where they touch, plus a faint reflection where the surface is glossy. Focus falls away outward from the hero, not uniformly. Asymmetric micro-imperfections: an unmirrored droplet, a crumb out of line, real variation in the material. True scale between objects. No waxy, plastic or over-smoothed surfaces, no HDR halo. Finish: a gentle S-curve in the tone, highlights rolling off rather than clipping, blacks that keep detail, no sharpening halo.
+LIGHT / CAMERA / MATERIALS: The lens a little above the subject's mid-line, looking down. The camera level, no tilt. A long, compressing view, the background flattened towards the subject. Shallow focus: the hero crisp, the background soft. A key light raking from the right, the form described by the shadow edge. The light is warm amber, like late afternoon. Clearly modelled shadows, detail still readable. A narrow rim or edge light separates the subject from the background along one side. One light direction governs every highlight and shadow in the frame; no object casts a shadow in a direction the others do not. Every object meets the surface with a contact shadow, darkest where they touch, plus a faint reflection where the surface is glossy. Focus falls away outward from the hero, not uniformly. Asymmetric micro-imperfections: an unmirrored droplet, a crumb out of line, real variation in the material. True scale between objects. No waxy, plastic or over-smoothed surfaces, no HDR halo. Finish: a gentle S-curve in the tone, highlights rolling off rather than clipping, blacks that keep detail, no sharpening halo.
 
-COLOR & BRAND STYLE: Most of the frame is the field colour — a warm off-white, close to unbleached paper — carrying the background and the surface. Roughly a third is the secondary, a soft putty grey: the supporting surfaces and the larger shapes. A small part is the accent, a amber: emphasis only — a single element, a price card, the tightest highlight. The background is never the product's own dominant colour.
+COLOR & BRAND STYLE: Most of the frame is the field colour — a warm off-white, close to unbleached paper — carrying the background and the surface. Roughly a third is the secondary, a soft putty grey: the supporting surfaces and the larger shapes. A small part is the accent, an amber: emphasis only — a single element, a price card, the tightest highlight. The background is never the product's own dominant colour.
 
 TEXT: Set each of the following exactly once, and nothing else — as the headline, at the top of the text zone, first in the reading order: "Hương trầm". Then as the supporting line, directly under the headline, inside the text zone: "Đốt một lần, thơm cả ngày". The headline dominant, the supporting line a little over a third of it, the smallest line a third. Small text sits on a flat card or a plain untextured area — never over the product, never over texture. Render every Vietnamese diacritic exactly as written. No other text, numbers, watermarks or extra logos.
 

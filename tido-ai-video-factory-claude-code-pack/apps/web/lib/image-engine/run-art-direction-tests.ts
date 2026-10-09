@@ -709,9 +709,22 @@ async function main() {
     const fx = fixtureById("16_mood_manifest_present");
     const sheet = sheetFor(fx);
     const brief = buildGptMessages(artDirectorBriefInputFor(fx), "v2").user.content;
-    // Composition, light and colour travel.
-    assert.ok(/single hard light from the right/i.test(brief), "the mood lighting never reached the brief");
+    // Composition travels as WORDS, because nothing downstream decides it.
     assert.ok(/two thirds of the frame empty/i.test(brief), "the mood composition never reached the brief");
+    // Light direction travels as a DECISION, not as prose. Emitting the raw sentence as
+    // well put two different key lights in one prompt — measured in the Step 1i evidence,
+    // where the lighting block said "front left" while the mood line said "from the right".
+    // "a single hard light from the right, deep shadow filling the left": the shadow is on
+    // the left, so the light is on the right, and "hard" makes it a raking side light.
+    assert.strictEqual(sheet.lighting.key_direction, "side_right", "the mood image's light direction was ignored");
+    assert.ok(
+      !/single hard light from the right/i.test(brief),
+      "the raw mood lighting sentence is still in the brief, contradicting the derived key light",
+    );
+    assert.ok(
+      sheet.conflicts_resolved.some((c) => /key_direction/.test(c) && /mood/i.test(c)),
+      `the override was silent: ${JSON.stringify(sheet.conflicts_resolved)}`,
+    );
     // And it influenced a derived value rather than only being quoted: the accent.
     assert.ok(
       sheet.palette.reason.length > 0 && accentSeparates(sheet.palette.ten, sheet.palette.sixty),

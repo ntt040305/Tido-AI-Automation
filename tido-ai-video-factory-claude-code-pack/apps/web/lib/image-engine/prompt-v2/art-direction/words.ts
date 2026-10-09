@@ -346,8 +346,11 @@ export function colourWords(hex: string): string {
   }
 
   const lightness = (rgb[0] * 299 + rgb[1] * 587 + rgb[2] * 114) / 1000;
-  const qualifier = lightness > 215 ? "a very pale " : lightness > 165 ? "a light " : lightness > 80 ? "a " : "a deep ";
-  return `${qualifier}${best}`;
+  const qualifier = lightness > 215 ? "very pale " : lightness > 165 ? "light " : lightness > 80 ? "" : "deep ";
+  const phrase = `${qualifier}${best}`;
+  // "a amber" was in the evidence. The article depends on the whole phrase, not on the
+  // colour word, because a qualifier goes in front of it.
+  return `${/^[aeiou]/i.test(phrase) ? "an" : "a"} ${phrase}`;
 }
 
 /**

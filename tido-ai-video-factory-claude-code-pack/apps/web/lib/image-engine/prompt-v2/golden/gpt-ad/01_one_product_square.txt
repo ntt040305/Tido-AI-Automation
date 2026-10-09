@@ -281,7 +281,7 @@ Mood: cool and clean, assured; addressed to whoever this poster is for, addresse
 
   - most of the frame is the field colour — a warm off-white, close to unbleached paper — carrying the background and the surface.
   - roughly a third is the secondary, a soft putty grey: the supporting surfaces and the larger shapes.
-  - a small part is the accent, a amber: emphasis only — a single element, a price card, the tightest highlight.
+  - a small part is the accent, an amber: emphasis only — a single element, a price card, the tightest highlight.
   - The background is never the product's own dominant colour.
 
 ## S8 — TYPOGRAPHY AND THE TEXT MANIFEST
@@ -483,7 +483,7 @@ COMPOSITION & LAYOUT: The frame is square. A clear, even margin on every side, w
 
 LIGHT / CAMERA / MATERIALS: The lens a little above the subject's mid-line, looking down. The camera level, no tilt. A long, compressing view, the background flattened towards the subject. Shallow focus: the hero crisp, the background soft. A high key light from the front left, shadows falling back and right. The light is clean daylight. Clearly modelled shadows, detail still readable. A narrow rim or edge light separates the subject from the background along one side. One light direction governs every highlight and shadow in the frame; no object casts a shadow in a direction the others do not. Every object meets the surface with a contact shadow, darkest where they touch, plus a faint reflection where the surface is glossy. Focus falls away outward from the hero, not uniformly. Asymmetric micro-imperfections: an unmirrored droplet, a crumb out of line, real variation in the material. True scale between objects. No waxy, plastic or over-smoothed surfaces, no HDR halo. Finish: a gentle S-curve in the tone, highlights rolling off rather than clipping, blacks that keep detail, no sharpening halo.
 
-COLOR & BRAND STYLE: Most of the frame is the field colour — a warm off-white, close to unbleached paper — carrying the background and the surface. Roughly a third is the secondary, a soft putty grey: the supporting surfaces and the larger shapes. A small part is the accent, a amber: emphasis only — a single element, a price card, the tightest highlight. The background is never the product's own dominant colour.
+COLOR & BRAND STYLE: Most of the frame is the field colour — a warm off-white, close to unbleached paper — carrying the background and the surface. Roughly a third is the secondary, a soft putty grey: the supporting surfaces and the larger shapes. A small part is the accent, an amber: emphasis only — a single element, a price card, the tightest highlight. The background is never the product's own dominant colour.
 
 TEXT: Set each of the following exactly once, and nothing else — as the headline, at the top of the text zone, first in the reading order: "Slow mornings". Then as the supporting line, directly under the headline, inside the text zone: "Cold brew, done properly". Then as the call to action, at the foot of the text zone, last in the reading order: "Đặt ngay". The headline dominant, the supporting line a little over a third of it, the smallest line a third. Small text sits on a flat card or a plain untextured area — never over the product, never over texture. Render every Vietnamese diacritic exactly as written. No other text, numbers, watermarks or extra logos.
 

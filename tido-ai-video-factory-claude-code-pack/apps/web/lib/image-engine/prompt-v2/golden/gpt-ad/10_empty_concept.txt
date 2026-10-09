@@ -4,7 +4,7 @@
 
 === ART DIRECTION SHEET (the decisions, with their concrete values) ===
 {
-  "big_idea": "Hai Mươi shown plainly and well, with one idea and nothing competing with it",
+  "big_idea": "Hai Mươi shown plainly and well, with one idea and nothing competing with it.",
   "mood": "composed and quiet",
   "audience_tone": "whoever this hero is for, addressed directly and without hype",
   "products": [
@@ -217,7 +217,7 @@ Raw product facts, where the client supplied any:
 
 ## S1 — BIG IDEA
 
-Hai Mươi shown plainly and well, with one idea and nothing competing with it
+Hai Mươi shown plainly and well, with one idea and nothing competing with it.
 
 Mood: composed and quiet; addressed to whoever this hero is for, addressed directly and without hype
 
@@ -451,7 +451,7 @@ OUTPUT: A square Product Hero for Hai Mươi, a fashion and accessories brand, f
 
 REFERENCE IMAGES: Image 1 is a tan leather crossbody bag. Every product keeps its exact shape, proportions, colours, materials and label layout; none is redesigned or re-lettered. The hero is a tan leather crossbody bag. Keep any branding already printed on the product photographs exactly as photographed — same artwork, same position, same size. Where it is not clearly legible, leave that area clean rather than guessing at letters. Draw no other logo, wordmark, emblem or icon anywhere in the picture.
 
-SCENE & CONCEPT: Hai Mươi shown plainly and well, with one idea and nothing competing with it The mood is composed and quiet. Surface: a plain matte surface a shade darker than the background, with no pattern of its own. Background: a plain field of a warm off-white, close to unbleached paper, softly out of focus. No added props beyond anything the concept names; otherwise the subject and the surface are the whole set.
+SCENE & CONCEPT: Hai Mươi shown plainly and well, with one idea and nothing competing with it. The mood is composed and quiet. Surface: a plain matte surface a shade darker than the background, with no pattern of its own. Background: a plain field of a warm off-white, close to unbleached paper, softly out of focus. No added props beyond anything the concept names; otherwise the subject and the surface are the whole set.
 
 SUBJECT ARRANGEMENT: The hero is a tan leather crossbody bag, holding roughly a third; nothing else competes for that share. Three depth layers: a soft near foreground, the hero sharp, a background clearly behind. No overlap is needed: the subject stands clear of everything else. Nothing is deformed, mirrored, stretched or duplicated to fill a gap.
 

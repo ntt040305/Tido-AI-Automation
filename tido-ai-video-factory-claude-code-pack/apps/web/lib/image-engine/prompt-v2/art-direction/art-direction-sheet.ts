@@ -573,12 +573,17 @@ function deriveLighting(
   // defect. So an OBSERVED material wins, and the conflict is recorded.
   //
   // Nothing fires without an observation: `physics` is null without GPT_PRODUCT_VISION.
+  // A direction read off the mood IMAGE, when one was. Below the product's own material —
+  // a backlight for glass is physics and a mood image is a preference — and above geometry,
+  // because a client who supplied a reference lit from the right asked for that.
+  const moodKey = moodKeyDirection(input);
   const key = resolvePrecedence<KeyDirection>("lighting.key_direction", [
     {
       tier: "product_appearance",
       value: physics?.lighting.key,
       from: physics ? `the product is ${physics.material.dominant} (observed: ${physics.material.observed.join(", ")})` : undefined,
     },
+    { tier: "mood_reference", value: moodKey, from: "the light direction read off the mood image" },
     { tier: "default", value: geometricKey, from: "the side the words are not on" },
   ]);
 
@@ -628,7 +633,10 @@ function moodWords(input: SheetInput): string[] {
     if (text) out.push(`${label}: ${text}`);
   };
   add("composition read off the mood image", m.composition);
-  add("light direction read off the mood image", m.lighting);
+  // NOT `m.lighting`. Its direction is now resolved into `lighting.key_direction` and
+  // stated once there. Emitting the raw sentence as well put two different key lights in
+  // one prompt — measured in the Step 1i evidence, where the lighting block said "front
+  // left" and this line said "from the right, deep shadow filling the left".
   add("colour mood read off the mood image", m.colorMood);
   if (out.length) {
     out.push(
@@ -636,6 +644,35 @@ function moodWords(input: SheetInput): string[] {
     );
   }
   return out;
+}
+
+/**
+ * A key-light direction read off the mood image, when one was read off the IMAGE.
+ *
+ * Words, matched against what the inspiration pass wrote. Deliberately conservative: only
+ * a clear side or front statement is honoured, because "soft light" names a quality rather
+ * than a direction and guessing one from it would be inventing a decision.
+ */
+function moodKeyDirection(input: SheetInput): KeyDirection | undefined {
+  const m = input.styleManifest;
+  if (!m || m.derived_from_image !== true) return undefined;
+  const text = lower(m.lighting);
+  if (!text) return undefined;
+  const behind = /\bbehind\b|\bback\s*light|\bbacklit\b|\bfrom\s+the\s+rear\b/.test(text);
+  const above = /\bfrom\s+above\b|\boverhead\b|\btop\s*light\b/.test(text);
+  const left = /\bleft\b/.test(text);
+  const right = /\bright\b/.test(text);
+  // "deep shadow filling the left" means the LIGHT is on the right. A side named as the
+  // shadow side is the opposite of the side named as the light side, so only the clear
+  // single-sided cases are taken.
+  const lit = /\bshadow[^.]*\bleft\b/.test(text) ? "right" : /\bshadow[^.]*\bright\b/.test(text) ? "left" : left && !right ? "left" : right && !left ? "right" : null;
+  if (above && !behind) return "top";
+  if (!lit) return undefined;
+  if (behind) return lit === "left" ? "back_left" : "back_right";
+  // A "hard" or "raking" light across the form is a side light; anything else is frontal.
+  const raking = /\bhard\b|\brak/.test(text);
+  if (raking) return lit === "left" ? "side_left" : "side_right";
+  return lit === "left" ? "front_left" : "front_right";
 }
 
 /** The dominant colour word the product photographs or the product facts state. */
@@ -1010,7 +1047,7 @@ export function buildArtDirectionSheet(input: SheetInput): ArtDirectionSheet {
   const sheet: ArtDirectionSheet = {
     big_idea:
       conceptClean ||
-      `${trim(input.brand) || "the brand"} shown plainly and well, with one idea and nothing competing with it`,
+      `${trim(input.brand) || "the brand"} shown plainly and well, with one idea and nothing competing with it.`,
     // The approach says how much invention the frame can carry; the CONCEPT says how the
     // picture should feel. Both, because either alone lies: measured on the Florian
     // fixture, nine lines of copy forced a restrained approach and the mood then read
