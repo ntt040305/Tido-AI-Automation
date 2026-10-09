@@ -136,11 +136,17 @@ npx tsx lib/image-engine/run-vision-qc-tests.ts
 npx tsx lib/image-engine/run-all-tests.ts --keep-going
 ```
 
-## Full sweep, 2026-10-09
+## Full sweep, 2026-10-09 (final)
 
-`63/63 suites · 2077 passed, 20 failed`. Four suites red, and all four are
-**pre-existing**: verified by running them at `19556d9`, the commit before any
-art-director work, where the counts are identical. They are source-assertion tests about
-`ExperimentPipeline` call ordering — `run-vision-loop-tests` (1),
-`run-creative-director-tests` (2), `run-design-output-tests` (1). Not investigated
-further; out of scope for this work.
+`65/65 suites · 2176 passed, 4 failed`, confirmed by two independent runs on the final
+tree.
+
+All 4 failures are in 3 **pre-existing** suites, verified by running them at `19556d9` —
+the commit before any art-director work — where the counts are identical:
+`run-vision-loop-tests` (1), `run-creative-director-tests` (2), `run-design-output-tests`
+(1). They are source-assertion tests about `ExperimentPipeline` call ordering. Not
+investigated further; out of scope for this work.
+
+A mid-Round-2 sweep read 20 failures. Fourteen of those were `run-gpt-golden-tests`
+failing on CRLF after a branch switch (now normalised on both sides) and one was
+`run-typography-composition-tests`, which the Step 3a fix turned green.
