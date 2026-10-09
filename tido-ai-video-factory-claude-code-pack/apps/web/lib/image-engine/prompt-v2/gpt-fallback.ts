@@ -60,6 +60,7 @@ function referenceLines(
   allocation: Allocation | null | undefined,
   input: GptBriefInput,
   floor: number,
+  terseFidelity = false,
 ): string {
   if (!allocation || allocation.slots.length === 0) {
     return (
@@ -67,6 +68,10 @@ function referenceLines(
       "mark is drawn."
     );
   }
+  // `terseFidelity` states the fidelity rule once for all slots instead of once per slot.
+  // Measured: at two sheets the per-slot form repeated a 22-word sentence, and the master
+  // prompt is held to five to seven hundred words.
+  const terse = Boolean(terseFidelity);
   const byIndex = new Map(input.references.map((r) => [String(r.index), r]));
   const out: string[] = [];
   let anyUnsafe = false;
@@ -81,7 +86,9 @@ function referenceLines(
         );
       } else {
         out.push(
-          `Image ${slot.index} is ${trim(ref?.description) || "the product"}. Preserve its exact shape, proportions, colours, materials and label layout; do not redesign it and do not re-letter it.`,
+          terse
+            ? `Image ${slot.index} is ${trim(ref?.description) || "the product"}.`
+            : `Image ${slot.index} is ${trim(ref?.description) || "the product"}. Preserve its exact shape, proportions, colours, materials and label layout; do not redesign it and do not re-letter it.`,
         );
       }
       continue;
@@ -95,22 +102,37 @@ function referenceLines(
       })
       .join(", ");
     out.push(
-      `Image ${slot.index} is a reference sheet in panels: ${panels}. Preserve each product's exact shape, proportions, colours, materials and label layout; do not redesign them and do not re-letter them.`,
+      terse
+        ? `Image ${slot.index} is a reference sheet in panels: ${panels}.`
+        : `Image ${slot.index} is a reference sheet in panels: ${panels}. Preserve each product's exact shape, proportions, colours, materials and label layout; do not redesign them and do not re-letter them.`,
     );
   }
 
+  if (terse) {
+    // Once, for every slot above. The invariant stays near the TOP of the section, which
+    // is where a renderer is most likely to keep hold of it.
+    out.push(
+      "Every product keeps its exact shape, proportions, colours, materials and label layout; none is redesigned or re-lettered.",
+    );
+  }
   if (allocation.packed) {
     out.push(
-      "The panel letters, the borders between panels and the flat grey ground are annotations and must not appear in the rendered image.",
+      terse
+        ? "Panel letters, borders and the flat grey ground are annotations and must not appear in the image."
+        : "The panel letters, the borders between panels and the flat grey ground are annotations and must not appear in the rendered image.",
     );
   }
   if (anyUnsafe) {
     out.push(
-      "Some panels are too small for their lettering to be read reliably; take shape, proportions, colours and materials from those panels and do not reproduce their lettering.",
+      terse
+        ? "Some panels are too small to read: take shape, proportions, colours and materials from them, never their lettering."
+        : "Some panels are too small for their lettering to be read reliably; take shape, proportions, colours and materials from those panels and do not reproduce their lettering.",
     );
   }
   const hasLogoImage = allocation.slots.some((s) => s.panels.some((p) => p.role === "logo"));
-  if (!hasLogoImage) {
+  // On the terse path the print rule already says this in its own sentence, so repeating it
+  // here would both lengthen the prompt and risk raising the print-rule branch count.
+  if (!hasLogoImage && !terse) {
     out.push("No logo image is attached, so no logo, brand mark or emblem is drawn anywhere.");
   }
   return out.join(" ");
@@ -231,8 +253,8 @@ function buildSheetFallbackPrompt(
     // six hundred characters, and said nothing the renderer had not just been told.
     // What is NOT already stated is which product leads, and the print rule.
     "REFERENCE IMAGES:":
-      `${referenceLines(input.allocation, input, floor)} ` +
-      `${heroProduct ? `The hero — the product the picture is about — is ${unquote(heroProduct.description)}. ` : ""}` +
+      `${referenceLines(input.allocation, input, floor, true)} ` +
+      `${heroProduct ? `The hero is ${unquote(heroProduct.description)}. ` : ""}` +
       `${printRule.text}`,
     "SCENE & CONCEPT:": `${unquote(sheet.big_idea)} The mood is ${sheet.mood}. ${flatten(renderSet(sheet))}`,
     "SUBJECT ARRANGEMENT:": flatten(renderArrangement(sheet, density)),
@@ -251,7 +273,7 @@ function buildSheetFallbackPrompt(
     // That phrase is the MARKER for the photographed-branding branch, so on a brief with a
     // supplied logo this sentence used to raise the branch count to two — caught by
     // PRINT_RULE_BRANCHES on the brand-kit fixture, which is what the check is for.
-    "CONSTRAINTS:": `${sheet.negatives.join(". ")}.${
+    "CONSTRAINTS:": `${sheet.negatives.join("; ")}.${
       sheet.set.exclusions.length ? ` ${sheet.set.exclusions.map((e) => unquote(e)).join(". ")}.` : ""
     } Every product is reproduced as supplied in the reference photographs, and only the strings listed above are set.`,
   };

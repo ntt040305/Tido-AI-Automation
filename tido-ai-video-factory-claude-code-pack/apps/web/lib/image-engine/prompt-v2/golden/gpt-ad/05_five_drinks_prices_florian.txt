@@ -96,33 +96,35 @@
     "kelvin": 3200,
     "rim": false,
     "fill_ratio": 2,
-    "shadow_rule": "one light direction governs every highlight and every shadow in the frame; each object has a contact shadow where it meets the surface, and no object casts a shadow in a direction the others do not"
+    "shadow_rule": "one light direction governs every highlight and shadow in the frame; no object casts a shadow in a direction the others do not"
   },
   "set": {
     "surface": "wood, as the concept states",
-    "background": "a plain field of a warm off-white, close to unbleached paper, falling softly out of focus behind the subject",
+    "background": "a plain field of a warm off-white, close to unbleached paper, softly out of focus",
     "props": [],
     "culture_signals": [],
     "exclusions": [
       "no spilled or stained surfaces around the cups unless the concept asks for it"
-    ]
+    ],
+    "mood_reference": []
   },
   "palette": {
     "sixty": "#f2efe9",
     "thirty": "#d8d2c6",
     "ten": "#c0392b",
+    "text": "#c0392b",
     "product_dominant": "#c0392b",
-    "reason": "field from default, secondary from default, accent from product_appearance; the product reads red, so the field is not that colour"
+    "reason": "field from default, secondary from default, accent from product_appearance, type from product_appearance; the product reads red, so the field is not that colour"
   },
   "typography": {
     "families": [],
     "hierarchy": "the headline dominant, the supporting line a little over a third of it, the smallest line a third",
     "sizes_pct": {
       "headline": 10.5,
-      "supporting": 3.5999999999999996,
+      "supporting": 3.6,
       "small": 3
     },
-    "treatment_over_texture": "small text sits on a flat card, a plain panel or an untextured area of the surface — never over the product, never over texture, never over a gradient that crosses it"
+    "treatment_over_texture": "small text sits on a flat card or a plain untextured area — never over the product, never over texture"
   },
   "text_manifest": [
     {
@@ -190,25 +192,27 @@
     }
   ],
   "realism_details": [
-    "every object meets the surface with a contact shadow, darkest where they touch and softening outward, plus a faint reflection where the surface is glossy",
-    "focus falls away outward from the hero rather than uniformly across the frame",
-    "micro-imperfections, asymmetric: a droplet or drip that is not mirrored, a crumb out of line, real variation in the material",
-    "true scale between objects — each the size it would really be beside the others",
-    "no waxy, plastic or over-smoothed surfaces, and no HDR halo on any edge",
-    "no two items are identical copies: where products are of the same kind, their highlights, garnishes, fill levels and small marks all differ"
+    "every object meets the surface with a contact shadow, darkest where they touch, plus a faint reflection where the surface is glossy",
+    "focus falls away outward from the hero, not uniformly",
+    "asymmetric micro-imperfections: an unmirrored droplet, a crumb out of line, real variation in the material",
+    "true scale between objects",
+    "no waxy, plastic or over-smoothed surfaces, no HDR halo",
+    "no two items are identical copies: highlights, garnishes, fill levels and small marks all differ"
   ],
-  "finish": "a gentle S-curve in the tone, highlights rolling off softly rather than clipping, blacks that keep detail, and no sharpening halo on any edge",
+  "finish": "a gentle S-curve in the tone, highlights rolling off rather than clipping, blacks that keep detail, no sharpening halo",
   "negatives": [
-    "no text, numeral, word or character other than the strings listed",
-    "no logo, wordmark, emblem or icon other than the one the print rule allows",
-    "no second or duplicate copy of any product",
-    "no watermark, no signature, no frame or border drawn inside the image"
+    "no text, numeral or character other than the strings listed",
+    "no logo, wordmark, emblem or icon beyond what the print rule allows",
+    "no duplicate copy of any product",
+    "no watermark, signature, frame or border inside the image"
   ],
   "conflicts_resolved": [
     "lighting.kelvin: concept_text (the concept says warm, cosy, festive) won over default (the concept states no temperature)",
     "palette.ten: product_appearance (the product is red) won over concept_text (a colour named in the concept)",
-    "palette.ten: product_appearance (the product is red) won over default (nothing named an accent)"
+    "palette.ten: product_appearance (the product is red) won over default (every named colour failed the contrast guard)",
+    "palette.text: product_appearance (the accent) won over default (derived from the field's own luminance)"
   ],
+  "sheet_fallback_reason": null,
   "provenance": {
     "asset_family": "social",
     "aspect_ratio": "1:1",
@@ -242,9 +246,26 @@ Concept, exactly as the client wrote it:
 A warm, inviting festive cafe celebrating Tết: the five signature drinks together on a wooden tabletop, delicate yellow apricot blossom in the background, a cosy holiday gathering mood.
 
 Nothing in this section may be paraphrased, translated, corrected or improved. Where it
-conflicts with anything below, it wins. Where it names a culture, a region, a festival or
-an occasion, YOU name the exact visual identifiers of it and the nearest confusion to
-exclude — that judgement is yours, not the sheet's.
+conflicts with anything below, it wins.
+
+CULTURAL, REGIONAL AND SEASONAL SPECIFICS ARE YOUR JUDGEMENT, NOT THE SHEET'S.
+Where the concept names a culture, a region, a festival, a season or an occasion, you must
+do two things in SCENE & CONCEPT:
+
+1. Name the EXACT visual identifiers — species, number of petals, colour, material, form,
+   the way the thing is actually made or worn or arranged in that place.
+2. Name the nearest neighbour that must be EXCLUDED, explicitly.
+
+The failure this prevents, measured on real renders: a Vietnamese Tết brief asks for
+*hoa mai*, a yellow five-petalled apricot blossom on a bare dark branch, and the render
+comes back with pink Japanese cherry blossom — the most statistically common "festive
+blossom" in any image model's training data. The two are not interchangeable and the
+substitution is immediately obvious to the audience the asset is for. "Yellow apricot
+blossom, five petals, on bare brown branches; NOT pink cherry blossom and NOT plum" is
+the level of specificity required, in whatever the concept's own culture needs it.
+
+The sheet deliberately contains no lookup table for this, and must never grow one: a table
+would be wrong in a way nobody notices. You have read the concept. You do it.
 
 ## C — REFERENCES
 
@@ -315,82 +336,82 @@ Mood: warm, composed and quiet; addressed to whoever this social is for, address
 ## S2 — LAYOUT AND ZONES
 
   - The frame is square.
-  - a clear, even margin on every side, wide enough that nothing important reads as touching an edge — nothing that must be read, and no edge of the hero, crosses into it.
+  - a clear, even margin on every side, wide enough that nothing important reads as touching an edge; nothing that must be read crosses into it.
   - The subject occupies about half, in the lower third.
   - The words live in the upper third, and nowhere else. No word is placed over the hero.
-  - Leave roughly a quarter as quiet, uncluttered ground. Negative space is a decision here, not what is left over.
+  - Leave roughly a quarter as quiet, uncluttered ground.
 
 ## S3 — ARRANGEMENT AND DEPTH
 
-  - The hero is a tall clear cup of iced caramel coffee, and it holds a little under half. Nothing else competes for that share.
-  - three depth layers: something soft in the near foreground, the hero sharp in the middle, and a background that is clearly behind.
-  - The group overlaps: items in front partly occlude the ones behind, so the arrangement reads as one object with depth rather than as a row.
+  - The hero is a tall clear cup of iced caramel coffee, holding a little under half; nothing else competes for that share.
+  - three depth layers: a soft near foreground, the hero sharp, a background clearly behind.
+  - The group overlaps: items in front partly occlude those behind, so it reads as one object with depth, not a row.
   - Nothing is deformed, mirrored, stretched or duplicated to fill a gap.
 
 ## S4 — CAMERA
 
-  - the lens well above the subject, looking down across the arrangement
-  - the camera level, horizon true, no tilt
-  - a natural view that exaggerates nothing, neither stretched nor flattened
-  - moderate depth: every product in the group is crisp and only the far background softens
+  - the lens well above the subject, looking down across it
+  - the camera level, no tilt
+  - a natural view, nothing stretched or flattened
+  - moderate depth: every product crisp, only the far background soft
 
 ## S5 — LIGHTING
 
-  - the key light from the front left, high, so shadows fall back and to the right
-  - the light is warm amber, like late afternoon indoors
-  - soft shadows that keep their detail
+  - a high key light from the front left, shadows falling back and right
+  - the light is warm amber, like late afternoon
+  - soft shadows, detail kept
   - no rim light: with this many objects in frame it would outline all of them and read as a cutout
-  - one light direction governs every highlight and every shadow in the frame; each object has a contact shadow where it meets the surface, and no object casts a shadow in a direction the others do not
+  - one light direction governs every highlight and shadow in the frame; no object casts a shadow in a direction the others do not
 
 ## S6 — SET AND PROPS
 
   - Surface: wood, as the concept states.
-  - Background: a plain field of a warm off-white, close to unbleached paper, falling softly out of focus behind the subject.
-  - No added props. If the concept names something, that thing and nothing more; otherwise the subject and the surface are the whole set.
+  - Background: a plain field of a warm off-white, close to unbleached paper, softly out of focus.
+  - No added props beyond anything the concept names; otherwise the subject and the surface are the whole set.
 
 ## S7 — COLOUR
 
   - most of the frame is the field colour — a warm off-white, close to unbleached paper — carrying the background and the surface.
   - roughly a third is the secondary, a soft putty grey: the supporting surfaces and the larger shapes.
   - a small part is the accent, a red: emphasis only — a single element, a price card, the tightest highlight.
-  - The background is never the product's own dominant colour: the product has to separate from what is behind it.
+  - The background is never the product's own dominant colour.
 
 ## S8 — TYPOGRAPHY AND THE TEXT MANIFEST
 
   - One type family throughout: a clean, high-contrast sans-serif. Never more than two families in the frame.
   - the headline dominant, the supporting line a little over a third of it, the smallest line a third
-  - small text sits on a flat card, a plain panel or an untextured area of the surface — never over the product, never over texture, never over a gradient that crosses it
+  - small text sits on a flat card or a plain untextured area — never over the product, never over texture
   - Every Vietnamese diacritic is rendered exactly as written, in NFC. No string is added, shortened, translated or corrected.
 
   THE TEXT MANIFEST — every string that may appear, each exactly once:
-    [headline] "Florian Cafe" — at the top of the text zone, first in the reading order, tall enough to read without effort at a glance — never thinner than a hairline against the background, set in a red
-    [supporting line] "Nơi giúp bạn giải tỏa căng thẳng" — directly under the headline, inside the text zone, tall enough to read without effort at a glance — never thinner than a hairline against the background, set in a red
-    [supporting line] "Bằng những ly nước ngọt ngào" — directly under the headline, inside the text zone, tall enough to read without effort at a glance — never thinner than a hairline against the background, set in a red
-    [price line] "Chỉ từ 30K" — grouped with the other numbered lines, on a flat card inside the text zone, tall enough to read without effort at a glance — never thinner than a hairline against the background, set in a red
-    [price line] "Caramel coffee - 35K" — grouped with the other numbered lines, on a flat card inside the text zone, tall enough to read without effort at a glance — never thinner than a hairline against the background, set in a red
-    [price line] "Trà cam - 40K" — grouped with the other numbered lines, on a flat card inside the text zone, tall enough to read without effort at a glance — never thinner than a hairline against the background, set in a red
-    [price line] "Trà việt quất - 40K" — grouped with the other numbered lines, on a flat card inside the text zone, tall enough to read without effort at a glance — never thinner than a hairline against the background, set in a red
-    [price line] "Matcha hạt sen - 45K" — grouped with the other numbered lines, on a flat card inside the text zone, tall enough to read without effort at a glance — never thinner than a hairline against the background, set in a red
-    [price line] "Matcha Latte - 40K" — grouped with the other numbered lines, on a flat card inside the text zone, tall enough to read without effort at a glance — never thinner than a hairline against the background, set in a red
+    [headline] "Florian Cafe" — at the top of the text zone, first in the reading order, tall enough to read at a glance, set in a red
+    [supporting line] "Nơi giúp bạn giải tỏa căng thẳng" — directly under the headline, inside the text zone, tall enough to read at a glance, set in a red
+    [supporting line] "Bằng những ly nước ngọt ngào" — directly under the headline, inside the text zone, tall enough to read at a glance, set in a red
+    [price line] "Chỉ từ 30K" — grouped with the other numbered lines, on a flat card inside the text zone, tall enough to read at a glance, set in a red
+    [price line] "Caramel coffee - 35K" — grouped with the other numbered lines, on a flat card inside the text zone, tall enough to read at a glance, set in a red
+    [price line] "Trà cam - 40K" — grouped with the other numbered lines, on a flat card inside the text zone, tall enough to read at a glance, set in a red
+    [price line] "Trà việt quất - 40K" — grouped with the other numbered lines, on a flat card inside the text zone, tall enough to read at a glance, set in a red
+    [price line] "Matcha hạt sen - 45K" — grouped with the other numbered lines, on a flat card inside the text zone, tall enough to read at a glance, set in a red
+    [price line] "Matcha Latte - 40K" — grouped with the other numbered lines, on a flat card inside the text zone, tall enough to read at a glance, set in a red
 
   Nothing outside this manifest is set. No extra numerals, no invented strap line, no watermark.
 
 ## S9 — REALISM AND FINISH
 
-  - every object meets the surface with a contact shadow, darkest where they touch and softening outward, plus a faint reflection where the surface is glossy
-  - focus falls away outward from the hero rather than uniformly across the frame
-  - micro-imperfections, asymmetric: a droplet or drip that is not mirrored, a crumb out of line, real variation in the material
-  - true scale between objects — each the size it would really be beside the others
-  - no waxy, plastic or over-smoothed surfaces, and no HDR halo on any edge
-  - no two items are identical copies: where products are of the same kind, their highlights, garnishes, fill levels and small marks all differ
-  - Finish: a gentle S-curve in the tone, highlights rolling off softly rather than clipping, blacks that keep detail, and no sharpening halo on any edge.
+  - every object meets the surface with a contact shadow, darkest where they touch, plus a faint reflection where the surface is glossy
+  - focus falls away outward from the hero, not uniformly
+  - asymmetric micro-imperfections: an unmirrored droplet, a crumb out of line, real variation in the material
+  - true scale between objects
+  - no waxy, plastic or over-smoothed surfaces, no HDR halo
+  - no two items are identical copies: highlights, garnishes, fill levels and small marks all differ
+  - Finish: a gentle S-curve in the tone, highlights rolling off rather than clipping, blacks that keep detail, no sharpening halo.
 
 ## S10 — CONSTRAINTS
 
-  - no text, numeral, word or character other than the strings listed
-  - no logo, wordmark, emblem or icon other than the one the print rule allows
-  - no second or duplicate copy of any product
-  - no watermark, no signature, no frame or border drawn inside the image
+  - no text, numeral or character other than the strings listed
+  - no logo, wordmark, emblem or icon beyond what the print rule allows
+  - no duplicate copy of any product
+  - no watermark, signature, frame or border inside the image
   - no spilled or stained surfaces around the cups unless the concept asks for it
 
 ## S11 — DERIVED DECISIONS (why the sheet says what it says; never written into the prompt)
@@ -398,11 +419,12 @@ Mood: warm, composed and quiet; addressed to whoever this social is for, address
   - creative approach: restrained — 35 words against the 19 this social carries: the frame has to work for the type, not against it
   - asset family: social; canvas: 1:1
   - print rule branch: photographed_branding
-  - palette: field from default, secondary from default, accent from product_appearance; the product reads red, so the field is not that colour
+  - palette: field from default, secondary from default, accent from product_appearance, type from product_appearance; the product reads red, so the field is not that colour
   - the client stated no technical specs in the concept
   - lighting.kelvin: concept_text (the concept says warm, cosy, festive) won over default (the concept states no temperature)
   - palette.ten: product_appearance (the product is red) won over concept_text (a colour named in the concept)
-  - palette.ten: product_appearance (the product is red) won over default (nothing named an accent)
+  - palette.ten: product_appearance (the product is red) won over default (every named colour failed the contrast guard)
+  - palette.text: product_appearance (the accent) won over default (derived from the field's own luminance)
   - unverified material: a tall clear cup of iced caramel coffee — describe its surface from the photograph, do not name a material
   - unverified material: a clear cup of iced orange tea with fruit slices — describe its surface from the photograph, do not name a material
   - unverified material: a clear cup of iced blueberry tea — describe its surface from the photograph, do not name a material
@@ -555,18 +577,18 @@ The master prompt, and nothing else.
 === CODE-BUILT FALLBACK PROMPT ===
 OUTPUT: A square Social Ad for Florian, a coffee and tea brand, for a Tết promotional post. Photorealistic, finished and ready to publish.
 
-REFERENCE IMAGES: Image 1 is a reference sheet in panels: panel A is a tall clear cup of iced caramel coffee, panel B is a clear cup of iced blueberry tea, panel C is a cup of iced matcha latte, layered. Preserve each product's exact shape, proportions, colours, materials and label layout; do not redesign them and do not re-letter them. Image 2 is a reference sheet in panels: panel A is a clear cup of iced orange tea with fruit slices, panel B is a cup of iced matcha with lotus seed. Preserve each product's exact shape, proportions, colours, materials and label layout; do not redesign them and do not re-letter them. The panel letters, the borders between panels and the flat grey ground are annotations and must not appear in the rendered image. Some panels are too small for their lettering to be read reliably; take shape, proportions, colours and materials from those panels and do not reproduce their lettering. No logo image is attached, so no logo, brand mark or emblem is drawn anywhere. The hero — the product the picture is about — is a tall clear cup of iced caramel coffee. Keep any branding already printed on the product photographs exactly as photographed — same artwork, same position, same size. Where it is not clearly legible, leave that area clean rather than guessing at letters. Draw no other logo, wordmark, emblem or icon anywhere in the picture.
+REFERENCE IMAGES: Image 1 is a reference sheet in panels: panel A is a tall clear cup of iced caramel coffee, panel B is a clear cup of iced blueberry tea, panel C is a cup of iced matcha latte, layered. Image 2 is a reference sheet in panels: panel A is a clear cup of iced orange tea with fruit slices, panel B is a cup of iced matcha with lotus seed. Every product keeps its exact shape, proportions, colours, materials and label layout; none is redesigned or re-lettered. Panel letters, borders and the flat grey ground are annotations and must not appear in the image. Some panels are too small to read: take shape, proportions, colours and materials from them, never their lettering. The hero is a tall clear cup of iced caramel coffee. Keep any branding already printed on the product photographs exactly as photographed — same artwork, same position, same size. Where it is not clearly legible, leave that area clean rather than guessing at letters. Draw no other logo, wordmark, emblem or icon anywhere in the picture.
 
-SCENE & CONCEPT: A warm, inviting festive cafe celebrating Tết: the five signature drinks together on a wooden tabletop, delicate yellow apricot blossom in the background, a cosy holiday gathering mood. The mood is warm, composed and quiet. Surface: wood, as the concept states. Background: a plain field of a warm off-white, close to unbleached paper, falling softly out of focus behind the subject. No added props. If the concept names something, that thing and nothing more; otherwise the subject and the surface are the whole set.
+SCENE & CONCEPT: A warm, inviting festive cafe celebrating Tết: the five signature drinks together on a wooden tabletop, delicate yellow apricot blossom in the background, a cosy holiday gathering mood. The mood is warm, composed and quiet. Surface: wood, as the concept states. Background: a plain field of a warm off-white, close to unbleached paper, softly out of focus. No added props beyond anything the concept names; otherwise the subject and the surface are the whole set.
 
-SUBJECT ARRANGEMENT: The hero is a tall clear cup of iced caramel coffee, and it holds a little under half. Nothing else competes for that share. Three depth layers: something soft in the near foreground, the hero sharp in the middle, and a background that is clearly behind. The group overlaps: items in front partly occlude the ones behind, so the arrangement reads as one object with depth rather than as a row. Nothing is deformed, mirrored, stretched or duplicated to fill a gap.
+SUBJECT ARRANGEMENT: The hero is a tall clear cup of iced caramel coffee, holding a little under half; nothing else competes for that share. Three depth layers: a soft near foreground, the hero sharp, a background clearly behind. The group overlaps: items in front partly occlude those behind, so it reads as one object with depth, not a row. Nothing is deformed, mirrored, stretched or duplicated to fill a gap.
 
-COMPOSITION & LAYOUT: The frame is square. A clear, even margin on every side, wide enough that nothing important reads as touching an edge — nothing that must be read, and no edge of the hero, crosses into it. The subject occupies about half, in the lower third. The words live in the upper third, and nowhere else. No word is placed over the hero. Leave roughly a quarter as quiet, uncluttered ground. Negative space is a decision here, not what is left over.
+COMPOSITION & LAYOUT: The frame is square. A clear, even margin on every side, wide enough that nothing important reads as touching an edge; nothing that must be read crosses into it. The subject occupies about half, in the lower third. The words live in the upper third, and nowhere else. No word is placed over the hero. Leave roughly a quarter as quiet, uncluttered ground.
 
-LIGHT / CAMERA / MATERIALS: The lens well above the subject, looking down across the arrangement. The camera level, horizon true, no tilt. A natural view that exaggerates nothing, neither stretched nor flattened. Moderate depth: every product in the group is crisp and only the far background softens. The key light from the front left, high, so shadows fall back and to the right. The light is warm amber, like late afternoon indoors. Soft shadows that keep their detail. No rim light: with this many objects in frame it would outline all of them and read as a cutout. One light direction governs every highlight and every shadow in the frame; each object has a contact shadow where it meets the surface, and no object casts a shadow in a direction the others do not. Every object meets the surface with a contact shadow, darkest where they touch and softening outward, plus a faint reflection where the surface is glossy. Focus falls away outward from the hero rather than uniformly across the frame. Micro-imperfections, asymmetric: a droplet or drip that is not mirrored, a crumb out of line, real variation in the material. True scale between objects — each the size it would really be beside the others. No waxy, plastic or over-smoothed surfaces, and no HDR halo on any edge. No two items are identical copies: where products are of the same kind, their highlights, garnishes, fill levels and small marks all differ. Finish: a gentle S-curve in the tone, highlights rolling off softly rather than clipping, blacks that keep detail, and no sharpening halo on any edge. Take every surface and material from the photographs rather than naming one.
+LIGHT / CAMERA / MATERIALS: The lens well above the subject, looking down across it. The camera level, no tilt. A natural view, nothing stretched or flattened. Moderate depth: every product crisp, only the far background soft. A high key light from the front left, shadows falling back and right. The light is warm amber, like late afternoon. Soft shadows, detail kept. No rim light: with this many objects in frame it would outline all of them and read as a cutout. One light direction governs every highlight and shadow in the frame; no object casts a shadow in a direction the others do not. Every object meets the surface with a contact shadow, darkest where they touch, plus a faint reflection where the surface is glossy. Focus falls away outward from the hero, not uniformly. Asymmetric micro-imperfections: an unmirrored droplet, a crumb out of line, real variation in the material. True scale between objects. No waxy, plastic or over-smoothed surfaces, no HDR halo. No two items are identical copies: highlights, garnishes, fill levels and small marks all differ. Finish: a gentle S-curve in the tone, highlights rolling off rather than clipping, blacks that keep detail, no sharpening halo. Take every surface and material from the photographs rather than naming one.
 
-COLOR & BRAND STYLE: Most of the frame is the field colour — a warm off-white, close to unbleached paper — carrying the background and the surface. Roughly a third is the secondary, a soft putty grey: the supporting surfaces and the larger shapes. A small part is the accent, a red: emphasis only — a single element, a price card, the tightest highlight. The background is never the product's own dominant colour: the product has to separate from what is behind it.
+COLOR & BRAND STYLE: Most of the frame is the field colour — a warm off-white, close to unbleached paper — carrying the background and the surface. Roughly a third is the secondary, a soft putty grey: the supporting surfaces and the larger shapes. A small part is the accent, a red: emphasis only — a single element, a price card, the tightest highlight. The background is never the product's own dominant colour.
 
-TEXT: Set each of the following exactly once, and nothing else — as the headline, at the top of the text zone, first in the reading order: "Florian Cafe". Then as supporting lines, directly under the headline, inside the text zone: "Nơi giúp bạn giải tỏa căng thẳng"; "Bằng những ly nước ngọt ngào". Then as price lines, grouped with the other numbered lines, on a flat card inside the text zone: "Chỉ từ 30K"; "Caramel coffee - 35K"; "Trà cam - 40K"; "Trà việt quất - 40K"; "Matcha hạt sen - 45K"; "Matcha Latte - 40K". The headline dominant, the supporting line a little over a third of it, the smallest line a third. Small text sits on a flat card, a plain panel or an untextured area of the surface — never over the product, never over texture, never over a gradient that crosses it. Render every Vietnamese diacritic exactly as written. No other text, numbers, watermarks or extra logos.
+TEXT: Set each of the following exactly once, and nothing else — as the headline, at the top of the text zone, first in the reading order: "Florian Cafe". Then as supporting lines, directly under the headline, inside the text zone: "Nơi giúp bạn giải tỏa căng thẳng"; "Bằng những ly nước ngọt ngào". Then as price lines, grouped with the other numbered lines, on a flat card inside the text zone: "Chỉ từ 30K"; "Caramel coffee - 35K"; "Trà cam - 40K"; "Trà việt quất - 40K"; "Matcha hạt sen - 45K"; "Matcha Latte - 40K". The headline dominant, the supporting line a little over a third of it, the smallest line a third. Small text sits on a flat card or a plain untextured area — never over the product, never over texture. Render every Vietnamese diacritic exactly as written. No other text, numbers, watermarks or extra logos.
 
-CONSTRAINTS: no text, numeral, word or character other than the strings listed. no logo, wordmark, emblem or icon other than the one the print rule allows. no second or duplicate copy of any product. no watermark, no signature, no frame or border drawn inside the image. no spilled or stained surfaces around the cups unless the concept asks for it. Every product is reproduced as supplied in the reference photographs, and only the strings listed above are set.
+CONSTRAINTS: no text, numeral or character other than the strings listed; no logo, wordmark, emblem or icon beyond what the print rule allows; no duplicate copy of any product; no watermark, signature, frame or border inside the image. no spilled or stained surfaces around the cups unless the concept asks for it. Every product is reproduced as supplied in the reference photographs, and only the strings listed above are set.

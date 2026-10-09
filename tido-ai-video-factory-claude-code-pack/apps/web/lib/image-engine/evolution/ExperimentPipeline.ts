@@ -1447,6 +1447,10 @@ export class ExperimentPipeline {
                     .salesContext ?? null,
                   targetChannel: request.marketingContext?.target_channel,
                   productFacts: (request as { hardRequirements?: string[] }).hardRequirements ?? undefined,
+                  // Reported, not assumed. If the wrapper is ever reordered so that this
+                  // closure runs before `blueprintFor`, the sheet records the absence and
+                  // logs it instead of looking complete on its derived defaults.
+                  upstream: { blueprint: capturedBlueprint, compositionPlan: capturedCompositionPlan },
                   productCountRule:
                     countAttachedProducts(request) > 1
                       ? "Several products: group them with a clear hierarchy, the main product largest, none deformed or duplicated."

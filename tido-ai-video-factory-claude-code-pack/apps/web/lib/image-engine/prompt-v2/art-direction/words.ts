@@ -104,63 +104,63 @@ export function bandWords(topPct: number, heightPct: number): string {
  */
 export function lensWords(mm: number): string {
   const v = Number(mm) || 50;
-  if (v < 28) return "a wide, enveloping view that takes in the whole setting";
+  if (v < 28) return "a wide, enveloping view taking in the whole setting";
   if (v < 40) return "a slightly wide view, with no stretched edges";
-  if (v < 60) return "a natural view that exaggerates nothing, neither stretched nor flattened";
-  if (v < 85) return "a slightly long view that draws the background a little closer";
-  if (v < 120) return "a long, gently compressing view that flattens the background towards the subject";
-  return "a tightly compressed view: the background is pulled flat behind the subject and reads almost as a backdrop";
+  if (v < 60) return "a natural view, nothing stretched or flattened";
+  if (v < 85) return "a slightly long view, the background drawn closer";
+  if (v < 120) return "a long, compressing view, the background flattened towards the subject";
+  return "a tightly compressed view, the background flat behind the subject like a backdrop";
 }
 
 /** Aperture as depth of field. */
 export function apertureWords(fNumber: number): string {
   const v = Number(fNumber) || 4;
-  if (v <= 1.8) return "very shallow focus: only the nearest face of the hero is crisp and everything else melts";
-  if (v <= 2.8) return "shallow focus: the hero is crisp and the background falls away softly";
-  if (v <= 4.5) return "shallow focus with enough depth to hold the whole hero crisp while the background softens";
-  if (v <= 8) return "moderate depth: every product in the group is crisp and only the far background softens";
-  return "deep focus: the setting is nearly as crisp as the subject";
+  if (v <= 1.8) return "very shallow focus: only the hero's nearest face crisp";
+  if (v <= 2.8) return "shallow focus: the hero crisp, the background soft";
+  if (v <= 4.5) return "shallow focus holding the whole hero crisp, the background soft";
+  if (v <= 8) return "moderate depth: every product crisp, only the far background soft";
+  return "deep focus: the setting nearly as crisp as the subject";
 }
 
 /** Colour temperature as a described light. */
 export function kelvinWords(kelvin: number): string {
   const v = Number(kelvin) || 4500;
   if (v <= 2900) return "deeply warm, close to candlelight";
-  if (v <= 3500) return "warm amber, like late afternoon indoors";
-  if (v <= 4200) return "softly warm, a shade warmer than neutral";
+  if (v <= 3500) return "warm amber, like late afternoon";
+  if (v <= 4200) return "a shade warmer than neutral";
   if (v <= 5000) return "neutral white, neither warm nor cool";
-  if (v <= 6000) return "clean and daylight-neutral";
+  if (v <= 6000) return "clean daylight";
   return "cool and slightly blue, like open shade";
 }
 
 /** Fill ratio as contrast. The number is a key-to-fill ratio, so higher means harsher. */
 export function fillRatioWords(ratio: number): string {
   const v = Number(ratio) || 3;
-  if (v <= 1.6) return "shadows almost as bright as the lit side: flat, even, no drama";
-  if (v <= 2.5) return "soft shadows that keep their detail";
-  if (v <= 4) return "clearly modelled shadows with detail still readable in them";
-  if (v <= 6) return "deep shadows that hold only a little detail";
-  return "near-black shadows: the lit edge does all the describing";
+  if (v <= 1.6) return "flat, even light; shadows almost as bright as the lit side";
+  if (v <= 2.5) return "soft shadows, detail kept";
+  if (v <= 4) return "clearly modelled shadows, detail still readable";
+  if (v <= 6) return "deep shadows, little detail held";
+  return "near-black shadows; the lit edge does the describing";
 }
 
 /** Camera tilt as a visible angle. Zero is the common and correct answer. */
 export function tiltWords(degrees: number): string {
   const v = Math.abs(Number(degrees) || 0);
-  if (v < 1) return "the camera level, horizon true, no tilt";
-  if (v < 3) return "the camera tilted barely a degree or two off level, enough to feel alive and not enough to read as a mistake";
-  if (v < 6) return "the camera tilted a few degrees off level for tension";
-  return "the camera clearly tilted off level, the tilt an intentional part of the picture";
+  if (v < 1) return "the camera level, no tilt";
+  if (v < 3) return "the camera tilted barely off level";
+  if (v < 6) return "the camera tilted a few degrees off level, for tension";
+  return "the camera clearly and deliberately tilted off level";
 }
 
 /** Camera height relative to the subject. Named by what it does, not by a number. */
 export type CameraHeight = "low" | "subject_line" | "slightly_above" | "high" | "overhead";
 
 export const CAMERA_HEIGHT_WORDS: Record<CameraHeight, string> = {
-  low: "the lens below the subject's mid-line, looking slightly up so the subject stands over the viewer",
-  subject_line: "the lens level with the subject's mid-line, the honest eye-level view",
-  slightly_above: "the lens a little above the subject's mid-line, looking gently down",
-  high: "the lens well above the subject, looking down across the arrangement",
-  overhead: "the lens directly overhead, looking straight down on the surface",
+  low: "the lens below the subject's mid-line, looking up",
+  subject_line: "the lens level with the subject's mid-line",
+  slightly_above: "the lens a little above the subject's mid-line, looking down",
+  high: "the lens well above the subject, looking down across it",
+  overhead: "the lens directly overhead, straight down",
 };
 
 /** Key-light direction. Named by where the light comes from and what it does to the form. */
@@ -168,13 +168,13 @@ export type KeyDirection =
   | "front_left" | "front_right" | "side_left" | "side_right" | "back_left" | "back_right" | "top";
 
 export const KEY_DIRECTION_WORDS: Record<KeyDirection, string> = {
-  front_left: "the key light from the front left, high, so shadows fall back and to the right",
-  front_right: "the key light from the front right, high, so shadows fall back and to the left",
-  side_left: "the key light from the left side, raking across the subject so its form is described by the shadow edge",
-  side_right: "the key light from the right side, raking across the subject so its form is described by the shadow edge",
-  back_left: "the key light from behind and to the left, so the subject is rimmed and its front is modelled by fill alone",
-  back_right: "the key light from behind and to the right, so the subject is rimmed and its front is modelled by fill alone",
-  top: "the key light from directly above, close in, so shadows pool tightly under the subject",
+  front_left: "a high key light from the front left, shadows falling back and right",
+  front_right: "a high key light from the front right, shadows falling back and left",
+  side_left: "a key light raking from the left, the form described by the shadow edge",
+  side_right: "a key light raking from the right, the form described by the shadow edge",
+  back_left: "a key light behind and left, the subject rimmed, its front on fill alone",
+  back_right: "a key light behind and right, the subject rimmed, its front on fill alone",
+  top: "a close key light directly above, shadows pooling under the subject",
 };
 
 /**
@@ -204,11 +204,114 @@ const NEUTRAL_NAMES: Record<string, string> = {
   "#23211e": "a near-black charcoal with a warm cast",
 };
 
-function hexToRgb(hex: string): [number, number, number] | null {
+export function hexToRgb(hex: string): [number, number, number] | null {
   const m = /^#?([0-9a-f]{6})$/i.exec(String(hex || "").trim());
   if (!m) return null;
   const n = parseInt(m[1], 16);
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+
+/**
+ * WCAG relative luminance, 0 (black) to 1 (white). Null when the input is not a hex.
+ *
+ * The real formula rather than a cheap average, because the cheap one is wrong in exactly
+ * the case that matters: pure yellow and pure blue have nearly the same naive average and
+ * wildly different perceived brightness, so an "accent" picked by average can be invisible
+ * against its own background.
+ */
+export function relativeLuminance(hex: string): number | null {
+  const rgb = hexToRgb(hex);
+  if (!rgb) return null;
+  const channel = (v: number) => {
+    const s = v / 255;
+    return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+  };
+  return 0.2126 * channel(rgb[0]) + 0.7152 * channel(rgb[1]) + 0.0722 * channel(rgb[2]);
+}
+
+/** WCAG contrast ratio, 1 to 21. Null when either input is not a hex. */
+export function contrastRatio(a: string, b: string): number | null {
+  const la = relativeLuminance(a);
+  const lb = relativeLuminance(b);
+  if (la === null || lb === null) return null;
+  return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+}
+
+/**
+ * The floor for text against whatever it sits on. WCAG AA for body text.
+ *
+ * Applied to a drawn image rather than to a web page, which is a stricter situation than
+ * the standard was written for: the viewer cannot zoom a poster, and a one-pass renderer
+ * will not be nudging the colour afterwards.
+ */
+export const TEXT_CONTRAST_MIN = 4.5;
+
+/**
+ * How far an accent must sit from the field in luminance before it reads as emphasis.
+ *
+ * The measured defect this exists for: the four-dish brief derived `#f7f5f1` as its accent
+ * from the words "white ceramic", against a `#f2efe9` field. Both are off-whites. An
+ * accent that close to its ground is not an accent — it is a slightly different
+ * background, and "a small part is the accent, a very pale white" is an instruction that
+ * cannot be followed.
+ *
+ * A luminance DELTA rather than a contrast ratio because an accent is a shape against a
+ * ground, not text to be read: 0.15 is roughly the point at which a shape stops reading as
+ * a smudge, well below the 4.5:1 a letterform needs.
+ */
+export const ACCENT_LUMINANCE_DELTA_MIN = 0.15;
+
+/** True when `accent` is far enough from `field` in luminance to read as emphasis. */
+export function accentSeparates(accent: string, field: string): boolean {
+  const a = relativeLuminance(accent);
+  const f = relativeLuminance(field);
+  if (a === null || f === null) return false;
+  return Math.abs(a - f) >= ACCENT_LUMINANCE_DELTA_MIN;
+}
+
+/**
+ * A neutral that is readable on this background, derived from the background itself.
+ *
+ * The last resort when every tier's candidate failed its contrast check. Derived from the
+ * background's own luminance and from nothing else — no industry, no product type, no
+ * occasion — so it is always either a near-black or a near-white, whichever the ground can
+ * carry.
+ *
+ * The two values are the darkest and lightest the palette's own neutral range already
+ * uses, so this never introduces a colour the rest of the sheet does not know.
+ */
+export const NEUTRAL_INK = "#1a1a1a";
+export const NEUTRAL_PAPER = "#f7f5f1";
+
+export function readableNeutralFor(background: string): string {
+  const l = relativeLuminance(background);
+  // An unreadable background is treated as light, which is the common case and the one
+  // where ink is the safe answer.
+  if (l === null) return NEUTRAL_INK;
+  // Whichever actually MEASURES best, not whichever a luminance threshold guesses.
+  //
+  // The first draft returned paper below a 0.45 threshold. On the brand-kit fixture's
+  // `#e01b24` red — luminance 0.17, comfortably "dark" — that gave 4.4 to 1, just under the
+  // floor, and ink was worse at 3.6. A threshold cannot know that; a ratio can.
+  //
+  // The tasteful pair is tried first and the PURE pair only if neither clears the floor,
+  // because that is what a last resort is for: on a saturated field no off-white reaches AA,
+  // and pure white on that red reaches 4.8. A softer default that cannot be read is not a
+  // softer default, it is an unreadable one.
+  const candidates = [NEUTRAL_INK, NEUTRAL_PAPER, "#000000", "#ffffff"];
+  let best = NEUTRAL_INK;
+  let bestRatio = 0;
+  for (const candidate of candidates) {
+    const ratio = contrastRatio(candidate, background) ?? 0;
+    if (ratio >= TEXT_CONTRAST_MIN) return candidate;
+    if (ratio > bestRatio) {
+      bestRatio = ratio;
+      best = candidate;
+    }
+  }
+  // Nothing cleared the floor. The field itself is the problem — a mid-grey carries no type
+  // at all — so this returns the best available and the caller records the shortfall.
+  return best;
 }
 
 /**
@@ -256,5 +359,5 @@ export function colourWords(hex: string): string {
 export function capHeightFloorWords(pct: number, density: "words_only" | "words_plus_percent"): string {
   return density === "words_plus_percent"
     ? `at least ${percentWords(pct)} of the canvas height`
-    : `tall enough to read without effort at a glance — never thinner than a hairline against the background`;
+    : `tall enough to read at a glance`;
 }

@@ -555,6 +555,25 @@ export class SimpleImageGenerationOrchestratorService {
         }
       }
 
+      // Hand the manifest back to whoever owns the request.
+      //
+      // Measured gap: the Art Direction Sheet reads `request.inspirationStyleManifest`, and
+      // on a live render it was always absent — because the manifest is computed HERE, in a
+      // local, and only ever travels forwards into the compiler input. The pipeline that
+      // built the sheet had already passed this object in and was reading it again later,
+      // from inside the provider wrapper, long after this line has run. So the user's mood
+      // image reached the Gemini compiler and never reached the sheet.
+      //
+      // One assignment rather than threading a getter through the orchestrator: the
+      // pipeline's `renderSource` is the identity on this path, so it is the same object.
+      //
+      // ponytail: in EDITABLE mode `renderSource` shallow-copies the request, so this write
+      // lands on the copy and the sheet still sees nothing. Editable mode renders the scene
+      // only and does not use the art-director path today; revisit if that changes.
+      if (inspirationStyleManifest && !request.inspirationStyleManifest) {
+        request.inspirationStyleManifest = inspirationStyleManifest;
+      }
+
       // 4.7 Inspiration Image Withholding Decision
       // Decided BEFORE compilation so the prompt describes the attachments that will
       // actually be sent. The inspiration image is a second product photo; handing it to

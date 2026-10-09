@@ -51,8 +51,17 @@ import type { NumericWordsDensity } from "../engine-selector";
 import { exclusionsFor, industryLabel } from "./industry-label";
 import { extractConceptSpecs, conceptWithoutSpecs, type ConceptSpecs } from "./concept-specs";
 import { printRuleFor, type PrintRule } from "./print-rule";
-import { resolvePrecedence } from "./precedence";
-import { COLOUR_HEX, colourWords, type CameraHeight, type KeyDirection } from "./words";
+import { resolvePrecedence, type Candidate } from "./precedence";
+import {
+  COLOUR_HEX,
+  TEXT_CONTRAST_MIN,
+  accentSeparates,
+  colourWords,
+  contrastRatio,
+  readableNeutralFor,
+  type CameraHeight,
+  type KeyDirection,
+} from "./words";
 
 // ──────────────────────────────────────────────────────────────────────────
 // The schema
@@ -128,12 +137,32 @@ export const ArtDirectionSheetSchema = z.object({
     props: z.array(z.string()),
     culture_signals: z.array(z.string()),
     exclusions: z.array(z.string()),
+    /**
+     * What the mood image contributed, in words. Composition, light and colour only.
+     *
+     * On the SHEET rather than only in the adapter, which is where the first draft put it:
+     * the adapter is one of several callers, so a fixture or a script that built a sheet
+     * directly got a sheet whose mood image had silently contributed nothing. A field here
+     * travels with the sheet for everyone.
+     *
+     * Empty unless the manifest was read FROM the image — see `SheetInput.styleManifest`.
+     */
+    mood_reference: z.array(z.string()),
   }),
 
   palette: z.object({
     sixty: z.string(),
     thirty: z.string(),
     ten: z.string(),
+    /**
+     * The colour type is set in, at or above WCAG AA against the field.
+     *
+     * A field of its own rather than reusing the accent, which is what the first draft did:
+     * an accent is a shape against a ground and needs only to separate, while a letterform
+     * has to be READ. The two floors are different numbers and conflating them meant one of
+     * the two was always wrong.
+     */
+    text: z.string(),
     /**
      * The product's own dominant colour, as a hex, or null when nothing named one.
      *
@@ -169,6 +198,19 @@ export const ArtDirectionSheetSchema = z.object({
   negatives: z.array(z.string()),
   /** One line per field where a lower-priority source wanted something else. */
   conflicts_resolved: z.array(z.string()),
+
+  /**
+   * Why a layer the sheet expected was missing, or null when nothing was.
+   *
+   * The sheet is built inside the provider wrapper, four lines after `blueprintFor` has
+   * populated `capturedBlueprint` and `capturedCompositionPlan`. That ordering is a fact
+   * about the current call sequence rather than a guarantee, so when a layer is absent the
+   * sheet says so instead of silently using its derived defaults — a render that quietly
+   * lost its composition plan looks exactly like one that never had it.
+   *
+   * Never throws. A missing layer degrades the sheet; it does not end the render.
+   */
+  sheet_fallback_reason: z.string().nullable(),
 
   /** Not creative. The record of how this sheet was made. */
   provenance: z.object({
@@ -240,6 +282,14 @@ export interface SheetInput {
   /** Phase 3's hook. Nothing populates it in this round. */
   detectedPrintedBranding?: Array<{ product: string; reads: string }> | null;
   density?: NumericWordsDensity;
+  /**
+   * Which upstream layers the caller could actually see, so the sheet can say when one was
+   * missing rather than quietly using a default.
+   *
+   * `undefined` means the caller is not reporting — a test or a fixture — and nothing is
+   * recorded. `null` for a named layer means the caller looked and it was not there.
+   */
+  upstream?: { blueprint: unknown | null; compositionPlan: unknown | null };
 }
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -474,10 +524,41 @@ function deriveLighting(
       rim: n <= 3,
       fill_ratio: approach === "restrained" ? 2 : approach === "bold" ? 5 : 3,
       shadow_rule:
-        "one light direction governs every highlight and every shadow in the frame; each object has a contact shadow where it meets the surface, and no object casts a shadow in a direction the others do not",
+        "one light direction governs every highlight and shadow in the frame; no object casts a shadow in a direction the others do not",
     },
     conflicts: kelvin.conflicts,
   };
+}
+
+/**
+ * The words a mood image legitimately contributes.
+ *
+ * Gated on `derived_from_image`, and `types.ts:628` records why: the LLM transport is
+ * text-only, so a manifest can be an inference FROM THE CONCEPT wearing the clothes of an
+ * observation, and injecting that as authoritative style reintroduces the generic studio
+ * look it was meant to replace.
+ *
+ * Composition, light direction and colour mood only. Never the reference image's OBJECTS:
+ * a mood photograph of a watch is a lighting instruction for a bottle, not a reason to
+ * draw a watch.
+ */
+function moodWords(input: SheetInput): string[] {
+  const m = input.styleManifest;
+  if (!m || m.derived_from_image !== true) return [];
+  const out: string[] = [];
+  const add = (label: string, value: unknown) => {
+    const text = trim(value);
+    if (text) out.push(`${label}: ${text}`);
+  };
+  add("composition read off the mood image", m.composition);
+  add("light direction read off the mood image", m.lighting);
+  add("colour mood read off the mood image", m.colorMood);
+  if (out.length) {
+    out.push(
+      "take its composition, light and colour only — none of the objects in the mood image appear in this picture",
+    );
+  }
+  return out;
 }
 
 /** The dominant colour word the product photographs or the product facts state. */
@@ -504,12 +585,18 @@ function derivePalette(input: SheetInput): { palette: ArtDirectionSheet["palette
   const kit = (input.brandKit?.colors || []).map((c) => trim(c.hex)).filter(Boolean);
   const product = dominantProductColour(input);
   const conceptColours = wordsIn(input.concept, Object.keys(COLOUR_HEX)).map((w) => COLOUR_HEX[w]);
+  // A colour read off the mood image, and only when it was read off the IMAGE. `types.ts:628`
+  // records why: the transport is text-only, so a manifest can be an inference from the
+  // concept wearing the clothes of an observation.
+  const moodColour =
+    input.styleManifest?.derived_from_image === true
+      ? wordsIn(String(input.styleManifest.colorMood || ""), Object.keys(COLOUR_HEX)).map((w) => COLOUR_HEX[w])[0]
+      : undefined;
 
   // Neutral grounds, used when nothing in the brief names a colour for the field. Light and
   // dark so a dark product is not placed on near-black.
   const NEUTRAL_LIGHT = "#f2efe9";
   const NEUTRAL_MID = "#d8d2c6";
-  const NEUTRAL_DARK = "#23211e";
 
   const clashes = (hex: string) => Boolean(product && lower(hex) === lower(product.hex));
 
@@ -540,26 +627,94 @@ function derivePalette(input: SheetInput): { palette: ArtDirectionSheet["palette
     { tier: "default", value: sixty.value === NEUTRAL_LIGHT ? NEUTRAL_MID : NEUTRAL_LIGHT, from: "a neutral against the field" },
   ]);
 
+  const field = sixty.value ?? NEUTRAL_LIGHT;
+
+  // ── The accent, through the contrast guard ──────────────────────────────
+  //
   // The accent is the one place the product's own colour, or a clashing brand colour, is
-  // not only safe but useful: ten percent of the frame reads as emphasis, not as ground.
-  const ten = resolvePrecedence<string>("palette.ten", [
-    { tier: "brand_kit", value: kit.find(clashes) || kitUsable[2], from: "a brand colour, as emphasis" },
+  // not only safe but useful: a tenth of the frame reads as emphasis rather than as ground.
+  // But only if it SEPARATES from the field.
+  //
+  // Measured defect: the four-dish brief derived `#f7f5f1` from "white ceramic" against an
+  // `#f2efe9` field — two off-whites — and the prompt then said "a small part is the
+  // accent, a very pale white", which is not an instruction anyone can follow.
+  //
+  // So each tier's candidate is tested and a failing one is SKIPPED rather than demoted:
+  // precedence decides which colours are considered, and the guard decides which of them
+  // can do the job. A rejection is recorded, because "why is the accent not the brand
+  // colour" has to have an answer.
+  const accentCandidates: Candidate<string>[] = [
+    { tier: "brand_kit", value: kit.find(clashes) || kitUsable[2] || kit[0], from: "a brand colour, as emphasis" },
+    { tier: "mood_reference", value: moodColour, from: "a colour read off the mood image" },
     { tier: "product_appearance", value: product?.hex, from: `the product is ${product?.word}` },
     { tier: "concept_text", value: conceptColours[0], from: "a colour named in the concept" },
-    { tier: "default", value: NEUTRAL_DARK, from: "nothing named an accent" },
+  ];
+  const accentUsable: Candidate<string>[] = [];
+  for (const candidate of accentCandidates) {
+    if (!candidate.value) continue;
+    if (accentSeparates(candidate.value, field)) {
+      accentUsable.push(candidate);
+      continue;
+    }
+    conflicts.push(
+      `palette.ten: ${candidate.tier} (${candidate.from}) offered ${candidate.value}, which is too ` +
+        `close in luminance to the field ${field} to read as emphasis — skipped`,
+    );
+  }
+  const ten = resolvePrecedence<string>("palette.ten", [
+    ...accentUsable,
+    // Derived from the field's own luminance and from nothing else. Never industry-keyed.
+    { tier: "default", value: readableNeutralFor(field), from: "every named colour failed the contrast guard" },
+  ]);
+
+  // ── The text colour, at WCAG AA against what it sits on ────────────────
+  //
+  // Small text sits on a card or a flat area of the surface, which is the FIELD colour, so
+  // that is what the ratio is measured against. A brand's own text colour is tried first
+  // and is held to the same floor as everything else: a kit that specifies unreadable text
+  // has specified a defect, and the client would rather have legible type than an obeyed
+  // hex nobody can read.
+  const textCandidates: Candidate<string>[] = [
+    {
+      tier: "brand_kit",
+      value: (input.brandKit?.colors || []).find((c) => lower(c.role) === "text")?.hex,
+      from: "the kit's text colour",
+    },
+    { tier: "brand_kit", value: kitUsable[0], from: "the kit's first colour" },
+    { tier: "product_appearance", value: ten.value, from: "the accent" },
+  ];
+  const textUsable: Candidate<string>[] = [];
+  for (const candidate of textCandidates) {
+    if (!candidate.value) continue;
+    const ratio = contrastRatio(candidate.value, field);
+    if (ratio !== null && ratio >= TEXT_CONTRAST_MIN) {
+      textUsable.push(candidate);
+      continue;
+    }
+    conflicts.push(
+      `palette.text: ${candidate.tier} (${candidate.from}) offered ${candidate.value}, which reaches only ` +
+        `${(ratio ?? 0).toFixed(1)} to 1 against the field ${field} — below the ${TEXT_CONTRAST_MIN} to 1 ` +
+        `type needs, so it is skipped`,
+    );
+  }
+  const text = resolvePrecedence<string>("palette.text", [
+    ...textUsable,
+    { tier: "default", value: readableNeutralFor(field), from: "derived from the field's own luminance" },
   ]);
 
   return {
     palette: {
-      sixty: sixty.value ?? NEUTRAL_LIGHT,
+      sixty: field,
       thirty: thirty.value ?? NEUTRAL_MID,
-      ten: ten.value ?? NEUTRAL_DARK,
+      ten: ten.value ?? readableNeutralFor(field),
+      text: text.value ?? readableNeutralFor(field),
       product_dominant: product?.hex ?? null,
       reason:
-        `field from ${sixty.tier}, secondary from ${thirty.tier}, accent from ${ten.tier}` +
+        `field from ${sixty.tier}, secondary from ${thirty.tier}, accent from ${ten.tier}, ` +
+        `type from ${text.tier}` +
         (product ? `; the product reads ${product.word}, so the field is not that colour` : ""),
     },
-    conflicts: [...conflicts, ...sixty.conflicts, ...thirty.conflicts, ...ten.conflicts],
+    conflicts: [...conflicts, ...sixty.conflicts, ...thirty.conflicts, ...ten.conflicts, ...text.conflicts],
   };
 }
 
@@ -602,7 +757,10 @@ function deriveTextManifest(
               ? "grouped with the other numbered lines, on a flat card inside the text zone"
               : "directly under the headline, inside the text zone",
       size_pct,
-      colour: role === "headline" ? palette.ten : palette.ten,
+      // `palette.text`, which has passed the WCAG AA guard against the field. The first
+      // draft used the accent for every role, which meant a type colour chosen by a rule
+      // about SHAPES against a ground.
+      colour: palette.text,
     };
   });
 }
@@ -643,18 +801,18 @@ export function realismDetails(productCount: number): string[] {
     // The single-light-direction rule lives in `lighting.shadow_rule` and is NOT repeated
     // here: both blocks land in the same master-prompt section, and the first draft of this
     // file put the same sentence in the prompt twice.
-    "every object meets the surface with a contact shadow, darkest where they touch and softening outward, plus a faint reflection where the surface is glossy",
+    "every object meets the surface with a contact shadow, darkest where they touch, plus a faint reflection where the surface is glossy",
     // The three depth layers are stated by `arrangement`, and both blocks land in the same
     // master-prompt section. Saying it twice is how a prompt grows without saying more.
-    "focus falls away outward from the hero rather than uniformly across the frame",
-    "micro-imperfections, asymmetric: a droplet or drip that is not mirrored, a crumb out of line, real variation in the material",
-    "true scale between objects — each the size it would really be beside the others",
-    "no waxy, plastic or over-smoothed surfaces, and no HDR halo on any edge",
+    "focus falls away outward from the hero, not uniformly",
+    "asymmetric micro-imperfections: an unmirrored droplet, a crumb out of line, real variation in the material",
+    "true scale between objects",
+    "no waxy, plastic or over-smoothed surfaces, no HDR halo",
   ];
   if (productCount > 1) {
     // The specific tell of a generated group, and only relevant when there is a group.
     lines.push(
-      "no two items are identical copies: where products are of the same kind, their highlights, garnishes, fill levels and small marks all differ",
+      "no two items are identical copies: highlights, garnishes, fill levels and small marks all differ",
     );
   }
   return lines;
@@ -755,9 +913,10 @@ export function buildArtDirectionSheet(input: SheetInput): ArtDirectionSheet {
       surface: surfaceWord
         ? `${surfaceWord}, as the concept states`
         : "a plain matte surface a shade darker than the background, with no pattern of its own",
-      background: `a plain field of ${colourWords(pal.palette.sixty)}, falling softly out of focus behind the subject`,
+      background: `a plain field of ${colourWords(pal.palette.sixty)}, softly out of focus`,
       props: [],
       culture_signals: [],
+      mood_reference: moodWords(input),
       exclusions: [
         ...exclusionsFor(input.industry),
         ...conceptExclusions,
@@ -777,19 +936,20 @@ export function buildArtDirectionSheet(input: SheetInput): ArtDirectionSheet {
         small: profile.min_cap_height_pct,
       },
       treatment_over_texture:
-        "small text sits on a flat card, a plain panel or an untextured area of the surface — never over the product, never over texture, never over a gradient that crosses it",
+        "small text sits on a flat card or a plain untextured area — never over the product, never over texture",
     },
     text_manifest: manifest,
     realism_details: realismDetails(input.products.length),
     finish:
-      "a gentle S-curve in the tone, highlights rolling off softly rather than clipping, blacks that keep detail, and no sharpening halo on any edge",
+      "a gentle S-curve in the tone, highlights rolling off rather than clipping, blacks that keep detail, no sharpening halo",
     negatives: [
-      "no text, numeral, word or character other than the strings listed",
-      "no logo, wordmark, emblem or icon other than the one the print rule allows",
-      "no second or duplicate copy of any product",
-      "no watermark, no signature, no frame or border drawn inside the image",
+      "no text, numeral or character other than the strings listed",
+      "no logo, wordmark, emblem or icon beyond what the print rule allows",
+      "no duplicate copy of any product",
+      "no watermark, signature, frame or border inside the image",
     ],
     conflicts_resolved: conflicts,
+    sheet_fallback_reason: fallbackReason(input),
     provenance: {
       asset_family: profile.family,
       aspect_ratio: trim(input.aspectRatio) || "1:1",
@@ -816,7 +976,51 @@ export function buildArtDirectionSheet(input: SheetInput): ArtDirectionSheet {
     );
   }
 
-  return ArtDirectionSheetSchema.parse(sheet);
+  // Every number rounded to one decimal, once, here.
+  //
+  // At the source would mean remembering it at a dozen call sites and forgetting it at the
+  // thirteenth: the measured leak was `supporting: 3.5999999999999996`, which is
+  // `min_cap_height_pct * 1.2` and perfectly correct arithmetic. It is also noise in an
+  // artifact whose whole job is to be read by a person, and one more decimal of a cap
+  // height is precision nothing downstream can act on.
+  return ArtDirectionSheetSchema.parse(roundNumbers(sheet));
+}
+
+/** One decimal, everywhere, recursively. Arrays and objects in, same shape out. */
+export function roundNumbers<T>(value: T): T {
+  if (typeof value === "number") return (Math.round(value * 10) / 10) as unknown as T;
+  if (Array.isArray(value)) return value.map(roundNumbers) as unknown as T;
+  if (value && typeof value === "object") {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) out[k] = roundNumbers(v);
+    return out as T;
+  }
+  return value;
+}
+
+/**
+ * Why an upstream layer the sheet expected was missing, or null when none was.
+ *
+ * VERIFIED ordering: `blueprintFor` is called at `wrapProvider:556` and `v2For()` is
+ * awaited at `:561`, so `capturedBlueprint` and `capturedCompositionPlan` are populated by
+ * the time the adapter builds the sheet. That is a fact about the current call sequence,
+ * not a guarantee the code enforces — if the wrapper is ever reordered, the sheet silently
+ * loses two inputs and still looks complete.
+ *
+ * So the absence is recorded instead. It never throws: a missing layer degrades the sheet
+ * to its derived defaults, which is the behaviour the whole derivation was written for, and
+ * ending a paid render over a missing advisory input would be the worse failure.
+ */
+function fallbackReason(input: SheetInput): string | null {
+  const missing: string[] = [];
+  if (input.upstream && input.upstream.blueprint === null) missing.push("the creative blueprint");
+  if (input.upstream && input.upstream.compositionPlan === null) missing.push("the composition plan");
+  if (!missing.length) return null;
+  return (
+    `${missing.join(" and ")} ${missing.length === 1 ? "was" : "were"} not available when the sheet was ` +
+    `built, so those inputs fell back to the derivation defaults. Check the order of ` +
+    `blueprintFor and v2For in wrapProvider.`
+  );
 }
 
 /** The print rule for a sheet's inputs. Exported so the brief and the tests agree. */

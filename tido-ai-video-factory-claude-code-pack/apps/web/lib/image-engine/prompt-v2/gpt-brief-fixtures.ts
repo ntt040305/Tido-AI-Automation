@@ -57,6 +57,19 @@ export interface GptBriefFixture {
   logo?: boolean;
   /** A mood / inspiration reference. Never travels as an image. */
   styleRef?: { description: string };
+  /**
+   * Style read off the mood image, in words.
+   *
+   * Distinct from `styleRef`, which is an uploaded image that occupies a reference slot.
+   * This is what the inspiration vision pass WROTE about one, and the sheet honours it only
+   * when `derived_from_image` is true — see `SheetInput.styleManifest`.
+   */
+  styleManifest?: {
+    composition?: string;
+    lighting?: string;
+    colorMood?: string;
+    derived_from_image?: boolean;
+  };
   productFacts?: string[];
   brandKit?: GptBriefInput["brandKit"];
   strategy?: { label: string; text: string }[];
@@ -294,6 +307,41 @@ export const GPT_BRIEF_FIXTURES: GptBriefFixture[] = [
     notes:
       "The kit's primary is the product's own colour. The background may not be it, or the product disappears.",
   },
+  {
+    id: "15_single_product_vertical",
+    assetType: "Social Ad",
+    aspectRatio: "9:16",
+    industry: "beauty_skincare",
+    intendedUse: "a TikTok post",
+    concept:
+      "One bottle held up against a bright window, clean and fresh, the morning light doing all the work.",
+    brand: "Sương",
+    copy: ["Sáng da sau 7 ngày", "Thử ngay"],
+    products: [{ description: "a tall frosted glass bottle of vitamin C serum", ...SQ }],
+    productFacts: ['the label reads "SUONG / VITAMIN C"', "frosted glass, matte white cap"],
+    notes:
+      "Step 1i case 3: one product on the vertical canvas, where the platform draws its own interface over the top and bottom bands.",
+  },
+  {
+    id: "16_mood_manifest_present",
+    assetType: "Poster",
+    aspectRatio: "1:1",
+    industry: "home_lifestyle",
+    concept: "The candle on a dark table, lit the way the reference is lit, nothing else in the room.",
+    brand: "Trầm",
+    copy: ["Hương trầm", "Đốt một lần, thơm cả ngày"],
+    products: [{ description: "a ribbed amber glass candle with a brass lid", ...SQ }],
+    styleManifest: {
+      composition: "the subject low and left, two thirds of the frame empty above it",
+      lighting: "a single hard light from the right, deep shadow filling the left",
+      colorMood: "deep brown and black, one warm highlight",
+      // TRUE, which is the whole point of this fixture: the sheet must honour a manifest
+      // that was read off the image and ignore one that was inferred from the concept.
+      derived_from_image: true,
+    },
+    notes:
+      "Step 1i case 5 and Step 1c: the mood manifest is present and was read FROM the image, so its composition, light and colour may travel — and its objects may not.",
+  },
 ];
 
 /** The allocation this fixture produces on the active model's ceilings. */
@@ -408,6 +456,7 @@ export function artDirectorBriefInputFor(
     productFacts: fx.productFacts,
     brandKit: fx.brandKit ?? null,
     strategy: fx.strategy,
+    styleManifest: fx.styleManifest ?? null,
     density,
   };
   return {

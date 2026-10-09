@@ -94,6 +94,14 @@ export interface GptPipelineInput {
   targetChannel?: string;
   /** Phase 3's hook. Nothing populates it in this round. */
   detectedPrintedBranding?: Array<{ product: string; reads: string }> | null;
+  /**
+   * What the caller could see of the layers that run just before it.
+   *
+   * Reported rather than assumed: the pipeline builds the sheet four lines after
+   * `blueprintFor` populates these, and that ordering is a fact about the current call
+   * sequence rather than something the code enforces.
+   */
+  upstream?: { blueprint: unknown | null; compositionPlan: unknown | null };
 }
 
 function roleKind(role: string): AllocationInput["kind"] {
@@ -204,7 +212,7 @@ export function asSimpleResult(gpt: GptEngineResult): SimpleResult {
  * a mood photograph of a watch is a lighting instruction for a bottle, not a reason to
  * draw a watch.
  */
-function styleWords(manifest: GptPipelineInput["styleManifest"]): { label: string; text: string }[] {
+export function styleWords(manifest: GptPipelineInput["styleManifest"]): { label: string; text: string }[] {
   if (!manifest || manifest.derived_from_image !== true) return [];
   const out: { label: string; text: string }[] = [];
   const add = (label: string, value: unknown) => {
@@ -247,10 +255,14 @@ function sheetInputFor(input: GptPipelineInput, allocation: Allocation | null): 
     userControls: input.userControls,
     userApproach: input.userApproach ?? null,
     inferredApproach: input.inferredApproach ?? null,
-    strategy: [...(input.strategy || []), ...styleWords(input.styleManifest)],
+    // `styleWords` is retained below for callers that want the lines on their own, but the
+    // mood words now ride on the SHEET (`set.mood_reference`) so every caller gets them.
+    // Pushing them into STRATEGY as well put the same three lines in the brief twice.
+    strategy: input.strategy,
     styleManifest: input.styleManifest ?? null,
     detectedPrintedBranding: input.detectedPrintedBranding ?? null,
     density: numericWordsDensity(),
+    upstream: input.upstream,
   };
 }
 
@@ -286,6 +298,9 @@ export async function buildGptForPipeline(
     const printRule = sheetInput ? printRuleForSheet(sheetInput) : null;
     if (sheet) {
       console.log("[PROMPT_GPT][SHEET]", JSON.stringify(sheetTelemetry(sheet)));
+      if (sheet.sheet_fallback_reason) {
+        console.warn(`[PROMPT_GPT][SHEET][DEGRADED] ${sheet.sheet_fallback_reason}`);
+      }
     }
 
     const briefInput: GptBriefInput = {

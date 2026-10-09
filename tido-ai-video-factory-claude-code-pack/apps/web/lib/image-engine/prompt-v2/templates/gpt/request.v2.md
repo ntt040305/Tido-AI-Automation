@@ -14,9 +14,26 @@ Concept, exactly as the client wrote it:
 {{CONCEPT}}
 
 Nothing in this section may be paraphrased, translated, corrected or improved. Where it
-conflicts with anything below, it wins. Where it names a culture, a region, a festival or
-an occasion, YOU name the exact visual identifiers of it and the nearest confusion to
-exclude — that judgement is yours, not the sheet's.
+conflicts with anything below, it wins.
+
+CULTURAL, REGIONAL AND SEASONAL SPECIFICS ARE YOUR JUDGEMENT, NOT THE SHEET'S.
+Where the concept names a culture, a region, a festival, a season or an occasion, you must
+do two things in SCENE & CONCEPT:
+
+1. Name the EXACT visual identifiers — species, number of petals, colour, material, form,
+   the way the thing is actually made or worn or arranged in that place.
+2. Name the nearest neighbour that must be EXCLUDED, explicitly.
+
+The failure this prevents, measured on real renders: a Vietnamese Tết brief asks for
+*hoa mai*, a yellow five-petalled apricot blossom on a bare dark branch, and the render
+comes back with pink Japanese cherry blossom — the most statistically common "festive
+blossom" in any image model's training data. The two are not interchangeable and the
+substitution is immediately obvious to the audience the asset is for. "Yellow apricot
+blossom, five petals, on bare brown branches; NOT pink cherry blossom and NOT plum" is
+the level of specificity required, in whatever the concept's own culture needs it.
+
+The sheet deliberately contains no lookup table for this, and must never grow one: a table
+would be wrong in a way nobody notices. You have read the concept. You do it.
 
 ## C — REFERENCES
 

@@ -1,74 +1,60 @@
-# 03_three_products_square
-# Three products against a two-slot ceiling: the first case that must pack a sheet.
-# templates: v2 / social / gpt-image
+# 16_mood_manifest_present
+# Step 1i case 5 and Step 1c: the mood manifest is present and was read FROM the image, so its composition, light and colour may travel — and its objects may not.
+# templates: v2 / poster / gpt-image
 
 === ART DIRECTION SHEET (the decisions, with their concrete values) ===
 {
-  "big_idea": "Three cans standing in a row, bright and graphic, flat afternoon light.",
-  "mood": "cool and clean, assured",
-  "audience_tone": "whoever this social is for, addressed directly and without hype",
+  "big_idea": "The candle on a dark table, lit the way the reference is lit, nothing else in the room.",
+  "mood": "warm, assured",
+  "audience_tone": "whoever this poster is for, addressed directly and without hype",
   "products": [
     {
       "id": "1",
-      "material": "unverified",
+      "material": "glass, brass",
       "size_class": "unverified",
-      "colours": [],
+      "colours": [
+        "amber"
+      ],
       "printed_branding": "unverified",
-      "description": "slim can, citrus"
-    },
-    {
-      "id": "2",
-      "material": "unverified",
-      "size_class": "unverified",
-      "colours": [],
-      "printed_branding": "unverified",
-      "description": "slim can, berry"
-    },
-    {
-      "id": "3",
-      "material": "unverified",
-      "size_class": "unverified",
-      "colours": [],
-      "printed_branding": "unverified",
-      "description": "slim can, ginger"
+      "description": "a ribbed amber glass candle with a brass lid"
     }
   ],
   "hero": {
     "id": "1",
-    "reason": "no product is named in the copy, so the first attached leads"
+    "reason": "the only product"
   },
   "canvas_zones": {
     "safe_margin_pct": 5,
     "platform_ui": null,
     "subject": {
-      "top_pct": 29,
+      "top_pct": 26,
       "left_pct": 5,
       "width_pct": 90,
-      "height_pct": 66
+      "height_pct": 69
     },
     "text": {
       "top_pct": 5,
       "left_pct": 5,
       "width_pct": 90,
-      "height_pct": 24
+      "height_pct": 21
     },
     "negative_space_pct": 19
   },
   "arrangement": {
     "depth_layers": 3,
-    "overlaps": true,
-    "hero_scale_pct": 55
+    "overlaps": false,
+    "hero_scale_pct": 50
   },
   "camera": {
     "height": "slightly_above",
     "tilt_deg": 0,
-    "lens_mm": 70,
-    "aperture": 4,
+    "lens_mm": 85,
+    "aperture": 2.8,
     "focus_rule": "the hero is crisp from its nearest edge through its label, and focus falls away outward from the hero in every direction"
   },
   "lighting": {
     "key_direction": "front_left",
-    "kelvin": 5600,
+    "kelvin": 3200,
     "rim": true,
     "fill_ratio": 3,
     "shadow_rule": "one light direction governs every highlight and shadow in the frame; no object casts a shadow in a direction the others do not"
@@ -79,39 +65,44 @@
     "props": [],
     "culture_signals": [],
     "exclusions": [],
-    "mood_reference": []
+    "mood_reference": [
+      "composition read off the mood image: the subject low and left, two thirds of the frame empty above it",
+      "light direction read off the mood image: a single hard light from the right, deep shadow filling the left",
+      "colour mood read off the mood image: deep brown and black, one warm highlight",
+      "take its composition, light and colour only — none of the objects in the mood image appear in this picture"
+    ]
   },
   "palette": {
     "sixty": "#f2efe9",
     "thirty": "#d8d2c6",
-    "ten": "#c7a781",
+    "ten": "#c98a2e",
     "text": "#1a1a1a",
-    "product_dominant": null,
-    "reason": "field from default, secondary from default, accent from concept_text, type from default"
+    "product_dominant": "#c98a2e",
+    "reason": "field from default, secondary from default, accent from product_appearance, type from default; the product reads amber, so the field is not that colour"
   },
   "typography": {
     "families": [],
     "hierarchy": "the headline dominant, the supporting line a little over a third of it, the smallest line a third",
     "sizes_pct": {
-      "headline": 10.5,
-      "supporting": 3.6,
-      "small": 3
+      "headline": 7.7,
+      "supporting": 2.6,
+      "small": 2.2
     },
     "treatment_over_texture": "small text sits on a flat card or a plain untextured area — never over the product, never over texture"
   },
   "text_manifest": [
     {
       "role": "headline",
-      "exact_string": "Ba vị mới",
+      "exact_string": "Hương trầm",
       "position": "at the top of the text zone, first in the reading order",
-      "size_pct": 10.5,
+      "size_pct": 7.7,
       "colour": "#1a1a1a"
     },
     {
       "role": "supporting line",
-      "exact_string": "Có mặt tại mọi cửa hàng",
+      "exact_string": "Đốt một lần, thơm cả ngày",
       "position": "directly under the headline, inside the text zone",
-      "size_pct": 3.6,
+      "size_pct": 2.6,
       "colour": "#1a1a1a"
     }
   ],
@@ -120,8 +111,7 @@
     "focus falls away outward from the hero, not uniformly",
     "asymmetric micro-imperfections: an unmirrored droplet, a crumb out of line, real variation in the material",
     "true scale between objects",
-    "no waxy, plastic or over-smoothed surfaces, no HDR halo",
-    "no two items are identical copies: highlights, garnishes, fill levels and small marks all differ"
+    "no waxy, plastic or over-smoothed surfaces, no HDR halo"
   ],
   "finish": "a gentle S-curve in the tone, highlights rolling off rather than clipping, blacks that keep detail, no sharpening halo",
   "negatives": [
@@ -131,17 +121,18 @@
     "no watermark, signature, frame or border inside the image"
   ],
   "conflicts_resolved": [
-    "lighting.kelvin: concept_text (the concept says bright) won over default (the concept states no temperature)",
-    "palette.text: product_appearance (the accent) offered #c7a781, which reaches only 2.0 to 1 against the field #f2efe9 — below the 4.5 to 1 type needs, so it is skipped",
-    "palette.ten: concept_text (a colour named in the concept) won over default (every named colour failed the contrast guard)"
+    "lighting.kelvin: concept_text (the concept says candle) won over default (the concept states no temperature)",
+    "palette.text: product_appearance (the accent) offered #c98a2e, which reaches only 2.6 to 1 against the field #f2efe9 — below the 4.5 to 1 type needs, so it is skipped",
+    "palette.ten: product_appearance (the product is amber) won over mood_reference (a colour read off the mood image)",
+    "palette.ten: product_appearance (the product is amber) won over default (every named colour failed the contrast guard)"
   ],
   "sheet_fallback_reason": null,
   "provenance": {
-    "asset_family": "social",
+    "asset_family": "poster",
     "aspect_ratio": "1:1",
     "approach": "balanced",
-    "approach_reason": "no approach was stated, and a social with 9 words of copy needs neither extreme",
-    "industry_label": "everyday consumer goods",
+    "approach_reason": "no approach was stated, and a poster with 8 words of copy needs neither extreme",
+    "industry_label": "homeware and lifestyle",
     "density": "words_only",
     "print_rule_branch": "photographed_branding",
     "concept_specs": []
@@ -155,18 +146,18 @@ reason: no logo image was supplied, so the photographs are the only authority on
 === DIRECTOR REQUEST (the filled request template) ===
 ## A — JOB
 
-Deliverable: a finished, publishable Social Ad
-Asset type: Social Ad
-Industry: everyday consumer goods
+Deliverable: a finished, publishable Poster
+Asset type: Poster
+Industry: homeware and lifestyle
 Canvas: square (the ratio travels as a parameter; never write ratio digits)
-Products in frame: 3
+Products in frame: 1
 Intended use: (not stated)
 
 ## B — CLIENT INPUTS (authoritative, verbatim)
 
-Brand name: Tonic
+Brand name: Trầm
 Concept, exactly as the client wrote it:
-Three cans standing in a row, bright and graphic, flat afternoon light.
+The candle on a dark table, lit the way the reference is lit, nothing else in the room.
 
 Nothing in this section may be paraphrased, translated, corrected or improved. Where it
 conflicts with anything below, it wins.
@@ -192,10 +183,8 @@ would be wrong in a way nobody notices. You have read the concept. You do it.
 
 ## C — REFERENCES
 
-  Image 1 is a reference sheet of 2 product photographs in panels: panel A is slim can, citrus, panel B is slim can, ginger. Preserve each product's exact shape, proportions, colours, materials and label layout; do not redesign them and do not re-letter them.
-  Image 2 is slim can, berry. Preserve its exact shape, proportions, colours, materials and label layout. Do not redesign it and do not re-letter it.
+  Image 1 is a ribbed amber glass candle with a brass lid. Preserve its exact shape, proportions, colours, materials and label layout. Do not redesign it and do not re-letter it.
   NO LOGO IMAGE IS ATTACHED. Do NOT ask for a logo, brand mark, wordmark or emblem to be drawn anywhere in the picture.
-  The panel letters, the borders between panels and the flat grey ground are annotations on a contact sheet. They are not part of any product and must never appear in the rendered image.
 
 ## C2 — PRINT RULE (exactly one rule; carry this sentence through)
 
@@ -206,11 +195,9 @@ add a second one anywhere, and do not contradict it in CONSTRAINTS.
 
 ## D — PRODUCT MAP
 
-  - HERO — slim can, citrus; material unverified, take it from the photograph
-  - slim can, berry; material unverified, take it from the photograph
-  - slim can, ginger; material unverified, take it from the photograph
+  - HERO — a ribbed amber glass candle with a brass lid; reads amber; glass, brass
 
-Hero:   slim can, citrus — no product is named in the copy, so the first attached leads
+Hero:   a ribbed amber glass candle with a brass lid — the only product
 
 Raw product facts, where the client supplied any:
   (none)
@@ -221,8 +208,8 @@ Raw product facts, where the client supplied any:
 
 ## F — COPY
 
-  1. [headline] "Ba vị mới"
-  2. [supporting line] "Có mặt tại mọi cửa hàng"
+  1. [headline] "Hương trầm"
+  2. [supporting line] "Đốt một lần, thơm cả ngày"
   Every string above appears in the image exactly once, verbatim, character for character, in straight double quotes in the TEXT section. Vietnamese keeps every diacritic, in NFC. No string may be added, shortened, translated or corrected.
 
 ## G — USER CHOICES (binding)
@@ -243,36 +230,36 @@ Raw product facts, where the client supplied any:
 
 ## S1 — BIG IDEA
 
-Three cans standing in a row, bright and graphic, flat afternoon light.
+The candle on a dark table, lit the way the reference is lit, nothing else in the room.
 
-Mood: cool and clean, assured; addressed to whoever this social is for, addressed directly and without hype
+Mood: warm, assured; addressed to whoever this poster is for, addressed directly and without hype
 
 ## S2 — LAYOUT AND ZONES
 
   - The frame is square.
   - a clear, even margin on every side, wide enough that nothing important reads as touching an edge; nothing that must be read crosses into it.
-  - The subject occupies a little over half, in the lower third.
+  - The subject occupies a little over half, in the middle band.
   - The words live in the top band, and nowhere else. No word is placed over the hero.
   - Leave roughly a quarter as quiet, uncluttered ground.
 
 ## S3 — ARRANGEMENT AND DEPTH
 
-  - The hero is slim can, citrus, holding about half; nothing else competes for that share.
+  - The hero is a ribbed amber glass candle with a brass lid, holding about half; nothing else competes for that share.
   - three depth layers: a soft near foreground, the hero sharp, a background clearly behind.
-  - The group overlaps: items in front partly occlude those behind, so it reads as one object with depth, not a row.
+  - No overlap is needed: the subject stands clear of everything else.
   - Nothing is deformed, mirrored, stretched or duplicated to fill a gap.
 
 ## S4 — CAMERA
 
   - the lens a little above the subject's mid-line, looking down
   - the camera level, no tilt
-  - a slightly long view, the background drawn closer
-  - shallow focus holding the whole hero crisp, the background soft
+  - a long, compressing view, the background flattened towards the subject
+  - shallow focus: the hero crisp, the background soft
 
 ## S5 — LIGHTING
 
   - a high key light from the front left, shadows falling back and right
-  - the light is clean daylight
+  - the light is warm amber, like late afternoon
   - clearly modelled shadows, detail still readable
   - a narrow rim or edge light separates the subject from the background along one side
   - one light direction governs every highlight and shadow in the frame; no object casts a shadow in a direction the others do not
@@ -282,12 +269,13 @@ Mood: cool and clean, assured; addressed to whoever this social is for, addresse
   - Surface: a plain matte surface a shade darker than the background, with no pattern of its own.
   - Background: a plain field of a warm off-white, close to unbleached paper, softly out of focus.
   - No added props beyond anything the concept names; otherwise the subject and the surface are the whole set.
+  - From the mood image — composition read off the mood image: the subject low and left, two thirds of the frame empty above it; light direction read off the mood image: a single hard light from the right, deep shadow filling the left; colour mood read off the mood image: deep brown and black, one warm highlight; take its composition, light and colour only — none of the objects in the mood image appear in this picture.
 
 ## S7 — COLOUR
 
   - most of the frame is the field colour — a warm off-white, close to unbleached paper — carrying the background and the surface.
   - roughly a third is the secondary, a soft putty grey: the supporting surfaces and the larger shapes.
-  - a small part is the accent, a light tan: emphasis only — a single element, a price card, the tightest highlight.
+  - a small part is the accent, a amber: emphasis only — a single element, a price card, the tightest highlight.
   - The background is never the product's own dominant colour.
 
 ## S8 — TYPOGRAPHY AND THE TEXT MANIFEST
@@ -298,8 +286,8 @@ Mood: cool and clean, assured; addressed to whoever this social is for, addresse
   - Every Vietnamese diacritic is rendered exactly as written, in NFC. No string is added, shortened, translated or corrected.
 
   THE TEXT MANIFEST — every string that may appear, each exactly once:
-    [headline] "Ba vị mới" — at the top of the text zone, first in the reading order, tall enough to read at a glance, set in a deep black
-    [supporting line] "Có mặt tại mọi cửa hàng" — directly under the headline, inside the text zone, tall enough to read at a glance, set in a deep black
+    [headline] "Hương trầm" — at the top of the text zone, first in the reading order, tall enough to read at a glance, set in a deep black
+    [supporting line] "Đốt một lần, thơm cả ngày" — directly under the headline, inside the text zone, tall enough to read at a glance, set in a deep black
 
   Nothing outside this manifest is set. No extra numerals, no invented strap line, no watermark.
 
@@ -310,7 +298,6 @@ Mood: cool and clean, assured; addressed to whoever this social is for, addresse
   - asymmetric micro-imperfections: an unmirrored droplet, a crumb out of line, real variation in the material
   - true scale between objects
   - no waxy, plastic or over-smoothed surfaces, no HDR halo
-  - no two items are identical copies: highlights, garnishes, fill levels and small marks all differ
   - Finish: a gentle S-curve in the tone, highlights rolling off rather than clipping, blacks that keep detail, no sharpening halo.
 
 ## S10 — CONSTRAINTS
@@ -322,37 +309,36 @@ Mood: cool and clean, assured; addressed to whoever this social is for, addresse
 
 ## S11 — DERIVED DECISIONS (why the sheet says what it says; never written into the prompt)
 
-  - creative approach: balanced — no approach was stated, and a social with 9 words of copy needs neither extreme
-  - asset family: social; canvas: 1:1
+  - creative approach: balanced — no approach was stated, and a poster with 8 words of copy needs neither extreme
+  - asset family: poster; canvas: 1:1
   - print rule branch: photographed_branding
-  - palette: field from default, secondary from default, accent from concept_text, type from default
+  - palette: field from default, secondary from default, accent from product_appearance, type from default; the product reads amber, so the field is not that colour
   - the client stated no technical specs in the concept
-  - lighting.kelvin: concept_text (the concept says bright) won over default (the concept states no temperature)
-  - palette.text: product_appearance (the accent) offered #c7a781, which reaches only 2.0 to 1 against the field #f2efe9 — below the 4.5 to 1 type needs, so it is skipped
-  - palette.ten: concept_text (a colour named in the concept) won over default (every named colour failed the contrast guard)
-  - unverified material: slim can, citrus — describe its surface from the photograph, do not name a material
-  - unverified material: slim can, berry — describe its surface from the photograph, do not name a material
-  - unverified material: slim can, ginger — describe its surface from the photograph, do not name a material
+  - lighting.kelvin: concept_text (the concept says candle) won over default (the concept states no temperature)
+  - palette.text: product_appearance (the accent) offered #c98a2e, which reaches only 2.6 to 1 against the field #f2efe9 — below the 4.5 to 1 type needs, so it is skipped
+  - palette.ten: product_appearance (the product is amber) won over mood_reference (a colour read off the mood image)
+  - palette.ten: product_appearance (the product is amber) won over default (every named colour failed the contrast guard)
 
 # ═══ END OF SHEET ═══
 
 ## J — ASSET PLAYBOOK (what this channel has to win)
 
-SOCIAL — one to three seconds, on a held phone, in a feed of other people's pictures.
+POSTER — the viewer is standing still and gives it three to ten seconds.
 
-What it has to win: a frame that survives a thumbnail and rewards a second look at full
-size. It has to stop the scroll on shape and colour alone, before any word is read.
+What it has to win: one idea a person could describe afterwards, and a hierarchy the eye
+follows without being told the order.
 
 The hero scale, the margins, the type sizes and the layout for this canvas are already
-decided in the sheet. Do not restate them differently here.
+decided in the sheet. Do not restate them differently here: a playbook that disagrees with
+the sheet gives the renderer two layouts to choose between.
 
-What is still worth saying for this channel: the silhouette. At thumbnail size the picture
-is a shape and two colours, so the subject's outline has to be legible with every detail
-removed.
+What is still worth saying for this channel: the second look has to reward the first. A
+poster is approached, so an edge, a material or a small true detail that only reads from a
+metre away is worth the frame it costs.
 
 
 Industry module: (neutral studio treatment)
-Product-count rule: Several products: group them with a clear hierarchy, the main product largest, none deformed or duplicated.
+Product-count rule: One product: one focal point.
 
 ## K — TARGET MODEL NOTES
 
@@ -423,23 +409,23 @@ fact that one was required.
 
 status: seed - unproven
 
-OUTPUT: A vertical social advertisement for the skincare brand Centella, beauty and skincare, for a paid feed placement. Photorealistic, finished and ready to publish.
+OUTPUT: A vertical poster for the cold brew brand Origin Blend, food and beverage, for a shop window. Photorealistic, finished and ready to publish.
 
-REFERENCE IMAGES: Image 1 is a reference sheet of two product photographs in panels: panel A a frosted glass serum bottle with a dropper cap, panel B a clear toner bottle with a pump. Keep each product exact in shape, proportions, colours, materials and label layout; do not redesign them and do not re-letter them. The panel letters, the separating borders and the flat grey ground are annotations and must not appear in the image.
+REFERENCE IMAGES: Image 1 is the product, an amber glass bottle with a turned wood cap. Keep its exact shape, proportions, colours, materials and label layout; do not redesign it and do not re-letter it.
 
-SCENE & CONCEPT: The two bottles stand together on pale wet stone under soft diffused daylight, a thin film of water around their bases. The idea is calm after irritation.
+SCENE & CONCEPT: The bottle stands alone on a dark slate counter in the first light of morning. A few coffee beans rest beside it. Cool condensation beads on the glass. The idea is the quiet minute before the day starts.
 
-SUBJECT ARRANGEMENT: Two bottles, the serum slightly forward and larger, the toner just behind to its right. No other objects.
+SUBJECT ARRANGEMENT: One bottle, slightly below centre, filling a little over half the height of the frame. Nothing else competes with it.
 
-COMPOSITION & LAYOUT: The pair sits in the lower middle. The upper area is an even, gently lit wall held clear for the words. Keep the top strip and the bottom strip of the frame free of text.
+COMPOSITION & LAYOUT: The bottle occupies the lower middle. The upper third is a calm, softly lit wall left deliberately empty for the words. Generous margins on every edge.
 
-LIGHT / CAMERA / MATERIALS: Broad soft light from the front left with almost no hard shadow. A faint sheen on the wet stone. Frosted glass, clear glass, translucent gel, cool damp stone.
+LIGHT / CAMERA / MATERIALS: A single soft light from the left rakes across the slate and catches the condensation. Deep shadow on the right side of the bottle. Shallow depth of field so the wall behind falls gently out of focus. Amber glass, brushed wood, cold wet stone.
 
-COLOR & BRAND STYLE: Pale green and off-white, clean and clinical, with one soft shadow for depth.
+COLOR & BRAND STYLE: Warm amber against cold grey-blue, nothing else. Restrained and expensive.
 
-TEXT: In the upper area, left aligned, a clean sans-serif headline in deep green: "Da dịu sau 7 ngày". Beneath it, small: "Thử ngay". Render every Vietnamese accent exactly. No other text, numbers, watermarks or extra logos.
+TEXT: In the upper third, centred, a bold modern sans-serif headline in warm white: "Khoi dong ngay moi" rendered as "Khởi động ngày mới". Directly beneath it, smaller and lighter: "Cold brew đậm vị, tươi mỗi sáng". Near the lower edge, small: "Đặt ngay". Render every Vietnamese accent exactly. No other text, numbers, watermarks or extra logos.
 
-CONSTRAINTS: No people, no hands, no droppers lifted out, no third bottle, no flowers.
+CONSTRAINTS: No people, no second bottle, no cup, no visible brand other than the one on the supplied label.
 
 
 ## SELF-CHECK before you answer
@@ -478,20 +464,20 @@ The master prompt, and nothing else.
 
 
 === CODE-BUILT FALLBACK PROMPT ===
-OUTPUT: A square Social Ad for Tonic, a everyday consumer goods brand, for a commercial placement. Photorealistic, finished and ready to publish.
+OUTPUT: A square Poster for Trầm, a homeware and lifestyle brand, for a commercial placement. Photorealistic, finished and ready to publish.
 
-REFERENCE IMAGES: Image 1 is a reference sheet in panels: panel A is slim can, citrus, panel B is slim can, ginger. Image 2 is slim can, berry. Every product keeps its exact shape, proportions, colours, materials and label layout; none is redesigned or re-lettered. Panel letters, borders and the flat grey ground are annotations and must not appear in the image. The hero is slim can, citrus. Keep any branding already printed on the product photographs exactly as photographed — same artwork, same position, same size. Where it is not clearly legible, leave that area clean rather than guessing at letters. Draw no other logo, wordmark, emblem or icon anywhere in the picture.
+REFERENCE IMAGES: Image 1 is a ribbed amber glass candle with a brass lid. Every product keeps its exact shape, proportions, colours, materials and label layout; none is redesigned or re-lettered. The hero is a ribbed amber glass candle with a brass lid. Keep any branding already printed on the product photographs exactly as photographed — same artwork, same position, same size. Where it is not clearly legible, leave that area clean rather than guessing at letters. Draw no other logo, wordmark, emblem or icon anywhere in the picture.
 
-SCENE & CONCEPT: Three cans standing in a row, bright and graphic, flat afternoon light. The mood is cool and clean, assured. Surface: a plain matte surface a shade darker than the background, with no pattern of its own. Background: a plain field of a warm off-white, close to unbleached paper, softly out of focus. No added props beyond anything the concept names; otherwise the subject and the surface are the whole set.
+SCENE & CONCEPT: The candle on a dark table, lit the way the reference is lit, nothing else in the room. The mood is warm, assured. Surface: a plain matte surface a shade darker than the background, with no pattern of its own. Background: a plain field of a warm off-white, close to unbleached paper, softly out of focus. No added props beyond anything the concept names; otherwise the subject and the surface are the whole set. From the mood image — composition read off the mood image: the subject low and left, two thirds of the frame empty above it; light direction read off the mood image: a single hard light from the right, deep shadow filling the left; colour mood read off the mood image: deep brown and black, one warm highlight; take its composition, light and colour only — none of the objects in the mood image appear in this picture.
 
-SUBJECT ARRANGEMENT: The hero is slim can, citrus, holding about half; nothing else competes for that share. Three depth layers: a soft near foreground, the hero sharp, a background clearly behind. The group overlaps: items in front partly occlude those behind, so it reads as one object with depth, not a row. Nothing is deformed, mirrored, stretched or duplicated to fill a gap.
+SUBJECT ARRANGEMENT: The hero is a ribbed amber glass candle with a brass lid, holding about half; nothing else competes for that share. Three depth layers: a soft near foreground, the hero sharp, a background clearly behind. No overlap is needed: the subject stands clear of everything else. Nothing is deformed, mirrored, stretched or duplicated to fill a gap.
 
-COMPOSITION & LAYOUT: The frame is square. A clear, even margin on every side, wide enough that nothing important reads as touching an edge; nothing that must be read crosses into it. The subject occupies a little over half, in the lower third. The words live in the top band, and nowhere else. No word is placed over the hero. Leave roughly a quarter as quiet, uncluttered ground.
+COMPOSITION & LAYOUT: The frame is square. A clear, even margin on every side, wide enough that nothing important reads as touching an edge; nothing that must be read crosses into it. The subject occupies a little over half, in the middle band. The words live in the top band, and nowhere else. No word is placed over the hero. Leave roughly a quarter as quiet, uncluttered ground.
 
-LIGHT / CAMERA / MATERIALS: The lens a little above the subject's mid-line, looking down. The camera level, no tilt. A slightly long view, the background drawn closer. Shallow focus holding the whole hero crisp, the background soft. A high key light from the front left, shadows falling back and right. The light is clean daylight. Clearly modelled shadows, detail still readable. A narrow rim or edge light separates the subject from the background along one side. One light direction governs every highlight and shadow in the frame; no object casts a shadow in a direction the others do not. Every object meets the surface with a contact shadow, darkest where they touch, plus a faint reflection where the surface is glossy. Focus falls away outward from the hero, not uniformly. Asymmetric micro-imperfections: an unmirrored droplet, a crumb out of line, real variation in the material. True scale between objects. No waxy, plastic or over-smoothed surfaces, no HDR halo. No two items are identical copies: highlights, garnishes, fill levels and small marks all differ. Finish: a gentle S-curve in the tone, highlights rolling off rather than clipping, blacks that keep detail, no sharpening halo. Take every surface and material from the photographs rather than naming one.
+LIGHT / CAMERA / MATERIALS: The lens a little above the subject's mid-line, looking down. The camera level, no tilt. A long, compressing view, the background flattened towards the subject. Shallow focus: the hero crisp, the background soft. A high key light from the front left, shadows falling back and right. The light is warm amber, like late afternoon. Clearly modelled shadows, detail still readable. A narrow rim or edge light separates the subject from the background along one side. One light direction governs every highlight and shadow in the frame; no object casts a shadow in a direction the others do not. Every object meets the surface with a contact shadow, darkest where they touch, plus a faint reflection where the surface is glossy. Focus falls away outward from the hero, not uniformly. Asymmetric micro-imperfections: an unmirrored droplet, a crumb out of line, real variation in the material. True scale between objects. No waxy, plastic or over-smoothed surfaces, no HDR halo. Finish: a gentle S-curve in the tone, highlights rolling off rather than clipping, blacks that keep detail, no sharpening halo.
 
-COLOR & BRAND STYLE: Most of the frame is the field colour — a warm off-white, close to unbleached paper — carrying the background and the surface. Roughly a third is the secondary, a soft putty grey: the supporting surfaces and the larger shapes. A small part is the accent, a light tan: emphasis only — a single element, a price card, the tightest highlight. The background is never the product's own dominant colour.
+COLOR & BRAND STYLE: Most of the frame is the field colour — a warm off-white, close to unbleached paper — carrying the background and the surface. Roughly a third is the secondary, a soft putty grey: the supporting surfaces and the larger shapes. A small part is the accent, a amber: emphasis only — a single element, a price card, the tightest highlight. The background is never the product's own dominant colour.
 
-TEXT: Set each of the following exactly once, and nothing else — as the headline, at the top of the text zone, first in the reading order: "Ba vị mới". Then as the supporting line, directly under the headline, inside the text zone: "Có mặt tại mọi cửa hàng". The headline dominant, the supporting line a little over a third of it, the smallest line a third. Small text sits on a flat card or a plain untextured area — never over the product, never over texture. Render every Vietnamese diacritic exactly as written. No other text, numbers, watermarks or extra logos.
+TEXT: Set each of the following exactly once, and nothing else — as the headline, at the top of the text zone, first in the reading order: "Hương trầm". Then as the supporting line, directly under the headline, inside the text zone: "Đốt một lần, thơm cả ngày". The headline dominant, the supporting line a little over a third of it, the smallest line a third. Small text sits on a flat card or a plain untextured area — never over the product, never over texture. Render every Vietnamese diacritic exactly as written. No other text, numbers, watermarks or extra logos.
 
 CONSTRAINTS: no text, numeral or character other than the strings listed; no logo, wordmark, emblem or icon beyond what the print rule allows; no duplicate copy of any product; no watermark, signature, frame or border inside the image. Every product is reproduced as supplied in the reference photographs, and only the strings listed above are set.

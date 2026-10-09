@@ -58,23 +58,25 @@
     "kelvin": 4500,
     "rim": true,
     "fill_ratio": 5,
-    "shadow_rule": "one light direction governs every highlight and every shadow in the frame; each object has a contact shadow where it meets the surface, and no object casts a shadow in a direction the others do not"
+    "shadow_rule": "one light direction governs every highlight and shadow in the frame; no object casts a shadow in a direction the others do not"
   },
   "set": {
     "surface": "a plain matte surface a shade darker than the background, with no pattern of its own",
-    "background": "a plain field of a warm off-white, close to unbleached paper, falling softly out of focus behind the subject",
+    "background": "a plain field of a warm off-white, close to unbleached paper, softly out of focus",
     "props": [],
     "culture_signals": [],
     "exclusions": [
       "no invented ports, buttons, logos or screen content that the photographs do not show"
-    ]
+    ],
+    "mood_reference": []
   },
   "palette": {
     "sixty": "#f2efe9",
     "thirty": "#d8d2c6",
     "ten": "#111111",
+    "text": "#111111",
     "product_dominant": "#111111",
-    "reason": "field from default, secondary from default, accent from product_appearance; the product reads black, so the field is not that colour"
+    "reason": "field from default, secondary from default, accent from product_appearance, type from product_appearance; the product reads black, so the field is not that colour"
   },
   "typography": {
     "families": [],
@@ -84,7 +86,7 @@
       "supporting": 4.8,
       "small": 4
     },
-    "treatment_over_texture": "small text sits on a flat card, a plain panel or an untextured area of the surface — never over the product, never over texture, never over a gradient that crosses it"
+    "treatment_over_texture": "small text sits on a flat card or a plain untextured area — never over the product, never over texture"
   },
   "text_manifest": [
     {
@@ -103,22 +105,24 @@
     }
   ],
   "realism_details": [
-    "every object meets the surface with a contact shadow, darkest where they touch and softening outward, plus a faint reflection where the surface is glossy",
-    "focus falls away outward from the hero rather than uniformly across the frame",
-    "micro-imperfections, asymmetric: a droplet or drip that is not mirrored, a crumb out of line, real variation in the material",
-    "true scale between objects — each the size it would really be beside the others",
-    "no waxy, plastic or over-smoothed surfaces, and no HDR halo on any edge"
+    "every object meets the surface with a contact shadow, darkest where they touch, plus a faint reflection where the surface is glossy",
+    "focus falls away outward from the hero, not uniformly",
+    "asymmetric micro-imperfections: an unmirrored droplet, a crumb out of line, real variation in the material",
+    "true scale between objects",
+    "no waxy, plastic or over-smoothed surfaces, no HDR halo"
   ],
-  "finish": "a gentle S-curve in the tone, highlights rolling off softly rather than clipping, blacks that keep detail, and no sharpening halo on any edge",
+  "finish": "a gentle S-curve in the tone, highlights rolling off rather than clipping, blacks that keep detail, no sharpening halo",
   "negatives": [
-    "no text, numeral, word or character other than the strings listed",
-    "no logo, wordmark, emblem or icon other than the one the print rule allows",
-    "no second or duplicate copy of any product",
-    "no watermark, no signature, no frame or border drawn inside the image"
+    "no text, numeral or character other than the strings listed",
+    "no logo, wordmark, emblem or icon beyond what the print rule allows",
+    "no duplicate copy of any product",
+    "no watermark, signature, frame or border inside the image"
   ],
   "conflicts_resolved": [
-    "palette.ten: product_appearance (the product is black) won over default (nothing named an accent)"
+    "palette.ten: product_appearance (the product is black) won over default (every named colour failed the contrast guard)",
+    "palette.text: product_appearance (the accent) won over default (derived from the field's own luminance)"
   ],
+  "sheet_fallback_reason": null,
   "provenance": {
     "asset_family": "banner",
     "aspect_ratio": "16:9",
@@ -152,9 +156,26 @@ Concept, exactly as the client wrote it:
 The speaker alone on a dark surface, one hard light raking across it, nothing else.
 
 Nothing in this section may be paraphrased, translated, corrected or improved. Where it
-conflicts with anything below, it wins. Where it names a culture, a region, a festival or
-an occasion, YOU name the exact visual identifiers of it and the nearest confusion to
-exclude — that judgement is yours, not the sheet's.
+conflicts with anything below, it wins.
+
+CULTURAL, REGIONAL AND SEASONAL SPECIFICS ARE YOUR JUDGEMENT, NOT THE SHEET'S.
+Where the concept names a culture, a region, a festival, a season or an occasion, you must
+do two things in SCENE & CONCEPT:
+
+1. Name the EXACT visual identifiers — species, number of petals, colour, material, form,
+   the way the thing is actually made or worn or arranged in that place.
+2. Name the nearest neighbour that must be EXCLUDED, explicitly.
+
+The failure this prevents, measured on real renders: a Vietnamese Tết brief asks for
+*hoa mai*, a yellow five-petalled apricot blossom on a bare dark branch, and the render
+comes back with pink Japanese cherry blossom — the most statistically common "festive
+blossom" in any image model's training data. The two are not interchangeable and the
+substitution is immediately obvious to the audience the asset is for. "Yellow apricot
+blossom, five petals, on bare brown branches; NOT pink cherry blossom and NOT plum" is
+the level of specificity required, in whatever the concept's own culture needs it.
+
+The sheet deliberately contains no lookup table for this, and must never grow one: a table
+would be wrong in a way nobody notices. You have read the concept. You do it.
 
 ## C — REFERENCES
 
@@ -212,74 +233,74 @@ Mood: confident and graphic; addressed to whoever this banner is for, addressed 
 ## S2 — LAYOUT AND ZONES
 
   - The frame is horizontal.
-  - a clear, even margin on every side, wide enough that nothing important reads as touching an edge — nothing that must be read, and no edge of the hero, crosses into it.
+  - a clear, even margin on every side, wide enough that nothing important reads as touching an edge; nothing that must be read crosses into it.
   - The subject occupies about half, in the middle band.
   - The words live in the middle band, in the left roughly a third of the width, and nowhere else. No word is placed over the hero.
-  - Leave roughly a quarter as quiet, uncluttered ground. Negative space is a decision here, not what is left over.
+  - Leave roughly a quarter as quiet, uncluttered ground.
 
 ## S3 — ARRANGEMENT AND DEPTH
 
-  - The hero is a matte black cylindrical bluetooth speaker, and it holds roughly two thirds. Nothing else competes for that share.
-  - three depth layers: something soft in the near foreground, the hero sharp in the middle, and a background that is clearly behind.
+  - The hero is a matte black cylindrical bluetooth speaker, holding roughly two thirds; nothing else competes for that share.
+  - three depth layers: a soft near foreground, the hero sharp, a background clearly behind.
   - No overlap is needed: the subject stands clear of everything else.
   - Nothing is deformed, mirrored, stretched or duplicated to fill a gap.
 
 ## S4 — CAMERA
 
-  - the lens a little above the subject's mid-line, looking gently down
-  - the camera tilted a few degrees off level for tension
-  - a slightly long view that draws the background a little closer
-  - shallow focus: the hero is crisp and the background falls away softly
+  - the lens a little above the subject's mid-line, looking down
+  - the camera tilted a few degrees off level, for tension
+  - a slightly long view, the background drawn closer
+  - shallow focus: the hero crisp, the background soft
 
 ## S5 — LIGHTING
 
-  - the key light from the front right, high, so shadows fall back and to the left
+  - a high key light from the front right, shadows falling back and left
   - the light is neutral white, neither warm nor cool
-  - deep shadows that hold only a little detail
+  - deep shadows, little detail held
   - a narrow rim or edge light separates the subject from the background along one side
-  - one light direction governs every highlight and every shadow in the frame; each object has a contact shadow where it meets the surface, and no object casts a shadow in a direction the others do not
+  - one light direction governs every highlight and shadow in the frame; no object casts a shadow in a direction the others do not
 
 ## S6 — SET AND PROPS
 
   - Surface: a plain matte surface a shade darker than the background, with no pattern of its own.
-  - Background: a plain field of a warm off-white, close to unbleached paper, falling softly out of focus behind the subject.
-  - No added props. If the concept names something, that thing and nothing more; otherwise the subject and the surface are the whole set.
+  - Background: a plain field of a warm off-white, close to unbleached paper, softly out of focus.
+  - No added props beyond anything the concept names; otherwise the subject and the surface are the whole set.
 
 ## S7 — COLOUR
 
   - most of the frame is the field colour — a warm off-white, close to unbleached paper — carrying the background and the surface.
   - roughly a third is the secondary, a soft putty grey: the supporting surfaces and the larger shapes.
   - a small part is the accent, a deep black: emphasis only — a single element, a price card, the tightest highlight.
-  - The background is never the product's own dominant colour: the product has to separate from what is behind it.
+  - The background is never the product's own dominant colour.
 
 ## S8 — TYPOGRAPHY AND THE TEXT MANIFEST
 
   - One type family throughout: a clean, high-contrast sans-serif. Never more than two families in the frame.
   - the headline dominant, the supporting line a little over a third of it, the smallest line a third
-  - small text sits on a flat card, a plain panel or an untextured area of the surface — never over the product, never over texture, never over a gradient that crosses it
+  - small text sits on a flat card or a plain untextured area — never over the product, never over texture
   - Every Vietnamese diacritic is rendered exactly as written, in NFC. No string is added, shortened, translated or corrected.
 
   THE TEXT MANIFEST — every string that may appear, each exactly once:
-    [headline] "Âm thanh thật" — at the top of the text zone, first in the reading order, tall enough to read without effort at a glance — never thinner than a hairline against the background, set in a deep black
-    [supporting line] "Đặt trước" — directly under the headline, inside the text zone, tall enough to read without effort at a glance — never thinner than a hairline against the background, set in a deep black
+    [headline] "Âm thanh thật" — at the top of the text zone, first in the reading order, tall enough to read at a glance, set in a deep black
+    [supporting line] "Đặt trước" — directly under the headline, inside the text zone, tall enough to read at a glance, set in a deep black
 
   Nothing outside this manifest is set. No extra numerals, no invented strap line, no watermark.
 
 ## S9 — REALISM AND FINISH
 
-  - every object meets the surface with a contact shadow, darkest where they touch and softening outward, plus a faint reflection where the surface is glossy
-  - focus falls away outward from the hero rather than uniformly across the frame
-  - micro-imperfections, asymmetric: a droplet or drip that is not mirrored, a crumb out of line, real variation in the material
-  - true scale between objects — each the size it would really be beside the others
-  - no waxy, plastic or over-smoothed surfaces, and no HDR halo on any edge
-  - Finish: a gentle S-curve in the tone, highlights rolling off softly rather than clipping, blacks that keep detail, and no sharpening halo on any edge.
+  - every object meets the surface with a contact shadow, darkest where they touch, plus a faint reflection where the surface is glossy
+  - focus falls away outward from the hero, not uniformly
+  - asymmetric micro-imperfections: an unmirrored droplet, a crumb out of line, real variation in the material
+  - true scale between objects
+  - no waxy, plastic or over-smoothed surfaces, no HDR halo
+  - Finish: a gentle S-curve in the tone, highlights rolling off rather than clipping, blacks that keep detail, no sharpening halo.
 
 ## S10 — CONSTRAINTS
 
-  - no text, numeral, word or character other than the strings listed
-  - no logo, wordmark, emblem or icon other than the one the print rule allows
-  - no second or duplicate copy of any product
-  - no watermark, no signature, no frame or border drawn inside the image
+  - no text, numeral or character other than the strings listed
+  - no logo, wordmark, emblem or icon beyond what the print rule allows
+  - no duplicate copy of any product
+  - no watermark, signature, frame or border inside the image
   - no invented ports, buttons, logos or screen content that the photographs do not show
 
 ## S11 — DERIVED DECISIONS (why the sheet says what it says; never written into the prompt)
@@ -287,9 +308,10 @@ Mood: confident and graphic; addressed to whoever this banner is for, addressed 
   - creative approach: bold — a banner is read in under a second, so separation and statement outrank subtlety
   - asset family: banner; canvas: 16:9
   - print rule branch: photographed_branding
-  - palette: field from default, secondary from default, accent from product_appearance; the product reads black, so the field is not that colour
+  - palette: field from default, secondary from default, accent from product_appearance, type from product_appearance; the product reads black, so the field is not that colour
   - the client stated no technical specs in the concept
-  - palette.ten: product_appearance (the product is black) won over default (nothing named an accent)
+  - palette.ten: product_appearance (the product is black) won over default (every named colour failed the contrast guard)
+  - palette.text: product_appearance (the accent) won over default (derived from the field's own luminance)
   - unverified material: a matte black cylindrical bluetooth speaker — describe its surface from the photograph, do not name a material
 
 # ═══ END OF SHEET ═══
@@ -440,18 +462,18 @@ The master prompt, and nothing else.
 === CODE-BUILT FALLBACK PROMPT ===
 OUTPUT: A horizontal Banner for Nghe, a consumer electronics brand, for a website hero banner. Photorealistic, finished and ready to publish.
 
-REFERENCE IMAGES: Image 1 is a matte black cylindrical bluetooth speaker. Preserve its exact shape, proportions, colours, materials and label layout; do not redesign it and do not re-letter it. No logo image is attached, so no logo, brand mark or emblem is drawn anywhere. The hero — the product the picture is about — is a matte black cylindrical bluetooth speaker. Keep any branding already printed on the product photographs exactly as photographed — same artwork, same position, same size. Where it is not clearly legible, leave that area clean rather than guessing at letters. Draw no other logo, wordmark, emblem or icon anywhere in the picture.
+REFERENCE IMAGES: Image 1 is a matte black cylindrical bluetooth speaker. Every product keeps its exact shape, proportions, colours, materials and label layout; none is redesigned or re-lettered. The hero is a matte black cylindrical bluetooth speaker. Keep any branding already printed on the product photographs exactly as photographed — same artwork, same position, same size. Where it is not clearly legible, leave that area clean rather than guessing at letters. Draw no other logo, wordmark, emblem or icon anywhere in the picture.
 
-SCENE & CONCEPT: The speaker alone on a dark surface, one hard light raking across it, nothing else. The mood is confident and graphic. Surface: a plain matte surface a shade darker than the background, with no pattern of its own. Background: a plain field of a warm off-white, close to unbleached paper, falling softly out of focus behind the subject. No added props. If the concept names something, that thing and nothing more; otherwise the subject and the surface are the whole set.
+SCENE & CONCEPT: The speaker alone on a dark surface, one hard light raking across it, nothing else. The mood is confident and graphic. Surface: a plain matte surface a shade darker than the background, with no pattern of its own. Background: a plain field of a warm off-white, close to unbleached paper, softly out of focus. No added props beyond anything the concept names; otherwise the subject and the surface are the whole set.
 
-SUBJECT ARRANGEMENT: The hero is a matte black cylindrical bluetooth speaker, and it holds roughly two thirds. Nothing else competes for that share. Three depth layers: something soft in the near foreground, the hero sharp in the middle, and a background that is clearly behind. No overlap is needed: the subject stands clear of everything else. Nothing is deformed, mirrored, stretched or duplicated to fill a gap.
+SUBJECT ARRANGEMENT: The hero is a matte black cylindrical bluetooth speaker, holding roughly two thirds; nothing else competes for that share. Three depth layers: a soft near foreground, the hero sharp, a background clearly behind. No overlap is needed: the subject stands clear of everything else. Nothing is deformed, mirrored, stretched or duplicated to fill a gap.
 
-COMPOSITION & LAYOUT: The frame is horizontal. A clear, even margin on every side, wide enough that nothing important reads as touching an edge — nothing that must be read, and no edge of the hero, crosses into it. The subject occupies about half, in the middle band. The words live in the middle band, in the left roughly a third of the width, and nowhere else. No word is placed over the hero. Leave roughly a quarter as quiet, uncluttered ground. Negative space is a decision here, not what is left over.
+COMPOSITION & LAYOUT: The frame is horizontal. A clear, even margin on every side, wide enough that nothing important reads as touching an edge; nothing that must be read crosses into it. The subject occupies about half, in the middle band. The words live in the middle band, in the left roughly a third of the width, and nowhere else. No word is placed over the hero. Leave roughly a quarter as quiet, uncluttered ground.
 
-LIGHT / CAMERA / MATERIALS: The lens a little above the subject's mid-line, looking gently down. The camera tilted a few degrees off level for tension. A slightly long view that draws the background a little closer. Shallow focus: the hero is crisp and the background falls away softly. The key light from the front right, high, so shadows fall back and to the left. The light is neutral white, neither warm nor cool. Deep shadows that hold only a little detail. A narrow rim or edge light separates the subject from the background along one side. One light direction governs every highlight and every shadow in the frame; each object has a contact shadow where it meets the surface, and no object casts a shadow in a direction the others do not. Every object meets the surface with a contact shadow, darkest where they touch and softening outward, plus a faint reflection where the surface is glossy. Focus falls away outward from the hero rather than uniformly across the frame. Micro-imperfections, asymmetric: a droplet or drip that is not mirrored, a crumb out of line, real variation in the material. True scale between objects — each the size it would really be beside the others. No waxy, plastic or over-smoothed surfaces, and no HDR halo on any edge. Finish: a gentle S-curve in the tone, highlights rolling off softly rather than clipping, blacks that keep detail, and no sharpening halo on any edge. Take every surface and material from the photographs rather than naming one.
+LIGHT / CAMERA / MATERIALS: The lens a little above the subject's mid-line, looking down. The camera tilted a few degrees off level, for tension. A slightly long view, the background drawn closer. Shallow focus: the hero crisp, the background soft. A high key light from the front right, shadows falling back and left. The light is neutral white, neither warm nor cool. Deep shadows, little detail held. A narrow rim or edge light separates the subject from the background along one side. One light direction governs every highlight and shadow in the frame; no object casts a shadow in a direction the others do not. Every object meets the surface with a contact shadow, darkest where they touch, plus a faint reflection where the surface is glossy. Focus falls away outward from the hero, not uniformly. Asymmetric micro-imperfections: an unmirrored droplet, a crumb out of line, real variation in the material. True scale between objects. No waxy, plastic or over-smoothed surfaces, no HDR halo. Finish: a gentle S-curve in the tone, highlights rolling off rather than clipping, blacks that keep detail, no sharpening halo. Take every surface and material from the photographs rather than naming one.
 
-COLOR & BRAND STYLE: Most of the frame is the field colour — a warm off-white, close to unbleached paper — carrying the background and the surface. Roughly a third is the secondary, a soft putty grey: the supporting surfaces and the larger shapes. A small part is the accent, a deep black: emphasis only — a single element, a price card, the tightest highlight. The background is never the product's own dominant colour: the product has to separate from what is behind it.
+COLOR & BRAND STYLE: Most of the frame is the field colour — a warm off-white, close to unbleached paper — carrying the background and the surface. Roughly a third is the secondary, a soft putty grey: the supporting surfaces and the larger shapes. A small part is the accent, a deep black: emphasis only — a single element, a price card, the tightest highlight. The background is never the product's own dominant colour.
 
-TEXT: Set each of the following exactly once, and nothing else — as the headline, at the top of the text zone, first in the reading order: "Âm thanh thật". Then as the supporting line, directly under the headline, inside the text zone: "Đặt trước". The headline dominant, the supporting line a little over a third of it, the smallest line a third. Small text sits on a flat card, a plain panel or an untextured area of the surface — never over the product, never over texture, never over a gradient that crosses it. Render every Vietnamese diacritic exactly as written. No other text, numbers, watermarks or extra logos.
+TEXT: Set each of the following exactly once, and nothing else — as the headline, at the top of the text zone, first in the reading order: "Âm thanh thật". Then as the supporting line, directly under the headline, inside the text zone: "Đặt trước". The headline dominant, the supporting line a little over a third of it, the smallest line a third. Small text sits on a flat card or a plain untextured area — never over the product, never over texture. Render every Vietnamese diacritic exactly as written. No other text, numbers, watermarks or extra logos.
 
-CONSTRAINTS: no text, numeral, word or character other than the strings listed. no logo, wordmark, emblem or icon other than the one the print rule allows. no second or duplicate copy of any product. no watermark, no signature, no frame or border drawn inside the image. no invented ports, buttons, logos or screen content that the photographs do not show. Every product is reproduced as supplied in the reference photographs, and only the strings listed above are set.
+CONSTRAINTS: no text, numeral or character other than the strings listed; no logo, wordmark, emblem or icon beyond what the print rule allows; no duplicate copy of any product; no watermark, signature, frame or border inside the image. no invented ports, buttons, logos or screen content that the photographs do not show. Every product is reproduced as supplied in the reference photographs, and only the strings listed above are set.

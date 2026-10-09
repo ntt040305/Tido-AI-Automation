@@ -86,7 +86,7 @@ export function renderLayout(sheet: ArtDirectionSheet, density: NumericWordsDens
   const z = sheet.canvas_zones;
   const lines = [
     `The frame is ${sheet.provenance.aspect_ratio === "9:16" ? "vertical" : sheet.provenance.aspect_ratio === "16:9" ? "horizontal" : "square"}.`,
-    `${margin(z.safe_margin_pct, density)} — nothing that must be read, and no edge of the hero, crosses into it.`,
+    `${margin(z.safe_margin_pct, density)}; nothing that must be read crosses into it.`,
     `The subject occupies ${share((z.subject.width_pct * z.subject.height_pct) / 100, density)}, in ${bandWords(z.subject.top_pct, z.subject.height_pct)}.`,
     z.text.height_pct > 0 && z.text.width_pct > 0
       ? `The words live in ${bandWords(z.text.top_pct, z.text.height_pct)}${z.text.width_pct < 60 ? `, in the ${z.text.left_pct < 50 ? "left" : "right"} ${shareWords(z.text.width_pct)} of the width` : ""}, and nowhere else. No word is placed over the hero.`
@@ -98,7 +98,7 @@ export function renderLayout(sheet: ArtDirectionSheet, density: NumericWordsDens
             : "keep a generous band clear at the very top and a wider one at the very bottom"
         } of anything that must be read or seen.`
       : "",
-    `Leave ${share(z.negative_space_pct, density)} as quiet, uncluttered ground. Negative space is a decision here, not what is left over.`,
+    `Leave ${share(z.negative_space_pct, density)} as quiet, uncluttered ground.`,
   ];
   return bullets(lines);
 }
@@ -108,12 +108,12 @@ export function renderArrangement(sheet: ArtDirectionSheet, density: NumericWord
   const a = sheet.arrangement;
   const hero = sheet.products.find((p) => p.id === sheet.hero.id);
   return bullets([
-    `The hero is ${hero ? hero.description : "the lead product"}, and it holds ${share(a.hero_scale_pct, density)}. Nothing else competes for that share.`,
+    `The hero is ${hero ? hero.description : "the lead product"}, holding ${share(a.hero_scale_pct, density)}; nothing else competes for that share.`,
     // Spelled, not "3": the art-director contract bans digits in the prompt, and a bare
     // integer is exactly the kind that slips past a regex written for units.
-    `${numberWord(a.depth_layers)} depth layers: something soft in the near foreground, the hero sharp in the middle, and a background that is clearly behind.`,
+    `${numberWord(a.depth_layers)} depth layers: a soft near foreground, the hero sharp, a background clearly behind.`,
     a.overlaps
-      ? "The group overlaps: items in front partly occlude the ones behind, so the arrangement reads as one object with depth rather than as a row."
+      ? "The group overlaps: items in front partly occlude those behind, so it reads as one object with depth, not a row."
       : "No overlap is needed: the subject stands clear of everything else.",
     "Nothing is deformed, mirrored, stretched or duplicated to fill a gap.",
   ]);
@@ -154,8 +154,9 @@ export function renderSet(sheet: ArtDirectionSheet): string {
     `Background: ${s.background}.`,
     s.props.length
       ? `Props, and only these: ${s.props.join("; ")}. Nothing else is added to the scene.`
-      : "No added props. If the concept names something, that thing and nothing more; otherwise the subject and the surface are the whole set.",
+      : "No added props beyond anything the concept names; otherwise the subject and the surface are the whole set.",
     s.culture_signals.length ? `Cultural detail the brief named: ${s.culture_signals.join("; ")}.` : "",
+    s.mood_reference.length ? `From the mood image — ${s.mood_reference.join("; ")}.` : "",
   ]);
 }
 
@@ -169,7 +170,7 @@ export function renderColour(sheet: ArtDirectionSheet, density: NumericWordsDens
     `${sixty} of the frame is the field colour — ${colourWords(p.sixty)} — carrying the background and the surface.`,
     `${thirty} is the secondary, ${colourWords(p.thirty)}: the supporting surfaces and the larger shapes.`,
     `${ten} is the accent, ${colourWords(p.ten)}: emphasis only — a single element, a price card, the tightest highlight.`,
-    "The background is never the product's own dominant colour: the product has to separate from what is behind it.",
+    "The background is never the product's own dominant colour.",
     // `p.reason` is NOT emitted here. It names precedence tiers — "accent from
     // product_appearance" — and a raw snake_case identifier in a master prompt is exactly
     // the `coffee_tea` leak in another costume. It rides in DERIVED DECISIONS instead,

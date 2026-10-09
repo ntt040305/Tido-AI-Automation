@@ -44,7 +44,18 @@ import { conceptWithoutSpecs, extractConceptSpecs } from "./prompt-v2/art-direct
 import { PRECEDENCE_TIERS, resolvePrecedence } from "./prompt-v2/art-direction/precedence";
 import { exclusionsFor, industryLabel, knownIndustryIds } from "./prompt-v2/art-direction/industry-label";
 import { buildArtDirectionSheet } from "./prompt-v2/art-direction/art-direction-sheet";
-import { colourWords, numberWord, percentWords } from "./prompt-v2/art-direction/words";
+import {
+  ACCENT_LUMINANCE_DELTA_MIN,
+  TEXT_CONTRAST_MIN,
+  accentSeparates,
+  colourWords,
+  contrastRatio,
+  numberWord,
+  percentWords,
+  readableNeutralFor,
+  relativeLuminance,
+} from "./prompt-v2/art-direction/words";
+import { roundNumbers } from "./prompt-v2/art-direction/art-direction-sheet";
 
 let passed = 0;
 let failed = 0;
@@ -581,6 +592,339 @@ async function main() {
     const codes = result.failures.map((f) => f.code);
     for (const code of ["UNRESOLVED_AUTO", "RAW_IDENTIFIER", "PERCENT_WORDS_OUTSIDE_LAYOUT", "PRINT_RULE_BRANCHES"]) {
       assert.ok(!codes.includes(code as never), `${code} fired without a sheet`);
+    }
+  });
+
+
+  // ── 15. The contrast guard (Step 1a) ───────────────────────────────────
+  //
+  // The measured defect: the four-dish brief derived `#f7f5f1` as its accent from the
+  // words "white ceramic", against an `#f2efe9` field. Two off-whites. The prompt then
+  // read "a small part is the accent, a very pale white", which is not an instruction
+  // anyone can follow.
+  console.log("\nthe contrast guard");
+  check("WCAG luminance and ratio are the real formulas", () => {
+    assert.strictEqual(relativeLuminance("#000000"), 0);
+    assert.strictEqual(relativeLuminance("#ffffff"), 1);
+    assert.strictEqual(Math.round((contrastRatio("#000000", "#ffffff") ?? 0) * 10) / 10, 21);
+    assert.strictEqual(contrastRatio("not a hex", "#ffffff"), null);
+    // The naive average would call these two near-identical; perceived brightness does not.
+    const yellow = relativeLuminance("#ffff00") ?? 0;
+    const blue = relativeLuminance("#0000ff") ?? 0;
+    assert.ok(yellow > blue * 10, "the cheap average snuck in");
+  });
+  check("an accent too close to the field is rejected", () => {
+    // The exact measured pair.
+    assert.ok(!accentSeparates("#f7f5f1", "#f2efe9"), "the off-white-on-off-white accent passed");
+    assert.ok(accentSeparates("#c0392b", "#f2efe9"), "a red on off-white was rejected");
+    assert.ok(accentSeparates("#1a1a1a", "#f2efe9"), "ink on paper was rejected");
+    // Boundary: the threshold is a floor, so a pair exactly at it passes.
+    const field = "#f2efe9";
+    const fieldL = relativeLuminance(field) ?? 0;
+    assert.ok(fieldL - ACCENT_LUMINANCE_DELTA_MIN > 0, "the fixture field is too dark for this check");
+  });
+  check("the four-dish accent is no longer an off-white", () => {
+    const sheet = sheetFor(fixtureById("04_four_dishes_fast_food"));
+    assert.ok(
+      accentSeparates(sheet.palette.ten, sheet.palette.sixty),
+      `the accent ${sheet.palette.ten} still does not separate from the field ${sheet.palette.sixty}`,
+    );
+    assert.ok(
+      sheet.conflicts_resolved.some((c) => /too close in luminance/i.test(c)),
+      `the rejection was not recorded: ${JSON.stringify(sheet.conflicts_resolved)}`,
+    );
+    // And the prompt no longer says the thing that could not be followed.
+    assert.ok(!/accent, a very pale white/i.test(promptFor(fixtureById("04_four_dishes_fast_food"))));
+  });
+  check("type reaches WCAG AA against the field on every brief", () => {
+    for (const fx of GPT_BRIEF_FIXTURES) {
+      const sheet = sheetFor(fx);
+      if (!sheet.text_manifest.length) continue;
+      const ratio = contrastRatio(sheet.palette.text, sheet.palette.sixty) ?? 0;
+      assert.ok(
+        ratio >= TEXT_CONTRAST_MIN,
+        `${fx.id}: type ${sheet.palette.text} on field ${sheet.palette.sixty} reaches only ${ratio.toFixed(1)} to 1`,
+      );
+      for (const entry of sheet.text_manifest) {
+        assert.strictEqual(entry.colour, sheet.palette.text, `${fx.id}: a manifest entry uses a different colour`);
+      }
+    }
+  });
+  check("a brand kit that specifies unreadable type is overruled and the reason recorded", () => {
+    const base = fixtureById("01_one_product_square");
+    const sheet = sheetFor({
+      ...base,
+      brandKit: {
+        // Near-white type. Against a near-white field this is a defect the kit specified.
+        colors: [{ hex: "#fbfbfa", role: "text" }],
+        hasLogoImage: false,
+      },
+    });
+    assert.notStrictEqual(sheet.palette.text.toLowerCase(), "#fbfbfa", "unreadable type was obeyed");
+    assert.ok((contrastRatio(sheet.palette.text, sheet.palette.sixty) ?? 0) >= TEXT_CONTRAST_MIN);
+    assert.ok(
+      sheet.conflicts_resolved.some((c) => /palette\.text/.test(c) && /below the/.test(c)),
+      `the override was silent: ${JSON.stringify(sheet.conflicts_resolved)}`,
+    );
+  });
+  check("the last-resort neutral is derived from the background and nothing else", () => {
+    assert.strictEqual(readableNeutralFor("#ffffff"), "#1a1a1a");
+    assert.strictEqual(readableNeutralFor("#000000"), "#f7f5f1");
+    assert.strictEqual(readableNeutralFor("#f2efe9"), "#1a1a1a");
+    // Not a hex: treated as light, which is the common case and where ink is safe.
+    assert.strictEqual(readableNeutralFor("teal"), "#1a1a1a");
+  });
+
+  // ── 16. Numeric hygiene (Step 1b) ──────────────────────────────────────
+  console.log("\nnumeric hygiene");
+  check("no number in any sheet carries more than one decimal", () => {
+    for (const fx of GPT_BRIEF_FIXTURES) {
+      const walk = (value: unknown, path: string) => {
+        if (typeof value === "number") {
+          const decimals = String(value).split(".")[1] || "";
+          assert.ok(decimals.length <= 1, `${fx.id} ${path} = ${value} carries ${decimals.length} decimals`);
+          return;
+        }
+        if (Array.isArray(value)) return value.forEach((v, i) => walk(v, `${path}[${i}]`));
+        if (value && typeof value === "object") {
+          for (const [k, v] of Object.entries(value)) walk(v, `${path}.${k}`);
+        }
+      };
+      walk(sheetFor(fx), "sheet");
+    }
+  });
+  check("the measured float is gone", () => {
+    // `min_cap_height_pct * 1.2` on a social profile was 3.5999999999999996.
+    const sizes = sheetFor(fixtureById("05_five_drinks_prices_florian")).typography.sizes_pct;
+    assert.strictEqual(sizes.supporting, 3.6, `expected 3.6, got ${sizes.supporting}`);
+  });
+  check("roundNumbers keeps the shape and only touches numbers", () => {
+    const input = { a: 1.26, b: [2.04, { c: "3.999" }], d: null, e: true };
+    assert.deepStrictEqual(roundNumbers(input), { a: 1.3, b: [2, { c: "3.999" }], d: null, e: true });
+  });
+
+  // ── 17. The mood image reaches the sheet (Step 1c) ─────────────────────
+  console.log("\nthe mood image");
+  check("a manifest read FROM the image reaches the sheet, in words", () => {
+    const fx = fixtureById("16_mood_manifest_present");
+    const sheet = sheetFor(fx);
+    const brief = buildGptMessages(artDirectorBriefInputFor(fx), "v2").user.content;
+    // Composition, light and colour travel.
+    assert.ok(/single hard light from the right/i.test(brief), "the mood lighting never reached the brief");
+    assert.ok(/two thirds of the frame empty/i.test(brief), "the mood composition never reached the brief");
+    // And it influenced a derived value rather than only being quoted: the accent.
+    assert.ok(
+      sheet.palette.reason.length > 0 && accentSeparates(sheet.palette.ten, sheet.palette.sixty),
+      "the mood colour did not survive the contrast guard",
+    );
+  });
+  check("a manifest NOT read from the image is ignored", () => {
+    const fx = fixtureById("16_mood_manifest_present");
+    const inferred = sheetFor({
+      ...fx,
+      styleManifest: { ...fx.styleManifest, derived_from_image: false },
+    });
+    assert.ok(
+      !/single hard light from the right/i.test(JSON.stringify(inferred)),
+      "an inferred manifest was treated as an observation",
+    );
+  });
+  check("the orchestrator hands the manifest back to the request", () => {
+    // A source assertion, because the alternative is a live render. The write-back is the
+    // whole fix: the manifest is computed in a local and the sheet reads it off `request`
+    // later, from inside the provider wrapper.
+    const src = fs.readFileSync(
+      path.join(__dirname, "service", "SimpleImageGenerationOrchestratorService.ts"),
+      "utf8",
+    );
+    assert.ok(
+      /request\.inspirationStyleManifest\s*=\s*inspirationStyleManifest/.test(src),
+      "the orchestrator still drops the manifest it computed",
+    );
+  });
+  check("a style reference's objects never reach the brief at all", () => {
+    // Corrected from the first draft of this test, which asserted the opposite. A style
+    // reference is allocated as `kind: "style"` and never travels as an image, so the
+    // allocation has no slot for it and its description is never written into section C.
+    // That is the strongest possible version of "its objects do not travel": the words
+    // describing them are not in the brief either.
+    const brief = buildGptMessages(
+      artDirectorBriefInputFor(fixtureById("13_mood_image_of_another_product")),
+      "v2",
+    ).user.content;
+    assert.ok(!/wristwatch/i.test(brief), "a different product's description reached the brief");
+  });
+  check("a mood manifest says take the look, not the objects", () => {
+    const brief = buildGptMessages(
+      artDirectorBriefInputFor(fixtureById("16_mood_manifest_present")),
+      "v2",
+    ).user.content;
+    assert.ok(
+      /none of the objects in the mood image appear in this picture/i.test(brief),
+      "nothing told the director to take the look and not the objects",
+    );
+  });
+
+  // ── 18. The order-dependency guard (Step 1d) ───────────────────────────
+  console.log("\nthe order dependency");
+  check("a missing upstream layer is recorded, not silently defaulted", () => {
+    const base = fixtureById("01_one_product_square");
+    const input = artDirectorBriefInputFor(base);
+    const reported = buildArtDirectionSheet({
+      assetType: base.assetType,
+      aspectRatio: base.aspectRatio,
+      concept: base.concept,
+      brand: base.brand,
+      copy: base.copy,
+      products: [{ id: "1", description: base.products[0].description }],
+      allocation: input.allocation,
+      upstream: { blueprint: null, compositionPlan: null },
+    });
+    assert.ok(reported.sheet_fallback_reason, "a missing blueprint was not recorded");
+    assert.ok(/blueprint/i.test(reported.sheet_fallback_reason!));
+    assert.ok(/composition plan/i.test(reported.sheet_fallback_reason!));
+    assert.ok(/wrapProvider/.test(reported.sheet_fallback_reason!), "the reason does not say where to look");
+  });
+  check("a sheet with every layer present records nothing", () => {
+    const base = fixtureById("01_one_product_square");
+    const sheet = buildArtDirectionSheet({
+      assetType: base.assetType,
+      aspectRatio: base.aspectRatio,
+      concept: base.concept,
+      brand: base.brand,
+      copy: base.copy,
+      products: [{ id: "1", description: base.products[0].description }],
+      upstream: { blueprint: {}, compositionPlan: {} },
+    });
+    assert.strictEqual(sheet.sheet_fallback_reason, null);
+  });
+  check("a caller that does not report is not accused", () => {
+    // `undefined` means "not reporting" — a test or a fixture — and must not be read as
+    // "the layer was missing".
+    assert.strictEqual(sheetFor(fixtureById("01_one_product_square")).sheet_fallback_reason, null);
+  });
+  check("blueprintFor still runs before v2For in wrapProvider", () => {
+    // The guard above records a reversal; this fails ON one, so the ordering cannot drift
+    // silently into the degraded path.
+    const src = fs.readFileSync(path.join(__dirname, "evolution", "ExperimentPipeline.ts"), "utf8");
+    const blueprintAt = src.indexOf("const blueprintText = blueprintFor ? blueprintFor(");
+    const v2At = src.indexOf("const v2 = v2For ? await v2For() : null;");
+    assert.ok(blueprintAt > 0, "the blueprintFor call site moved or was renamed");
+    assert.ok(v2At > 0, "the v2For call site moved or was renamed");
+    assert.ok(
+      blueprintAt < v2At,
+      "v2For now runs BEFORE blueprintFor, so every sheet is built without the blueprint and the composition plan",
+    );
+  });
+
+  // ── 19. Culture signals are the director's job (Step 1e) ───────────────
+  console.log("\ncultural specifics");
+  check("the v2 brief instructs the director to name identifiers and the confusion to exclude", () => {
+    const brief = buildGptMessages(
+      artDirectorBriefInputFor(fixtureById("09_culturally_specific_concept")),
+      "v2",
+    ).user.content;
+    assert.ok(/EXACT visual identifiers/i.test(brief), "the brief does not ask for exact identifiers");
+    assert.ok(/EXCLUDED/i.test(brief), "the brief does not ask for the confusion to be excluded");
+    // The measured failure, named concretely so the instruction cannot be read as abstract.
+    assert.ok(/apricot blossom/i.test(brief), "the apricot-blossom failure is not named");
+    assert.ok(/cherry blossom/i.test(brief), "the cherry-blossom substitution is not named");
+    assert.ok(/never grow one|no lookup table/i.test(brief), "nothing forbids a lookup table");
+  });
+  check("the client's own exclusion survives into the prompt", () => {
+    const fx = fixtureById("09_culturally_specific_concept");
+    const sheet = sheetFor(fx);
+    assert.ok(
+      sheet.set.exclusions.some((e) => /not chinese|not japanese/i.test(e)),
+      `the concept's own exclusion was dropped: ${JSON.stringify(sheet.set.exclusions)}`,
+    );
+  });
+  check("no lookup table was added", () => {
+    for (const fx of GPT_BRIEF_FIXTURES) {
+      assert.deepStrictEqual(
+        sheetFor(fx).set.culture_signals,
+        [],
+        `${fx.id} populated culture_signals, which means a table was added somewhere`,
+      );
+    }
+  });
+
+  // ── 20. The quoted-digit exemption (Step 1g) ───────────────────────────
+  console.log("\nthe quoted-digit exemption");
+  check("prices and brand strings inside the manifest do not trip the digit rule", () => {
+    const fx = fixtureById("05_five_drinks_prices_florian");
+    const input = artDirectorBriefInputFor(fx);
+    const result = runGptChecks(promptFor(fx), {
+      copy: fx.copy,
+      referenceCount: input.allocation?.slots.length ?? 0,
+      aspectRatio: fx.aspectRatio,
+      maxChars: gptFallbackMaxChars(input),
+      sheet: input.sheet,
+      density: "words_only",
+      printRuleBranch: input.printRule?.branch,
+    });
+    // Six of the nine strings carry digits — "Chỉ từ 30K", "Caramel coffee - 35K" …
+    assert.ok(fx.copy.filter((c) => /\d/.test(c)).length >= 6, "the fixture lost its price lines");
+    assert.ok(result.ok, `the client's own prices were refused: ${result.failures.map((f) => f.code).join(", ")}`);
+  });
+  check("a stray digit OUTSIDE a quoted string still fails", () => {
+    const fx = fixtureById("05_five_drinks_prices_florian");
+    const input = artDirectorBriefInputFor(fx);
+    // One numeral, in prose, in the lighting section — the exact leak the rule is for.
+    const sabotaged = promptFor(fx).replace(
+      "LIGHT / CAMERA / MATERIALS:",
+      "LIGHT / CAMERA / MATERIALS: Shot at 85mm.",
+    );
+    const result = runGptChecks(sabotaged, {
+      copy: fx.copy,
+      referenceCount: input.allocation?.slots.length ?? 0,
+      aspectRatio: fx.aspectRatio,
+      maxChars: gptFallbackMaxChars(input),
+      sheet: input.sheet,
+      density: "words_only",
+      printRuleBranch: input.printRule?.branch,
+    });
+    assert.ok(!result.ok, "a millimetre figure in prose was accepted");
+    assert.ok(
+      result.failures.some((f) => f.code === "PHYSICAL_NUMBER"),
+      `expected PHYSICAL_NUMBER, got ${result.failures.map((f) => f.code).join(", ")}`,
+    );
+  });
+  check("a digit-bearing string the client did NOT supply is still refused", () => {
+    const fx = fixtureById("01_one_product_square");
+    const input = artDirectorBriefInputFor(fx);
+    const sabotaged = promptFor(fx).replace("TEXT:", 'TEXT: Also set "Giảm 50% hôm nay".');
+    const result = runGptChecks(sabotaged, {
+      copy: fx.copy,
+      referenceCount: input.allocation?.slots.length ?? 0,
+      aspectRatio: fx.aspectRatio,
+      maxChars: gptFallbackMaxChars(input),
+      sheet: input.sheet,
+      density: "words_only",
+      printRuleBranch: input.printRule?.branch,
+    });
+    assert.ok(!result.ok, "invented copy carrying a discount was accepted");
+    assert.ok(
+      result.failures.some((f) => f.code === "UNAUTHORIZED_QUOTE" || f.code === "QUOTE_OUTSIDE_MANIFEST"),
+      `expected an unauthorised-quote failure, got ${result.failures.map((f) => f.code).join(", ")}`,
+    );
+  });
+
+  // ── 21. Prompt length (Step 1f) ────────────────────────────────────────
+  console.log("\nprompt length");
+  check("the director is told the five-to-seven-hundred-word target", () => {
+    const brief = buildGptMessages(artDirectorBriefInputFor(fixtureById("01_one_product_square")), "v2")
+      .user.content;
+    assert.ok(/five hundred to seven hundred words/i.test(brief), "the word target is not stated");
+  });
+  check("the code-built prompt stays inside its own ceiling on every brief", () => {
+    for (const fx of GPT_BRIEF_FIXTURES) {
+      const input = artDirectorBriefInputFor(fx);
+      const chars = promptFor(fx).length;
+      assert.ok(
+        chars <= gptFallbackMaxChars(input),
+        `${fx.id}: ${chars} characters against a ${gptFallbackMaxChars(input)} ceiling`,
+      );
     }
   });
 
