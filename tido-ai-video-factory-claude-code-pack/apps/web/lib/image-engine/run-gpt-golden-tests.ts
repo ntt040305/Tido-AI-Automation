@@ -113,7 +113,15 @@ function compare(dir: string, fx: GptBriefFixture, actual: string) {
     return;
   }
   assert.ok(fs.existsSync(file), `no golden at ${path.relative(process.cwd(), file)} — run with --update`);
-  const expected = fs.readFileSync(file, "utf8");
+  // Line endings normalised on BOTH sides.
+  //
+  // The goldens are committed with LF and this repo's git converts them to CRLF in the
+  // working tree, so a branch switch alone was enough to fail all 32 comparisons on a line
+  // ending nobody changed. The content is what the golden is for.
+  const CR = String.fromCharCode(13);
+  const normalise = (text: string) => text.split(CR).join("");
+  const expected = normalise(fs.readFileSync(file, "utf8"));
+  actual = normalise(actual);
   if (expected !== actual) {
     // The first differing line is the useful part of a 4,000-character diff.
     const a = expected.split("\n");

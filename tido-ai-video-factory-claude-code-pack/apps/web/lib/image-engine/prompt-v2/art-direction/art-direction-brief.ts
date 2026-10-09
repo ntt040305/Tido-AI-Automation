@@ -143,6 +143,9 @@ export function renderLighting(sheet: ArtDirectionSheet): string {
       ? "a narrow rim or edge light separates the subject from the background along one side"
       : "no rim light: with this many objects in frame it would outline all of them and read as a cutout",
     l.shadow_rule,
+    // Conditional on an observation, and silent without one, so a render with no vision
+    // pass reads exactly as it does today.
+    sheet.material_lighting_note ?? "",
   ]);
 }
 
@@ -265,6 +268,7 @@ export function artDirectionSlots(
           `${p.id === sheet.hero.id ? "HERO — " : ""}${p.description}` +
           `${p.colours.length ? `; reads ${p.colours.join(", ")}` : ""}` +
           `${p.material !== "unverified" ? `; ${p.material}` : "; material unverified, take it from the photograph"}` +
+          `${p.size_class !== "unverified" ? `; ${p.size_class}` : ""}` +
           `${p.printed_branding !== "unverified" ? `; printed branding reads ${p.printed_branding}` : ""}`,
       ),
     ),

@@ -14,7 +14,8 @@
       "size_class": "unverified",
       "colours": [],
       "printed_branding": "unverified",
-      "description": "slim can, citrus"
+      "description": "slim can, citrus",
+      "physics": null
     },
     {
       "id": "2",
@@ -22,7 +23,8 @@
       "size_class": "unverified",
       "colours": [],
       "printed_branding": "unverified",
-      "description": "slim can, berry"
+      "description": "slim can, berry",
+      "physics": null
     },
     {
       "id": "3",
@@ -30,7 +32,8 @@
       "size_class": "unverified",
       "colours": [],
       "printed_branding": "unverified",
-      "description": "slim can, ginger"
+      "description": "slim can, ginger",
+      "physics": null
     }
   ],
   "hero": {
@@ -135,6 +138,7 @@
     "palette.text: product_appearance (the accent) offered #c7a781, which reaches only 2.0 to 1 against the field #f2efe9 — below the 4.5 to 1 type needs, so it is skipped",
     "palette.ten: concept_text (a colour named in the concept) won over default (every named colour failed the contrast guard)"
   ],
+  "material_lighting_note": null,
   "sheet_fallback_reason": null,
   "provenance": {
     "asset_family": "social",

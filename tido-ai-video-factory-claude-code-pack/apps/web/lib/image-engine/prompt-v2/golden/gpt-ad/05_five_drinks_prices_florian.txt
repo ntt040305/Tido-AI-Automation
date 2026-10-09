@@ -14,7 +14,8 @@
       "size_class": "unverified",
       "colours": [],
       "printed_branding": "unverified",
-      "description": "a tall clear cup of iced caramel coffee"
+      "description": "a tall clear cup of iced caramel coffee",
+      "physics": null
     },
     {
       "id": "2",
@@ -24,7 +25,8 @@
         "orange"
       ],
       "printed_branding": "unverified",
-      "description": "a clear cup of iced orange tea with fruit slices"
+      "description": "a clear cup of iced orange tea with fruit slices",
+      "physics": null
     },
     {
       "id": "3",
@@ -34,7 +36,8 @@
         "blue"
       ],
       "printed_branding": "unverified",
-      "description": "a clear cup of iced blueberry tea"
+      "description": "a clear cup of iced blueberry tea",
+      "physics": null
     },
     {
       "id": "4",
@@ -44,7 +47,8 @@
         "matcha"
       ],
       "printed_branding": "unverified",
-      "description": "a cup of iced matcha with lotus seed"
+      "description": "a cup of iced matcha with lotus seed",
+      "physics": null
     },
     {
       "id": "5",
@@ -55,7 +59,8 @@
         "matcha"
       ],
       "printed_branding": "unverified",
-      "description": "a cup of iced matcha latte, layered"
+      "description": "a cup of iced matcha latte, layered",
+      "physics": null
     }
   ],
   "hero": {
@@ -212,6 +217,7 @@
     "palette.ten: product_appearance (the product is red) won over default (every named colour failed the contrast guard)",
     "palette.text: product_appearance (the accent) won over default (derived from the field's own luminance)"
   ],
+  "material_lighting_note": null,
   "sheet_fallback_reason": null,
   "provenance": {
     "asset_family": "social",

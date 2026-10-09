@@ -8,10 +8,15 @@ Updated after every commit. Read this first if you are picking the work up cold.
 Direction Sheet (Zod), `words.ts` translation, precedence, print rule, text manifest,
 realism block, nine flag-gated linter rules, v2 templates, 14 golden briefs ON and OFF.
 
-**Round 2 Step 1 (done, this commit).** Defect fixes from the Round 1 report.
+**Round 2 Step 1 (done, `72c7951`).** Defect fixes from the Round 1 report.
 
-**Next: Step 2** — Phase 3 per-product vision facts behind `GPT_PRODUCT_VISION`.
-**Then: Step 3** — Phase 5 post-render vision QC behind `GPT_VISION_QC`.
+**Round 2 Step 2 (done, this commit).** Per-product vision facts behind
+`GPT_PRODUCT_VISION`: one call over the packed sheets, universal material physics,
+print-rule branch (c) now reachable. No real call made.
+
+**Next: Step 3** — Phase 5 post-render vision QC behind `GPT_VISION_QC`. Starts with the
+one authorised in-place bug fix: `VisionReview.ts:353` filters on `f.blocking` while
+findings carry `severity`, so the re-render path has never fired.
 
 ## Flags
 
@@ -19,7 +24,7 @@ realism block, nine flag-gated linter rules, v2 templates, 14 golden briefs ON a
 |---|---|---|
 | `GPT_ART_DIRECTOR` | OFF | The sheet writes the Sunburst brief. Rollback = unset. |
 | `GPT_NUMERIC_WORDS` | `words_only` | `words_plus_percent` spells percentages in the layout sections. |
-| `GPT_PRODUCT_VISION` | — | Step 2. Not built yet. |
+| `GPT_PRODUCT_VISION` | OFF | One vision call reads the packed sheets; material drives the light. Needs `GPT_ART_DIRECTOR` too. |
 | `GPT_VISION_QC` | — | Step 3. Not built yet. |
 
 ## Step 1, item by item
@@ -36,6 +41,20 @@ realism block, nine flag-gated linter rules, v2 templates, 14 golden briefs ON a
 | 1h full sweep | done | see the commit message |
 | 1i evidence | done | `golden/gpt-ad/*.txt` carries prompt + sheet per brief |
 
+## Step 2, item by item
+
+| Item | State | Where |
+|---|---|---|
+| 2a one vision call, Zod output | done | `art-direction/product-vision.ts`. Reuses `LLMProviderService` with `image_url`, the transport the inspiration layer already uses. No new provider. |
+| 2b wired into the sheet | done | `material-physics.ts` → `deriveLighting`, `deriveCamera`, `deriveProducts`. Dominant material by visible area; secondary gets a fill rule. |
+| 2c reliability | done | hash cache (bytes + prompt version), raced timeout, every failure returns `vision: null` and the sheet keeps today's defaults |
+| 2d mocked tests | done | `run-product-vision-tests.ts`, 46 checks, five material cases, no real call |
+| 2e guarded script | done | `scripts/eval-product-vision.ts`. **Not run.** |
+
+Two bugs the tests caught, both mine: `sizeFor` matched "two-handed" against its
+one-handed `hand` pattern (so a two-handed box got the +25mm meant for a palm-sized
+thing), and the golden comparison broke on CRLF after a branch switch.
+
 ## Open risks
 
 1. **1f is not fully met.** The target is 500–700 words. The DIRECTOR is told that and its
@@ -50,9 +69,16 @@ realism block, nine flag-gated linter rules, v2 templates, 14 golden briefs ON a
 3. **Editable mode does not get the mood image.** `renderSource` shallow-copies the request
    there, so the orchestrator's write-back lands on the copy. Editable renders the scene
    only and does not use this path today. `ponytail:` comment at the write-back.
-4. **466px label-lock still unverified.** `scripts/eval-gpt-label-lock.ts`, ~1,000 VND,
+4. **No real vision call has ever been made.** Every assertion about the vision pass is
+   against a mocked reply. If a real model misreads a glass cup as matte plastic, the
+   lighting plan inverts — backlight becomes raking light — and nothing in the logs says
+   so beyond the recorded conflict line. `scripts/eval-product-vision.ts`, ~50 VND, unrun.
+5. **Branch (c) trusts `legible`.** A model that reports a label as legible when it
+   guessed is how invented lettering reaches a real product. The prompt pushes hard against
+   it and `legible: false` keeps branch (b), but this is unverified against a real model.
+6. **466px label-lock still unverified.** `scripts/eval-gpt-label-lock.ts`, ~1,000 VND,
    unrun.
-5. **The D2 A/B is unrun** and its render loop is deliberately unwritten.
+7. **The D2 A/B is unrun** and its render loop is deliberately unwritten.
    `scripts/eval-gpt-density.ts`.
 
 ## Rules in force
@@ -72,5 +98,15 @@ realism block, nine flag-gated linter rules, v2 templates, 14 golden briefs ON a
 ```bash
 npx tsx lib/image-engine/run-art-direction-tests.ts
 npx tsx lib/image-engine/run-gpt-golden-tests.ts            # add --update to rewrite
+npx tsx lib/image-engine/run-product-vision-tests.ts
 npx tsx lib/image-engine/run-all-tests.ts --keep-going
 ```
+
+## Full sweep, 2026-10-09
+
+`63/63 suites · 2077 passed, 20 failed`. Four suites red, and all four are
+**pre-existing**: verified by running them at `19556d9`, the commit before any
+art-director work, where the counts are identical. They are source-assertion tests about
+`ExperimentPipeline` call ordering — `run-vision-loop-tests` (1),
+`run-creative-director-tests` (2), `run-design-output-tests` (1). Not investigated
+further; out of scope for this work.

@@ -33,7 +33,13 @@ import { buildGptPrompt, type GptEngineResult } from "./build-gpt";
 import type { GptBriefInput, GptReference } from "./gpt-brief";
 import type { SimpleResult } from "./build-simple";
 import { activeProfile } from "../models/image-model-profiles";
-import { gptArtDirector, numericWordsDensity } from "./engine-selector";
+import { gptArtDirector, gptProductVision, numericWordsDensity } from "./engine-selector";
+import {
+  productVisionTelemetry,
+  readProductVision,
+  type ProductVision,
+  type ProductVisionResult,
+} from "./art-direction/product-vision";
 import {
   buildArtDirectionSheet,
   printRuleForSheet,
@@ -102,6 +108,27 @@ export interface GptPipelineInput {
    * sequence rather than something the code enforces.
    */
   upstream?: { blueprint: unknown | null; compositionPlan: unknown | null };
+  /**
+   * The packed sheet bytes, for the product-vision pass.
+   *
+   * Taken from the caller rather than packed again here. The provider already draws these
+   * sheets to send them, and drawing a second copy would mean rendering the same pixels
+   * twice and risking the two copies disagreeing. Absent means no vision pass, which is
+   * the same as the flag being off.
+   */
+  sheets?: Array<{ buffer: Buffer; mimeType?: string }>;
+  /**
+   * The vision client. Injected so a test can mock it and so this file adds no provider.
+   *
+   * Absent means no pass. In production the pipeline passes the same `chat` it gives the
+   * director — `LLMProviderService.generateChatCompletion`, which is the transport
+   * `InspirationStyleIntelligenceService` has used for vision since the inspiration layer
+   * shipped.
+   */
+  visionChat?: (
+    messages: Array<{ role: "system" | "user" | "assistant"; content: unknown }>,
+    purpose: string,
+  ) => Promise<string>;
 }
 
 function roleKind(role: string): AllocationInput["kind"] {
@@ -234,7 +261,11 @@ export function styleWords(manifest: GptPipelineInput["styleManifest"]): { label
 }
 
 /** The sheet's own input, assembled from what the pipeline already has. */
-function sheetInputFor(input: GptPipelineInput, allocation: Allocation | null): SheetInput {
+function sheetInputFor(
+  input: GptPipelineInput,
+  allocation: Allocation | null,
+  productVision: ProductVision | null = null,
+): SheetInput {
   return {
     assetType: input.assetType,
     aspectRatio: input.aspectRatio,
@@ -263,6 +294,7 @@ function sheetInputFor(input: GptPipelineInput, allocation: Allocation | null): 
     detectedPrintedBranding: input.detectedPrintedBranding ?? null,
     density: numericWordsDensity(),
     upstream: input.upstream,
+    productVision,
   };
 }
 
@@ -274,6 +306,7 @@ export async function buildGptForPipeline(
   gpt: GptEngineResult | null;
   allocation: Allocation | null;
   sheet: ArtDirectionSheet | null;
+  vision: ProductVisionResult | null;
 }> {
   const profile = activeProfile();
   const artDirector = gptArtDirector();
@@ -289,11 +322,31 @@ export async function buildGptForPipeline(
 
     const productCount = input.references.filter((r) => roleKind(r.role) === "product").length;
 
+    // ── The product-vision pass ────────────────────────────────────────
+    //
+    // One call over the packed sheets, before the sheet is built, because what it reads
+    // decides the lighting plan. It cannot end a render: `readProductVision` returns
+    // `vision: null` on a timeout, invalid JSON, a schema violation or a thrown client, and
+    // a null puts the sheet back on today's `unverified` defaults.
+    //
+    // Gated on BOTH flags. The art-director path has to stay usable without paying for a
+    // vision call, and a vision result with no sheet to put it in would be a wasted call.
+    let vision: ProductVisionResult | null = null;
+    if (artDirector && gptProductVision() && input.visionChat && (input.sheets || []).length) {
+      vision = await readProductVision(allocation, input.sheets || [], { chat: input.visionChat });
+      console.log("[PROMPT_GPT][PRODUCT_VISION]", JSON.stringify(productVisionTelemetry(vision)));
+      if (!vision.vision) {
+        console.warn(
+          `[PROMPT_GPT][PRODUCT_VISION][FALLBACK] ${vision.reason || vision.source} — the sheet keeps its unverified defaults`,
+        );
+      }
+    }
+
     // The sheet, and the print rule it selects. Both pure, both deterministic, neither
     // costing a model call — so building them before the flag check would be free, but it
     // would also mean a bug in a derivation rule could end a render that asked for none of
     // this. They are built only when they will be used.
-    const sheetInput = artDirector ? sheetInputFor(input, allocation) : null;
+    const sheetInput = artDirector ? sheetInputFor(input, allocation, vision?.vision ?? null) : null;
     const sheet = sheetInput ? buildArtDirectionSheet(sheetInput) : null;
     const printRule = sheetInput ? printRuleForSheet(sheetInput) : null;
     if (sheet) {
@@ -350,7 +403,7 @@ export async function buildGptForPipeline(
     };
 
     const gpt = await buildGptPrompt(briefInput, { chat });
-    return { simple: asSimpleResult(gpt), gpt, allocation, sheet };
+    return { simple: asSimpleResult(gpt), gpt, allocation, sheet, vision };
   } catch (err) {
     const message = (err as Error)?.message || String(err);
     return {
@@ -367,6 +420,7 @@ export async function buildGptForPipeline(
       gpt: null,
       allocation: null,
       sheet: null,
+      vision: null,
     };
   }
 }

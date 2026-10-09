@@ -16,7 +16,8 @@
         "white"
       ],
       "printed_branding": "unverified",
-      "description": "a bowl of beef noodle soup"
+      "description": "a bowl of beef noodle soup",
+      "physics": null
     },
     {
       "id": "2",
@@ -26,7 +27,8 @@
         "white"
       ],
       "printed_branding": "unverified",
-      "description": "a plate of grilled pork rice"
+      "description": "a plate of grilled pork rice",
+      "physics": null
     },
     {
       "id": "3",
@@ -36,7 +38,8 @@
         "white"
       ],
       "printed_branding": "unverified",
-      "description": "a basket of fried spring rolls"
+      "description": "a basket of fried spring rolls",
+      "physics": null
     },
     {
       "id": "4",
@@ -46,7 +49,8 @@
         "white"
       ],
       "printed_branding": "unverified",
-      "description": "a glass of iced lemon tea"
+      "description": "a glass of iced lemon tea",
+      "physics": null
     }
   ],
   "hero": {
@@ -167,6 +171,7 @@
     "lighting.kelvin: concept_text (the concept says warm) won over default (the concept states no temperature)",
     "palette.ten: product_appearance (the product is white) offered #f7f5f1, which is too close in luminance to the field #f2efe9 to read as emphasis — skipped"
   ],
+  "material_lighting_note": null,
   "sheet_fallback_reason": null,
   "provenance": {
     "asset_family": "poster",

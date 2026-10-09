@@ -17,7 +17,8 @@
         "red"
       ],
       "printed_branding": "unverified",
-      "description": "a bright red plastic bottle of chilli sauce"
+      "description": "a bright red plastic bottle of chilli sauce",
+      "physics": null
     }
   ],
   "hero": {
@@ -130,6 +131,7 @@
     "palette.sixty: brand_kit (the kit's first usable colour) won over default (no brand colour for the field, and a concept colour names a thing rather than the ground)",
     "palette.ten: product_appearance (the product is black) won over default (every named colour failed the contrast guard)"
   ],
+  "material_lighting_note": null,
   "sheet_fallback_reason": null,
   "provenance": {
     "asset_family": "poster",

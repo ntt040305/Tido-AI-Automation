@@ -14,7 +14,8 @@
       "size_class": "unverified",
       "colours": [],
       "printed_branding": "unverified",
-      "description": "a traditional baked mooncake, cut to show the salted egg yolk"
+      "description": "a traditional baked mooncake, cut to show the salted egg yolk",
+      "physics": null
     }
   ],
   "hero": {
@@ -122,6 +123,7 @@
     "palette.ten: concept_text (a colour named in the concept) won over default (every named colour failed the contrast guard)",
     "palette.text: product_appearance (the accent) won over default (derived from the field's own luminance)"
   ],
+  "material_lighting_note": null,
   "sheet_fallback_reason": null,
   "provenance": {
     "asset_family": "poster",

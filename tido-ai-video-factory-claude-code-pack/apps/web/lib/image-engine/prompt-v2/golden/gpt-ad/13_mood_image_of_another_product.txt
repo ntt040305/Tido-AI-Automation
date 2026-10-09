@@ -16,7 +16,8 @@
         "cream"
       ],
       "printed_branding": "unverified",
-      "description": "a frosted glass bottle of night cream"
+      "description": "a frosted glass bottle of night cream",
+      "physics": null
     }
   ],
   "hero": {
@@ -113,6 +114,7 @@
   "conflicts_resolved": [
     "palette.ten: product_appearance (the product is cream) offered #efe6d4, which is too close in luminance to the field #f2efe9 to read as emphasis — skipped"
   ],
+  "material_lighting_note": null,
   "sheet_fallback_reason": null,
   "provenance": {
     "asset_family": "poster",

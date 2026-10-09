@@ -14,7 +14,8 @@
       "size_class": "unverified",
       "colours": [],
       "printed_branding": "unverified",
-      "description": "a ceramic mug"
+      "description": "a ceramic mug",
+      "physics": null
     },
     {
       "id": "2",
@@ -22,7 +23,8 @@
       "size_class": "unverified",
       "colours": [],
       "printed_branding": "unverified",
-      "description": "a stoneware plate"
+      "description": "a stoneware plate",
+      "physics": null
     },
     {
       "id": "3",
@@ -30,7 +32,8 @@
       "size_class": "unverified",
       "colours": [],
       "printed_branding": "unverified",
-      "description": "a glass tumbler"
+      "description": "a glass tumbler",
+      "physics": null
     },
     {
       "id": "4",
@@ -38,7 +41,8 @@
       "size_class": "unverified",
       "colours": [],
       "printed_branding": "unverified",
-      "description": "a linen napkin"
+      "description": "a linen napkin",
+      "physics": null
     },
     {
       "id": "5",
@@ -46,7 +50,8 @@
       "size_class": "unverified",
       "colours": [],
       "printed_branding": "unverified",
-      "description": "a wooden tray"
+      "description": "a wooden tray",
+      "physics": null
     },
     {
       "id": "6",
@@ -54,7 +59,8 @@
       "size_class": "unverified",
       "colours": [],
       "printed_branding": "unverified",
-      "description": "a small bowl"
+      "description": "a small bowl",
+      "physics": null
     },
     {
       "id": "7",
@@ -62,7 +68,8 @@
       "size_class": "unverified",
       "colours": [],
       "printed_branding": "unverified",
-      "description": "a teapot"
+      "description": "a teapot",
+      "physics": null
     },
     {
       "id": "8",
@@ -70,7 +77,8 @@
       "size_class": "unverified",
       "colours": [],
       "printed_branding": "unverified",
-      "description": "a brass spoon"
+      "description": "a brass spoon",
+      "physics": null
     }
   ],
   "hero": {
@@ -164,6 +172,7 @@
     "no watermark, signature, frame or border inside the image"
   ],
   "conflicts_resolved": [],
+  "material_lighting_note": null,
   "sheet_fallback_reason": null,
   "provenance": {
     "asset_family": "poster",

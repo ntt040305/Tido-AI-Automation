@@ -14,7 +14,8 @@
       "size_class": "unverified",
       "colours": [],
       "printed_branding": "unverified",
-      "description": "30ml frosted glass serum bottle with a dropper"
+      "description": "30ml frosted glass serum bottle with a dropper",
+      "physics": null
     },
     {
       "id": "2",
@@ -24,7 +25,8 @@
         "white"
       ],
       "printed_branding": "unverified",
-      "description": "50ml white pump bottle of moisturiser"
+      "description": "50ml white pump bottle of moisturiser",
+      "physics": null
     }
   ],
   "hero": {
@@ -130,6 +132,7 @@
     "lighting.kelvin: concept_text (the concept says clean, clinical) won over default (the concept states no temperature)",
     "palette.ten: product_appearance (the product is white) offered #f7f5f1, which is too close in luminance to the field #f2efe9 to read as emphasis — skipped"
   ],
+  "material_lighting_note": null,
   "sheet_fallback_reason": null,
   "provenance": {
     "asset_family": "poster",

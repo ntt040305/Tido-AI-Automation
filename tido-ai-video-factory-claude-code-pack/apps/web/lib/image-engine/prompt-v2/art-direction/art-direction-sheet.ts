@@ -51,6 +51,8 @@ import type { NumericWordsDensity } from "../engine-selector";
 import { exclusionsFor, industryLabel } from "./industry-label";
 import { extractConceptSpecs, conceptWithoutSpecs, type ConceptSpecs } from "./concept-specs";
 import { printRuleFor, type PrintRule } from "./print-rule";
+import { physicsFor, type ProductPhysics } from "./material-physics";
+import type { ProductVision, ProductVisionItem } from "./product-vision";
 import { resolvePrecedence, type Candidate } from "./precedence";
 import {
   COLOUR_HEX,
@@ -94,6 +96,19 @@ export const ArtDirectionSheetSchema = z.object({
       printed_branding: unverifiable(z.string()),
       /** What the client said this is. Verbatim. */
       description: z.string(),
+      /**
+       * What the material does to light, when a vision pass observed one.
+       *
+       * Null without `GPT_PRODUCT_VISION`, which is the same as today. Keyed on optical
+       * behaviour that was SEEN, never on what the product is for — see `material-physics.ts`.
+       */
+      physics: z
+        .object({
+          dominant: z.string(),
+          secondary: z.string().nullable(),
+          observed: z.array(z.string()),
+        })
+        .nullable(),
     }),
   ),
   hero: z.object({ id: z.string(), reason: z.string() }),
@@ -210,6 +225,15 @@ export const ArtDirectionSheetSchema = z.object({
    *
    * Never throws. A missing layer degrades the sheet; it does not end the render.
    */
+  /**
+   * Why the light is what it is, when a material was observed. Null otherwise.
+   *
+   * Separate from `lighting.shadow_rule` because this one is CONDITIONAL on an observation
+   * and that one is always true. A reader of the sheet can tell at a glance whether the
+   * lighting plan came from a photograph or from the geometry.
+   */
+  material_lighting_note: z.string().nullable(),
+
   sheet_fallback_reason: z.string().nullable(),
 
   /** Not creative. The record of how this sheet was made. */
@@ -279,7 +303,18 @@ export interface SheetInput {
     colorMood?: string;
     derived_from_image?: boolean;
   } | null;
-  /** Phase 3's hook. Nothing populates it in this round. */
+  /**
+   * What the vision pass read off the packed sheets, when `GPT_PRODUCT_VISION` is on.
+   *
+   * Absent means no pass ran or it failed, and the sheet then behaves exactly as it does
+   * without one: `unverified` materials, neutral lighting, print-rule branch (b).
+   */
+  productVision?: ProductVision | null;
+  /**
+   * Printed branding the vision pass could READ. Populated from `productVision`.
+   *
+   * No longer only a hook: this is what makes print-rule branch (c) reachable.
+   */
   detectedPrintedBranding?: Array<{ product: string; reads: string }> | null;
   density?: NumericWordsDensity;
   /**
@@ -437,6 +472,7 @@ function deriveCamera(
   profile: AssetProfile,
   approach: ApproachLevel,
   specs: ConceptSpecs,
+  physics: ProductPhysics | null,
 ): { camera: ArtDirectionSheet["camera"]; conflicts: string[] } {
   const n = Math.max(1, input.products.length);
   const ratio = trim(input.aspectRatio) || "1:1";
@@ -446,11 +482,21 @@ function deriveCamera(
   const baseLens = n === 1 ? 85 : n <= 3 ? 70 : n <= 6 ? 50 : 40;
   // A wide canvas sees more horizontally at the same distance, so it needs less lens to
   // fill the frame and more to avoid stretching its edges.
-  const derivedLens = Math.max(24, baseLens - (ratio === "16:9" ? 10 : 0));
+  // The observed real-world SIZE nudges the count-derived default rather than replacing it,
+  // so "more products means a shorter lens" still holds. Small things need a longer lens:
+  // at a wide angle you have to get close enough that the near edge stretches.
+  const sizeDelta = physics?.size?.lens_delta_mm ?? 0;
+  const derivedLens = Math.max(24, baseLens - (ratio === "16:9" ? 10 : 0) + sizeDelta);
 
   const lens = resolvePrecedence<number>("camera.lens_mm", [
     { tier: "explicit_selection", value: specs.lens_mm, from: "a focal length in the concept" },
-    { tier: "default", value: derivedLens, from: `${n} product(s) on a ${ratio} ${profile.family}` },
+    {
+      tier: "default",
+      value: derivedLens,
+      from:
+        `${n} product(s) on a ${ratio} ${profile.family}` +
+        (sizeDelta ? `, adjusted for an observed ${physics?.size ? "size" : ""} class` : ""),
+    },
   ]);
 
   // Deeper as the group grows: every extra object is another plane that has to stay crisp.
@@ -465,11 +511,15 @@ function deriveCamera(
   const saysOverhead = wordsIn(input.concept, OVERHEAD_WORDS).length > 0;
   const height: CameraHeight = saysOverhead
     ? "overhead"
-    : n >= 4
-      ? "high"
-      : profile.family === "hero"
-        ? "subject_line"
-        : "slightly_above";
+    : // A large product is seen from its own eye level, whatever the count says: looking
+      // down on something furniture-sized makes it look like a model of itself.
+      physics?.size?.height
+      ? physics.size.height
+      : n >= 4
+        ? "high"
+        : profile.family === "hero"
+          ? "subject_line"
+          : "slightly_above";
 
   const tilt_deg = approach === "bold" ? 3 : 0;
 
@@ -492,7 +542,8 @@ function deriveLighting(
   approach: ApproachLevel,
   zones: ReturnType<typeof deriveZones>,
   specs: ConceptSpecs,
-): { lighting: ArtDirectionSheet["lighting"]; conflicts: string[] } {
+  physics: ProductPhysics | null,
+): { lighting: ArtDirectionSheet["lighting"]; conflicts: string[]; physicsNote: string | null } {
   const warm = wordsIn(input.concept, WARM_WORDS);
   const cool = wordsIn(input.concept, COOL_WORDS);
   // Neither, or both, means neutral. A concept that says "warm and clean" has not chosen,
@@ -512,21 +563,47 @@ function deriveLighting(
   // The key comes from the side the words are NOT on, so the shadow it throws falls away
   // from the type instead of across it. Pure geometry.
   const textOnLeft = zones.text.width_pct > 0 && zones.text.left_pct + zones.text.width_pct / 2 < 50;
-  const key_direction: KeyDirection = textOnLeft ? "front_right" : "front_left";
+  const geometricKey: KeyDirection = textOnLeft ? "front_right" : "front_left";
+
+  // What the MATERIAL needs outranks where the words are.
+  //
+  // Geometry decides the key when nothing is known about the surface, and that is the right
+  // default — a shadow thrown across the type is a defect. But a transparent product lit
+  // from the front reads as grey plastic whatever the layout wanted, and that is a worse
+  // defect. So an OBSERVED material wins, and the conflict is recorded.
+  //
+  // Nothing fires without an observation: `physics` is null without GPT_PRODUCT_VISION.
+  const key = resolvePrecedence<KeyDirection>("lighting.key_direction", [
+    {
+      tier: "product_appearance",
+      value: physics?.lighting.key,
+      from: physics ? `the product is ${physics.material.dominant} (observed: ${physics.material.observed.join(", ")})` : undefined,
+    },
+    { tier: "default", value: geometricKey, from: "the side the words are not on" },
+  ]);
 
   const n = input.products.length;
+  const fill = resolvePrecedence<number>("lighting.fill_ratio", [
+    { tier: "product_appearance", value: physics?.lighting.fill_ratio, from: `a ${physics?.material.dominant} surface` },
+    { tier: "creative_approach", value: approach === "restrained" ? 2 : approach === "bold" ? 5 : 3, from: `a ${approach} approach` },
+  ]);
+
   return {
     lighting: {
-      key_direction,
+      key_direction: key.value ?? geometricKey,
       kelvin: kelvin.value ?? 4500,
       // A rim separates a subject from its ground; with a crowd in the frame it turns into
-      // outlines on everything and reads as a cutout.
-      rim: n <= 3,
-      fill_ratio: approach === "restrained" ? 2 : approach === "bold" ? 5 : 3,
+      // outlines on everything and reads as a cutout. A transmissive hero overrides that:
+      // without a rim its edges disappear.
+      rim: physics ? physics.lighting.rim : n <= 3,
+      fill_ratio: fill.value ?? 3,
       shadow_rule:
         "one light direction governs every highlight and shadow in the frame; no object casts a shadow in a direction the others do not",
     },
-    conflicts: kelvin.conflicts,
+    conflicts: [...kelvin.conflicts, ...key.conflicts, ...fill.conflicts],
+    physicsNote: physics
+      ? [physics.lighting.note, physics.lighting.secondary_note, physics.size?.note].filter(Boolean).join("; ")
+      : null,
   };
 }
 
@@ -765,26 +842,80 @@ function deriveTextManifest(
   });
 }
 
+/**
+ * The vision item for a product, matched by the panel the allocation gave it.
+ *
+ * Matched by panel rather than by array position, because the allocation reorders products
+ * when it packs sheets — on the five-drink brief, panel order is 1, 3, 5, 2, 4 — so index
+ * matching would attach one product's material to another's lighting plan.
+ */
+function visionFor(input: SheetInput, productId: string): ProductVisionItem | null {
+  const vision = input.productVision;
+  if (!vision) return null;
+  // The panel label this product was allocated to, or the slot number when it travels whole.
+  for (const slot of input.allocation?.slots || []) {
+    for (const panel of slot.panels) {
+      if (panel.role !== "product" || panel.sourceImageId !== productId) continue;
+      const want = slot.kind === "single" ? String(slot.index) : panel.label;
+      return vision.products.find((v) => String(v.panel) === want) ?? null;
+    }
+  }
+  // No allocation (a text-path test): fall back to the panel named for this id.
+  return vision.products.find((v) => String(v.panel) === productId) ?? null;
+}
+
 /** Products, with everything the system cannot see marked as such. */
 function deriveProducts(input: SheetInput): ArtDirectionSheet["products"] {
   const factText = (input.productFacts || []).join(" ");
   return input.products.map((p) => {
+    const seen = visionFor(input, p.id);
+    const physics = physicsFor(seen);
     const own = `${p.description} ${factText}`;
-    const materials = wordsIn(own, MATERIALS);
-    const colours = wordsIn(own, Object.keys(COLOUR_HEX));
+    // What was SEEN outranks what was typed, and both outrank nothing. A vision pass
+    // looking at the photograph is a better authority on the material than a word in a
+    // description — and the description is still used when no pass ran.
+    const materials = seen?.materials.length ? seen.materials : wordsIn(own, MATERIALS);
+    const colours = seen?.dominant_colours.length
+      ? seen.dominant_colours
+      : wordsIn(own, Object.keys(COLOUR_HEX));
     // "the label reads X" is the only shape the system can read branding from today, and
     // only when a human typed it into the product facts. Anything else is unverified, and
     // saying so is the whole point: a guessed label is drawn as a guessed label.
     const reads = /(?:label|front|cap|lid)\s+reads\s+([^;.]+)/i.exec(factText);
+    // Branding the vision pass could READ wins. Branding it could SEE but not read is
+    // still unverified, which is the whole reason `legible` exists: a guessed label is
+    // drawn as a guessed label on a real product.
+    const seenBranding =
+      seen?.printed_branding.present && seen.printed_branding.legible
+        ? trim(seen.printed_branding.description)
+        : "";
     return {
       id: p.id,
       material: materials.length ? materials.join(", ") : UNVERIFIED,
-      size_class: UNVERIFIED,
+      size_class: trim(seen?.size_class) || UNVERIFIED,
       colours,
-      printed_branding: reads ? trim(reads[1]).replace(/["“”]/g, "") : UNVERIFIED,
+      printed_branding: seenBranding || (reads ? trim(reads[1]).replace(/["“”]/g, "") : UNVERIFIED),
       description: p.description,
+      physics: physics
+        ? {
+            dominant: physics.material.dominant,
+            secondary: physics.material.secondary ?? null,
+            observed: physics.material.observed,
+          }
+        : null,
     };
   });
+}
+
+/**
+ * The physics of the HERO's material, which is what the lighting plan follows.
+ *
+ * The hero's, not an average: one frame has one lighting plan, and averaging a glass cup
+ * with a cardboard box produces a plan that serves neither. The secondary material gets a
+ * fill rule instead.
+ */
+function heroPhysics(input: SheetInput, heroId: string): ProductPhysics | null {
+  return physicsFor(visionFor(input, heroId));
 }
 
 /**
@@ -836,8 +967,12 @@ export function buildArtDirectionSheet(input: SheetInput): ArtDirectionSheet {
   const conceptClean = conceptWithoutSpecs(input.concept, specs);
   const approach = resolveApproach(input, profile);
   const zones = deriveZones(input, profile, approach.level);
-  const cam = deriveCamera(input, profile, approach.level, specs);
-  const light = deriveLighting(input, approach.level, zones, specs);
+  // The hero's material drives the lighting plan. Resolved before the hero is NAMED below,
+  // from the first product, then re-read once the hero is known — cheap, both calls pure.
+  const provisionalHero = input.products[0]?.id ?? "1";
+  const physics = heroPhysics(input, provisionalHero);
+  const cam = deriveCamera(input, profile, approach.level, specs, physics);
+  const light = deriveLighting(input, approach.level, zones, specs, physics);
   const pal = derivePalette(input);
   const manifest = deriveTextManifest(input, profile, zones, pal.palette);
   const products = deriveProducts(input);
@@ -949,6 +1084,7 @@ export function buildArtDirectionSheet(input: SheetInput): ArtDirectionSheet {
       "no watermark, signature, frame or border inside the image",
     ],
     conflicts_resolved: conflicts,
+    material_lighting_note: light.physicsNote,
     sheet_fallback_reason: fallbackReason(input),
     provenance: {
       asset_family: profile.family,
@@ -957,16 +1093,30 @@ export function buildArtDirectionSheet(input: SheetInput): ArtDirectionSheet {
       approach_reason: approach.reason,
       industry_label: industryLabel(input.industry),
       density,
-      print_rule_branch: printRuleFor({
-        hasLogoImage: Boolean(
-          input.brandKit?.hasLogoImage ||
-            input.allocation?.slots.some((s) => s.panels.some((p) => p.role === "logo")),
-        ),
-        detectedPrintedBranding: input.detectedPrintedBranding ?? null,
-      }).branch,
+      print_rule_branch: printRuleForSheet(input).branch,
       concept_specs: specs.matched,
     },
   };
+
+  // A label we can READ that does not match the brand name.
+  //
+  // Not an error and not corrected: the client may be advertising a sub-brand, or may have
+  // uploaded the wrong photograph. Both are things a person should see, and neither is
+  // something to resolve by guessing.
+  const brandName = lower(input.brand);
+  if (brandName) {
+    for (const product of sheet.products) {
+      const printed = lower(product.printed_branding);
+      if (!printed || printed === UNVERIFIED) continue;
+      if (!printed.includes(brandName) && !brandName.includes(printed.split(/[\s/]+/)[0] || "\u0000")) {
+        sheet.conflicts_resolved.push(
+          `products.printed_branding: the label on "${product.description}" reads ` +
+            `"${product.printed_branding}", which does not match the brand name "${input.brand}" — ` +
+            `kept as photographed, nothing corrected`,
+        );
+      }
+    }
+  }
 
   // Props are capped by the approach, and the cap is recorded rather than applied silently.
   if (sheet.set.props.length > propBudget) {
@@ -1023,6 +1173,29 @@ function fallbackReason(input: SheetInput): string | null {
   );
 }
 
+/**
+ * Branding the vision pass could READ, as the print rule's third branch wants it.
+ *
+ * Only `legible` branding counts. Branding that is present but unreadable — the case the
+ * 512px floor creates on every five-product brief — leaves the rule on branch (b), which
+ * says "keep it as photographed, and where it is not legible leave that area clean". That
+ * is the correct instruction for an illegible label, and branch (c) would wrongly claim to
+ * know what it says.
+ */
+export function detectedBrandingFrom(input: SheetInput): Array<{ product: string; reads: string }> | null {
+  if (input.detectedPrintedBranding?.length) return input.detectedPrintedBranding;
+  const vision = input.productVision;
+  if (!vision) return null;
+  const out: Array<{ product: string; reads: string }> = [];
+  for (const product of input.products) {
+    const seen = visionFor(input, product.id);
+    if (!seen?.printed_branding.present || !seen.printed_branding.legible) continue;
+    const reads = trim(seen.printed_branding.description);
+    if (reads) out.push({ product: product.description, reads });
+  }
+  return out.length ? out : null;
+}
+
 /** The print rule for a sheet's inputs. Exported so the brief and the tests agree. */
 export function printRuleForSheet(input: SheetInput): PrintRule {
   return printRuleFor({
@@ -1030,7 +1203,7 @@ export function printRuleForSheet(input: SheetInput): PrintRule {
       input.brandKit?.hasLogoImage ||
         input.allocation?.slots.some((s) => s.panels.some((p) => p.role === "logo")),
     ),
-    detectedPrintedBranding: input.detectedPrintedBranding ?? null,
+    detectedPrintedBranding: detectedBrandingFrom(input),
   });
 }
 

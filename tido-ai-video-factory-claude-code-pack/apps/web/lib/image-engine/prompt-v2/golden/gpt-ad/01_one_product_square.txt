@@ -16,7 +16,8 @@
         "amber"
       ],
       "printed_branding": "ORIGIN BLEND / COLD BREW glass, matte wood cap",
-      "description": "amber glass bottle of cold brew with a turned wood cap"
+      "description": "amber glass bottle of cold brew with a turned wood cap",
+      "physics": null
     }
   ],
   "hero": {
@@ -129,6 +130,7 @@
     "palette.text: product_appearance (the accent) offered #c98a2e, which reaches only 2.6 to 1 against the field #f2efe9 — below the 4.5 to 1 type needs, so it is skipped",
     "palette.ten: product_appearance (the product is amber) won over default (every named colour failed the contrast guard)"
   ],
+  "material_lighting_note": null,
   "sheet_fallback_reason": null,
   "provenance": {
     "asset_family": "poster",

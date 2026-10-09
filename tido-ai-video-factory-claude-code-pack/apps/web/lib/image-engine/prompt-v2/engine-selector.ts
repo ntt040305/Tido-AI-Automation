@@ -304,6 +304,25 @@ export function gptTemplateVersion(env: EnvLike = process.env): string {
 }
 
 /**
+ * Whether one vision pass reads the product photographs. Default OFF.
+ *
+ * It replaces the sheet's `unverified` material, size class and printed branding with what
+ * a model actually SAW, which is the only honest way to get them: material decides the
+ * light — transmissive wants a backlight, matte wants a raking light — and deriving that
+ * from the INDUSTRY is the lock this system forbids.
+ *
+ * Separate from `GPT_ART_DIRECTOR` because it costs a call and the art-director path must
+ * remain usable without one. With it off, the sheet keeps today's neutral defaults and says
+ * "material unverified" in the brief, exactly as it does now.
+ *
+ * It can never block a render: every failure path returns no vision and the sheet falls
+ * back. See `product-vision.ts`.
+ */
+export function gptProductVision(env: EnvLike = process.env): boolean {
+  return String(env.GPT_PRODUCT_VISION || "").trim().toLowerCase() === "true";
+}
+
+/**
  * How precisely layout may be stated in words. Default `words_only`.
  *
  * D1 keeps the ban on digits and units in a master prompt, which the D8/K12 migration
@@ -356,6 +375,7 @@ export function engineTelemetry(env: EnvLike = process.env) {
     gpt_label_lock_verified: labelLockVerified(env),
     gpt_small_panel_policy: smallPanelPolicy(env),
     gpt_art_director: gptArtDirector(env),
+    gpt_product_vision: gptProductVision(env),
     gpt_template_version: gptTemplateVersion(env),
     gpt_numeric_words: numericWordsDensity(env),
     v2_director_model: directorModel(env) || "(provider default)",

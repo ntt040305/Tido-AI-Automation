@@ -14,7 +14,8 @@
       "size_class": "unverified",
       "colours": [],
       "printed_branding": "unverified",
-      "description": "a small unbranded cardboard box"
+      "description": "a small unbranded cardboard box",
+      "physics": null
     }
   ],
   "hero": {
@@ -107,6 +108,7 @@
     "no watermark, signature, frame or border inside the image"
   ],
   "conflicts_resolved": [],
+  "material_lighting_note": null,
   "sheet_fallback_reason": null,
   "provenance": {
     "asset_family": "poster",

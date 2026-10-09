@@ -14,7 +14,8 @@
       "size_class": "unverified",
       "colours": [],
       "printed_branding": "unverified",
-      "description": "a cup of iced milk tea"
+      "description": "a cup of iced milk tea",
+      "physics": null
     },
     {
       "id": "2",
@@ -22,7 +23,8 @@
       "size_class": "unverified",
       "colours": [],
       "printed_branding": "unverified",
-      "description": "a cup of peach tea"
+      "description": "a cup of peach tea",
+      "physics": null
     },
     {
       "id": "3",
@@ -32,7 +34,8 @@
         "black"
       ],
       "printed_branding": "unverified",
-      "description": "a cup of black coffee"
+      "description": "a cup of black coffee",
+      "physics": null
     }
   ],
   "hero": {
@@ -143,6 +146,7 @@
     "palette.ten: product_appearance (the product is black) won over default (every named colour failed the contrast guard)",
     "palette.text: product_appearance (the accent) won over default (derived from the field's own luminance)"
   ],
+  "material_lighting_note": null,
   "sheet_fallback_reason": null,
   "provenance": {
     "asset_family": "social",

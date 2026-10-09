@@ -17,7 +17,8 @@
         "blue"
       ],
       "printed_branding": "unverified",
-      "description": "a matte black cylindrical bluetooth speaker"
+      "description": "a matte black cylindrical bluetooth speaker",
+      "physics": null
     }
   ],
   "hero": {
@@ -122,6 +123,7 @@
     "palette.ten: product_appearance (the product is black) won over default (every named colour failed the contrast guard)",
     "palette.text: product_appearance (the accent) won over default (derived from the field's own luminance)"
   ],
+  "material_lighting_note": null,
   "sheet_fallback_reason": null,
   "provenance": {
     "asset_family": "banner",

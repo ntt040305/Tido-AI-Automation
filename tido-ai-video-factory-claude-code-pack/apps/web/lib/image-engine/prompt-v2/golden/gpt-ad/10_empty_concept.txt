@@ -16,7 +16,8 @@
         "tan"
       ],
       "printed_branding": "unverified",
-      "description": "a tan leather crossbody bag"
+      "description": "a tan leather crossbody bag",
+      "physics": null
     }
   ],
   "hero": {
@@ -112,6 +113,7 @@
     "palette.text: product_appearance (the accent) offered #c7a781, which reaches only 2.0 to 1 against the field #f2efe9 — below the 4.5 to 1 type needs, so it is skipped",
     "palette.ten: product_appearance (the product is tan) won over default (every named colour failed the contrast guard)"
   ],
+  "material_lighting_note": null,
   "sheet_fallback_reason": null,
   "provenance": {
     "asset_family": "hero",

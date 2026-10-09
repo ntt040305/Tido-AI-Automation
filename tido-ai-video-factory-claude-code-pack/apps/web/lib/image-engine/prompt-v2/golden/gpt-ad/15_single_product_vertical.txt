@@ -16,7 +16,8 @@
         "white"
       ],
       "printed_branding": "SUONG / VITAMIN C frosted glass, matte white cap",
-      "description": "a tall frosted glass bottle of vitamin C serum"
+      "description": "a tall frosted glass bottle of vitamin C serum",
+      "physics": null
     }
   ],
   "hero": {
@@ -122,8 +123,10 @@
   ],
   "conflicts_resolved": [
     "lighting.kelvin: concept_text (the concept says clean, fresh, morning) won over default (the concept states no temperature)",
-    "palette.ten: product_appearance (the product is white) offered #f7f5f1, which is too close in luminance to the field #f2efe9 to read as emphasis — skipped"
+    "palette.ten: product_appearance (the product is white) offered #f7f5f1, which is too close in luminance to the field #f2efe9 to read as emphasis — skipped",
+    "products.printed_branding: the label on \"a tall frosted glass bottle of vitamin C serum\" reads \"SUONG / VITAMIN C frosted glass, matte white cap\", which does not match the brand name \"Sương\" — kept as photographed, nothing corrected"
   ],
+  "material_lighting_note": null,
   "sheet_fallback_reason": null,
   "provenance": {
     "asset_family": "social",
@@ -316,6 +319,7 @@ Mood: cool and clean, assured; addressed to whoever this social is for, addresse
   - the client stated no technical specs in the concept
   - lighting.kelvin: concept_text (the concept says clean, fresh, morning) won over default (the concept states no temperature)
   - palette.ten: product_appearance (the product is white) offered #f7f5f1, which is too close in luminance to the field #f2efe9 to read as emphasis — skipped
+  - products.printed_branding: the label on "a tall frosted glass bottle of vitamin C serum" reads "SUONG / VITAMIN C frosted glass, matte white cap", which does not match the brand name "Sương" — kept as photographed, nothing corrected
 
 # ═══ END OF SHEET ═══
 

@@ -16,7 +16,8 @@
         "amber"
       ],
       "printed_branding": "unverified",
-      "description": "a ribbed amber glass candle with a brass lid"
+      "description": "a ribbed amber glass candle with a brass lid",
+      "physics": null
     }
   ],
   "hero": {
@@ -126,6 +127,7 @@
     "palette.ten: product_appearance (the product is amber) won over mood_reference (a colour read off the mood image)",
     "palette.ten: product_appearance (the product is amber) won over default (every named colour failed the contrast guard)"
   ],
+  "material_lighting_note": null,
   "sheet_fallback_reason": null,
   "provenance": {
     "asset_family": "poster",
