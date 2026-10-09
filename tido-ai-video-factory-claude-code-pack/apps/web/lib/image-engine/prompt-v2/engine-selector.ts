@@ -323,6 +323,25 @@ export function gptProductVision(env: EnvLike = process.env): boolean {
 }
 
 /**
+ * Whether the render is checked against its own Art Direction Sheet afterwards. Default OFF.
+ *
+ * It costs a vision call per render and, when it finds an auto-fail, one more render. So it
+ * is opt-in and bounded twice over: by a retry count (default 1, hard maximum 2) and by a
+ * hard VND ceiling checked BEFORE each attempt, because a count alone does not bound spend.
+ *
+ * An `unverified` verdict never retries. "We could not look" is not evidence the pixels are
+ * wrong, and paying for a second render on that basis charges the user for our own outage —
+ * the same rule `VisionReview` enforces for the typographic critique, and the rule that was
+ * broken there for a whole phase.
+ *
+ * See `vision-qc.ts`. Needs `GPT_ART_DIRECTOR`: without a sheet there is nothing to check
+ * the render against.
+ */
+export function gptVisionQc(env: EnvLike = process.env): boolean {
+  return String(env.GPT_VISION_QC || "").trim().toLowerCase() === "true";
+}
+
+/**
  * How precisely layout may be stated in words. Default `words_only`.
  *
  * D1 keeps the ban on digits and units in a master prompt, which the D8/K12 migration
@@ -376,6 +395,7 @@ export function engineTelemetry(env: EnvLike = process.env) {
     gpt_small_panel_policy: smallPanelPolicy(env),
     gpt_art_director: gptArtDirector(env),
     gpt_product_vision: gptProductVision(env),
+    gpt_vision_qc: gptVisionQc(env),
     gpt_template_version: gptTemplateVersion(env),
     gpt_numeric_words: numericWordsDensity(env),
     v2_director_model: directorModel(env) || "(provider default)",

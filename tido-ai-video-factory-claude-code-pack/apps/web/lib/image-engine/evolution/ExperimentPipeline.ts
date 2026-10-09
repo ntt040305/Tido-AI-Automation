@@ -74,9 +74,10 @@ import { buildTextLedgers, ledgerTelemetry } from "./experiment/TextLedgerSystem
 import { finishTelemetry, renderFinishForPrompt, resolveFinish } from "./experiment/FinishLayer";
 import { ideaTelemetry, renderIdeaForPrompt, resolveIdea } from "./experiment/IdeaLayer";
 import { copyFitsChannel, profileFor, profileTelemetry } from "./experiment/AssetProfile";
-import { copyPolicyMode, directorModel, includeLabelText, isV2, templateReload } from "../prompt-v2/engine-selector";
+import { copyPolicyMode, directorModel, includeLabelText, isV2, templateReload, gptVisionQc } from "../prompt-v2/engine-selector";
 import { buildSimplePrompt, simpleTelemetry, type SimpleResult } from "../prompt-v2/build-simple";
 import { promptDialect } from "../prompt-v2/engine-selector";
+import { HARD_MAX_RETRIES as QC_HARD_MAX_RETRIES } from "../prompt-v2/art-direction/vision-qc";
 import type { AspectRatio } from "../prompt-v2/templates";
 import {
   cinematographyTelemetry,
@@ -517,7 +518,22 @@ export class ExperimentPipeline {
      * fix -- leaves v1 to produce the prompt, which is the whole point of keeping
      * v1.
      */
-    v2For?: () => Promise<SimpleResult | null>
+    v2For?: () => Promise<SimpleResult | null>,
+    /**
+     * The post-render QC gate. `GPT_VISION_QC` only.
+     *
+     * Returns the prompt to retry with, or null to accept what came back. The GATE owns
+     * the decision and the budget; the loop below owns the calling. That split is what
+     * makes termination provable in one place: `QcBudget.mayRetry` refuses once the retry
+     * count or the VND ceiling is reached, so the gate returns null and the loop ends.
+     *
+     * The loop is ALSO bounded by its own counter, which is belt and braces: a bug in the
+     * gate must not be able to spend money in a circle.
+     */
+    qcGate?: (
+      result: { imageBuffer?: Buffer; mimeType?: string; success?: boolean },
+      promptUsed: string,
+    ) => Promise<{ prompt: string } | null>
   ): ImageGenerationProvider {
     return {
       async generateImage(input: ProviderImageGenerationInput) {
@@ -746,8 +762,45 @@ export class ExperimentPipeline {
           RenderTracer.recordImageRender();
         }
 
-        const out = await inner.generateImage({ ...input, prompt: finalPrompt });
+        let out = await inner.generateImage({ ...input, prompt: finalPrompt });
         if (out && !out.finalPrompt) out.finalPrompt = finalPrompt;
+
+        // ── The QC gate and its at-most-two retries ────────────────────────
+        //
+        // Off unless GPT_VISION_QC. The gate looks at what came back, compares it against
+        // the Art Direction Sheet that produced it, and either accepts it or hands back
+        // ONE corrected prompt. It refuses to hand anything back once the retry count or
+        // the per-request VND ceiling is reached, and it never retries an `unverified`
+        // verdict — "we could not look" is not evidence the pixels are wrong.
+        //
+        // The counter here is a second, independent bound: whatever the gate does, this
+        // loop cannot run more than HARD_MAX_RETRIES times.
+        if (qcGate) {
+          for (let attempt = 0; attempt < QC_HARD_MAX_RETRIES; attempt += 1) {
+            const promptUsed = out.finalPrompt || finalPrompt;
+            let next: { prompt: string } | null = null;
+            try {
+              next = await qcGate(out, promptUsed);
+            } catch (err: unknown) {
+              // A bug in the gate must not cost the render that already succeeded.
+              console.warn(
+                `[VISION_QC] the gate threw; delivering the render as it is — ${(err as Error)?.message || String(err)}`,
+              );
+              break;
+            }
+            if (!next) break;
+            console.log("[VISION_QC][RETRY] re-rendering with one appended correction");
+            const retried = await inner.generateImage({ ...input, prompt: next.prompt });
+            // A retry that fails outright keeps the render we already have: a worse image
+            // beats no image, and the caller has already been charged for both.
+            if (!retried?.success || !retried.imageBuffer?.length) {
+              console.warn("[VISION_QC][RETRY] the retry did not return an image; keeping the first render");
+              break;
+            }
+            if (!retried.finalPrompt) retried.finalPrompt = next.prompt;
+            out = retried;
+          }
+        }
 
         if (RenderTracer.isTraceEnabled()) {
           RenderTracer.stage({
@@ -1236,6 +1289,12 @@ export class ExperimentPipeline {
     // correction with no starting value cannot be checked against the result.
     let capturedTypography: any = null;
     let capturedGeometry: any = null;
+    // The Art Direction Sheet this render was built from, for the QC gate to check the
+    // returned pixels against. Null unless GPT_ART_DIRECTOR produced one.
+    let capturedSheet: import("../prompt-v2/art-direction/art-direction-sheet").ArtDirectionSheet | null = null;
+    // One ledger per request, shared across every attempt, because the VND ceiling is a
+    // per-request cap and a budget rebuilt per attempt would never reach it.
+    let qcBudget: import("../prompt-v2/art-direction/vision-qc").QcBudget | null = null;
     let capturedBlueprint: any = null;
     // The rest of what a render decides. Captured for the same reason as the
     // three above: each already exists, each is thrown away when the response
@@ -1344,6 +1403,76 @@ export class ExperimentPipeline {
     // the active model needs is a fact about that model: Sunburst cannot be sent a
     // Gemini prompt because a flag says v1. So the engine runs whenever the flag asks
     // for it OR the active model requires the GPT dialect.
+    /**
+     * The post-render QC gate. `GPT_VISION_QC` only, and silent without a sheet.
+     *
+     * Built here because this is where `capturedSheet` lives. It owns the whole decision —
+     * run the QC call, read the verdict, derive at most one correction, and consult the
+     * budget — and hands the wrapper either a prompt to retry with or null.
+     *
+     * It never throws and never lets a QC failure cost a render that already succeeded: an
+     * unparseable answer, a timeout and a thrown client all become `unverified`, which is
+     * delivered and flagged rather than retried.
+     */
+    const qcGate = gptVisionQc()
+      ? async (
+          result: { imageBuffer?: Buffer; mimeType?: string; success?: boolean },
+          promptUsed: string,
+        ): Promise<{ prompt: string } | null> => {
+          const sheet = capturedSheet;
+          if (!sheet) return null;
+          if (!result?.success || !result.imageBuffer?.length) return null;
+
+          const { runVisionQc, qcOutcome, qcConfig, correctionForVerdict, qcTelemetry, QcBudget } = await import(
+            "../prompt-v2/art-direction/vision-qc"
+          );
+          if (!qcBudget) qcBudget = new QcBudget(qcConfig());
+
+          const { LLMProviderService } = await import("../llm/llm-provider.service");
+          const llm = new LLMProviderService();
+          const { qc, reason } = await runVisionQc(
+            sheet,
+            { buffer: result.imageBuffer, mimeType: result.mimeType },
+            {
+              chat: (messages, purpose) =>
+                llm.generateChatCompletion(messages as never, purpose, {
+                  max_tokens: 1200,
+                  temperature: 0.1,
+                  timeoutMs: 60000,
+                }),
+            },
+          );
+
+          const verdict = qcOutcome(qc, qcBudget.config);
+          const correction = verdict.outcome === "fail" ? correctionForVerdict(qc, sheet) : null;
+          qcBudget.record({
+            correction,
+            outcome: verdict.outcome,
+            because: verdict.because,
+            cost_vnd: QcBudget.attemptCostVnd(),
+          });
+          console.log("[VISION_QC]", JSON.stringify(qcTelemetry(qc, verdict.outcome, qcBudget)));
+
+          if (verdict.outcome === "unverified") {
+            // Delivered, flagged for a human. Never looped on: see `gptVisionQc`.
+            console.warn(
+              `[VISION_QC][UNVERIFIED] ${reason || verdict.because} — the render is delivered and needs a human look`,
+            );
+            return null;
+          }
+          if (verdict.outcome === "pass") return null;
+
+          const may = qcBudget.mayRetry(verdict.outcome, correction);
+          if (!may.allowed) {
+            console.warn(`[VISION_QC][NO_RETRY] ${verdict.because} — ${may.because}`);
+            return null;
+          }
+          // ONE sentence, appended to the prompt that was mostly right. Rewriting the whole
+          // prompt would change the part that worked and make the next failure unattributable.
+          return { prompt: `${promptUsed}\n\n${correction}` };
+        }
+      : undefined;
+
     const dialect = promptDialect();
     const v2For = !isV2() && dialect !== "gpt-image"
       ? undefined
@@ -1466,6 +1595,7 @@ export class ExperimentPipeline {
                 console.log(`[PROMPT_GPT][warning] ${w.slice(0, 200)}`);
               }
               capturedV2 = result.simple;
+              capturedSheet = result.sheet;
               return result.simple;
             }
 
@@ -2408,7 +2538,8 @@ ${text || ""}`,
             finalDirective,
             editableHooks,
             opticalScriptFor,
-            v2For
+            v2For,
+            qcGate
           ),
         });
 
@@ -2618,7 +2749,8 @@ ${text || ""}`,
           finalDirective,
           editableHooks,
           opticalScriptFor,
-          v2For
+          v2For,
+          qcGate
         ),
       });
 

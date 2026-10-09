@@ -80,6 +80,7 @@ const SUITES = [
   "run-gpt-dialect-tests",
   "run-gpt-golden-tests",
   "run-product-vision-tests",
+  "run-vision-qc-tests",
   "run-art-direction-tests",
   "run-creative-approach-tests",
   "run-tone-fixture-tests",
