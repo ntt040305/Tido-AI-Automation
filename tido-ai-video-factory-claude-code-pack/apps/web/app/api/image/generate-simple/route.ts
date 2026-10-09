@@ -9,6 +9,8 @@ import { recordGeneration } from "@/lib/persistence/record-generation";
 import { loadBrandKitForRender, type LoadedBrandKit } from "@/lib/brand-kit/brand-kit-store";
 import { SimpleInputRequestV1, AssetRoleV1 } from "@/lib/image-engine/types";
 import { RenderTracer } from "@/lib/image-engine/observability/RenderTracer";
+import { checkIntake } from "@/lib/image-engine/service/intake-limits";
+import { IMAGE_ENGINE_CONFIG } from "@/lib/image-engine/config";
 
 export const runtime = "nodejs";
 
@@ -97,6 +99,7 @@ export async function POST(req: NextRequest) {
       let creativeDirection: any;
       let salesContext: any;
       let copyItems: any;
+      let productTexts: { index: number; text: string }[] = [];
 
       // Authorized visible copy travels on the multipart branch too. Without this
       // the compiler saw an empty copy list on every request that carried an image
@@ -124,6 +127,19 @@ export async function POST(req: NextRequest) {
         if (scRaw) salesContext = JSON.parse(scRaw);
       } catch (e) { }
 
+      // Text that belongs to one product, keyed by that product's position in the
+      // upload order — the same number the uploader shows on the thumbnail.
+      try {
+        const ptRaw = formData.get("productTexts") as string;
+        if (ptRaw) {
+          const parsed = JSON.parse(ptRaw);
+          if (Array.isArray(parsed)) productTexts = parsed;
+        }
+      } catch {
+        // A malformed productTexts field must not fail the render; the whole-picture
+        // copy still stands on its own.
+      }
+
       console.log("[SIMPLE RATIO][ROUTE]", {
         rawAspectRatio: formData.get("aspectRatio"),
         parsedAspectRatio: aspectRatio,
@@ -136,6 +152,30 @@ export async function POST(req: NextRequest) {
       // Phase 5.4: a logo arrives under its own key with an explicit role. In
       // "images" it defaulted to PRODUCT and could be read as the product.
       const rawLogoImages = formData.getAll("logoImages");
+
+      // Intake limits, enforced here because this is the only place that cannot be
+      // skipped. The uploader applies the same numbers from the same constant, but a
+      // request can arrive without going through it at all, and before this there was
+      // no cap on either side: any number of files of any size were buffered.
+      //
+      // Refused, never trimmed. Silently dropping the ninth photograph a person
+      // chose is the behaviour this whole packing effort exists to avoid.
+      const intake = IMAGE_ENGINE_CONFIG.INTAKE_LIMITS;
+      const intakeProblem = checkIntake(
+        [
+          { label: "ảnh sản phẩm", items: rawImages, max: intake.maxProductImages, types: intake.acceptedMimeTypes },
+          { label: "ảnh logo", items: rawLogoImages, max: intake.maxLogoImages, types: intake.acceptedLogoMimeTypes },
+          { label: "ảnh phong cách", items: rawInspirationImages, max: intake.maxStyleImages, types: intake.acceptedMimeTypes },
+        ],
+        intake,
+      );
+      if (intakeProblem) {
+        console.warn("[INTAKE][REJECTED]", intakeProblem.detail);
+        return NextResponse.json(
+          { success: false, error: { code: intakeProblem.code, message: intakeProblem.message_vi, details: intakeProblem.detail } },
+          { status: 400 },
+        );
+      }
       tExtractDone = Date.now();
       const parsedImages: {
         reference_id: string;
@@ -157,6 +197,20 @@ export async function POST(req: NextRequest) {
             buffer: Buffer.from(arrayBuffer),
             mimeType: item.type || "image/png",
             filename: item.name || `ref_${i + 1}.png`,
+            // THE PRODUCT ROLE IS EXPLICIT, like the logo and inspiration channels.
+            //
+            // This was the one channel that did not stamp a role, and it was measured:
+            // five product photographs were uploaded and only three became products.
+            // Without a role here, `SimpleInputAdapterService.ts:118-128` finds no
+            // explicit entry for these files and the LLM router's classification stands
+            // — so any image the router happened to call AMBIGUOUS, SUPPORT_REFERENCE or
+            // LOGO was filtered out of `productCandidates` at `:144` and never became a
+            // product at all. Silently: the upload succeeded and two products vanished.
+            //
+            // The upload slot a person chose IS a statement of role. A classifier may
+            // describe what is in the picture; it does not get to overrule which box the
+            // file was dropped into.
+            role: "PRODUCT",
           });
         }
       }
@@ -219,6 +273,38 @@ export async function POST(req: NextRequest) {
         marketingContext.industry = formIndustry;
       }
 
+      // Per-product text travels on TWO channels on purpose.
+      //
+      // The string itself joins `copyItems`, because it is the client's copy and has to
+      // be reproduced verbatim like any other line — the exact-copy check and the
+      // post-render gate both work from that list.
+      //
+      // WHICH product it belongs to travels as a hard requirement instead, because the
+      // binding must not end up inside the drawn text. Writing "Sản phẩm 2: Cold Brew"
+      // into the copy would put the words "Sản phẩm 2" on the poster. Hard requirements
+      // are already the channel for a statement the client made and the renderer must
+      // obey (USER_HARD_CONSTRAINTS), which is exactly what this is.
+      const productTextRequirements: string[] = [];
+      if (productTexts.length > 0) {
+        type CopyEntry = string | { text?: string; type?: string };
+        const existing: CopyEntry[] = Array.isArray(copyItems) ? copyItems : [];
+        const added: CopyEntry[] = [];
+        for (const entry of productTexts) {
+          const text = String(entry?.text || "").trim();
+          const index = Number(entry?.index);
+          if (!text || !Number.isFinite(index) || index < 1) continue;
+          // Not added twice if the same string is also in the whole-picture copy.
+          const already = [...existing, ...added].some(
+            (c) => String(typeof c === "string" ? c : c.text || "").trim() === text,
+          );
+          if (!already) added.push({ text, type: "product_name" });
+          productTextRequirements.push(
+            `The text "${text}" belongs to product ${index} (reference image ${index}) and must be set beside that product, not beside any other. Reproduce it verbatim.`,
+          );
+        }
+        if (added.length > 0) copyItems = [...existing, ...added];
+      }
+
       simpleRequest = {
         images: parsedImages,
         concept,
@@ -227,6 +313,7 @@ export async function POST(req: NextRequest) {
         aspectRatio,
         brandName,
         copyItems,
+        ...(productTextRequirements.length > 0 ? { hardRequirements: productTextRequirements } : {}),
         marketingContext,
         industry: marketingContext?.industry || formIndustry,
         creativeDirection,

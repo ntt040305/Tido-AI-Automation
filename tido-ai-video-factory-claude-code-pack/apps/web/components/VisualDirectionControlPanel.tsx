@@ -116,20 +116,27 @@ export function VisualDirectionControlPanel({
             const suggested = plan[control.key];
             const override = value[control.key];
 
-            // What the control currently resolves to, and why. The badge is the
-            // transparency requirement: a user should never wonder whether a
-            // value came from them, from their words, or from the machine.
-            const isAuto = override === AUTO;
-            const current = isAuto ? AUTO : override || suggested?.option || AUTO;
-            const source = isAuto
-              ? "default"
-              : override
-                ? "user_selected"
-                : suggested?.source || "default";
+            // EVERY control sits on "Tự chọn" until the user moves it.
+            //
+            // It used to display the AI's suggestion as the selected value, which reads
+            // as a choice somebody made: the box said "Góc thấp" when nobody had asked
+            // for a low angle, and the only way to get back to "let the AI decide" was
+            // to realise that was what the box already meant. The suggestion is still
+            // shown — on the line below and marked "AI đề xuất" in the list — but it is
+            // a suggestion, not a selection.
+            //
+            // Only an explicit override selects anything.
+            const isAuto = !override || override === AUTO;
+            const current = isAuto ? AUTO : override;
+            const source = isAuto ? "default" : "user_selected";
             const sourceLabel = SOURCE_LABELS[source] || "Tự chọn";
+            // On auto, say what the AI would pick — as information, not as a selection.
+            // The suggestion is worth seeing; it is just not an answer the user gave.
             const optionLabel =
               current === AUTO
-                ? "Tự chọn — AI quyết định khi tạo ảnh"
+                ? suggested?.label
+                  ? `Tự chọn — AI quyết định khi tạo ảnh (dự kiến: ${suggested.label})`
+                  : "Tự chọn — AI quyết định khi tạo ảnh"
                 : control.options.find((o) => o.id === current)?.label || "Tự chọn";
 
             return (

@@ -253,8 +253,8 @@ function main() {
         ...clean(),
         typography_critique: {
           findings: [
-            { area: "duplicate_text", blocking: true, what: "the headline appears twice in the frame" },
-            { area: "duplicate_text", blocking: true, what: "the subheadline appears twice in the frame" },
+            { area: "duplicate_text", severity: "blocking", what: "the headline appears twice in the frame" },
+            { area: "duplicate_text", severity: "blocking", what: "the subheadline appears twice in the frame" },
           ],
         },
       },
@@ -268,9 +268,68 @@ function main() {
     assert.ok(/told it not to/.test(issue.because), issue.because);
   });
 
+  check("the re-render path fires on `severity`, which is the field a finding carries", () => {
+    // THE REGRESSION TEST FOR THE 353 BUG. `judgeTypography` filtered on `f.blocking`
+    // while a TypographyFinding carries `severity: "blocking" | "major" | "minor"` and has
+    // never had a `blocking` field — nothing in the repo sets one. So the filter was always
+    // empty and this whole branch was dead: a render with every client line drawn twice came
+    // back reported as "aligned".
+    //
+    // Both shapes are exercised here so the fix cannot silently regress in either direction.
+    const withSeverity = buildVisionReview({
+      plan: plan(), dna: dna(), design: design(), map: map(), blueprint: blueprint(),
+      analysis: {
+        ...clean(),
+        typography_critique: {
+          verdict: "verified",
+          findings: [{ area: "duplicate_text", severity: "blocking", what: "the headline appears twice" }],
+        },
+      },
+    });
+    assert.strictEqual(withSeverity.severity, "blocking", "a finding with severity:blocking did not trigger a re-render");
+    assert.ok(
+      withSeverity.detected_issues.some((i: { what: string }) => /twice/i.test(i.what)),
+      "the measured fault did not reach the issues list",
+    );
+
+    // The old field, which no producer emits. It must NOT trigger: accepting it would mean
+    // the fix had quietly kept the dead path alive beside the live one.
+    const withLegacyFlag = buildVisionReview({
+      plan: plan(), dna: dna(), design: design(), map: map(), blueprint: blueprint(),
+      analysis: {
+        ...clean(),
+        typography_critique: {
+          verdict: "verified",
+          findings: [{ area: "duplicate_text", blocking: true, what: "the headline appears twice" }],
+        },
+      },
+    });
+    assert.notStrictEqual(
+      withLegacyFlag.severity,
+      "blocking",
+      "a `blocking: true` flag no producer emits still triggers a re-render",
+    );
+  });
+
+  check("an unverified critique still cannot recommend a re-render", () => {
+    // The guard the fix must not have widened: "we could not look" is not evidence the
+    // pixels are wrong, and a second render on that basis charges the user for our outage.
+    const unverified = buildVisionReview({
+      plan: plan(), dna: dna(), design: design(), map: map(), blueprint: blueprint(),
+      analysis: {
+        ...clean(),
+        typography_critique: {
+          verdict: "unverified",
+          findings: [{ area: "duplicate_text", severity: "blocking", what: "the headline appears twice" }],
+        },
+      },
+    });
+    assert.notStrictEqual(unverified.severity, "blocking", "an unverified critique recommended a re-render");
+  });
+
   check("a measured blocking fault outranks a perfectly applied treatment", () => {
     const withFault = buildVisionReview({
-      analysis: { ...clean(), typography_critique: { findings: [{ area: "collision", blocking: true, what: "the headline crosses the product" }] } },
+      analysis: { ...clean(), typography_critique: { findings: [{ area: "collision", severity: "blocking", what: "the headline crosses the product" }] } },
       plan: plan(), dna: dna(), design: design(), map: map(), blueprint: blueprint(),
     });
     const without = buildVisionReview({ analysis: clean(), plan: plan(), dna: dna(), design: design(), map: map(), blueprint: blueprint() });

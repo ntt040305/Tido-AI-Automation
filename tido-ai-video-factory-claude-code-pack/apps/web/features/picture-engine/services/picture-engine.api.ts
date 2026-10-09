@@ -97,8 +97,27 @@ export async function createPictureAsset(
       // Phase 4.1.5. Only sent when the user actually chose something; an
       // untouched panel adds no field to the request.
       visual_controls: brief.creative_direction?.visual_controls,
+      // `creative_direction` is NOT serialised whole — this is an allow-list, so a
+      // field absent from it never leaves the browser. `compact` then drops it
+      // again when it is empty, and "auto" is dropped deliberately: it means "you
+      // decide", which is what the server does with no field at all.
+      creative_approach:
+        brief.creative_direction?.creative_approach && brief.creative_direction.creative_approach !== "auto"
+          ? brief.creative_direction.creative_approach
+          : undefined,
     });
     const salesContext = compact(brief.sales_context as any);
+
+    // Per-product on-image text, aligned to the order the product files are appended
+    // below, so index 1 here is the same photograph as "Sản phẩm 1" in the uploader and
+    // the same reference the prompt will call by number. Keyed by asset_id in the store
+    // and flattened to an index here, because the server only ever sees the file order.
+    const productTexts = (brief.brand_identity?.product_assets || [])
+      .map((asset, i) => ({
+        index: i + 1,
+        text: ((brief.product_texts || {})[asset.asset_id] || "").trim(),
+      }))
+      .filter((p) => p.text.length > 0);
 
     // Step 3: Trigger Provider Render
     store.setGenerationJob({
@@ -161,6 +180,7 @@ export async function createPictureAsset(
         if (marketingContext) formData.append("marketingContext", JSON.stringify(marketingContext));
         if (creativeDirection) formData.append("creativeDirection", JSON.stringify(creativeDirection));
         if (salesContext) formData.append("salesContext", JSON.stringify(salesContext));
+        if (productTexts.length > 0) formData.append("productTexts", JSON.stringify(productTexts));
 
         for (const asset of productAssets) {
           if (asset.file) {
@@ -247,6 +267,7 @@ export async function createPictureAsset(
             requestId: jobId,
             marketingContext,
             creativeDirection,
+            productTexts: productTexts.length > 0 ? productTexts : undefined,
             salesContext,
           }),
           signal: controller.signal,

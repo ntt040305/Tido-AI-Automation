@@ -226,7 +226,7 @@ export class CommercialLayoutService {
     attentionShift?: string;
   }): CommercialLayoutPlan {
     const format = (input.assetType || "poster").toLowerCase().replace(/[\s-]+/g, "_");
-    const aspectRatio = input.aspectRatio || "4:5";
+    const aspectRatio = input.aspectRatio || "1:1";
     const copyItems = (input.copyItems || []).filter(Boolean);
     const rendersCopy = copyItems.length > 0;
 

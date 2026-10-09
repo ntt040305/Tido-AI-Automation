@@ -40,6 +40,20 @@ export interface PackedCell {
   top: number;
   width: number;
   height: number;
+  /**
+   * The ORIGINAL pixel size, and what the panel actually became.
+   *
+   * The cell rectangle above is the box; these are the picture inside it. A
+   * `contain` fit means a tall photograph in a square cell does not fill the cell,
+   * so `width`/`height` overstate how many pixels of product survived. Recorded so
+   * the loss can be judged by numbers instead of by looking at the sheet.
+   */
+  original_width?: number;
+  original_height?: number;
+  rendered_width?: number;
+  rendered_height?: number;
+  /** rendered longest side / original longest side. 1 means nothing was lost. */
+  downscale?: number;
 }
 
 /** The identity map that has to survive alongside the packed image. */
@@ -85,8 +99,16 @@ export interface PackingResult {
   status: PackingStatus;
   /** What to hand the provider. At most `limit` entries. */
   references: ProviderReferenceImage[];
-  /** Absent unless a sheet was built. */
+  /** Absent unless a sheet was built. The FIRST sheet, for existing readers. */
   packed?: PackedReferenceMap;
+  /**
+   * Every sheet, when more than one was built.
+   *
+   * A two-image model carrying eight products needs two sheets, so one map is no
+   * longer enough to say what is where. `packed` stays as the first of them so
+   * nothing that reads it breaks.
+   */
+  packed_sheets?: PackedReferenceMap[];
   dropped: DroppedReference[];
   /**
    * Every distinct product the payload started with, and every one that reaches
@@ -96,6 +118,25 @@ export interface PackingResult {
   products_in: string[];
   products_out: string[];
   reason?: string;
+  /**
+   * Panels that came out too small to carry identity, and anything else worth
+   * telling the director about the packing.
+   *
+   * Reported, never corrected: making one panel bigger means making another
+   * smaller, so the honest thing is to say identity may not survive this sheet
+   * rather than to rearrange until the warning disappears. Travels into the
+   * decisions tag.
+   */
+  warnings?: PackingWarning[];
+}
+
+export interface PackingWarning {
+  code: "PANEL_BELOW_IDENTITY_FLOOR";
+  /** Which cell, by the reference it came from. */
+  source_reference_id: string;
+  product_id?: string;
+  longest_side_px: number;
+  floor_px: number;
 }
 
 export interface PackingOptions {
@@ -115,6 +156,13 @@ export interface PackingOptions {
    * map in `PackedReferenceMap` is the authoritative record either way.
    */
   label?: boolean;
+  /**
+   * Longest side, in pixels, below which a product panel is reported as too small.
+   *
+   * From the active model's row (`models/image-model-profiles.ts`), because what is
+   * legible depends on the sheet size the model accepts. A warning, never a refusal.
+   */
+  minPanelLongestSidePx?: number;
 }
 
 export const PACKING_DEFAULTS = {
@@ -122,4 +170,6 @@ export const PACKING_DEFAULTS = {
   sheetSize: 1024,
   maxCells: 9,
   label: true,
+  /** 1024 / 3 — the smallest cell a 3x3 sheet at the default size produces. */
+  minPanelLongestSidePx: 341,
 } as const;

@@ -1,0 +1,13 @@
+BANNER — read in under a second, while scrolling past, often delivered a few hundred
+pixels wide.
+
+What it has to win: one statement that survives being small and being greyscale.
+Separation and edge cleanliness outrank atmosphere here; a beautiful banner nobody can
+read has lost.
+
+The hero scale, the margins, the type sizes and the layout for this canvas are already
+decided in the sheet. Do not restate them differently here.
+
+What is still worth saying for this channel: contrast at the edges of the subject, because
+that is what holds when the image is downscaled. Nothing subtle in the shadows, nothing
+important that depends on fine detail surviving.

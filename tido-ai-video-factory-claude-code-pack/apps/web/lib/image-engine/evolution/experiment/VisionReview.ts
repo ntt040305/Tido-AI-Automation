@@ -350,8 +350,29 @@ function judgeTypography(
   // draw none -- and this function called typography "aligned" because the
   // composited layer matched its decision perfectly. It did. The picture was
   // still wrong, and the existing critique had already said so.
-  const critique = analysis?.typography_critique as { findings?: Array<{ area?: string; blocking?: boolean; what?: string }> } | undefined;
-  const blocking = (critique?.findings ?? []).filter((f) => f.blocking);
+  // `severity`, not `blocking`.
+  //
+  // THE BUG THIS FIXES. This local type declared `blocking?: boolean` and the filter below
+  // read `f.blocking` — but a `TypographyFinding` carries
+  // `severity: "blocking" | "major" | "minor"` and has never had a `blocking` field.
+  // Nothing in the repo sets one. So the filter was always empty, this whole branch was
+  // dead, and the re-render path it guards has never fired once: a render that came back
+  // with every client line drawn twice was reported as "aligned", which is the exact
+  // failure the comment above was written to describe.
+  //
+  // Grepped before changing: `typography_critique` is produced only by
+  // `TypographyCritique.ts`, whose findings are `TypographyFinding[]`, so reading
+  // `severity` is reading the field that is actually there. No legacy `blocking` boolean is
+  // accepted as a fallback, because no producer has ever emitted one.
+  const critique = analysis?.typography_critique as
+    | { findings?: Array<{ area?: string; severity?: string; what?: string }>; verdict?: string }
+    | undefined;
+  // An unverified critique is one where the vision call failed or returned
+  // nothing. It has no observed findings to act on, and it must not be allowed to
+  // recommend a re-render: "we could not look" is not evidence that the pixels
+  // are wrong, and paying for a second render on the strength of it would charge
+  // the user for our own outage.
+  const blocking = critique?.verdict === "unverified" ? [] : (critique?.findings ?? []).filter((f) => f.severity === "blocking");
   if (blocking.length) {
     const duplicated = blocking.filter((f) => f.area === "duplicate_text");
     for (const f of duplicated.length ? duplicated : blocking) {

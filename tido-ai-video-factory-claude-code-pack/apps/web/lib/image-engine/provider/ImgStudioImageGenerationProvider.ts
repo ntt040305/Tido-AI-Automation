@@ -1,5 +1,6 @@
 import sharp from "sharp";
 import { IMAGE_ENGINE_CONFIG } from "../config";
+import { activeProfile } from "../models/image-model-profiles";
 import {
   ImageNormalizationService,
   NormalizedImage,
@@ -9,6 +10,7 @@ import {
 } from "../service/ImageNormalizationService";
 import { ProviderErrorClassifier, ProviderErrorVerdict } from "./ProviderErrorClassifier";
 import { ReferencePackingService } from "./reference-packing/ReferencePackingService";
+import { DROP_REASON_VI } from "./reference-capacity";
 import {
   applyPackedReferenceProtocol,
   protocolTelemetry,
@@ -41,6 +43,26 @@ export interface ImgStudioRemoteDetails {
   download_ms?: number;
   download_bytes?: number;
   attempts?: number;
+  /**
+   * What happened to the user's reference images.
+   *
+   * Fix C: nothing is lost silently. If five photographs became two sheets, or an
+   * extra angle did not travel, or a packed panel came out below the identity
+   * floor, that rides back with the render so the response and the strategy panel
+   * can say so instead of the user wondering.
+   *
+   * Counts, ids and reasons. Never a buffer, never the client's filenames.
+   */
+  reference_packing?: {
+    status: string;
+    packed: boolean;
+    slots_sent: number;
+    provider_limit: number;
+    products_in: number;
+    products_out: number;
+    dropped: { what: string; role?: string; reason?: string; reason_vi: string }[];
+    warnings: { code: string; longest_side_px: number; floor_px: number; product_id?: string }[];
+  };
 }
 
 export interface ImgStudioProviderOutput extends ProviderImageGenerationOutput {
@@ -66,15 +88,28 @@ export class ImgStudioImageGenerationProvider implements ImageGenerationProvider
 
   /**
    * Generates or edits an image using ImgStudio REST API (/api/v1/images/edit)
-   * Model / Provider ID: flow-nano-banana-2
+   * Model / Provider ID: from the active row in `models/image-model-profiles.ts`.
    * Includes 90,000ms timeout, network error retries (3 attempts total), and detailed telemetry.
    */
   async generateImage(input: ProviderImageGenerationInput): Promise<ImgStudioProviderOutput> {
     const baseUrl = (process.env.IMGSTUDIO_BASE_URL || "https://imgstudio.site").replace(/\/+$/, "");
     const apiKey = process.env.IMGSTUDIO_API_KEY;
-    const providerId = process.env.IMGSTUDIO_PROVIDER_ID || "flow-nano-banana-2";
-    const resolution = process.env.TIDO_IMAGE_OUTPUT_RESOLUTION || input.imageSize || "1K";
-    const quality = process.env.TIDO_IMAGE_OUTPUT_QUALITY || "standard";
+    // The model's own facts, from its one row in `models/image-model-profiles.ts`.
+    //
+    // These three used to be literals here, and the literals were wrong for the
+    // model that is now active: the default provider id named Nano Banana 2, and
+    // `quality` defaulted to "standard" where the ImgStudio web UI sends "high" for
+    // Sunburst. An explicit environment override still wins, because a value set by
+    // hand is a decision and this is not the place to overrule one.
+    const profile = activeProfile();
+    const providerId = process.env.IMGSTUDIO_PROVIDER_ID || profile.providerId;
+    const resolution = process.env.TIDO_IMAGE_OUTPUT_RESOLUTION || input.imageSize || profile.resolutionTier;
+    const quality = process.env.TIDO_IMAGE_OUTPUT_QUALITY || profile.quality;
+    // The hard per-call ceiling. `config.ts:172-175` declared 3 for every ImgStudio
+    // model; Sunburst refuses a third (03 §2.2), so the number belongs to the row.
+    const referenceLimit = Number(process.env.IMGSTUDIO_MAX_REFERENCE_IMAGES) > 0
+      ? Number(process.env.IMGSTUDIO_MAX_REFERENCE_IMAGES)
+      : profile.maxReferences;
     // Measurement only; neither value changes any decision below.
     let apiRequestMs = 0;
     let downloadMs = 0;
@@ -93,9 +128,10 @@ export class ImgStudioImageGenerationProvider implements ImageGenerationProvider
     }
 
     // 2. Pre-call Aspect Ratio Validation (Non-retryable)
-    const supportedRatios = IMAGE_ENGINE_CONFIG.IMGSTUDIO_SUPPORTED_ASPECT_RATIOS || [
-      "1:1", "9:16", "16:9",
-    ];
+    // The active model's own list. `config.ts:157` held one list for every
+    // ImgStudio model; a per-model row is what lets Sunburst refuse 4:5 while a
+    // future model that accepts it does not have to.
+    const supportedRatios = profile.ratios;
 
     if (!input.aspectRatio || !supportedRatios.includes(input.aspectRatio)) {
       return {
@@ -147,14 +183,19 @@ export class ImgStudioImageGenerationProvider implements ImageGenerationProvider
     const packing = await ReferencePackingService.pack({
       references: candidateReferences,
       manifest: input.reference_manifest,
-      options: { limit: IMAGE_ENGINE_CONFIG.IMGSTUDIO_MAX_REFERENCE_IMAGES },
+      options: {
+        limit: referenceLimit,
+        maxCells: profile.maxPanelsPerSheet,
+        sheetSize: profile.sheetSizePx,
+        minPanelLongestSidePx: profile.minPanelLongestSidePx,
+      },
     });
 
     if (packing.status === "IMPOSSIBLE") {
       console.error("[ImgStudioProvider][REFERENCE_CAPACITY_BLOCKED]", {
         status: packing.status,
         received: candidateReferences.length,
-        limit: IMAGE_ENGINE_CONFIG.IMGSTUDIO_MAX_REFERENCE_IMAGES,
+        limit: referenceLimit,
         products_in: packing.products_in.length,
         reason: packing.reason,
       });
@@ -163,13 +204,13 @@ export class ImgStudioImageGenerationProvider implements ImageGenerationProvider
         error: {
           code: "REFERENCE_LIMIT_EXCEEDED",
           message:
-            `Nhà cung cấp chỉ nhận tối đa ${IMAGE_ENGINE_CONFIG.IMGSTUDIO_MAX_REFERENCE_IMAGES} ` +
+            `Nhà cung cấp chỉ nhận tối đa ${referenceLimit} ` +
             `ảnh tham chiếu, và ${packing.products_in.length} sản phẩm này không gộp được vào một ảnh. ` +
             `Hãy tách brief thành nhiều lần tạo.`,
           details: {
             error_code: "REFERENCE_LIMIT_EXCEEDED",
             stage: "PROVIDER_CAPABILITY_CHECK",
-            provider_limit: IMAGE_ENGINE_CONFIG.IMGSTUDIO_MAX_REFERENCE_IMAGES,
+            provider_limit: referenceLimit,
             received: candidateReferences.length,
             distinct_products: packing.products_in,
             shed_without_loss: packing.dropped,
@@ -213,7 +254,27 @@ export class ImgStudioImageGenerationProvider implements ImageGenerationProvider
     // both exist — packing happens here, and everything upstream finished its
     // work before there was a sheet to describe. Returns the same string when
     // nothing was packed, so every ordinary render is byte-identical.
-    const effectivePrompt = applyPackedReferenceProtocol(input.prompt, packing);
+    // The Gemini-dialect sheet protocol, and why it is skipped for the GPT dialect.
+    //
+    // That block explains what a contact sheet is to a model whose prompt did not
+    // mention one — which is correct for the Gemini path, where the prompt is written
+    // before anything is packed. The GPT brief's section C already describes the exact
+    // slots `allocateReferences` returned, panel by panel, so appending this would say
+    // the same thing twice in two vocabularies.
+    //
+    // Worse than redundant: this block reads only `packing.packed`, the FIRST sheet. On
+    // a two-sheet payload its `companions` branch describes PACKED_PRODUCTS_02 as "a
+    // full-resolution copy of a product already present in the sheet… the same product,
+    // not additional ones" — and sheet 2 holds DIFFERENT products. Measured on
+    // `gen_1791446396500_fjk1e`: five products across two sheets, the second sheet
+    // announced to the model as a duplicate of the first.
+    //
+    // The Gemini path keeps it exactly as it is; that defect is pre-existing there and
+    // fixing it is a separate change to a path that is the rollback.
+    const effectivePrompt =
+      profile.promptDialect === "gpt-image"
+        ? input.prompt
+        : applyPackedReferenceProtocol(input.prompt, packing);
     if (effectivePrompt !== input.prompt) {
       console.log(
         "[REFERENCE_PACKING][PROTOCOL]",
@@ -225,6 +286,45 @@ export class ImgStudioImageGenerationProvider implements ImageGenerationProvider
     }
 
     const realReferences = packing.references;
+
+    // ── Count guard ────────────────────────────────────────────────────
+    //
+    // The last check before the wire, and deliberately a hard stop rather than a
+    // trim. The provider answers one image too many with HTTP 400 before it renders
+    // anything, so nothing is lost by refusing here — but something IS lost by
+    // trimming: the prompt upstream already describes "Image 1" and "Image 2", and
+    // sending fewer images than the prompt names leaves the model looking for a
+    // reference that is not there.
+    //
+    // Packing is supposed to have made this impossible. This is here because
+    // "supposed to" is not a guarantee, and a silent mismatch between what the
+    // prompt describes and what the provider received is the hardest class of bug
+    // to see from an image.
+    if (realReferences.length > referenceLimit) {
+      console.error("[ImgStudioProvider][REFERENCE_COUNT_GUARD]", {
+        about_to_send: realReferences.length,
+        limit: referenceLimit,
+        model: profile.displayName,
+        packing_status: packing.status,
+      });
+      return {
+        success: false,
+        error: {
+          code: "REFERENCE_LIMIT_EXCEEDED",
+          message:
+            `Lỗi nội bộ: hệ thống định gửi ${realReferences.length} ảnh nhưng model ` +
+            `${profile.displayName} chỉ nhận ${referenceLimit}. Chưa gửi gì cả.`,
+          details: {
+            error_code: "REFERENCE_COUNT_GUARD",
+            stage: "PRE_DISPATCH",
+            about_to_send: realReferences.length,
+            provider_limit: referenceLimit,
+            packing_status: packing.status,
+          },
+        },
+      };
+    }
+
     const hasRealReferences = realReferences.length > 0;
     const endpoint = this.selectEndpoint(baseUrl, hasRealReferences);
 
@@ -660,6 +760,27 @@ export class ImgStudioImageGenerationProvider implements ImageGenerationProvider
             provider_name: json.provider_name || "Flow",
             model: json.model || providerId,
             url: json.url,
+            // What happened to the user's images, carried with the render.
+            //
+            // Nothing is lost silently (Fix C): if five photographs became two
+            // sheets, or an extra angle did not travel, that fact rides back with
+            // the result so the response and the panel can say so. Counts and
+            // reasons, never a buffer.
+            reference_packing: {
+              status: packing.status,
+              packed: packing.status === "PACKED",
+              slots_sent: realReferences.length,
+              provider_limit: referenceLimit,
+              products_in: packing.products_in.length,
+              products_out: packing.products_out.length,
+              dropped: packing.dropped.map((d) => ({
+                what: d.reference_id || "(unnamed)",
+                role: d.role,
+                reason: d.reason,
+                reason_vi: DROP_REASON_VI[d.reason] || "",
+              })),
+              warnings: packing.warnings || [],
+            },
           },
         };
       } catch (err: any) {
@@ -677,6 +798,21 @@ export class ImgStudioImageGenerationProvider implements ImageGenerationProvider
         // No response arrived, so the upstream may still be holding the original
         // request. The key is deliberately NOT rotated here: reusing it lets ImgStudio
         // deduplicate rather than start (and bill) a second render.
+        //
+        // The classifier decides whether a retry is allowed at all. This branch used to
+        // retry every thrown error on its own, so a timeout went out three times even
+        // though the classifier is the one place that knows a timeout is final.
+        const thrownVerdict = ProviderErrorClassifier.classifyThrown(err);
+        if (!thrownVerdict.retryable) {
+          return {
+            success: false,
+            error: {
+              code: thrownVerdict.error_code,
+              message: `ImgStudio did not answer within ${timeoutMs}ms. Not retried: the provider may still be rendering, and charging for, this request.`,
+              details: String(err),
+            },
+          };
+        }
         if (attempt <= maxRetries) {
           const backoffMs = attempt === 1 ? 1000 : 2000;
           const remainingBudgetMs = deadlineAt - Date.now() - backoffMs;

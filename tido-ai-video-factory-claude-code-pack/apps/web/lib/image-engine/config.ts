@@ -125,7 +125,7 @@ export const IMAGE_ENGINE_CONFIG = {
 
   // Stage 5 Nano Banana 2 Generation Configuration
   TIDO_IMAGE_MODEL: process.env.TIDO_IMAGE_MODEL || "gemini-3.1-flash-image",
-  TIDO_IMAGE_OUTPUT_SIZE: process.env.TIDO_IMAGE_OUTPUT_SIZE || "2K",
+  TIDO_IMAGE_OUTPUT_SIZE: process.env.TIDO_IMAGE_OUTPUT_SIZE || "1K",
   TIDO_IMAGE_OUTPUT_MIME: process.env.TIDO_IMAGE_OUTPUT_MIME || "image/png",
   GENERATED_DIR: typeof window === "undefined" ? require("path").resolve(process.cwd(), "data/generated/image-renders") : "data/generated/image-renders",
   GENERATION_TIMEOUT_MS: 160000,
@@ -144,6 +144,39 @@ export const IMAGE_ENGINE_CONFIG = {
   WITHHOLD_INSPIRATION_IMAGE_FROM_PROVIDER: process.env.WITHHOLD_INSPIRATION_IMAGE_FROM_PROVIDER !== "false",
   CLIENT_TIMEOUT_MS: typeof process !== "undefined" && process.env?.NEXT_PUBLIC_CLIENT_TIMEOUT_MS ? parseInt(process.env.NEXT_PUBLIC_CLIENT_TIMEOUT_MS) : 250000,
   MAX_PRODUCT_REFERENCES: 10,
+
+  /**
+   * How many images a person may attach, and how large each may be.
+   *
+   * NOT the provider's limit. The provider accepts two images per call
+   * (`models/image-model-profiles.ts`), and more than that are PACKED into two
+   * reference sheets by `allocateReferences` — so what a user may upload and what
+   * travels on the wire are two different numbers, and conflating them is what made
+   * the earlier rule "the logo does not fit when there are two products".
+   *
+   * Before this existed there was no cap on either side: neither
+   * `BrandIdentityUploader` nor `generate-simple/route.ts` counted or measured
+   * anything, so eight 12-megapixel photographs were accepted, buffered and sent.
+   * One constant, read by both, so the server can never be stricter than the
+   * control that collected the files.
+   */
+  INTAKE_LIMITS: {
+    maxProductImages: 8,
+    maxLogoImages: 1,
+    maxStyleImages: 1,
+    /**
+     * Per file. 15 MB is comfortably above a phone photograph and below the point
+     * where buffering several at once is a problem;
+     * `ImageNormalizationService.PROVIDER_LIMIT_BYTES` still governs what the
+     * provider will accept after normalisation.
+     */
+    maxBytesPerImage: 15 * 1024 * 1024,
+    /** Across every channel, so ten files cannot each be just under the per-file cap. */
+    maxTotalBytes: 60 * 1024 * 1024,
+    acceptedMimeTypes: ["image/png", "image/jpeg", "image/webp"] as const,
+    /** A logo may also be a vector. */
+    acceptedLogoMimeTypes: ["image/png", "image/svg+xml", "image/jpeg", "image/webp"] as const,
+  },
   /**
    * The three delivery ratios this system supports: square, vertical, horizontal.
    *

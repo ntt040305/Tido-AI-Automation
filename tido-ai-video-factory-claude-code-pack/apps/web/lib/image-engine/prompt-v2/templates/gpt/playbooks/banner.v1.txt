@@ -1,0 +1,11 @@
+WEB BANNER — under a second, while someone scrolls past, often a few hundred pixels wide.
+
+What it has to win: one statement that is legible when small and in greyscale. Separation
+and edge cleanliness matter more than atmosphere.
+
+Hero: the subject sits on one side and holds roughly two fifths of the frame.
+Space: the opposite side is clean negative space, and that is where the text goes. Do not
+fill it with scenery.
+Type: one short statement and, if there is one, a call to action. Nothing else.
+Contrast: the subject must separate from the ground without relying on colour alone.
+Layout for this canvas: {{LAYOUT}}

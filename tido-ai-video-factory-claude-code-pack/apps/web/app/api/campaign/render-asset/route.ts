@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { activeProfile } from "@/lib/image-engine/models/image-model-profiles";
 import { getIdentityProvider } from "@tido/infrastructure";
 import { chargeRender } from "@/lib/security/render-rate-limit";
 import { IMAGE_ENGINE_CONFIG } from "@/lib/image-engine/config";
@@ -140,8 +141,9 @@ export async function POST(req: NextRequest) {
     // A fresh id per attempt: reusing one across retries makes the provider
     // reject the retry on its idempotency key.
     const generationId = `gen_${campaignId}_${assetType}_${Date.now()}`;
-    const model = process.env.IMGSTUDIO_PROVIDER_ID || "flow-nano-banana-2";
-    const imageSize = process.env.TIDO_IMAGE_OUTPUT_RESOLUTION || "2K";
+    const model = activeProfile().providerId;
+    // Was "2K" while config.ts:128 said "1K". One answer now, from the active row.
+    const imageSize = activeProfile().resolutionTier;
 
     const provider = new ImgStudioImageGenerationProvider();
     const res = await provider.generateImage({

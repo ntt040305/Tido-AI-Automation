@@ -30,7 +30,7 @@ export type CampaignObjective =
   | "promotion"
   | "branding";
 
-export type AspectRatioType = "1:1" | "4:5" | "9:16" | "16:9";
+export type AspectRatioType = "1:1" | "9:16" | "16:9";
 
 export interface UIState {
   activePanel: "brief" | "canvas" | "strategy";
@@ -61,6 +61,10 @@ export interface SalesContext {
 }
 
 import { ProductCompositionMode, ProductIdentityStrength } from "@tido/contracts";
+// Type-only, and the union is declared where the decision is made rather than
+// here, so the browser control and the server's recomputation cannot drift apart.
+// Erased at compile time, so this adds nothing to the client bundle.
+import type { ApproachChoice } from "@/lib/image-engine/director/CreativeApproach";
 
 export interface CreativeDirection {
   /**
@@ -68,6 +72,15 @@ export interface CreativeDirection {
    * the value "auto" means the user left it on Tự chọn and the engine decides.
    */
   visual_controls?: Record<string, string>;
+  /**
+   * How daring the frame should be. Absent or "auto" means the user left it on
+   * "Để AI quyết định" and `director/CreativeApproach.ts` infers it from the
+   * concept, the Brand Kit and the campaign objective.
+   *
+   * Optional, and absent by default, so a brief nobody touched behaves exactly as
+   * it did before this field existed.
+   */
+  creative_approach?: ApproachChoice;
   visual_style: string;
   emotional_tone: string;
   aspect_ratio: AspectRatioType;
@@ -109,6 +122,18 @@ export interface CreativeBrief {
    * 20%" here — never "headline" or "CTA".
    */
   content_message?: string;
+  /**
+   * Text that belongs to ONE product, keyed by that product image's `asset_id`.
+   *
+   * `content_message` is the text for the picture as a whole. This is for the case the
+   * whole-picture field cannot express: five bottles in one frame, each needing its own
+   * name or price beside it. Keyed by asset_id rather than by position so removing the
+   * second photograph does not silently move the second product's text onto the third.
+   *
+   * The number a person sees in the uploader ("Sản phẩm 2") is this image's position in
+   * `brand_identity.product_assets`; the key is its id.
+   */
+  product_texts?: Record<string, string>;
   marketing_context: MarketingContext;
   sales_context: SalesContext;
   creative_direction: CreativeDirection;
@@ -209,6 +234,20 @@ export interface VisionAnalysis {
   product_accuracy: VisionNote[];
   improvement_actions: { action: string; because?: string; area?: string; scope: string }[];
   unavailable_reason?: string;
+  /**
+   * The typographic critique, as the engine attached it
+   * (`evolution/VisionReviewLayer.ts:313`). The whole analysis is passed through
+   * to the client by `generate-simple/route.ts:413`, so this already travelled;
+   * only the declaration was missing.
+   *
+   * `verdict` is the field the UI must respect: on "unverified" the vision call
+   * failed or returned nothing, every score is null, and the panel shows "Chưa
+   * kiểm tra được" rather than a score or a tick.
+   */
+  typography_critique?: {
+    verdict?: "verified" | "unverified";
+    shippable?: boolean;
+  };
 }
 
 export interface CreativeIntelligence {

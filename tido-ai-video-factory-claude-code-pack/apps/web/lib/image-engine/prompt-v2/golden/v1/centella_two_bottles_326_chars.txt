@@ -1,0 +1,95 @@
+BLOCK 1 — OUTPUT CONTRACT
+AUTHORITY. Two things are absolute and nothing below them may change them: the product's identity in BLOCK 2, and the exact strings in BLOCK 8's ledger.
+Everything else: where two blocks describe the same thing differently, execute the LATER block's version.
+Where no block covers a decision, it is yours to make, in the direction the blocks already establish.
+ONE finished photograph, made in a single exposure. Every element in the frame — the product, the staging, the words — belongs to the same light, the same lens and the same depth. Nothing is laid on top of the picture.
+
+CHANNEL — a poster. The viewer gives it three to ten seconds, standing still.
+What it has to win: one idea a viewer could describe afterwards, and a hierarchy the eye follows without being told the order.
+The dominant element holds 40-60% of the frame; nothing else competes for that share.
+
+BLOCK 3 — SUBJECT & STAGING
+THE IDEA — Hai chai serum Centella đặt cạnh nhau trên nền đá sáng, ánh sáng dịu, cảm giác sạch và dịu da cho người da nhạy cảm.
+Everything below serves this one line. Where a later block offers a way to make the frame more interesting that this line does not need, leave it out.
+
+CREATIVE INTENT
+CREATIVE CONCEPT: Hai chai serum Centella đặt cạnh nhau trên nền đá sáng, ánh sáng dịu, cảm giác sạch và dịu da cho người da nhạy cảm.
+BRAND NAME: Centella
+
+THE FRAME, AS DECIDED
+- what the frame is of: the product, alone, as the frame's reason
+- the product's role: hero
+- where the product sits: 52%, 30% from the frame's top-left corner, 30% wide and 55% tall — centre right
+- how much of the frame it fills: about 38% — large
+- what the story is: an unhurried morning, before anything has started
+- what the empty part of the frame is for: the calm beside it
+- read 1: the product
+
+BLOCK 4 — LIGHT
+LIGHT — 2 sources at 5200K.
+Key: a source 2x the product's own width, 35 degrees above the product's centre and 48 degrees camera-left of the lens axis. Key to fill 4:1.
+1 secondary source(s), each at least 4:1 below the key and none of them casting a second shadow of the product.
+Shadow: medium edge. Contact shadow defined but not deep, holding the product on the surface.
+Speculars: at most 2 on the product, each one reading as the same source reflected.
+Air: haze costing about 7% of the frame's contrast, thickest away from the product.
+
+BLOCK 5 — LENS
+LENS — 85mm at f/8, close framing.
+Camera: 5 degrees above the product's centre, looking slightly down. No tilt; the vertical edges of the frame stay vertical.
+The product fills about 38% of the frame and sits wholly inside it, never cropped.
+Depth of field at f/8 holds the product's full depth sharp; everything behind it falls away without becoming an abstraction.
+Movement: no movement, but the scene looks recently touched.
+
+BLOCK 6 — ENVIRONMENT
+ENVIRONMENT — a single material with a visible but quiet grain.
+The staging surface reads at about 45% luminance; the backdrop stays even within 10% across its whole area.
+Props: at most 2, each one earning its place and none of them touching the product.
+Depth: 2 planes. Horizon middle.
+
+BLOCK 7 — GRADE & MATERIAL
+FINISH — this frame is a photograph on 4x5 colour transparency, not a render.
+What that medium does: it holds enormous tonal latitude, shows no structure in the midtones, and compresses highlights for a long way before they give up.
+Tonality: the darkest value in the frame sits at 12/255 and nothing reaches pure black; 3 stops of highlight rolloff above the key, so bright surfaces compress instead of clipping to white.
+Grain: 0.15% of the frame's width, even across the whole frame and present in the shadows as much as the midtones.
+Corner falloff: 2% darker at the corners than at the centre, gradual, with no visible edge to it.
+Colour: held in the product's own hue; the neutrals around it stay neutral.
+Optical signature: round and quiet, with no edge outlining; no flare or bloom; a specular highlight stays inside its own shape.
+
+SURFACES — the staging surface is 23% gloss; the rest of the set is matte.
+Its own micro-texture reads at about 0.5mm, visible where the light rakes across it and nowhere else.
+A specular on the product is no wider than 8% of the product's width, and the product's material keeps its true roughness rather than being polished to read as new.
+
+BLOCK 8 — TYPOGRAPHY
+
+T1 · THE LEDGERS — the only words that exist in this frame.
+CAMPAIGN COPY — SET THESE WORDS. Verb: RENDER.
+Each line below is set by you into the layout. Reproduce every character exactly: spelling, capitalization, punctuation, numbers and every accent. Each line appears exactly ONCE in the frame.
+  [H1] headline · 320 graphemes · "Tinh chất Centella giúp làm dịu da nhanh, giảm mẩn đỏ rõ rệt sau 14 ngày sử dụng đều đặn mỗi tối, phục hồi hàng rào bảo vệ da và cấp ẩm sâu cho da khô ráp, nhạy cảm, dễ kích ứng; kết cấu mỏng nhẹ thấm nhanh không gây bết dính, phù hợp mọi loại da kể cả da mụn, dùng được cho cả nam và nữ, mua 2 tặng 1 chỉ trong tuần này"
+        required marks (83): 21x circumflex, 14x dot below, 12x acute, 12x grave, 12x hook above, 6x horn, 4x tilde, 2x breve
+        ấ = a + circumflex + acute · ú = u + acute · à = a + grave · ị = i + dot below · ả = a + hook above · ẩ = a + circumflex + hook above · ỏ = o + hook above · õ = o + tilde · ệ = e + dot below + circumflex · ử = u + horn + hook above · ụ = u + dot below · ề = e + circumflex + grave · ặ = a + dot below + breve · ỗ = o + circumflex + tilde · ố = o + circumflex + acute · ồ = o + circumflex + grave · â = a + circumflex · ô = o + circumflex · á = a + acute · ạ = a + dot below · ễ = e + circumflex + tilde · í = i + acute · ứ = u + horn + acute · ế = e + circumflex + acute · ẹ = e + dot below · ù = u + grave · ợ = o + horn + dot below · ọ = o + dot below · ể = e + circumflex + hook above · ư = u + horn · ữ = u + horn + tilde · ỉ = i + hook above · ầ = a + circumflex + grave
+        distinct letters, not a plain letter with a mark: đ (d with stroke)
+PRODUCT LETTERING — COPY THESE WORDS. Verb: REPRODUCE.
+This text is part of the physical object, not part of the layout. It lies on the surface carrying it, curves with that surface, takes that surface's perspective, and may be partly turned away or in shadow. Do not restyle it, re-set it, translate it, or make it match the campaign type.
+  [P0] the lettering the attached product reference already shows. It is not quoted here because it is read from the reference, not from the brief: reproduce exactly what the reference shows, and invent no additional words, marks, logos or label text.
+
+T2 · MATERIAL — what the campaign letters are made of. They are a physical thing in this scene, not a graphic laid over it.
+- flat ink: one solid even tone, the same across every stroke: no gradient, no metal, no glow, no transparency, no relief and no shadow of its own. Clean closed counters, every stroke the same weight along its length, and every accent fully formed and separate from the letter beneath it.
+- Every glyph is fully formed: closed counters, consistent stroke weight, no broken, clipped, doubled or half-drawn letters, and no ornament that is not described above.
+
+T3 · OPTICS — where the letters sit in the picture and how they take its light.
+- The campaign letters lie in their own plane, parallel to the picture plane: no perspective, no curvature, no wrap, no tilt, and no part of them bent around anything in the scene.
+- They are in the sharp plane, as crisp as the product itself -- never behind it, never softened, never partly out of focus. Every stroke edge is resolved.
+- [H1] is the largest: its capital letters stand at least 2.2% of the frame's height, and every accent above or below a letter has its own clear room, touching nothing.
+- They sit inside the area the composition reserved: 26% from the left, 8% from the top, 48% wide and 21% tall, measured from the frame's top-left corner. Nothing in the scene crosses into it and no part of any line leaves it.
+- Set the ink against the tone of the area it actually sits on rather than against the frame's average, and keep that area tonally even so the words hold without an outline, a glow or a panel behind them.
+- The letters take their light from the same source BLOCK 4 establishes, at the same angle and with the same shadow softness as everything else in frame. Whatever shadow they cast falls the same way the product's does.
+
+T4 · FORBIDDEN.
+THE TWO LEDGERS DO NOT MIX. Both directions are forbidden:
+- [H1] never touch the product: not on its label, front panel, cap, lid, neck, shoulder, shrink sleeve, box face, foil seal, pump collar or base; not on any packaging, wrapper, tag or sticker; and not on any sign, screen or printed surface standing in for one. They exist only in their own plane in the open frame.
+- [P0] never leave the product. Do not lift the label's words into the frame, enlarge them as a headline, repeat them in the open space, or echo them anywhere outside the object itself.
+- No words exist in this frame beyond the two ledgers above: no extra headline, slogan, caption, price, watermark, signature, stamp, address, URL, QR code, or decorative lettering, and no invented brand mark or logo of any kind.
+- No line appears twice. Not at a second size, not in a second corner, not as a watermark, a caption, a label or a reflection.
+- No line appears without its accents, and none in a transliterated, unaccented, translated, re-spelt, abbreviated or extended form. Every tone mark listed in T1 is part of the word, not decoration on it.
+- No letter-shaped marks that are not one of the lines above: no filler lettering, no suggested text, no blurred word-like shapes, no foreign script, and no second alphabet.
+- No line is cropped, cut by the frame edge, hidden behind an object, or allowed to run off the canvas.

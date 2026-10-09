@@ -221,6 +221,29 @@ export class PipelineRouter {
         : undefined,
     );
 
+    // The product-label tripwire. Off unless V2_LABEL_CHECK=true, and free when on:
+    // it reads the observation the review pass already made rather than paying for a
+    // second vision call. Plugged in here because this is where the review already
+    // lives; nothing in the loop itself is rewritten.
+    try {
+      const { labelCheckEnabled } = await import("../prompt-v2/engine-selector");
+      if (labelCheckEnabled()) {
+        const { checkProductLabels, labelCheckTelemetry } = await import("../prompt-v2/label-check");
+        const record = reviewed as unknown as Record<string, unknown>;
+        const expected = ((record.promptV2 as { labels?: unknown[] } | undefined)?.labels || []).map((l) => String(l));
+        const observed = ((record.visionAnalysis as { visible_text?: unknown[] } | undefined)?.visible_text || []) as Array<{
+          text: string;
+          on_product?: boolean;
+        }>;
+        const check = checkProductLabels(expected, observed);
+        record.labelCheck = check;
+        console.log("[PROMPT_V2][LABEL_CHECK]", labelCheckTelemetry(check));
+      }
+    } catch (err: any) {
+      // A tripwire that breaks a finished render would be worse than no tripwire.
+      console.warn("[PROMPT_V2][LABEL_CHECK] skipped", { error: err?.message });
+    }
+
     logGeneration(decision, reviewed, Date.now() - startedAt);
 
     // Which pipeline actually served this, attached for the persistence layer

@@ -1,0 +1,12 @@
+POSTER — the viewer is standing still and gives it three to ten seconds.
+
+What it has to win: one idea a person could describe afterwards, and a hierarchy the eye
+follows without being told the order.
+
+Hero: the product holds a little over half the frame — dominant, but not so large that the
+frame has no air. One focal point only.
+Margins: keep a clear breathing margin on every edge; nothing important touches an edge.
+Type: a strict hierarchy. The headline is unmistakably first, the supporting line clearly
+second, the call to action smallest and last. Never two elements competing to be read first.
+Text sits in the calmest area the composition leaves; it is never placed over the product.
+Layout for this canvas: {{LAYOUT}}

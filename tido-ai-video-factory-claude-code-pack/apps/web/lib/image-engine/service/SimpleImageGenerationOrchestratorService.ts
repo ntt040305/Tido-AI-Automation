@@ -1,4 +1,5 @@
 import { MasterPromptCompilerService } from "../compiler/MasterPromptCompilerService";
+import { activeProfile } from "../models/image-model-profiles";
 import { PromptBudgetValidator } from "../compiler/PromptBudgetValidator";
 import { RenderTracer } from "../observability/RenderTracer";
 import { IMAGE_ENGINE_CONFIG } from "../config";
@@ -125,7 +126,7 @@ export class SimpleImageGenerationOrchestratorService {
           generationId,
           status: "VALIDATION_FAILED",
           useCase: request.useCase || "Poster",
-          aspectRatio: request.aspectRatio || "4:5",
+          aspectRatio: request.aspectRatio || "1:1",
           diagnostics: {
             routerDurationMs: 0,
             adapterDurationMs: 0,
@@ -277,7 +278,7 @@ export class SimpleImageGenerationOrchestratorService {
             generationId,
             status: "INTERPRETATION_FAILED",
             useCase: request.useCase || "Poster",
-            aspectRatio: request.aspectRatio || "4:5",
+            aspectRatio: request.aspectRatio || "1:1",
             diagnostics: {
               routerDurationMs,
               adapterDurationMs: 0,
@@ -342,7 +343,7 @@ export class SimpleImageGenerationOrchestratorService {
           generationId,
           status: "VALIDATION_FAILED",
           useCase: adapted.useCase || request.useCase || "Poster",
-          aspectRatio: adapted.aspectRatio || request.aspectRatio || "4:5",
+          aspectRatio: adapted.aspectRatio || request.aspectRatio || "1:1",
           diagnostics: {
             routerDurationMs,
             adapterDurationMs,
@@ -382,7 +383,7 @@ export class SimpleImageGenerationOrchestratorService {
           generationId,
           status: "NO_PRODUCT_REFERENCE",
           useCase: adapted.useCase || "Poster",
-          aspectRatio: adapted.aspectRatio || "4:5",
+          aspectRatio: adapted.aspectRatio || "1:1",
           diagnostics: {
             routerDurationMs,
             adapterDurationMs,
@@ -438,7 +439,7 @@ export class SimpleImageGenerationOrchestratorService {
           generationId,
           status: "COMPILATION_FAILED",
           useCase: adapted.useCase || "Poster",
-          aspectRatio: adapted.aspectRatio || "4:5",
+          aspectRatio: adapted.aspectRatio || "1:1",
           diagnostics: {
             routerDurationMs,
             adapterDurationMs,
@@ -492,7 +493,7 @@ export class SimpleImageGenerationOrchestratorService {
           concept: request.concept,
           assetType: (adapted.useCase as any) || request.useCase || "poster",
           productCount: adapted.resolvedProductCount,
-          aspectRatio: adapted.aspectRatio || request.aspectRatio || "4:5",
+          aspectRatio: adapted.aspectRatio || request.aspectRatio || "1:1",
           referenceAnalysis: adapted.resolvedRoutingResult,
           productIdentity: adapted.resolvedRoutingResult.products?.[0],
           retrievedKnowledge: (retrievalRes.package?.selected_blocks || []).map((b) => b.title),
@@ -552,6 +553,25 @@ export class SimpleImageGenerationOrchestratorService {
         } catch (err: any) {
           console.warn("[SIMPLE][INSPIRATION_STYLE_FALLBACK] Inspiration style analysis pass failed cleanly:", err.message || err);
         }
+      }
+
+      // Hand the manifest back to whoever owns the request.
+      //
+      // Measured gap: the Art Direction Sheet reads `request.inspirationStyleManifest`, and
+      // on a live render it was always absent — because the manifest is computed HERE, in a
+      // local, and only ever travels forwards into the compiler input. The pipeline that
+      // built the sheet had already passed this object in and was reading it again later,
+      // from inside the provider wrapper, long after this line has run. So the user's mood
+      // image reached the Gemini compiler and never reached the sheet.
+      //
+      // One assignment rather than threading a getter through the orchestrator: the
+      // pipeline's `renderSource` is the identity on this path, so it is the same object.
+      //
+      // ponytail: in EDITABLE mode `renderSource` shallow-copies the request, so this write
+      // lands on the copy and the sheet still sees nothing. Editable mode renders the scene
+      // only and does not use the art-director path today; revisit if that changes.
+      if (inspirationStyleManifest && !request.inspirationStyleManifest) {
+        request.inspirationStyleManifest = inspirationStyleManifest;
       }
 
       // 4.7 Inspiration Image Withholding Decision
@@ -617,7 +637,7 @@ export class SimpleImageGenerationOrchestratorService {
           generationId,
           status: "COMPILATION_FAILED",
           useCase: adapted.useCase || "Poster",
-          aspectRatio: adapted.aspectRatio || "4:5",
+          aspectRatio: adapted.aspectRatio || "1:1",
           diagnostics: {
             routerDurationMs,
             adapterDurationMs,
@@ -700,7 +720,7 @@ export class SimpleImageGenerationOrchestratorService {
           generationId,
           status: "EXACT_COPY_FAILED",
           useCase: adapted.useCase || "Poster",
-          aspectRatio: adapted.aspectRatio || "4:5",
+          aspectRatio: adapted.aspectRatio || "1:1",
           diagnostics: {
             routerDurationMs,
             adapterDurationMs,
@@ -745,7 +765,7 @@ export class SimpleImageGenerationOrchestratorService {
           generationId,
           status: "PROMPT_BUDGET_EXCEEDED",
           useCase: adapted.useCase || "Poster",
-          aspectRatio: adapted.aspectRatio || "4:5",
+          aspectRatio: adapted.aspectRatio || "1:1",
           diagnostics: {
             routerDurationMs,
             adapterDurationMs,
@@ -813,7 +833,7 @@ export class SimpleImageGenerationOrchestratorService {
           generationId,
           status: "REFERENCE_ORDER_MISMATCH",
           useCase: adapted.useCase || "Poster",
-          aspectRatio: adapted.aspectRatio || "4:5",
+          aspectRatio: adapted.aspectRatio || "1:1",
           diagnostics: {
             routerDurationMs,
             adapterDurationMs,
@@ -864,10 +884,10 @@ export class SimpleImageGenerationOrchestratorService {
       const generationProvider = options?.generationProvider || new ImgStudioImageGenerationProvider();
 
       const providerInput: ProviderImageGenerationInput = {
-        model: "flow-nano-banana-2",
+        model: activeProfile().providerId,
         prompt: masterPrompt,
         references: attachedReferences,
-        aspectRatio: adapted.aspectRatio || "4:5",
+        aspectRatio: adapted.aspectRatio || "1:1",
         imageSize: "1K",
         mimeType: "image/png",
         generationId,
@@ -974,7 +994,7 @@ export class SimpleImageGenerationOrchestratorService {
               prompt_chars_compiled: masterPrompt.length,
               prompt_chars_sent: (providerRes.finalPrompt || masterPrompt).length,
               provider: providerRes.remoteDetails?.provider_name || "imgstudio",
-              model: providerRes.remoteDetails?.model || "flow-nano-banana-2",
+              model: providerRes.remoteDetails?.model || activeProfile().providerId,
               aspect_ratio: adapted.aspectRatio || "1:1",
               remote_details: providerRes.remoteDetails,
             },

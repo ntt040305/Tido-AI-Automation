@@ -65,15 +65,40 @@ export interface TypographyFinding {
 
 export interface TypographyCritique {
   findings: TypographyFinding[];
-  /** 0-10 per dimension. Deliberately not averaged into a single badge. */
+  /**
+   * 0-10 per dimension, or null when nothing was observed. Deliberately not
+   * averaged into a single badge.
+   *
+   * Null is not "zero" and not "fine". It means this dimension was not checked,
+   * and the only honest thing to print for it is that it was not checked.
+   */
   scores: {
-    duplicate_free: number;
-    collision_free: number;
-    hierarchy: number;
-    readability: number;
-    balance: number;
+    duplicate_free: number | null;
+    collision_free: number | null;
+    hierarchy: number | null;
+    readability: number | null;
+    balance: number | null;
   };
-  /** True when nothing blocking or serious was found. */
+  /**
+   * Whether the render was actually looked at.
+   *
+   * THE FAILURE THIS CLOSES
+   * -----------------------
+   * `worst()` returned 10 for an area with no findings, and a vision call that
+   * failed produced no findings at all — so a review that saw nothing scored a
+   * flawless 10/10 and reported `shippable: true`. The one state the system most
+   * needed to distinguish, "checked and clean" from "never checked", was the one
+   * state it rendered identically to success.
+   *
+   * `unverified` therefore nulls every score, forces `shippable` false, and must
+   * never be shown as a number or a tick, nor used to trigger a re-render.
+   */
+  verdict: "verified" | "unverified";
+  /**
+   * True when the render was observed AND nothing blocking or serious was found.
+   *
+   * Never true on an unverified review: not knowing is not the same as approving.
+   */
   shippable: boolean;
 }
 
@@ -299,7 +324,17 @@ export function critiqueTypography(input: CritiqueInput): TypographyCritique {
     });
   }
 
-  const worst = (area: CritiqueArea) => {
+  // Was the render looked at at all?
+  //
+  // `null`/`undefined` means the vision call did not happen or came back with
+  // nothing. An empty ARRAY is different and counts as observed: it is a model
+  // reporting that it read no text, which is a real answer about a real frame.
+  const observed = input.visibleText != null || input.textCheck != null;
+
+  const worst = (area: CritiqueArea): number | null => {
+    // Nothing was seen, so there is nothing to score. Returning 10 here is what
+    // made a failed vision call indistinguishable from a flawless render.
+    if (!observed) return null;
     const hits = findings.filter((f) => f.area === area);
     if (!hits.length) return 10;
     if (hits.some((f) => f.severity === "blocking")) return 2;
@@ -316,7 +351,11 @@ export function critiqueTypography(input: CritiqueInput): TypographyCritique {
       readability: worst("readability"),
       balance: worst("balance"),
     },
-    shippable: !findings.some((f) => f.severity === "blocking" || f.severity === "serious"),
+    verdict: observed ? "verified" : "unverified",
+    // Measured findings are still real arithmetic and are still returned above —
+    // but without an observation nothing can be called shippable, because the
+    // half of the check that reads the actual pixels never ran.
+    shippable: observed && !findings.some((f) => f.severity === "blocking" || f.severity === "serious"),
   };
 }
 
@@ -365,6 +404,9 @@ export function typographyCritiqueTelemetry(c: TypographyCritique | null | undef
     measured: c.findings.filter((f) => f.source === "measured").length,
     observed: c.findings.filter((f) => f.source === "observed").length,
     scores: c.scores,
+    // So a log line can be read without guessing whether 10s mean "clean" or
+    // "never looked".
+    verdict: c.verdict,
     shippable: c.shippable,
   };
 }

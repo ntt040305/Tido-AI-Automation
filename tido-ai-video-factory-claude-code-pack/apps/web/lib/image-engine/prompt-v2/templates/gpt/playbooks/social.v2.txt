@@ -1,0 +1,11 @@
+SOCIAL — one to three seconds, on a held phone, in a feed of other people's pictures.
+
+What it has to win: a frame that survives a thumbnail and rewards a second look at full
+size. It has to stop the scroll on shape and colour alone, before any word is read.
+
+The hero scale, the margins, the type sizes and the layout for this canvas are already
+decided in the sheet. Do not restate them differently here.
+
+What is still worth saying for this channel: the silhouette. At thumbnail size the picture
+is a shape and two colours, so the subject's outline has to be legible with every detail
+removed.

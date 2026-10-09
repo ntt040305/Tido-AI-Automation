@@ -57,8 +57,6 @@ export function RenderCanvas({
     switch (ratio) {
       case "1:1":
         return "aspect-square max-w-[440px]";
-      case "4:5":
-        return "aspect-[4/5] max-w-[390px]";
       case "9:16":
         return "aspect-[9/16] max-w-[340px]";
       case "16:9":

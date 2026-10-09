@@ -67,16 +67,24 @@ console.log("\nContent Message separation\n");
 
 check("The field is rendered in the real brief panel", () => {
   const panel = read("features/picture-engine/components/brief/CreativeBriefPanel.tsx");
-  assert.ok(/Nội dung muốn xuất hiện trên ảnh/.test(panel), "the section is not in the UI");
+  // The label was renamed to "NỘI DUNG CHỮ TRÊN ẢNH (CONTENT MESSAGE)"
+  // (CreativeBriefPanel.tsx:524) and this assertion was never updated, so it has
+  // been failing on a string rather than on the behaviour it is here to protect:
+  // that the field exists, reads state and writes it back.
+  assert.ok(/NỘI DUNG CHỮ TRÊN ẢNH/.test(panel), "the section is not in the UI");
   assert.ok(/onUpdateContentMessage/.test(panel), "the field does not write back to state");
   assert.ok(/brief\.content_message/.test(panel), "the field does not read from state");
 });
 
 check("It sits above the visual direction panel", () => {
   const panel = read("features/picture-engine/components/brief/CreativeBriefPanel.tsx");
-  const content = panel.indexOf("Nội dung muốn xuất hiện trên ảnh");
+  // Same renamed label, and the submit comment is now numbered "{/* 8. Submit
+  // CTA */}". Both indexOf calls were returning -1, so the two comparisons below
+  // were passing or failing on nothing. The ordering they assert is unchanged and
+  // is now actually checked.
+  const content = panel.indexOf("NỘI DUNG CHỮ TRÊN ẢNH");
   const visual = panel.indexOf("<VisualDirectionControlPanel");
-  const cta = panel.indexOf("{/* Submit CTA */}");
+  const cta = panel.indexOf("Submit CTA */}");
   assert.ok(content > 0 && content < visual, "content message is not above the visual direction panel");
   assert.ok(visual < cta, "the visual panel is no longer before Generate");
 });

@@ -272,7 +272,24 @@ export async function reviewRender(
     // old list read `copyItems` only, so the content field's text was never
     // checked, and "no text" was never checked at all.
     const { resolveTextRequirement } = await import("../compiler/ExactCopyIntegrityValidator");
-    const textRequirement = resolveTextRequirement(request);
+    // On the v2 path the renderer was asked to draw `copy_final`, which differs
+    // from what the client typed whenever the copy had to be shortened to fit the
+    // channel. Comparing the original list there would report a correct render as
+    // wrong. Absent -- which is every v1 render -- this reads the request exactly
+    // as it always did.
+    //
+    // UNDER `exact` THE GATE READS THE ORIGINAL. Reading `copy_final` there was how a
+    // render whose copy had been silently shortened came back `compliant: true`: the
+    // engine cut two sentences, told the gate the shortened list was the requirement,
+    // and the gate agreed with it. `copy_final` is only the right list when the policy
+    // actually permitted a rewrite, which is `adapt` and nothing else.
+    const v2 = (result as unknown as { promptV2?: { copy_final?: unknown; copy_policy?: unknown } }).promptV2;
+    const v2Copy = v2?.copy_final;
+    const adapted = String(v2?.copy_policy || "") === "adapt";
+    const textRequirement =
+      adapted && Array.isArray(v2Copy) && v2Copy.length
+        ? ({ mode: "exact", lines: v2Copy.map((l) => String(l)) } as ReturnType<typeof resolveTextRequirement>)
+        : resolveTextRequirement(request);
     const expectedCopy = textRequirement.lines;
 
     const visionStart = Date.now();

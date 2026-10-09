@@ -256,6 +256,56 @@ async function main() {
     assert.strictEqual(dead.retryable, true);
   });
 
+  await check("A timeout is final: classified as not retryable", () => {
+    // The reseller may already be rendering -- and charging for -- the request that
+    // timed out on our side. A retry can pay for the same image twice, and a slower
+    // model makes timeouts likelier. A connection that never opened is different:
+    // nothing reached the provider, so that one may still be retried.
+    const timeout = ProviderErrorClassifier.classifyThrown(new Error("PROVIDER_TIMEOUT"));
+    assert.strictEqual(timeout.retryable, false);
+    assert.strictEqual(timeout.action, "STOP");
+    assert.strictEqual(ProviderErrorClassifier.mayRetry(timeout, 1), false);
+    const dead = ProviderErrorClassifier.classifyThrown(new Error("fetch failed"));
+    assert.strictEqual(dead.retryable, true, "a connection that never opened must stay retryable");
+  });
+
+  await check("The provider sends a timed-out render exactly once", async () => {
+    const { ImgStudioImageGenerationProvider } = await import("./provider/ImgStudioImageGenerationProvider");
+    const saved = {
+      key: process.env.IMGSTUDIO_API_KEY,
+      timeout: process.env.IMG_PROVIDER_TIMEOUT_MS,
+      fetch: global.fetch,
+    };
+    let calls = 0;
+    try {
+      process.env.IMGSTUDIO_API_KEY = "test_key_not_real";
+      process.env.IMG_PROVIDER_TIMEOUT_MS = "50";
+      // Never answers, so every attempt ends in PROVIDER_TIMEOUT.
+      global.fetch = (async () => {
+        calls++;
+        return new Promise<Response>(() => {});
+      }) as typeof fetch;
+      const out = await new ImgStudioImageGenerationProvider().generateImage({
+        model: "flow-nano-banana-2",
+        prompt: "test",
+        references: [],
+        aspectRatio: "1:1",
+        imageSize: "1K",
+        mimeType: "image/png",
+        generationId: "gen_test_timeout",
+      });
+      assert.strictEqual(out.success, false);
+      assert.strictEqual(calls, 1, `the provider was called ${calls} times for one timed-out render`);
+      assert.strictEqual(out.error?.code, "PROVIDER_TIMEOUT");
+    } finally {
+      if (saved.key === undefined) delete process.env.IMGSTUDIO_API_KEY;
+      else process.env.IMGSTUDIO_API_KEY = saved.key;
+      if (saved.timeout === undefined) delete process.env.IMG_PROVIDER_TIMEOUT_MS;
+      else process.env.IMG_PROVIDER_TIMEOUT_MS = saved.timeout;
+      global.fetch = saved.fetch;
+    }
+  });
+
   // ── Retry policy ─────────────────────────────────────────────────────
 
   await check("413 is worth exactly one further attempt, and 400 none", () => {

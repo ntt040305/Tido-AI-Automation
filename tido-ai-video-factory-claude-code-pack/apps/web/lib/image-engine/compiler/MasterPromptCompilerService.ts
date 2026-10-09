@@ -1053,8 +1053,20 @@ export class MasterPromptCompilerService {
     // Measured across ten captured production prompts, knowledge reached the
     // renderer 0 times out of 10. Fitting to the real ceiling costs a block or
     // two here and saves three entire sections there.
+    //
+    // One-pass moved the ceiling again, and this time upward. The compiled prompt
+    // is no longer what gets sent: `OpticalCompiler` sorts it into eight blocks and
+    // removes the writers BLOCK 8 supersedes, measured at ~6,900 characters per
+    // case across the twelve-case benchmark, then adds ~4,000 for the typography
+    // block. A compiled prompt of 27,000 therefore reaches the provider at roughly
+    // 24,100 against a 32,000 ceiling. Holding the compiler to 22,000 now trims
+    // knowledge to the universal floor to protect a budget nothing is spending.
+    //
+    // `PROMPT_KNOWLEDGE_FIT_CHARS` overrides it; the cap keeps it under the
+    // optimizer's own limit so this loop can never hand on a prompt the optimizer
+    // would then dismantle section by section.
     const knowledgeFitCeiling = Math.min(
-      PromptBudgetManagerService.EMERGENCY_TARGET,
+      Number(process.env.PROMPT_KNOWLEDGE_FIT_CHARS || 27000),
       ProviderPromptOptimizer.HARD_LIMIT
     );
     const droppedKnowledgeIds: string[] = [];

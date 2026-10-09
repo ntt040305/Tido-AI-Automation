@@ -1,4 +1,5 @@
 import { SimpleImageGenerationResultV1, SimpleInputRequestV1 } from "../types";
+import { activeProfile as activeImageProfile } from "./../models/image-model-profiles";
 import { ImgStudioImageGenerationProvider } from "../provider/ImgStudioImageGenerationProvider";
 import type { ImageGenerationProvider, ProviderImageGenerationInput } from "../provider/ImageGenerationProvider";
 // Phase 5.5.5: the render core, called directly. It was reached through a
@@ -68,8 +69,26 @@ import {
 } from "./experiment/TypographyPlan";
 import { composeEditable, editableTelemetry, type ComposeResult } from "./experiment/EditableDesign";
 import { buildTypographyDNA, categoryHint, renderDnaForImagePrompt } from "./experiment/TypographyDNA";
-import { compileOnePassPrompt, opticalTelemetry, type OnePassScript } from "./experiment/OpticalCompiler";
+import { TYPOGRAPHY_REQUIREMENTS, compileOnePassPrompt, opticalTelemetry, type OnePassScript } from "./experiment/OpticalCompiler";
 import { buildTextLedgers, ledgerTelemetry } from "./experiment/TextLedgerSystem";
+import { finishTelemetry, renderFinishForPrompt, resolveFinish } from "./experiment/FinishLayer";
+import { ideaTelemetry, renderIdeaForPrompt, resolveIdea } from "./experiment/IdeaLayer";
+import { copyFitsChannel, profileFor, profileTelemetry } from "./experiment/AssetProfile";
+import { copyPolicyMode, directorModel, includeLabelText, isV2, templateReload, gptVisionQc } from "../prompt-v2/engine-selector";
+import { buildSimplePrompt, simpleTelemetry, type SimpleResult } from "../prompt-v2/build-simple";
+import { promptDialect } from "../prompt-v2/engine-selector";
+import { HARD_MAX_RETRIES as QC_HARD_MAX_RETRIES } from "../prompt-v2/art-direction/vision-qc";
+import type { AspectRatio } from "../prompt-v2/templates";
+import {
+  cinematographyTelemetry,
+  projectToSetup,
+  renderEnvironmentForPrompt,
+  renderLensForPrompt,
+  renderLightForPrompt,
+  renderSurfaceForPrompt,
+  resolveOpticalAxes,
+} from "./experiment/CinematographyLayer";
+import { gradePrompt, promptGradeTelemetry } from "../benchmark/PromptGrader";
 import { TypographyDesignContractService } from "./experiment/TypographyDesignContract";
 import type { CreativeDocument } from "./experiment/CreativeDocument";
 import type { BrandKit } from "./experiment/BrandKit";
@@ -374,6 +393,43 @@ export class ExperimentPipeline {
    * aspect ratio, same model, same manifest. Only `prompt` differs, and only
    * when a judgment was produced.
    */
+  /**
+   * The v2 record, on the result the API returns.
+   *
+   * Additive and additive only: the response keeps every field it had, and gains
+   * `promptV2` when the v2 engine ran. The vision review reads `copy_final` from
+   * here, because under `adapt` the words the renderer was asked to draw are not
+   * the words the client typed -- and a gate that compares the wrong list would
+   * report a correct render as wrong.
+   */
+  private static attachV2<T extends object>(result: T, v2: SimpleResult | null): T {
+    if (!v2) return result;
+    Object.assign(result as Record<string, unknown>, {
+      promptV2: {
+        ...simpleTelemetry(v2),
+        copy_original: v2.copy_original,
+        copy_final: v2.copy_final,
+        warnings: v2.warnings,
+        // What the director filled in that the client never said, and the plan it
+        // worked to. On the job because they are the two outputs a human may want to
+        // overrule, and neither is visible in the image.
+        assumptions: v2.assumptions,
+        plan: v2.plan,
+        template_version: v2.templates?.version,
+        copy_policy_source: copyPolicyMode().source,
+        reference_roles: v2.referenceRoles,
+        // Empty under the simplified engine, and deliberately so: the model returns
+        // four tags and none of them is a per-product label list. The post-render
+        // label check (`V2_LABEL_CHECK`, default off) reads this, and with an empty
+        // list it simply has nothing to compare -- it does not report a false
+        // mismatch. Recovering it would mean a fifth tag; CHANGELOG_V2 records the
+        // trade rather than hiding it.
+        labels: [] as string[],
+      },
+    });
+    return result;
+  }
+
   private static wrapProvider(
     inner: ImageGenerationProvider,
     /**
@@ -452,7 +508,32 @@ export class ExperimentPipeline {
      * the blueprint's typography and layout directions, the old text directive --
      * is dropped by the router instead of being appended here.
      */
-    opticalScriptFor?: (composed: string, blueprintText?: string) => OnePassScript | null
+    opticalScriptFor?: (composed: string, blueprintText?: string) => OnePassScript | null,
+    /**
+     * The v2 engine, when `PROMPT_ENGINE=v2`.
+     *
+     * Async because it makes a model call, and awaited here rather than at the
+     * call site because this is where the prompt is decided. Returning null -- for
+     * a timeout, a reply with no `<image_prompt>`, or a check the one repair did not
+     * fix -- leaves v1 to produce the prompt, which is the whole point of keeping
+     * v1.
+     */
+    v2For?: () => Promise<SimpleResult | null>,
+    /**
+     * The post-render QC gate. `GPT_VISION_QC` only.
+     *
+     * Returns the prompt to retry with, or null to accept what came back. The GATE owns
+     * the decision and the budget; the loop below owns the calling. That split is what
+     * makes termination provable in one place: `QcBudget.mayRetry` refuses once the retry
+     * count or the VND ceiling is reached, so the gate returns null and the loop ends.
+     *
+     * The loop is ALSO bounded by its own counter, which is belt and braces: a bug in the
+     * gate must not be able to spend money in a circle.
+     */
+    qcGate?: (
+      result: { imageBuffer?: Buffer; mimeType?: string; success?: boolean },
+      promptUsed: string,
+    ) => Promise<{ prompt: string } | null>
   ): ImageGenerationProvider {
     return {
       async generateImage(input: ProviderImageGenerationInput) {
@@ -493,20 +574,105 @@ export class ExperimentPipeline {
         // One-pass: the eight-block script IS the prompt. The legacy assembly
         // below it survives only as the path a failed compile falls back to, which
         // is also the editable path -- nothing else reaches the provider.
+        const v2 = v2For ? await v2For() : null;
         const optical = opticalScriptFor ? opticalScriptFor(composed, blueprintText) : null;
-        const finalPrompt = optical
+        // NEVER v1 FOR THE GPT DIALECT.
+        //
+        // The ladder below is the Gemini fallback chain: v2, then the optical script,
+        // then the eight-block assembly. Every rung of it writes Gemini prose. For a
+        // GPT-Image model that is the wrong dialect, and the failure would be invisible
+        // from the outside — a ~26,000-character prompt built for Nano Banana 2 returns
+        // an image that looks like a result, costs 150-250 VND and reports nothing
+        // wrong. That is exactly how the `__dirname` template bug hid for a whole phase.
+        //
+        // So when the GPT dialect fails, the render fails. `build-gpt` has already tried
+        // the director, one repair, and a prompt assembled in code from the same brief;
+        // if all three are gone there is nothing honest left to send.
+        if (promptDialect() === "gpt-image" && !(v2?.ok && v2.prompt)) {
+          throw new Error(
+            "the GPT dialect produced no prompt, and there is no Gemini fallback for this model" +
+              (v2?.reason ? ` — ${v2.reason}` : ""),
+          );
+        }
+        const finalPrompt = v2?.ok && v2.prompt
+          ? v2.prompt
+          : optical
           ? optical.prompt
           : directive
             ? `${withBlueprint}\n\n${directive}`
             : withBlueprint;
+        if (v2) {
+          // Logged as ONE STRING, not an object.
+          //
+          // Next 16's dev-server log file writes every object argument as `{}`, so
+          // the object form of this line told a reader only that v2 ran -- not
+          // whether it reached the model, which check rejected it, or why it fell
+          // back. That is the whole diagnostic value of the line. A measured case:
+          // `[PROMPT_V2] {}` / `[PROMPT_V2] falling back to v1 {}` was the entire
+          // record of a failed build.
+          // Which files produced this image. The first question a bad render raises, and
+          // a content hash answers it even when somebody edited a template in place
+          // without bumping the version.
+          if (v2.templates) {
+            const digest = (text: string) => crypto.createHash("sha256").update(text, "utf8").digest("hex").slice(0, 8);
+            console.log(
+              `[PROMPT_V2][version] system=system.${v2.templates.version}.md@${digest(v2.templates.system)} ` +
+                `request=request.${v2.templates.version}.md@${digest(v2.templates.request)} ` +
+                `playbook=${v2.templates.playbookName}@${input.aspectRatio || "?"} ` +
+                `gold=${v2.templates.goldExample.trim() ? `${v2.templates.playbookName}.md` : "none"} ` +
+                `copy_policy=${v2.copyPolicy}(${copyPolicyMode().source}) ` +
+                `refs_sent_to_director=[${(v2.referenceRoles || []).join(",")}]`,
+            );
+          }
+          // What the director assumed and planned. Abridged, because the point is that a
+          // human can glance at it, and the full text is on the job.
+          for (const line of v2.assumptions.slice(0, 8)) console.log(`[PROMPT_V2][assumption] ${line.slice(0, 160)}`);
+          if (v2.plan) {
+            for (const line of v2.plan.split(/\r?\n/).filter(Boolean).slice(0, 8)) {
+              console.log(`[PROMPT_V2][plan] ${line.slice(0, 160)}`);
+            }
+          }
+          const t = simpleTelemetry(v2);
+          console.log(
+            `[PROMPT_V2] ok=${t.ok} calls=${t.llm_calls} tpl=${t.template_version} playbook=${t.playbook} ` +
+              `policy=${t.copy_policy} words=${t.prompt_words} copy=${t.copy_strings} adapted=${t.copy_adapted} ` +
+              `checks=[${(t.check_codes || []).join(",")}] missing_tags=[${(t.missing_tags || []).join(",")}] ` +
+              `warnings=${t.warnings} chars_sent=${finalPrompt.length}`,
+          );
+          // The warnings, printed. These are the things a human has to know and
+          // cannot see in the image: copy that was shortened, a claim that may need
+          // review, a label the model could not read. Measured case: a render came
+          // back with `adapted=true` and the only record of WHICH words were changed
+          // was a warning nobody printed.
+          for (const w of v2.warnings) console.warn(`[PROMPT_V2][warning] ${w}`);
+          if (v2.copyPolicy === "adapt" && v2.copy_original.join("\u0001") !== v2.copy_final.join("\u0001")) {
+            console.warn(`[PROMPT_V2][copy] the client typed: ${JSON.stringify(v2.copy_original)}`);
+            console.warn(`[PROMPT_V2][copy] the render was asked for: ${JSON.stringify(v2.copy_final)}`);
+          }
+          if (!v2.ok) {
+            console.warn(`[PROMPT_V2] falling back to v1 — ${v2.reason || "no reason given"}`);
+            // Every failure message, each on its own line, so the fix is readable
+            // rather than inferred from a code.
+            for (const f of v2.checks?.failures || []) console.warn(`[PROMPT_V2][${f.code}] ${f.message}`);
+            if (v2.reply?.stray) console.warn(`[PROMPT_V2][stray] ${v2.reply.stray.slice(0, 300)}`);
+          }
+        }
         if (optical) {
           console.log("[OPTICAL][SCRIPT]", {
             ...opticalTelemetry(optical),
             dropped: optical.route.dropped,
             unrouted: optical.route.unrouted,
+            knowledge_cards: optical.route.knowledgeCards,
+            deduped_lines: optical.deduped.lines,
+            deduped_chars: optical.deduped.chars,
             chars_legacy_assembly: withBlueprint.length + (directive ? directive.length + 2 : 0),
             chars_sent: finalPrompt.length,
           });
+          // How specific the script actually is, measured on the string being
+          // sent. Deterministic and free, so it rides on every render instead of
+          // waiting for a vision judge that costs 100 VND and cannot separate
+          // small differences. It grades DECISIVENESS, never quality.
+          console.log("[OPTICAL][GRADE]", promptGradeTelemetry(gradePrompt(finalPrompt)));
           if (!optical.ok) {
             console.warn("[OPTICAL][SCRIPT] invariant failed", {
               failed: optical.invariants.filter((x) => !x.ok).map((x) => `${x.id}: ${x.because}`),
@@ -580,14 +746,14 @@ export class ExperimentPipeline {
             file: "apps/web/lib/image-engine/evolution/ExperimentPipeline.ts",
             func: "wrapProvider -> inner.generateImage",
             input: {
-              model: input.model || "flow-nano-banana-2",
+              model: input.model || activeImageProfile().providerId,
               aspectRatio: input.aspectRatio,
               referenceCount: input.references?.length ?? 0,
               promptChars: finalPrompt.length,
             },
             decision: {
               provider: "ImgStudioImageGenerationProvider",
-              model: "flow-nano-banana-2",
+              model: activeImageProfile().providerId,
               endpoint: (input.references?.length ?? 0) > 0 ? "/api/v1/images/edit" : "/api/v1/images/generate",
             },
             output: "calling provider...",
@@ -596,8 +762,45 @@ export class ExperimentPipeline {
           RenderTracer.recordImageRender();
         }
 
-        const out = await inner.generateImage({ ...input, prompt: finalPrompt });
+        let out = await inner.generateImage({ ...input, prompt: finalPrompt });
         if (out && !out.finalPrompt) out.finalPrompt = finalPrompt;
+
+        // ── The QC gate and its at-most-two retries ────────────────────────
+        //
+        // Off unless GPT_VISION_QC. The gate looks at what came back, compares it against
+        // the Art Direction Sheet that produced it, and either accepts it or hands back
+        // ONE corrected prompt. It refuses to hand anything back once the retry count or
+        // the per-request VND ceiling is reached, and it never retries an `unverified`
+        // verdict — "we could not look" is not evidence the pixels are wrong.
+        //
+        // The counter here is a second, independent bound: whatever the gate does, this
+        // loop cannot run more than HARD_MAX_RETRIES times.
+        if (qcGate) {
+          for (let attempt = 0; attempt < QC_HARD_MAX_RETRIES; attempt += 1) {
+            const promptUsed = out.finalPrompt || finalPrompt;
+            let next: { prompt: string } | null = null;
+            try {
+              next = await qcGate(out, promptUsed);
+            } catch (err: unknown) {
+              // A bug in the gate must not cost the render that already succeeded.
+              console.warn(
+                `[VISION_QC] the gate threw; delivering the render as it is — ${(err as Error)?.message || String(err)}`,
+              );
+              break;
+            }
+            if (!next) break;
+            console.log("[VISION_QC][RETRY] re-rendering with one appended correction");
+            const retried = await inner.generateImage({ ...input, prompt: next.prompt });
+            // A retry that fails outright keeps the render we already have: a worse image
+            // beats no image, and the caller has already been charged for both.
+            if (!retried?.success || !retried.imageBuffer?.length) {
+              console.warn("[VISION_QC][RETRY] the retry did not return an image; keeping the first render");
+              break;
+            }
+            if (!retried.finalPrompt) retried.finalPrompt = next.prompt;
+            out = retried;
+          }
+        }
 
         if (RenderTracer.isTraceEnabled()) {
           RenderTracer.stage({
@@ -1086,6 +1289,12 @@ export class ExperimentPipeline {
     // correction with no starting value cannot be checked against the result.
     let capturedTypography: any = null;
     let capturedGeometry: any = null;
+    // The Art Direction Sheet this render was built from, for the QC gate to check the
+    // returned pixels against. Null unless GPT_ART_DIRECTOR produced one.
+    let capturedSheet: import("../prompt-v2/art-direction/art-direction-sheet").ArtDirectionSheet | null = null;
+    // One ledger per request, shared across every attempt, because the VND ceiling is a
+    // per-request cap and a budget rebuilt per attempt would never reach it.
+    let qcBudget: import("../prompt-v2/art-direction/vision-qc").QcBudget | null = null;
     let capturedBlueprint: any = null;
     // The rest of what a render decides. Captured for the same reason as the
     // three above: each already exists, each is thrown away when the response
@@ -1101,6 +1310,9 @@ export class ExperimentPipeline {
     let capturedCompositionPlan: CompositionPlan | null = null;
     let capturedAssetDna: any = null;
     let capturedPrompt: string | null = null;
+    // The v2 build, when the flag selected it. Null on the v1 path, which is the
+    // default: nothing here runs unless PROMPT_ENGINE=v2.
+    let capturedV2: SimpleResult | null = null;
     // Phase 5.1: the editable design document, when the execution layer built one.
     let capturedDocument: any = null;
     // The typography plan. Captured for the same reason the geometry is: the
@@ -1179,6 +1391,263 @@ export class ExperimentPipeline {
     // Null in editable mode, where the model renders the scene only, and null on a
     // failed compile -- in both cases the legacy assembly still runs, so a bug here
     // cannot cost a render.
+    // v2: one LLM call that writes the prompt itself. Off unless PROMPT_ENGINE=v2.
+    //
+    // Built here because this is where the request, the asset context and the
+    // product buffers are all in scope. It never throws: `buildSimplePrompt` turns
+    // every failure into `ok: false`, and this returns null on anything else so
+    // the v1 assembly below still runs.
+    // The GPT dialect is not optional and not flag-driven.
+    //
+    // `PROMPT_ENGINE` is a preference about how to write a GEMINI prompt. Which dialect
+    // the active model needs is a fact about that model: Sunburst cannot be sent a
+    // Gemini prompt because a flag says v1. So the engine runs whenever the flag asks
+    // for it OR the active model requires the GPT dialect.
+    /**
+     * The post-render QC gate. `GPT_VISION_QC` only, and silent without a sheet.
+     *
+     * Built here because this is where `capturedSheet` lives. It owns the whole decision —
+     * run the QC call, read the verdict, derive at most one correction, and consult the
+     * budget — and hands the wrapper either a prompt to retry with or null.
+     *
+     * It never throws and never lets a QC failure cost a render that already succeeded: an
+     * unparseable answer, a timeout and a thrown client all become `unverified`, which is
+     * delivered and flagged rather than retried.
+     */
+    const qcGate = gptVisionQc()
+      ? async (
+          result: { imageBuffer?: Buffer; mimeType?: string; success?: boolean },
+          promptUsed: string,
+        ): Promise<{ prompt: string } | null> => {
+          const sheet = capturedSheet;
+          if (!sheet) return null;
+          if (!result?.success || !result.imageBuffer?.length) return null;
+
+          const { runVisionQc, qcOutcome, qcConfig, correctionForVerdict, qcTelemetry, QcBudget } = await import(
+            "../prompt-v2/art-direction/vision-qc"
+          );
+          if (!qcBudget) qcBudget = new QcBudget(qcConfig());
+
+          const { LLMProviderService } = await import("../llm/llm-provider.service");
+          const llm = new LLMProviderService();
+          const { qc, reason } = await runVisionQc(
+            sheet,
+            { buffer: result.imageBuffer, mimeType: result.mimeType },
+            {
+              chat: (messages, purpose) =>
+                llm.generateChatCompletion(messages as never, purpose, {
+                  max_tokens: 1200,
+                  temperature: 0.1,
+                  timeoutMs: 60000,
+                }),
+            },
+          );
+
+          const verdict = qcOutcome(qc, qcBudget.config);
+          const correction = verdict.outcome === "fail" ? correctionForVerdict(qc, sheet) : null;
+          qcBudget.record({
+            correction,
+            outcome: verdict.outcome,
+            because: verdict.because,
+            cost_vnd: QcBudget.attemptCostVnd(),
+          });
+          console.log("[VISION_QC]", JSON.stringify(qcTelemetry(qc, verdict.outcome, qcBudget)));
+
+          if (verdict.outcome === "unverified") {
+            // Delivered, flagged for a human. Never looped on: see `gptVisionQc`.
+            console.warn(
+              `[VISION_QC][UNVERIFIED] ${reason || verdict.because} — the render is delivered and needs a human look`,
+            );
+            return null;
+          }
+          if (verdict.outcome === "pass") return null;
+
+          const may = qcBudget.mayRetry(verdict.outcome, correction);
+          if (!may.allowed) {
+            console.warn(`[VISION_QC][NO_RETRY] ${verdict.because} — ${may.because}`);
+            return null;
+          }
+          // ONE sentence, appended to the prompt that was mostly right. Rewriting the whole
+          // prompt would change the part that worked and make the next failure unattributable.
+          return { prompt: `${promptUsed}\n\n${correction}` };
+        }
+      : undefined;
+
+    const dialect = promptDialect();
+    const v2For = !isV2() && dialect !== "gpt-image"
+      ? undefined
+      : async (): Promise<SimpleResult | null> => {
+          try {
+            const { LLMProviderService } = await import("../llm/llm-provider.service");
+            const llm = new LLMProviderService();
+            // EVERY reference, in the order the provider appends them -- not just the
+            // products. A supplied LOGO used to reach the renderer as an attached image
+            // while the prompt said "no extra logos or brand marks", so the only
+            // instruction that mentioned it told the model to leave it out. The director
+            // now sees each photo and what it IS.
+            const allReferences = (request.images || []).map((img, i) => ({
+              img,
+              index: i + 1,
+              role: String((img as { role?: string }).role || "").toUpperCase() || "PRODUCT",
+              filename: (img as { filename?: string }).filename,
+            }));
+            const ratio = (["1:1", "9:16", "16:9"].includes(String(request.aspectRatio))
+              ? String(request.aspectRatio)
+              : "1:1") as AspectRatio;
+
+            const chat = (messages: unknown, purpose: string) =>
+              llm.generateChatCompletion(messages as never, purpose, {
+                temperature: 0.7,
+                max_tokens: 8000,
+                timeoutMs: 120000,
+                ...(directorModel() ? { model: directorModel() } : {}),
+              });
+
+            // ── The GPT dialect ──────────────────────────────────────────────
+            //
+            // A different model, a different template set, a different section
+            // contract — and crucially a brief whose section C describes the reference
+            // SHEETS the provider will be handed rather than the photographs the user
+            // uploaded. Measured before this branch existed: a five-product render sent
+            // two packed sheets while the prompt said "exactly as in attached photo 3".
+            if (dialect === "gpt-image") {
+              const { buildGptForPipeline } = await import("../prompt-v2/gpt-pipeline-adapter");
+              const { gptEngineTelemetry } = await import("../prompt-v2/build-gpt");
+              const result = await buildGptForPipeline(
+                {
+                  assetType: assetCtx?.asset_type || request.useCase || "Poster",
+                  aspectRatio: ratio,
+                  concept: request.concept || "",
+                  brand: request.brandName || "",
+                  copy: textRequirement.lines,
+                  references: allReferences.map((ref) => ({
+                    index: ref.index,
+                    role: ref.role,
+                    filename: ref.filename,
+                    description: (ref.img as { description?: string }).description,
+                    buffer: (ref.img as { buffer?: Buffer }).buffer,
+                    mimeType: (ref.img as { mimeType?: string }).mimeType,
+                    productId: (ref.img as { product_id?: string }).product_id ?? null,
+                  })),
+                  industry: request.industry || request.marketingContext?.industry,
+                  intendedUse: assetCtx?.asset_type || request.useCase,
+                  userControls: Object.entries(request.creativeDirection?.visual_controls || {})
+                    .filter(([, v]) => v && v !== "auto")
+                    .map(([k, v]) => ({ label: k, instruction: String(v) })),
+                  // ── What already ran and was being discarded here ───────
+                  //
+                  // Every field below comes from a layer this render has ALREADY executed
+                  // by the time this closure runs, and the audit measured the brief
+                  // reading "(none)" for all of them. The adapter ignores the lot unless
+                  // GPT_ART_DIRECTOR is on, so adding them changes nothing today.
+                  //
+                  // Ordering, which is load-bearing and fragile: `blueprintFor` is called
+                  // at wrapProvider :556, four lines before `v2For()` is awaited at :561,
+                  // so `capturedBlueprint` and `capturedCompositionPlan` are populated by
+                  // the time this reads them. `earlyStrategy` is awaited at :1184, long
+                  // before. Both are facts about the current call order rather than
+                  // guarantees — if the provider wrapper is ever reordered, these go back
+                  // to null and the sheet falls back to its derived defaults rather than
+                  // breaking.
+                  brandKit: decision.brandKit
+                    ? {
+                        colors: decision.brandKit.colors,
+                        fonts: decision.brandKit.fonts,
+                        stylePreferred: decision.brandKit.style?.preferred,
+                        styleForbidden: decision.brandKit.style?.forbidden,
+                        typographyPreference: decision.brandKit.style?.typography_preference,
+                        hasLogoImage: decision.brandKit.has_logo,
+                      }
+                    : null,
+                  strategy: earlyStrategy
+                    ? [
+                        { label: "Creative angle", text: earlyStrategy.creative_angle || "" },
+                        { label: "Commercial goal", text: earlyStrategy.commercial_goal || "" },
+                        { label: "Audience psychology", text: earlyStrategy.target_customer_psychology || "" },
+                        { label: "Consumer insight", text: earlyStrategy.consumer_insight || "" },
+                        { label: "The one thing the image says", text: earlyStrategy.creative_message || "" },
+                        { label: "What the viewer should feel", text: earlyStrategy.emotional_response || "" },
+                      ].filter((s) => s.text.trim())
+                    : undefined,
+                  // Style read off an inspiration image, when one was analysed FROM the
+                  // image. The adapter drops it otherwise — see `styleWords`.
+                  styleManifest: request.inspirationStyleManifest ?? null,
+                  salesContext: (request as { salesContext?: { product_name?: string; benefit?: string } })
+                    .salesContext ?? null,
+                  targetChannel: request.marketingContext?.target_channel,
+                  productFacts: (request as { hardRequirements?: string[] }).hardRequirements ?? undefined,
+                  // Reported, not assumed. If the wrapper is ever reordered so that this
+                  // closure runs before `blueprintFor`, the sheet records the absence and
+                  // logs it instead of looking complete on its derived defaults.
+                  upstream: { blueprint: capturedBlueprint, compositionPlan: capturedCompositionPlan },
+                  productCountRule:
+                    countAttachedProducts(request) > 1
+                      ? "Several products: group them with a clear hierarchy, the main product largest, none deformed or duplicated."
+                      : "One product: one focal point.",
+                },
+                chat,
+              );
+              console.log("[PROMPT_GPT]", JSON.stringify(gptEngineTelemetry(result.gpt)));
+              if (result.gpt?.refusal) {
+                console.warn(`[PROMPT_GPT][REFUSED] ${result.gpt.refusal.code} — ${result.gpt.refusal.message_vi}`);
+              }
+              for (const w of result.simple.warnings.slice(0, 8)) {
+                console.log(`[PROMPT_GPT][warning] ${w.slice(0, 200)}`);
+              }
+              capturedV2 = result.simple;
+              capturedSheet = result.sheet;
+              return result.simple;
+            }
+
+            const built = await buildSimplePrompt(
+              {
+                assetType: assetCtx?.asset_type || request.useCase || "Poster",
+                aspectRatio: ratio,
+                concept: request.concept || "",
+                brand: request.brandName || "",
+                productLine: (request as { productLine?: string }).productLine,
+                copy: textRequirement.lines,
+                products: allReferences.map((ref) => {
+                  const buf = (ref.img as { buffer?: Buffer }).buffer;
+                  const mime = (ref.img as { mimeType?: string }).mimeType || "image/png";
+                  return {
+                    ref_index: ref.index,
+                    role: ref.role,
+                    filename: ref.filename,
+                    description: (ref.img as { description?: string }).description,
+                    ...(buf ? { imageUrl: `data:${mime};base64,${buf.toString("base64")}` } : {}),
+                  };
+                }),
+                includeLabelText: includeLabelText(),
+                // Everything the client chose in the visual direction panel. v1 has
+                // consumed these since the panel shipped; v2 was ignoring them, so a
+                // client who picked "Góc thấp" got whatever angle the director liked.
+                visualControls: request.creativeDirection?.visual_controls ?? null,
+                visualStyle: request.creativeDirection?.visual_style ?? null,
+                emotionalTone: request.creativeDirection?.emotional_tone ?? null,
+                compositionLayout: request.creativeDirection?.composition_layout ?? null,
+                hardRequirements: (request as { hardRequirements?: string[] }).hardRequirements ?? null,
+              },
+              {
+                chat: (messages, purpose) =>
+                  llm.generateChatCompletion(messages as never, purpose, {
+                    temperature: 0.7,
+                    max_tokens: 8000,
+                    timeoutMs: 120000,
+                    // A model chosen for THIS call only. Undefined leaves the provider
+                    // on its default, which is the behaviour before this option existed.
+                    ...(directorModel() ? { model: directorModel() } : {}),
+                  }),
+              },
+            );
+            capturedV2 = built;
+            return built;
+          } catch (err: any) {
+            console.warn(`[PROMPT_V2] build threw; v1 will produce the prompt — ${err?.message || err}`);
+            return null;
+          }
+        };
+
     const opticalScriptFor = editableActive
       ? undefined
       : (composedPrompt: string, blueprintText?: string): OnePassScript | null => {
@@ -1195,17 +1664,87 @@ export class ExperimentPipeline {
               brandKit: decision.brandKit ?? null,
               copyLines: textRequirement.lines.length,
             });
+            // What kind of photograph this is. Nothing decided this before: the
+            // `finish` domain measured 0 of 12 on the benchmark, and it is where a
+            // render gives itself away.
+            const finish = resolveFinish({
+              assetType: assetCtx?.asset_type || request.useCase || null,
+              category: categoryHint(capturedBlueprint),
+              personality: capturedPlan?.style?.personality ?? null,
+              evidence: [
+                capturedCompositionPlan?.atmosphere?.value,
+                capturedCompositionPlan?.lighting_quality?.value,
+                capturedCompositionPlan?.environment?.value,
+                capturedCompositionPlan?.storytelling_intent?.value,
+                request.concept,
+                (decision.brandKit?.style?.preferred || []).join(" "),
+              ],
+              copyLines: textRequirement.lines.length,
+            });
+            // The setup that produces the picture. This is the layer that owns
+            // camera, lighting and the scene environment: the composition's prose
+            // about those three is read here as evidence and does not reach the
+            // renderer twice.
+            const axes = resolveOpticalAxes({
+              assetType: assetCtx?.asset_type || request.useCase || null,
+              brand: [
+                decision.brandKit?.name ? (decision.brandKit.style?.preferred || []).join(" ") : null,
+                capturedPlan?.style?.personality ?? null,
+              ],
+              evidence: [
+                request.concept,
+                capturedCompositionPlan?.atmosphere?.value,
+                capturedCompositionPlan?.lighting_quality?.value,
+                capturedCompositionPlan?.lighting_direction?.value,
+                capturedCompositionPlan?.environment?.value,
+                capturedCompositionPlan?.storytelling_intent?.value,
+                capturedCompositionPlan?.camera_lens_behavior?.value,
+                categoryHint(capturedBlueprint),
+              ],
+            });
+            const setup = projectToSetup(axes.values, {
+              product_share: capturedCompositionPlan?.product_scale?.value?.share ?? null,
+              requires: TYPOGRAPHY_REQUIREMENTS,
+              drawing_type: textRequirement.lines.length > 0,
+            });
+            // The one line the rest of the script serves. It states the idea once,
+            // names the directions it beat, and reports when the brief supplied a
+            // mood instead of an idea -- the measured cause of the judge's weakest
+            // dimension, `creative_concept` at 4.6.
+            const idea = resolveIdea({
+              concept: (capturedBlueprint as { concept?: Parameters<typeof resolveIdea>[0]["concept"] } | null)?.concept ?? null,
+              judgment,
+              brief: request.concept,
+            });
+            const assetType = assetCtx?.asset_type || request.useCase || null;
+            const profile = profileFor(assetType);
+            const fit = copyFitsChannel(profile, textRequirement.lines.length);
+            if (!fit.fits) console.warn("[OPTICAL][CHANNEL] copy exceeds what this channel carries", { note: fit.note });
             const script = compileOnePassPrompt({
+              assetType,
               compiled: composedPrompt,
               blueprint: blueprintText ?? null,
+              idea: renderIdeaForPrompt(idea),
               plan: capturedCompositionPlan,
               brand: brandKitDirective(decision.brandKit, textRequirement.mode),
+              finish: renderFinishForPrompt(finish),
+              optics: {
+                light: renderLightForPrompt(setup),
+                lens: renderLensForPrompt(setup),
+                environment: renderEnvironmentForPrompt(setup),
+                surface: renderSurfaceForPrompt(setup),
+              },
               ledgers,
               treatment: dna.treatment,
               avoidRules: dna.avoid_rules,
               accentInk: Boolean(dna.accent),
             });
             console.log("[OPTICAL][LEDGERS]", ledgerTelemetry(ledgers));
+            console.log("[OPTICAL][IDEA]", ideaTelemetry(idea));
+            console.log("[OPTICAL][CHANNEL]", profileTelemetry(profile, textRequirement.lines.length));
+            console.log("[OPTICAL][FINISH]", finishTelemetry(finish));
+            console.log("[OPTICAL][SETUP]", cinematographyTelemetry(setup));
+            console.log("[OPTICAL][AXES]", { reconciled: axes.reconciled, low_confidence: Object.entries(axes.confidence).filter(([, c]) => c < 0.25).map(([k]) => k) });
             return script;
           } catch (err: any) {
             console.warn("[OPTICAL][SCRIPT] compile failed; the legacy assembly was sent instead", {
@@ -1649,7 +2188,11 @@ export class ExperimentPipeline {
             const own = (topic: PromptTopic, text: string | undefined) => {
               if (text) executionSections.push({ topic, owner: TOPIC_OWNER[topic], text });
             };
-            own("composition", renderCompositionPlan(capturedCompositionPlan, { sceneOnly: editableActive && typographyPlanOn }));
+            // `omitOptics`: the camera, the light and the environment are stated as
+            // parameters by `CinematographyLayer`, which read this plan as its
+            // evidence. The plan's prose about them would be the same decision a
+            // second time, in the vaguer vocabulary.
+            own("composition", renderCompositionPlan(capturedCompositionPlan, { sceneOnly: editableActive && typographyPlanOn, omitOptics: true }));
             if (editableActive) {
               own("render_constraints", NO_TEXT_DIRECTIVE);
             } else {
@@ -1994,7 +2537,9 @@ ${text || ""}`,
             blueprintFor,
             finalDirective,
             editableHooks,
-            opticalScriptFor
+            opticalScriptFor,
+            v2For,
+            qcGate
           ),
         });
 
@@ -2007,7 +2552,8 @@ ${text || ""}`,
         // failed immediately, leaving the loop enabled and unreachable on the
         // common path. It now runs once in PipelineRouter, above both
         // pipelines, where there is exactly one place to forget.
-        return ExperimentPipeline.attachDesignContext(
+        return ExperimentPipeline.attachV2(
+          ExperimentPipeline.attachDesignContext(
           capturedIntelligence ? { ...generated, creativeIntelligence: capturedIntelligence } : generated,
           capturedBlueprint,
           capturedTypography,
@@ -2023,6 +2569,8 @@ ${text || ""}`,
           capturedDocument?.editable?.typography_dna ?? null,
           industryLandscape,
           creativeOpportunity,
+          ),
+          capturedV2,
         );
       } catch (err: any) {
         console.error("[EVOLUTION][EXPERIMENT] generation failed", {
@@ -2200,7 +2748,9 @@ ${text || ""}`,
           blueprintFor,
           finalDirective,
           editableHooks,
-          opticalScriptFor
+          opticalScriptFor,
+          v2For,
+          qcGate
         ),
       });
 
@@ -2248,7 +2798,7 @@ ${text || ""}`,
           nextStage: "VisionReviewLayer.reviewRender",
         });
       }
-      return attached;
+      return ExperimentPipeline.attachV2(attached, capturedV2);
     } catch (err: any) {
       console.error("[EVOLUTION][EXPERIMENT] generation failed", {
         error: err?.message || String(err),

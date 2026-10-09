@@ -1,0 +1,18 @@
+ASSET: banner at {{ASPECT_RATIO}}.
+The viewer gives it under a second, while scrolling past.
+
+What it has to win: one statement legible at 320 pixels wide and in greyscale.
+Separation and edge cleanliness outrank atmosphere.
+
+Subject: the subject is large and close, with a hard tonal separation from whatever
+is behind it.
+
+Layout for this ratio: {{LAYOUT}}
+
+Copy budget: at most 2 separate lines of text — a headline of at most 7 words and an
+action line of at most 3 words.
+
+- The headline is the largest thing in the frame after the product, and still reads
+  when the image is reduced to a few hundred pixels.
+- The action line reads as a button: a short line with its own clear space around it.
+- Nothing decorative between the words and the background.

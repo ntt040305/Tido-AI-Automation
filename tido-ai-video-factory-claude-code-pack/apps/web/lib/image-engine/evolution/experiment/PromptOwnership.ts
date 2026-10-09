@@ -40,15 +40,32 @@ export type PromptTopic =
   | "typography_copy"
   | "brand"
   | "memory"
-  | "render_constraints";
+  | "render_constraints"
+  /**
+   * What KIND of photograph this is: tonality, highlight behaviour, black level,
+   * grain, corner falloff, optical signature.
+   *
+   * A fourteenth topic rather than a corner of `visual_style`, because nothing in
+   * the system decided it before `FinishLayer` existed -- measured at 0 of 12
+   * prompts saying anything about it -- and a topic with no owner is how a subject
+   * ends up with three.
+   */
+  | "finish";
 
 /** The one module entitled to speak for each topic. */
 export const TOPIC_OWNER: Record<PromptTopic, string> = {
   product_truth: "AssetDNA",
   creative_idea: "CreativeDirector",
-  scene_environment: "CompositionPlan",
-  camera: "CompositionPlan",
-  lighting: "CompositionPlan",
+  // Transferred from `CompositionPlan` when `CinematographyLayer` shipped, and the
+  // transfer is a measurement rather than a preference: across the twelve-case
+  // benchmark the plan's prose for these three topics produced a physical
+  // parameter in at most 1 case of 12 -- no focal length, no aperture, no ratio,
+  // no colour temperature, no source size. The plan keeps `composition`, where it
+  // measures L3 on 12 of 12, and its prose about light and camera now feeds the
+  // layer as evidence instead of reaching the renderer as instruction.
+  scene_environment: "CinematographyLayer",
+  camera: "CinematographyLayer",
+  lighting: "CinematographyLayer",
   composition: "CompositionPlan",
   visual_style: "DesignSystem",
   supporting_elements: "CompositionPlan",
@@ -57,6 +74,7 @@ export const TOPIC_OWNER: Record<PromptTopic, string> = {
   brand: "BrandKit",
   memory: "CreativeMemory",
   render_constraints: "Renderer",
+  finish: "FinishLayer",
 };
 
 export interface PromptSection {

@@ -1,4 +1,5 @@
 import { DeliveryPackageService } from "../delivery/DeliveryPackageService";
+import { activeProfile } from "../models/image-model-profiles";
 import { ImageGenerationProvider } from "../provider/ImageGenerationProvider";
 import { ImgStudioImageGenerationProvider } from "../provider/ImgStudioImageGenerationProvider";
 import { CiosReasoningShadowService } from "../reasoning/CiosReasoningShadowService";
@@ -211,11 +212,13 @@ export class CampaignOrchestratorService {
         const generationId = `gen_${campaign.campaign_id}_${asset.asset_type}`;
         providerCalls++;
         const res = await provider.generateImage({
-          model: process.env.IMGSTUDIO_PROVIDER_ID || "flow-nano-banana-2",
+          model: activeProfile().providerId,
           prompt: asset.final_prompt,
           references: providerReferences,
           aspectRatio: asset.aspect_ratio,
-          imageSize: process.env.TIDO_IMAGE_OUTPUT_RESOLUTION || "2K",
+          // Was "2K" here and "1K" in config.ts:128 — the same decision with two
+          // different answers. The active row is the single answer now.
+          imageSize: activeProfile().resolutionTier,
           mimeType: "image/png",
           generationId,
           idempotencyKey: generationId,

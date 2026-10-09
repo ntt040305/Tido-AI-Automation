@@ -132,9 +132,19 @@ export function CreativeDirectionPanel({
   const suggestions = sawImage
     ? (vision!.improvement_actions || []).map((a) => a.action).filter(Boolean)
     : intelligence?.improvement_suggestions || [];
-  // Shown only when a model actually looked. Manufacturing praise to balance
-  // the criticism would be fabrication in the friendly direction.
-  const strengths = sawImage ? (vision!.strengths || []).map((s) => s.what).filter(Boolean) : [];
+  // Whether the review can be believed at all.
+  //
+  // `analyzed_image` says a call was made; the critique's verdict says it came
+  // back with something. A failed vision call used to score a flawless 10/10
+  // because an area with no findings scored 10, so "never looked" and "looked and
+  // found nothing" rendered identically. They are now different on screen.
+  const reviewUnverified = sawImage && vision!.typography_critique?.verdict === "unverified";
+
+  // Shown only when a model actually looked, AND the look produced something.
+  // Manufacturing praise to balance the criticism would be fabrication in the
+  // friendly direction; printing ticks for a review that never happened is the
+  // same fabrication with a stronger claim attached.
+  const strengths = sawImage && !reviewUnverified ? (vision!.strengths || []).map((s) => s.what).filter(Boolean) : [];
 
   return (
     <div className="space-y-5">
@@ -301,7 +311,7 @@ export function CreativeDirectionPanel({
       {/* Shown, not buried. A system that only reports success teaches nobody
           anything, and the critic's findings are the most actionable output it
           produces. */}
-      {(feedback.length > 0 || suggestions.length > 0 || strengths.length > 0) && (
+      {(feedback.length > 0 || suggestions.length > 0 || strengths.length > 0 || reviewUnverified) && (
         <Section
           icon={sawImage ? <Eye size={12} className="text-amber-400" /> : <AlertCircle size={12} className="text-amber-400" />}
           title="AI đánh giá kết quả"
@@ -311,8 +321,21 @@ export function CreativeDirectionPanel({
                 different claims, and a reader who cannot tell them apart will
                 act on a guess as though it were a measurement. */}
             <p className="text-[10.5px] text-amber-200/70 font-mono uppercase tracking-wider">
-              {sawImage ? "Đã xem ảnh vừa tạo" : "Dựa trên kế hoạch, chưa xem ảnh"}
+              {reviewUnverified
+                ? "Chưa kiểm tra được"
+                : sawImage
+                  ? "Đã xem ảnh vừa tạo"
+                  : "Dựa trên kế hoạch, chưa xem ảnh"}
             </p>
+
+            {/* No number, no tick. The check did not complete, and the only
+                honest thing to report is that it did not complete. */}
+            {reviewUnverified && (
+              <p className="text-[12px] text-text2 leading-relaxed">
+                Chưa kiểm tra được chất lượng chữ trên ảnh lần này. Ảnh vẫn dùng được, nhưng hệ
+                thống không xác nhận được phần chữ — bạn nên tự xem lại.
+              </p>
+            )}
             {strengths.length > 0 && (
               <div className="space-y-1">
                 {strengths.map((t, i) => (

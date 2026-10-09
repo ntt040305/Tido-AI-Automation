@@ -1,0 +1,500 @@
+# 14_brand_kit_clashes_with_product
+# The kit's primary is the product's own colour. The background may not be it, or the product disappears.
+# templates: v2 / poster / gpt-image
+
+=== ART DIRECTION SHEET (the decisions, with their concrete values) ===
+{
+  "big_idea": "The bottle on a flat ground, graphic and bold, one colour doing all the work.",
+  "mood": "assured",
+  "audience_tone": "whoever this poster is for, addressed directly and without hype",
+  "products": [
+    {
+      "id": "1",
+      "material": "plastic",
+      "size_class": "unverified",
+      "colours": [
+        "black",
+        "red"
+      ],
+      "printed_branding": "unverified",
+      "description": "a bright red plastic bottle of chilli sauce",
+      "physics": null
+    }
+  ],
+  "hero": {
+    "id": "1",
+    "reason": "the only product"
+  },
+  "canvas_zones": {
+    "safe_margin_pct": 5,
+    "platform_ui": null,
+    "subject": {
+      "top_pct": 22,
+      "left_pct": 5,
+      "width_pct": 90,
+      "height_pct": 73
+    },
+    "text": {
+      "top_pct": 5,
+      "left_pct": 5,
+      "width_pct": 90,
+      "height_pct": 17
+    },
+    "negative_space_pct": 19
+  },
+  "arrangement": {
+    "depth_layers": 3,
+    "overlaps": false,
+    "hero_scale_pct": 50
+  },
+  "camera": {
+    "height": "slightly_above",
+    "tilt_deg": 0,
+    "lens_mm": 85,
+    "aperture": 2.8,
+    "focus_rule": "the hero is crisp from its nearest edge through its label, and focus falls away outward from the hero in every direction"
+  },
+  "lighting": {
+    "key_direction": "front_left",
+    "kelvin": 4500,
+    "rim": true,
+    "fill_ratio": 3,
+    "shadow_rule": "one light direction governs every highlight and shadow in the frame; no object casts a shadow in a direction the others do not"
+  },
+  "set": {
+    "surface": "a plain matte surface a shade darker than the background, with no pattern of its own",
+    "background": "a plain field of a red, softly out of focus",
+    "props": [],
+    "culture_signals": [],
+    "exclusions": [
+      "never pastel",
+      "never watercolour"
+    ],
+    "mood_reference": []
+  },
+  "palette": {
+    "sixty": "#e01b24",
+    "thirty": "#f2efe9",
+    "ten": "#111111",
+    "text": "#ffffff",
+    "product_dominant": "#111111",
+    "reason": "field from brand_kit, secondary from default, accent from product_appearance, type from default; the product reads black, so the field is not that colour"
+  },
+  "typography": {
+    "families": [
+      "a tall condensed sans",
+      "a plain grotesque"
+    ],
+    "hierarchy": "the headline dominant, the supporting line a little over a third of it, the smallest line a third",
+    "sizes_pct": {
+      "headline": 7.7,
+      "supporting": 2.6,
+      "small": 2.2
+    },
+    "treatment_over_texture": "small text sits on a flat card or a plain untextured area — never over the product, never over texture"
+  },
+  "text_manifest": [
+    {
+      "role": "headline",
+      "exact_string": "Vị mới",
+      "position": "at the top of the text zone, first in the reading order",
+      "size_pct": 7.7,
+      "colour": "#ffffff"
+    },
+    {
+      "role": "supporting line",
+      "exact_string": "Thử ngay",
+      "position": "directly under the headline, inside the text zone",
+      "size_pct": 2.6,
+      "colour": "#ffffff"
+    }
+  ],
+  "realism_details": [
+    "every object meets the surface with a contact shadow, darkest where they touch, plus a faint reflection where the surface is glossy",
+    "focus falls away outward from the hero, not uniformly",
+    "asymmetric micro-imperfections: an unmirrored droplet, a crumb out of line, real variation in the material",
+    "true scale between objects",
+    "no waxy, plastic or over-smoothed surfaces, no HDR halo"
+  ],
+  "finish": "a gentle S-curve in the tone, highlights rolling off rather than clipping, blacks that keep detail, no sharpening halo",
+  "negatives": [
+    "no text, numeral or character other than the strings listed",
+    "no logo, wordmark, emblem or icon beyond what the print rule allows",
+    "no duplicate copy of any product",
+    "no watermark, signature, frame or border inside the image"
+  ],
+  "conflicts_resolved": [
+    "palette.sixty: product_appearance (the product is black) won over brand_kit (#111111) — the brand colour is the product's own colour, so it moves to the accent",
+    "palette.text: brand_kit (the kit's text colour) offered #111111, which reaches only 3.9 to 1 against the field #e01b24 — below the 4.5 to 1 type needs, so it is skipped",
+    "palette.text: brand_kit (the kit's first colour) offered #e01b24, which reaches only 1.0 to 1 against the field #e01b24 — below the 4.5 to 1 type needs, so it is skipped",
+    "palette.text: product_appearance (the accent) offered #111111, which reaches only 3.9 to 1 against the field #e01b24 — below the 4.5 to 1 type needs, so it is skipped",
+    "palette.sixty: brand_kit (the kit's first usable colour) won over default (no brand colour for the field, and a concept colour names a thing rather than the ground)",
+    "palette.ten: product_appearance (the product is black) won over default (every named colour failed the contrast guard)"
+  ],
+  "material_lighting_note": null,
+  "sheet_fallback_reason": null,
+  "provenance": {
+    "asset_family": "poster",
+    "aspect_ratio": "1:1",
+    "approach": "balanced",
+    "approach_reason": "no approach was stated, and a poster with 4 words of copy needs neither extreme",
+    "industry_label": "everyday consumer goods",
+    "density": "words_only",
+    "print_rule_branch": "supplied_logo",
+    "concept_specs": []
+  }
+}
+
+=== PRINT RULE (supplied_logo) ===
+Use the supplied logo exactly as given: reproduce it once, at the proportions supplied, without altering, restyling, re-lettering, recolouring or adding to it. Keep any branding already printed on the product photographs as photographed. Draw no other logo, wordmark, emblem or icon anywhere in the picture.
+reason: the client supplied a logo image, so that mark is the authority
+
+=== DIRECTOR REQUEST (the filled request template) ===
+## A — JOB
+
+Deliverable: a finished, publishable Poster
+Asset type: Poster
+Industry: everyday consumer goods
+Canvas: square (the ratio travels as a parameter; never write ratio digits)
+Products in frame: 1
+Intended use: (not stated)
+
+## B — CLIENT INPUTS (authoritative, verbatim)
+
+Brand name: Đỏ
+Concept, exactly as the client wrote it:
+The bottle on a flat ground, graphic and bold, one colour doing all the work.
+
+Nothing in this section may be paraphrased, translated, corrected or improved. Where it
+conflicts with anything below, it wins.
+
+CULTURAL, REGIONAL AND SEASONAL SPECIFICS ARE YOUR JUDGEMENT, NOT THE SHEET'S.
+Where the concept names a culture, a region, a festival, a season or an occasion, you must
+do two things in SCENE & CONCEPT:
+
+1. Name the EXACT visual identifiers — species, number of petals, colour, material, form,
+   the way the thing is actually made or worn or arranged in that place.
+2. Name the nearest neighbour that must be EXCLUDED, explicitly.
+
+The failure this prevents, measured on real renders: a Vietnamese Tết brief asks for
+*hoa mai*, a yellow five-petalled apricot blossom on a bare dark branch, and the render
+comes back with pink Japanese cherry blossom — the most statistically common "festive
+blossom" in any image model's training data. The two are not interchangeable and the
+substitution is immediately obvious to the audience the asset is for. "Yellow apricot
+blossom, five petals, on bare brown branches; NOT pink cherry blossom and NOT plum" is
+the level of specificity required, in whatever the concept's own culture needs it.
+
+The sheet deliberately contains no lookup table for this, and must never grow one: a table
+would be wrong in a way nobody notices. You have read the concept. You do it.
+
+## C — REFERENCES
+
+  Image 1 is a bright red plastic bottle of chilli sauce. Preserve its exact shape, proportions, colours, materials and label layout. Do not redesign it and do not re-letter it.
+  Image 2 is the logo, as supplied. Reproduce it exactly once, as supplied, and do not redraw or restyle it.
+  The logo appears on the sheet as a small separate strip labelled LOGO. Reproduce that mark exactly as supplied, once, and do not redraw, restyle or re-letter it.
+
+## C2 — PRINT RULE (exactly one rule; carry this sentence through)
+
+  Use the supplied logo exactly as given: reproduce it once, at the proportions supplied, without altering, restyling, re-lettering, recolouring or adding to it. Keep any branding already printed on the product photographs as photographed. Draw no other logo, wordmark, emblem or icon anywhere in the picture.
+
+This is the ONLY statement the master prompt makes about logos or printed branding. Do not
+add a second one anywhere, and do not contradict it in CONSTRAINTS.
+
+## D — PRODUCT MAP
+
+  - HERO — a bright red plastic bottle of chilli sauce; reads black, red; plastic
+
+Hero:   a bright red plastic bottle of chilli sauce — the only product
+
+Raw product facts, where the client supplied any:
+  - the bottle is bright red
+  - the cap is black
+
+## E — BRAND KIT
+
+  - colour #e01b24 (primary)
+  - colour #111111 (text)
+  - headline type feels like a tall condensed sans
+  - body type feels like a plain grotesque
+  - preferred style: graphic, high contrast
+  - never: pastel, watercolour
+  - the logo is supplied as an image; use only that mark, as-is, exactly once
+
+## F — COPY
+
+  1. [headline] "Vị mới"
+  2. [supporting line] "Thử ngay"
+  Every string above appears in the image exactly once, verbatim, character for character, in straight double quotes in the TEXT section. Vietnamese keeps every diacritic, in NFC. No string may be added, shortened, translated or corrected.
+
+## G — USER CHOICES (binding)
+
+  (the client set no explicit visual choices)
+
+## H — STRATEGY (advisory)
+
+  (none)
+
+## I — REFERENCE DATA — translate into plain visual description; never copy a number, unit or ratio into the master prompt
+
+  (none)
+
+# ═══ THE ART DIRECTION SHEET ═══
+#
+# Already resolved. Write it; do not re-decide it.
+
+## S1 — BIG IDEA
+
+The bottle on a flat ground, graphic and bold, one colour doing all the work.
+
+Mood: assured; addressed to whoever this poster is for, addressed directly and without hype
+
+## S2 — LAYOUT AND ZONES
+
+  - The frame is square.
+  - a clear, even margin on every side, wide enough that nothing important reads as touching an edge; nothing that must be read crosses into it.
+  - The subject occupies a little over half, in the middle band.
+  - The words live in the top band, and nowhere else. No word is placed over the hero.
+  - Leave roughly a quarter as quiet, uncluttered ground.
+
+## S3 — ARRANGEMENT AND DEPTH
+
+  - The hero is a bright red plastic bottle of chilli sauce, holding about half; nothing else competes for that share.
+  - three depth layers: a soft near foreground, the hero sharp, a background clearly behind.
+  - No overlap is needed: the subject stands clear of everything else.
+  - Nothing is deformed, mirrored, stretched or duplicated to fill a gap.
+
+## S4 — CAMERA
+
+  - the lens a little above the subject's mid-line, looking down
+  - the camera level, no tilt
+  - a long, compressing view, the background flattened towards the subject
+  - shallow focus: the hero crisp, the background soft
+
+## S5 — LIGHTING
+
+  - a high key light from the front left, shadows falling back and right
+  - the light is neutral white, neither warm nor cool
+  - clearly modelled shadows, detail still readable
+  - a narrow rim or edge light separates the subject from the background along one side
+  - one light direction governs every highlight and shadow in the frame; no object casts a shadow in a direction the others do not
+
+## S6 — SET AND PROPS
+
+  - Surface: a plain matte surface a shade darker than the background, with no pattern of its own.
+  - Background: a plain field of a red, softly out of focus.
+  - No added props beyond anything the concept names; otherwise the subject and the surface are the whole set.
+
+## S7 — COLOUR
+
+  - most of the frame is the field colour — a red — carrying the background and the surface.
+  - roughly a third is the secondary, a warm off-white, close to unbleached paper: the supporting surfaces and the larger shapes.
+  - a small part is the accent, a deep black: emphasis only — a single element, a price card, the tightest highlight.
+  - The background is never the product's own dominant colour.
+
+## S8 — TYPOGRAPHY AND THE TEXT MANIFEST
+
+  - Two type families and no more: a tall condensed sans for the headline, a plain grotesque for everything else.
+  - the headline dominant, the supporting line a little over a third of it, the smallest line a third
+  - small text sits on a flat card or a plain untextured area — never over the product, never over texture
+  - Every Vietnamese diacritic is rendered exactly as written, in NFC. No string is added, shortened, translated or corrected.
+
+  THE TEXT MANIFEST — every string that may appear, each exactly once:
+    [headline] "Vị mới" — at the top of the text zone, first in the reading order, tall enough to read at a glance, set in a very pale white
+    [supporting line] "Thử ngay" — directly under the headline, inside the text zone, tall enough to read at a glance, set in a very pale white
+
+  Nothing outside this manifest is set. No extra numerals, no invented strap line, no watermark.
+
+## S9 — REALISM AND FINISH
+
+  - every object meets the surface with a contact shadow, darkest where they touch, plus a faint reflection where the surface is glossy
+  - focus falls away outward from the hero, not uniformly
+  - asymmetric micro-imperfections: an unmirrored droplet, a crumb out of line, real variation in the material
+  - true scale between objects
+  - no waxy, plastic or over-smoothed surfaces, no HDR halo
+  - Finish: a gentle S-curve in the tone, highlights rolling off rather than clipping, blacks that keep detail, no sharpening halo.
+
+## S10 — CONSTRAINTS
+
+  - no text, numeral or character other than the strings listed
+  - no logo, wordmark, emblem or icon beyond what the print rule allows
+  - no duplicate copy of any product
+  - no watermark, signature, frame or border inside the image
+  - never pastel
+  - never watercolour
+
+## S11 — DERIVED DECISIONS (why the sheet says what it says; never written into the prompt)
+
+  - creative approach: balanced — no approach was stated, and a poster with 4 words of copy needs neither extreme
+  - asset family: poster; canvas: 1:1
+  - print rule branch: supplied_logo
+  - palette: field from brand_kit, secondary from default, accent from product_appearance, type from default; the product reads black, so the field is not that colour
+  - the client stated no technical specs in the concept
+  - palette.sixty: product_appearance (the product is black) won over brand_kit (#111111) — the brand colour is the product's own colour, so it moves to the accent
+  - palette.text: brand_kit (the kit's text colour) offered #111111, which reaches only 3.9 to 1 against the field #e01b24 — below the 4.5 to 1 type needs, so it is skipped
+  - palette.text: brand_kit (the kit's first colour) offered #e01b24, which reaches only 1.0 to 1 against the field #e01b24 — below the 4.5 to 1 type needs, so it is skipped
+  - palette.text: product_appearance (the accent) offered #111111, which reaches only 3.9 to 1 against the field #e01b24 — below the 4.5 to 1 type needs, so it is skipped
+  - palette.sixty: brand_kit (the kit's first usable colour) won over default (no brand colour for the field, and a concept colour names a thing rather than the ground)
+  - palette.ten: product_appearance (the product is black) won over default (every named colour failed the contrast guard)
+
+# ═══ END OF SHEET ═══
+
+## J — ASSET PLAYBOOK (what this channel has to win)
+
+POSTER — the viewer is standing still and gives it three to ten seconds.
+
+What it has to win: one idea a person could describe afterwards, and a hierarchy the eye
+follows without being told the order.
+
+The hero scale, the margins, the type sizes and the layout for this canvas are already
+decided in the sheet. Do not restate them differently here: a playbook that disagrees with
+the sheet gives the renderer two layouts to choose between.
+
+What is still worth saying for this channel: the second look has to reward the first. A
+poster is approached, so an edge, a material or a small true detail that only reads from a
+metre away is worth the frame it costs.
+
+
+Industry module: (neutral studio treatment)
+Product-count rule: One product: one focal point.
+
+## K — TARGET MODEL NOTES
+
+(none beyond the standing instructions)
+
+## L — OUTPUT CONTRACT
+
+Write the master prompt in English prose, 2800–4800 characters — aim for
+five hundred to seven hundred words — as nine labelled sections in exactly this order and
+with exactly these headings:
+
+OUTPUT:
+REFERENCE IMAGES:
+SCENE & CONCEPT:
+SUBJECT ARRANGEMENT:
+COMPOSITION & LAYOUT:
+LIGHT / CAMERA / MATERIALS:
+COLOR & BRAND STYLE:
+TEXT:
+CONSTRAINTS:
+
+The sheet maps onto them like this. Keep the headings; put the content where it belongs.
+
+| Sheet | Section |
+|---|---|
+| the job, the canvas, the industry as spelled in A | **OUTPUT** |
+| C, C2, D — references, the print rule, the product map, the hero | **REFERENCE IMAGES** |
+| S1 the big idea, then S6 the set and props | **SCENE & CONCEPT** |
+| S3 arrangement and depth | **SUBJECT ARRANGEMENT** |
+| S2 layout and zones | **COMPOSITION & LAYOUT** |
+| S4 camera, S5 lighting, then S9 realism and finish | **LIGHT / CAMERA / MATERIALS** |
+| S7 colour | **COLOR & BRAND STYLE** |
+| S8 typography and the manifest | **TEXT** |
+| S10 constraints | **CONSTRAINTS** |
+
+**OUTPUT** states the asset type, the brand, the industry as spelled in section A, the
+intended use and the canvas ORIENTATION in words. No ratio digits, and never a raw
+identifier with an underscore in it.
+
+**REFERENCE IMAGES** names every attached image by number — "Image 1 is …" — with its
+role, a short visual descriptor, and what must be preserved. For a product: preserve its
+shape, proportions, colours, materials and label layout; do not redesign it and do not
+re-letter it. For a contact sheet: say that the panel letters, the separating borders and
+the flat grey ground are annotations and must not appear in the image. Then state the
+print rule from C2, once. State the fidelity requirement and the exact-text requirement
+EARLY, here, and restate both briefly in CONSTRAINTS at the end — they are the two things
+a renderer most often drops.
+
+**TEXT** sets every string in the manifest verbatim inside straight double quotes, with
+its position, its size floor and how it is set. Nothing outside the manifest is set.
+Vietnamese keeps every diacritic, in NFC. For a brand name that is not a dictionary word,
+spell it letter by letter beside the quoted form, unquoted. End with: "No other text,
+numbers, watermarks or extra logos." If the manifest is empty, the whole TEXT section is
+exactly: "No text of any kind anywhere in the image."
+
+**CONSTRAINTS** lists concrete exclusions only, and restates fidelity and exact text in
+one line each.
+
+Nowhere in the master prompt may there appear: a colour temperature in Kelvin, an
+f-number, a focal length in millimetres, an aspect ratio as digits, a percentage figure, a
+count of stops, or a raw identifier such as `coffee_tea`.
+
+Nor may any of these words appear: "auto", "AI decides", "suitable", "tasteful",
+"appropriate", "as needed". Every decision is already made; write the decision, not the
+fact that one was required.
+
+## M — GOLD EXAMPLE (illustrative only — the sheet above outranks it)
+
+status: seed - unproven
+
+OUTPUT: A vertical poster for the cold brew brand Origin Blend, food and beverage, for a shop window. Photorealistic, finished and ready to publish.
+
+REFERENCE IMAGES: Image 1 is the product, an amber glass bottle with a turned wood cap. Keep its exact shape, proportions, colours, materials and label layout; do not redesign it and do not re-letter it.
+
+SCENE & CONCEPT: The bottle stands alone on a dark slate counter in the first light of morning. A few coffee beans rest beside it. Cool condensation beads on the glass. The idea is the quiet minute before the day starts.
+
+SUBJECT ARRANGEMENT: One bottle, slightly below centre, filling a little over half the height of the frame. Nothing else competes with it.
+
+COMPOSITION & LAYOUT: The bottle occupies the lower middle. The upper third is a calm, softly lit wall left deliberately empty for the words. Generous margins on every edge.
+
+LIGHT / CAMERA / MATERIALS: A single soft light from the left rakes across the slate and catches the condensation. Deep shadow on the right side of the bottle. Shallow depth of field so the wall behind falls gently out of focus. Amber glass, brushed wood, cold wet stone.
+
+COLOR & BRAND STYLE: Warm amber against cold grey-blue, nothing else. Restrained and expensive.
+
+TEXT: In the upper third, centred, a bold modern sans-serif headline in warm white: "Khoi dong ngay moi" rendered as "Khởi động ngày mới". Directly beneath it, smaller and lighter: "Cold brew đậm vị, tươi mỗi sáng". Near the lower edge, small: "Đặt ngay". Render every Vietnamese accent exactly. No other text, numbers, watermarks or extra logos.
+
+CONSTRAINTS: No people, no second bottle, no cup, no visible brand other than the one on the supplied label.
+
+
+## SELF-CHECK before you answer
+
+- All nine headings present, in order, spelled as above.
+- Every string from the TEXT MANIFEST appears verbatim, in straight double quotes, exactly
+  once, and no quoted string the manifest does not list.
+- Every attached image named by its number, and no number named that is not attached.
+- The print rule appears once. No second statement about logos or printed branding, and no
+  sentence in CONSTRAINTS that contradicts it.
+- No Kelvin, f-number, millimetres, ratio digits, percentage figure or stop count anywhere.
+- No raw identifier with an underscore. No "auto", "AI decides", "suitable" or "tasteful".
+- No `{{` left anywhere, and no section letter, sheet label or the words "brief", "sheet",
+  "manifest", "playbook" or "reference data" leaking into the prompt.
+- Length within the stated bounds.
+- The orientation word matches the canvas in section A.
+- Small text is on a card or a flat area, never over texture and never over the hero.
+- Where a panel was flagged as below the trusted size, the prompt does not ask for its
+  lettering to be reproduced.
+
+## ANSWER FORMAT
+
+<decisions>
+What you chose and why, in a few lines: how you wrote the sheet, the cultural identifiers
+you named and the confusion you excluded, and anything in the sheet you had to reconcile.
+</decisions>
+<copy_final>
+One line per string, exactly as it must be set. Empty if there is no copy.
+</copy_final>
+<warnings>
+Anything the next person should know. Empty if nothing.
+</warnings>
+<image_prompt>
+The master prompt, and nothing else.
+</image_prompt>
+
+
+=== CODE-BUILT FALLBACK PROMPT ===
+OUTPUT: A square Poster for Đỏ, a everyday consumer goods brand, for a commercial placement. Photorealistic, finished and ready to publish.
+
+REFERENCE IMAGES: Image 1 is a bright red plastic bottle of chilli sauce. Image 2 is the supplied logo. Reproduce it exactly as supplied, once, and do not redraw or restyle it. Every product keeps its exact shape, proportions, colours, materials and label layout; none is redesigned or re-lettered. The hero is a bright red plastic bottle of chilli sauce. Use the supplied logo exactly as given: reproduce it once, at the proportions supplied, without altering, restyling, re-lettering, recolouring or adding to it. Keep any branding already printed on the product photographs as photographed. Draw no other logo, wordmark, emblem or icon anywhere in the picture.
+
+SCENE & CONCEPT: The bottle on a flat ground, graphic and bold, one colour doing all the work. The mood is assured. Surface: a plain matte surface a shade darker than the background, with no pattern of its own. Background: a plain field of a red, softly out of focus. No added props beyond anything the concept names; otherwise the subject and the surface are the whole set.
+
+SUBJECT ARRANGEMENT: The hero is a bright red plastic bottle of chilli sauce, holding about half; nothing else competes for that share. Three depth layers: a soft near foreground, the hero sharp, a background clearly behind. No overlap is needed: the subject stands clear of everything else. Nothing is deformed, mirrored, stretched or duplicated to fill a gap.
+
+COMPOSITION & LAYOUT: The frame is square. A clear, even margin on every side, wide enough that nothing important reads as touching an edge; nothing that must be read crosses into it. The subject occupies a little over half, in the middle band. The words live in the top band, and nowhere else. No word is placed over the hero. Leave roughly a quarter as quiet, uncluttered ground.
+
+LIGHT / CAMERA / MATERIALS: The lens a little above the subject's mid-line, looking down. The camera level, no tilt. A long, compressing view, the background flattened towards the subject. Shallow focus: the hero crisp, the background soft. A high key light from the front left, shadows falling back and right. The light is neutral white, neither warm nor cool. Clearly modelled shadows, detail still readable. A narrow rim or edge light separates the subject from the background along one side. One light direction governs every highlight and shadow in the frame; no object casts a shadow in a direction the others do not. Every object meets the surface with a contact shadow, darkest where they touch, plus a faint reflection where the surface is glossy. Focus falls away outward from the hero, not uniformly. Asymmetric micro-imperfections: an unmirrored droplet, a crumb out of line, real variation in the material. True scale between objects. No waxy, plastic or over-smoothed surfaces, no HDR halo. Finish: a gentle S-curve in the tone, highlights rolling off rather than clipping, blacks that keep detail, no sharpening halo.
+
+COLOR & BRAND STYLE: Most of the frame is the field colour — a red — carrying the background and the surface. Roughly a third is the secondary, a warm off-white, close to unbleached paper: the supporting surfaces and the larger shapes. A small part is the accent, a deep black: emphasis only — a single element, a price card, the tightest highlight. The background is never the product's own dominant colour.
+
+TEXT: Set each of the following exactly once, and nothing else — as the headline, at the top of the text zone, first in the reading order: "Vị mới". Then as the supporting line, directly under the headline, inside the text zone: "Thử ngay". The headline dominant, the supporting line a little over a third of it, the smallest line a third. Small text sits on a flat card or a plain untextured area — never over the product, never over texture. Render every Vietnamese diacritic exactly as written. No other text, numbers, watermarks or extra logos.
+
+CONSTRAINTS: no text, numeral or character other than the strings listed; no logo, wordmark, emblem or icon beyond what the print rule allows; no duplicate copy of any product; no watermark, signature, frame or border inside the image. never pastel. never watercolour. Every product is reproduced as supplied in the reference photographs, and only the strings listed above are set.

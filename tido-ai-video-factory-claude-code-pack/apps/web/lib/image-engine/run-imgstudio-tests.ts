@@ -1,4 +1,5 @@
 import assert from "assert";
+import { DEFAULT_PROFILE } from "./models/image-model-profiles";
 import sharp from "sharp";
 import { ImgStudioImageGenerationProvider } from "./provider/ImgStudioImageGenerationProvider";
 import { resolveActiveProvider } from "./service/ImageGenerationService";
@@ -32,9 +33,24 @@ async function runImgStudioUnitTests() {
     // Test 1: Provider resolution
     try {
       process.env.TIDO_IMAGE_PROVIDER = "imgstudio";
+
+      // The model this reports is the ACTIVE ROW, not a literal.
+      //
+      // It used to default to "flow-nano-banana-2" here while the transport
+      // defaulted the same way separately — two copies of one decision. The default
+      // model is now GPT-Image-2.5-Sunburst, so asserting a fixed name would be
+      // asserting the old product decision. What matters is that the name this
+      // function reports and the id the transport sends are the same value, which is
+      // what both directions below check.
+      process.env.IMGSTUDIO_PROVIDER_ID = "flow-nano-banana-2";
+      const rolledBack = resolveActiveProvider();
+      assert.strictEqual(rolledBack.name, "imgstudio");
+      assert.strictEqual(rolledBack.model, "flow-nano-banana-2");
+
+      delete process.env.IMGSTUDIO_PROVIDER_ID;
       const resolved = resolveActiveProvider();
       assert.strictEqual(resolved.name, "imgstudio");
-      assert.strictEqual(resolved.model, "flow-nano-banana-2");
+      assert.strictEqual(resolved.model, DEFAULT_PROFILE.providerId);
       assert(resolved.provider instanceof ImgStudioImageGenerationProvider);
       logPass("Provider selection resolves ImgStudioImageGenerationProvider when TIDO_IMAGE_PROVIDER=imgstudio");
     } catch (e) {

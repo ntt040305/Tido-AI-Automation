@@ -43,6 +43,26 @@ export type DropReason =
   /** A deliberate context reference, shed last because something chose it. */
   | "SUPPORTING_CONTEXT";
 
+/**
+ * Each drop reason in the user's language.
+ *
+ * Here rather than in the UI because the reason is a fact about what the system
+ * did, and a person is entitled to it in words they read. Fix C: nothing is lost
+ * silently, so every entry has a sentence.
+ */
+export const DROP_REASON_VI: Record<DropReason, string> = {
+  INSPIRATION_TRAVELS_AS_TEXT:
+    "Ảnh phong cách không được gửi kèm; phong cách của nó được mô tả bằng chữ trong prompt.",
+  LOGO_NOT_RENDERED_BY_MODEL:
+    "Logo không được model vẽ lại; logo được ghép vào ảnh một cách chính xác.",
+  REDUNDANT_VIEW_OF_SAME_PRODUCT:
+    "Đây là góc chụp thêm của một sản phẩm đã có ảnh khác, nên không được gửi kèm.",
+  UNCLASSIFIED_REFERENCE:
+    "Ảnh này không được nhận dạng là sản phẩm, logo hay phong cách, nên không được gửi kèm.",
+  SUPPORTING_CONTEXT:
+    "Ảnh bối cảnh hỗ trợ; được bỏ lại sau cùng để nhường chỗ cho sản phẩm.",
+};
+
 export type CapacityStatus =
   /** Fits as-is. The reference list is returned untouched, same order, same objects. */
   | "WITHIN_LIMIT"

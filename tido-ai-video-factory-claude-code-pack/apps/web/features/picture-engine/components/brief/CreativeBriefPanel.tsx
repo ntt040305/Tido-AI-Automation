@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   CreativeBrief,
   AssetType,
@@ -14,7 +14,9 @@ import { AssetTypeSelector } from "./AssetTypeSelector";
 import { VisualDirectionControlPanel } from "@/components/VisualDirectionControlPanel";
 import { BrandIdentityUploader } from "./BrandIdentityUploader";
 import { BrandKitPanel } from "./BrandKitPanel";
-import { Sparkles, FileText, Package, Ratio, Lightbulb, Check } from "lucide-react";
+import { CreativeApproachControl } from "./CreativeApproachControl";
+import { MarketingContextForm } from "./MarketingContextForm";
+import { Sparkles, FileText, Package, Ratio, Lightbulb, Check, ChevronDown, Target } from "lucide-react";
 import { VmcButton, VmcTallyDot, VmcBadge } from "@/components/vmc";
 
 export interface CreativeBriefPanelProps {
@@ -32,6 +34,8 @@ export interface CreativeBriefPanelProps {
   onUpdateSalesContext: (updates: Partial<SalesContext>) => void;
   onUpdateCreativeDirection: (updates: Partial<CreativeDirection>) => void;
   onUpdateContentMessage: (value: string) => void;
+  /** Per-product on-image text, keyed by the product image's asset_id. */
+  onUpdateProductText?: (assetId: string, text: string) => void;
   onUpdateBrandIdentity: (updates: Partial<BrandIdentity>) => void;
   onGenerate: () => void;
 }
@@ -46,13 +50,47 @@ export function CreativeBriefPanel({
   onUpdateMarketingContext,
   onUpdateCreativeDirection,
   onUpdateContentMessage,
+  onUpdateProductText,
   onUpdateBrandIdentity,
   onGenerate,
 }: CreativeBriefPanelProps) {
   const currentConcept = brief.creative_concept || brief.user_notes || "";
   const currentProductCount = brief.creative_direction?.target_product_count ?? 1;
-  const currentAspectRatio = brief.creative_direction?.aspect_ratio ?? "4:5";
+  const currentAspectRatio = brief.creative_direction?.aspect_ratio ?? "1:1";
   const currentIndustry = brief.marketing_context?.industry || "";
+
+  const productAssets = brief.brand_identity?.product_assets || [];
+
+  // Split exactly as `SimpleInputAdapterService.ts:311-315` splits it, so the
+  // veto the browser shows is computed from the same string count the server will
+  // see.
+  const contentMessageLines = React.useMemo(
+    () =>
+      String(brief.content_message || "")
+        .split(/\r?\n/)
+        .map((l) => l.trim())
+        .filter(Boolean),
+    [brief.content_message],
+  );
+
+  // The selected Brand Kit's preferred styles, lifted out of BrandKitPanel.
+  //
+  // Step 3 of the creative-approach precedence reads brand style, and the brief
+  // carries only `brand_kit_id` — so without this the badge under the control
+  // would disagree with the server for any kit whose style says something the
+  // concept does not. A preview only: the server recomputes the decision from the
+  // kit it loads itself (`generate-simple/route.ts:94`) and never reads this.
+  const [brandStylePreferred, setBrandStylePreferred] = useState<string[] | undefined>(undefined);
+  const handleBrandStyle = React.useCallback(
+    (preferred: string[] | null) => setBrandStylePreferred(preferred || undefined),
+    [],
+  );
+
+  // Collapsed by default. Objective and audience are worth 0.40 of the route
+  // score (`DirectionEvaluator.ts:137-144`) and were unreachable because this
+  // panel never mounted the form that writes them — but they are still optional
+  // context, and must not become a wall between the user and the render button.
+  const [isCampaignContextOpen, setIsCampaignContextOpen] = useState(false);
 
   const [isProfessionalizing, setIsProfessionalizing] = useState(false);
   const [professionalResult, setProfessionalResult] = useState<{
@@ -86,7 +124,7 @@ export function CreativeBriefPanel({
     { label: "Nhiều sản phẩm", value: "multiple" },
   ];
 
-  const ASPECT_RATIO_OPTIONS: AspectRatioType[] = ["1:1", "4:5", "9:16", "16:9"];
+  const ASPECT_RATIO_OPTIONS: AspectRatioType[] = ["1:1", "9:16", "16:9"];
 
   const handleConceptChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const val = e.target.value;
@@ -117,6 +155,23 @@ export function CreativeBriefPanel({
       onUpdateCreativeDirection({ aspect_ratio: ratio });
     }
   };
+
+  // With PROMPT_ENGINE=v2 the creative director runs on every render, so this
+  // button would pay for a second opinion nobody reads. Asked once, server-side,
+  // because the flag lives on the server.
+  const [ideationAvailable, setIdeationAvailable] = useState(true);
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/image/concept-professionalize")
+      .then((r) => (r.ok ? r.json() : { available: true }))
+      .then((d) => {
+        if (alive && d && typeof d.available === "boolean") setIdeationAvailable(d.available);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const handleProfessionalize = async () => {
     if (!currentConcept || !currentConcept.trim() || isProfessionalizing) return;
@@ -275,6 +330,7 @@ export function CreativeBriefPanel({
       <BrandKitPanel
         brandIdentity={brief.brand_identity}
         onChange={onUpdateBrandIdentity}
+        onSelectedStyleChange={handleBrandStyle}
       />
 
       {/* 5. Creative Concept (Large Textarea) */}
@@ -297,7 +353,7 @@ export function CreativeBriefPanel({
         />
 
         {/* Concept Professionalizer Button */}
-        <div className="pt-1 space-y-1.5">
+        <div className="pt-1 space-y-1.5" hidden={!ideationAvailable}>
           <button
             type="button"
             disabled={!currentConcept.trim() || isGenerating || isProfessionalizing}
@@ -415,6 +471,58 @@ export function CreativeBriefPanel({
         )}
       </div>
 
+      {/* 5b. Creative Approach
+           Directly under the concept, because it modifies the concept. */}
+      <CreativeApproachControl
+        value={brief.creative_direction?.creative_approach}
+        onChange={(next) => onUpdateCreativeDirection({ creative_approach: next })}
+        concept={currentConcept}
+        assetType={brief.asset_type}
+        objective={brief.marketing_context?.objective}
+        copyStrings={contentMessageLines}
+        brandStylePreferred={brandStylePreferred}
+      />
+
+      {/* 5c. Campaign context — the form that existed and was never mounted.
+           `MarketingContextForm` has carried the objective and audience controls
+           since Phase 4.1 (`MarketingContextForm.tsx:26-30`, `:97-98`) and this
+           panel never imported it, so `AIStrategyPanel.tsx:73` always printed
+           "Chưa nhập đối tượng cụ thể". Industry is excluded: this panel renders
+           its own selector for it at the top. */}
+      <div className="space-y-2">
+        <button
+          type="button"
+          onClick={() => setIsCampaignContextOpen((v) => !v)}
+          className="w-full flex items-center justify-between gap-2 text-left cursor-pointer outline-none group"
+        >
+          <span className="font-mono text-[11px] uppercase tracking-wider text-text-telemetry flex items-center gap-1.5 group-hover:text-text">
+            <Target size={13} />
+            <span>Bối cảnh chiến dịch (không bắt buộc)</span>
+          </span>
+          <ChevronDown
+            size={14}
+            className={`text-text-telemetry transition-transform ${isCampaignContextOpen ? "rotate-180" : ""}`}
+          />
+        </button>
+
+        {!isCampaignContextOpen && (
+          <p className="text-[11.5px] text-text3 leading-relaxed px-1">
+            Mục tiêu và đối tượng giúp AI chọn hướng sáng tạo sát hơn. Bỏ trống cũng được.
+          </p>
+        )}
+
+        {isCampaignContextOpen && (
+          <div className="border border-borderStrong rounded-xl p-4 bg-surface2/30">
+            <MarketingContextForm
+              context={brief.marketing_context}
+              onChange={onUpdateMarketingContext}
+              fields={["objective", "target_audience"]}
+              showHeader={false}
+            />
+          </div>
+        )}
+      </div>
+
       {/* 6. Content Message */}
       <div className="space-y-1.5">
         <label className="font-mono text-[11px] uppercase tracking-wider text-text-telemetry flex items-center justify-between">
@@ -428,6 +536,39 @@ export function CreativeBriefPanel({
           placeholder="Nhập chính xác chữ bạn muốn xuất hiện trên ảnh (ví dụ: Ra mắt dòng sản phẩm mới • Khai trương 20%)..."
           className="w-full bg-surface2 border border-border text-text rounded-[2px] text-[12.5px] p-2.5 focus:outline-none focus:border-borderStrong transition-colors resize-none placeholder:text-text-telemetry"
         />
+
+        {/* 6b. Text that belongs to ONE product.
+             The field above is the text for the picture as a whole. This is the case it
+             cannot express: several products in one frame, each needing its own name or
+             price beside it. Only shown when there is more than one product, because with
+             one product the field above already is its text.
+             The number matches the badge on the thumbnail. */}
+        {onUpdateProductText && productAssets.length > 1 && (
+          <div className="pt-1.5 space-y-1.5">
+            <label className="font-mono text-[11px] uppercase tracking-wider text-text-telemetry flex items-center justify-between">
+              <span>CHỮ RIÊNG CHO TỪNG SẢN PHẨM</span>
+              <span className="text-[10px] lowercase text-text-muted">(không bắt buộc)</span>
+            </label>
+            <p className="text-[11px] text-text3 leading-relaxed">
+              Số ở đây khớp với số trên ảnh sản phẩm bạn đã tải lên. Chữ nhập ở đây sẽ được
+              vẽ cạnh đúng sản phẩm đó, nguyên văn.
+            </p>
+            {productAssets.map((asset, index) => (
+              <div key={asset.asset_id} className="flex items-center gap-2">
+                <span className="shrink-0 w-6 h-6 rounded-full bg-surface3 border border-borderStrong text-text text-[11px] font-bold font-mono flex items-center justify-center">
+                  {index + 1}
+                </span>
+                <input
+                  type="text"
+                  value={(brief.product_texts || {})[asset.asset_id] || ""}
+                  onChange={(e) => onUpdateProductText(asset.asset_id, e.target.value)}
+                  placeholder={`Chữ cho sản phẩm ${index + 1} (ví dụ: Cold Brew 250ml • 45.000đ)`}
+                  className="w-full bg-surface2 border border-border text-text rounded-[2px] text-[12.5px] px-2.5 py-2 focus:outline-none focus:border-borderStrong transition-colors placeholder:text-text-telemetry"
+                />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* 7. Visual Direction Controls */}

@@ -1,0 +1,11 @@
+SOCIAL AD — one to three seconds, on a held phone, often at thumbnail size first.
+
+What it has to win: a frame that survives being small and rewards a second look at full
+size. One message, one call to action, high contrast.
+
+Hero: the product or the face is immediately legible at a glance. Nothing subtle.
+Type: one message. If a second line exists it is plainly subordinate. Large, high
+contrast against whatever sits behind it.
+Vertical canvases: keep the top strip and the bottom strip of the frame free of text and
+logos — the platform's own interface covers them. Put nothing there you need read.
+Layout for this canvas: {{LAYOUT}}

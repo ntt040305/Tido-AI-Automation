@@ -1,0 +1,186 @@
+# 08_wide_one_product
+# The wide canvas and the banner profile, whose legibility floor is nearly double a poster's.
+# templates: v1 / banner / gpt-image
+
+=== DIRECTOR REQUEST (the filled request template) ===
+## A — JOB
+
+Deliverable: a finished, publishable Banner
+Asset type: Banner
+Industry: electronics_tech
+Canvas: horizontal (the ratio travels as a parameter; never write ratio digits)
+Products in frame: 1
+Intended use: a website hero banner
+
+## B — CLIENT INPUTS (authoritative, verbatim)
+
+Brand name: Nghe
+Concept, exactly as the client wrote it:
+The speaker alone on a dark surface, one hard light raking across it, nothing else.
+
+Nothing in this section may be paraphrased, translated, corrected or improved. Where it
+conflicts with anything below, it wins.
+
+## C — REFERENCES
+
+  Image 1 is a matte black cylindrical bluetooth speaker. Preserve its exact shape, proportions, colours, materials and label layout. Do not redesign it and do not re-letter it.
+  NO LOGO IMAGE IS ATTACHED. Do NOT ask for a logo, brand mark, wordmark or emblem to be drawn anywhere in the picture.
+
+## D — PRODUCT FACTS
+
+  (none)
+
+## E — BRAND KIT
+
+  (none)
+
+## F — COPY
+
+  1. [headline] "Âm thanh thật"
+  2. [supporting line] "Đặt trước"
+  Every string above appears in the image exactly once, verbatim, character for character, in straight double quotes in the TEXT section. Vietnamese keeps every diacritic, in NFC. No string may be added, shortened, translated or corrected.
+
+## G — USER CHOICES (binding)
+
+  (the client set no explicit visual choices)
+
+## H — STRATEGY (advisory)
+
+  (none)
+
+## I — REFERENCE DATA — translate into plain visual description; never copy a number, unit or ratio into the master prompt
+
+  (none)
+
+## J — ASSET PLAYBOOK
+
+WEB BANNER — under a second, while someone scrolls past, often a few hundred pixels wide.
+
+What it has to win: one statement that is legible when small and in greyscale. Separation
+and edge cleanliness matter more than atmosphere.
+
+Hero: the subject sits on one side and holds roughly two fifths of the frame.
+Space: the opposite side is clean negative space, and that is where the text goes. Do not
+fill it with scenery.
+Type: one short statement and, if there is one, a call to action. Nothing else.
+Contrast: the subject must separate from the ground without relying on colour alone.
+Layout for this canvas: a wide frame: the subject to one side, the words in the clear space opposite
+
+
+Industry module: (neutral studio treatment)
+Product-count rule: One product: one focal point.
+
+## K — TARGET MODEL NOTES
+
+(none beyond the standing instructions)
+
+## L — OUTPUT CONTRACT
+
+Write the master prompt in English prose, 1200–3500 characters, as nine
+labelled sections in exactly this order and with exactly these headings:
+
+OUTPUT:
+REFERENCE IMAGES:
+SCENE & CONCEPT:
+SUBJECT ARRANGEMENT:
+COMPOSITION & LAYOUT:
+LIGHT / CAMERA / MATERIALS:
+COLOR & BRAND STYLE:
+TEXT:
+CONSTRAINTS:
+
+**OUTPUT** states the asset type, the brand, the industry, the intended use and the canvas
+ORIENTATION in words. No ratio digits.
+
+**REFERENCE IMAGES** names every attached image by number — "Image 1 is …" — with its role,
+a short visual descriptor, and what must be preserved. For a product: preserve its shape,
+proportions, colours, materials and label layout; do not redesign it and do not re-letter
+it. For a logo: reproduce it as supplied, exactly once, at the stated position, and do not
+redraw or restyle it. For a contact sheet: say that the panel letters, the separating
+borders and the flat grey ground are annotations and must not appear in the image.
+
+**TEXT** sets each required string verbatim inside straight double quotes, with its
+position and how it is set. Vietnamese keeps every diacritic, in NFC. For a brand name
+that is not a dictionary word, spell it letter by letter beside the quoted form, unquoted.
+End with: "No other text, numbers, watermarks or extra logos." If section F says there is
+no copy, the whole TEXT section is exactly: "No text of any kind anywhere in the image."
+
+**CONSTRAINTS** lists concrete exclusions only.
+
+Nowhere in the master prompt may there appear: a colour temperature in Kelvin, an
+f-number, a focal length in millimetres, an aspect ratio as digits, a percentage, or a
+count of stops.
+
+## M — GOLD EXAMPLE (illustrative only)
+
+status: seed - unproven
+
+OUTPUT: A horizontal web banner for the earbud brand Nolan, technology, for a display placement. Photorealistic, finished and ready to publish.
+
+REFERENCE IMAGES: Image 1 is the product, a small charging case with one earbud resting beside it. Keep its exact shape, proportions, colours, materials and label layout; do not redesign it and do not re-letter it.
+
+SCENE & CONCEPT: The case sits on a plain pale surface, lit cleanly, with nothing around it. The idea is clarity.
+
+SUBJECT ARRANGEMENT: The case and the single earbud on the left side of the frame, together holding about two fifths of the width.
+
+COMPOSITION & LAYOUT: Subject left, and the entire right side left as clean empty surface for the words. Do not fill that side.
+
+LIGHT / CAMERA / MATERIALS: Even, slightly cool light with a soft gradient falloff to the right. A narrow highlight along the top edge of the case separates it from the ground. Smooth matte plastic, a faint polished rim.
+
+COLOR & BRAND STYLE: Near-white and graphite, high separation, readable without relying on colour.
+
+TEXT: On the right side, left aligned and vertically centred, a bold sans-serif line in graphite: "Nghe rõ hơn". Beneath it, smaller: "Mua ngay". Render every Vietnamese accent exactly. No other text, numbers, watermarks or extra logos.
+
+CONSTRAINTS: No hands, no ears, no second case, no cables, no scenery on the right side.
+
+
+## SELF-CHECK before you answer
+
+- All nine headings present, in order, spelled as above.
+- Every string from section F appears verbatim, in straight double quotes, exactly once.
+- No quoted string that section F did not list.
+- Every attached image named by its number, and no number named that is not attached.
+- No Kelvin, f-number, millimetres, ratio digits, percentage or stop count anywhere.
+- No `{{` left anywhere, and no section letter, heading name or the words "brief",
+  "playbook" or "reference data" leaking into the prompt.
+- Length within the stated bounds.
+- The orientation word matches the canvas in section A.
+- If no logo image was supplied, the prompt does not ask for a logo to be drawn.
+- If a panel was flagged as below the trusted size, the prompt does not ask for its
+  lettering to be reproduced.
+
+## ANSWER FORMAT
+
+<decisions>
+What you chose and why, in a few lines: the route you took, any conflict you resolved and
+which side won, and every default you filled because the brief was silent.
+</decisions>
+<copy_final>
+One line per string, exactly as it must be set. Empty if there is no copy.
+</copy_final>
+<warnings>
+Anything the next person should know. Empty if nothing.
+</warnings>
+<image_prompt>
+The master prompt, and nothing else.
+</image_prompt>
+
+
+=== CODE-BUILT FALLBACK PROMPT ===
+OUTPUT: A horizontal Banner for Nghe, electronics_tech, for a website hero banner. Photorealistic, finished and ready to publish.
+
+REFERENCE IMAGES: Image 1 is a matte black cylindrical bluetooth speaker. Preserve its exact shape, proportions, colours, materials and label layout; do not redesign it and do not re-letter it. No logo image is attached, so no logo, brand mark or emblem is drawn anywhere.
+
+SCENE & CONCEPT: The speaker alone on a dark surface, one hard light raking across it, nothing else.
+
+SUBJECT ARRANGEMENT: One product, one focal point, placed so nothing competes with it.
+
+COMPOSITION & LAYOUT: WEB BANNER — under a second, while someone scrolls past, often a few hundred pixels wide. What it has to win: one statement that is legible when small and in greyscale. Separation and edge cleanliness matter more than atmosphere. Hero: the subject sits on one side and holds roughly two fifths of the frame. Space: the opposite side is clean negative space, and that is where the text goes. Do not fill it with scenery. Type: one short statement and, if there is one, a call to action. Nothing else. Contrast: the subject must separate from the ground without relying on colour alone. Layout for this canvas: a wide frame: the subject to one side, the words in the clear space opposite Text sits in the calmest area the composition leaves and never over the product.
+
+LIGHT / CAMERA / MATERIALS: Neutral studio lighting: a soft key that models the form, a rim that separates the subject from the background, and a soft contact shadow. Shallow depth of field so the background falls gently out of focus.
+
+COLOR & BRAND STYLE: A restrained palette of two colours, the second almost absent.
+
+TEXT: Set each of the following exactly once, in the upper area, as the headline, large and first to be read: "Âm thanh thật"; directly below the headline, smaller and lighter: "Đặt trước". Render every Vietnamese diacritic exactly. No other text, numbers, watermarks or extra logos.
+
+CONSTRAINTS: No people other than those described. No second copy of the product. No invented lettering of any kind. No brand mark other than one supplied as an image.

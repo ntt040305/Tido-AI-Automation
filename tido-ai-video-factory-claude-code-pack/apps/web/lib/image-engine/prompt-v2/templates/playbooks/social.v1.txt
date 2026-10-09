@@ -1,0 +1,17 @@
+ASSET: social ad at {{ASPECT_RATIO}}.
+The viewer gives it one to three seconds, on a held phone.
+
+What it has to win: a frame that survives a thumbnail and rewards a second look at
+full size.
+
+Subject: the subject is large, high in contrast, and readable before anything is
+read.
+
+Layout for this ratio: {{LAYOUT}}
+
+Copy budget: at most 3 separate lines of text — a hook of at most 6 words, a
+supporting line of at most 10 words, and an action line of at most 3 words.
+
+- The top and bottom eighths of the frame stay clear of anything that matters,
+  because the platform draws its own interface there.
+- The hook is short enough to read while scrolling.

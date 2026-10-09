@@ -1,0 +1,73 @@
+BLOCK 1 — OUTPUT CONTRACT
+AUTHORITY. Two things are absolute and nothing below them may change them: the product's identity in BLOCK 2, and the exact strings in BLOCK 8's ledger.
+Everything else: where two blocks describe the same thing differently, execute the LATER block's version.
+Where no block covers a decision, it is yours to make, in the direction the blocks already establish.
+ONE finished photograph, made in a single exposure. Every element in the frame — the product, the staging, the words — belongs to the same light, the same lens and the same depth. Nothing is laid on top of the picture.
+
+CHANNEL — a hero. The viewer gives it ten seconds or more, often enlarged.
+What it has to win: surface truth under inspection: the product's material, edges and markings hold at 200% magnification.
+The dominant element holds 38-55% of the frame; nothing else competes for that share.
+
+BLOCK 3 — SUBJECT & STAGING
+THE IDEA — The watch alone on brushed steel, examined the way a collector examines it.
+Everything below serves this one line. Where a later block offers a way to make the frame more interesting that this line does not need, leave it out.
+
+CREATIVE INTENT
+CREATIVE CONCEPT: The watch alone on brushed steel, examined the way a collector examines it.
+BRAND NAME: Meridian
+
+THE FRAME, AS DECIDED
+- what the frame is of: the product, alone, as the frame's reason
+- the product's role: hero
+- where the product sits: 52%, 30% from the frame's top-left corner, 30% wide and 55% tall — centre right
+- how much of the frame it fills: about 38% — large
+- what the story is: an unhurried morning, before anything has started
+- what the empty part of the frame is for: the calm beside it
+- read 1: the product
+
+BLOCK 4 — LIGHT
+LIGHT — 1 source at 5300K.
+Key: a source 2.3x the product's own width, 34 degrees above the product's centre and 50 degrees camera-left of the lens axis. Key to fill 2:1.
+No second source: the fill is bounce off the set itself, keeping the shadow side 2:1 down from the key.
+Shadow: soft edge. Contact shadow defined but not deep, holding the product on the surface.
+Speculars: at most 1 on the product, each one reading as the same source reflected.
+Air: clear. No haze, no atmospheric veiling, no light shafts.
+
+BLOCK 5 — LENS
+LENS — 85mm at f/8, close framing.
+Camera: 7 degrees above the product's centre, looking slightly down. No tilt; the vertical edges of the frame stay vertical.
+The product fills about 38% of the frame and sits wholly inside it, never cropped.
+Depth of field at f/8 holds the product's full depth sharp; everything behind it falls away without becoming an abstraction.
+Movement: no movement, but the scene looks recently touched.
+
+BLOCK 6 — ENVIRONMENT
+ENVIRONMENT — a single material with a visible but quiet grain.
+The staging surface reads at about 47% luminance; the backdrop stays even within 8% across its whole area.
+Props: at most 1, which has to earn its place and must not touch the product.
+Depth: 2 planes. Horizon middle.
+
+BLOCK 7 — GRADE & MATERIAL
+FINISH — this frame is a photograph on 4x5 colour transparency, not a render.
+What that medium does: it holds enormous tonal latitude, shows no structure in the midtones, and compresses highlights for a long way before they give up.
+Tonality: the darkest value in the frame sits at 12/255 and nothing reaches pure black; 3 stops of highlight rolloff above the key, so bright surfaces compress instead of clipping to white.
+Grain: 0.15% of the frame's width, even across the whole frame and present in the shadows as much as the midtones.
+Corner falloff: none. The corners are as bright as the centre.
+Colour: held in the product's own hue; the neutrals around it stay neutral.
+Optical signature: round and quiet, with no edge outlining; no flare or bloom; a specular highlight stays inside its own shape.
+
+SURFACES — the staging surface is 7% gloss; the rest of the set is matte.
+Its own micro-texture reads at about 0.3mm, visible where the light rakes across it and nowhere else.
+A specular on the product is no wider than 7% of the product's width, and the product's material keeps its true roughness rather than being polished to read as new.
+
+BLOCK 8 — TYPOGRAPHY
+
+T1 · THE LEDGERS — the only words that exist in this frame.
+CAMPAIGN COPY — none. No headline, subheadline, call to action, price, caption, slogan or decorative lettering is authorized for this frame. Render no words of your own anywhere in it.
+PRODUCT LETTERING — COPY THESE WORDS. Verb: REPRODUCE.
+This text is part of the physical object, not part of the layout. It lies on the surface carrying it, curves with that surface, takes that surface's perspective, and may be partly turned away or in shadow. Do not restyle it, re-set it, translate it, or make it match the campaign type.
+  [P0] the lettering the attached product reference already shows. It is not quoted here because it is read from the reference, not from the brief: reproduce exactly what the reference shows, and invent no additional words, marks, logos or label text.
+
+T4 · FORBIDDEN.
+THE TWO LEDGERS DO NOT MIX. Both directions are forbidden:
+- [P0] never leave the product. Do not lift the label's words into the frame, enlarge them as a headline, repeat them in the open space, or echo them anywhere outside the object itself.
+- No words exist in this frame beyond the two ledgers above: no extra headline, slogan, caption, price, watermark, signature, stamp, address, URL, QR code, or decorative lettering, and no invented brand mark or logo of any kind.

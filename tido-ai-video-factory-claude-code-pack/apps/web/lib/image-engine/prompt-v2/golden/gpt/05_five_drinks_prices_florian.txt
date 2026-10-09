@@ -1,0 +1,195 @@
+# 05_five_drinks_prices_florian
+# The reviewer's first required golden, taken from the live render gen_1791450163915_8eocz. Five products across two sheets; every panel falls below the 512px identity floor.
+# templates: v1 / social / gpt-image
+
+=== DIRECTOR REQUEST (the filled request template) ===
+## A — JOB
+
+Deliverable: a finished, publishable Social Ad
+Asset type: Social Ad
+Industry: coffee_tea
+Canvas: square (the ratio travels as a parameter; never write ratio digits)
+Products in frame: 5
+Intended use: a Tết promotional post
+
+## B — CLIENT INPUTS (authoritative, verbatim)
+
+Brand name: Florian
+Concept, exactly as the client wrote it:
+A warm, inviting festive cafe celebrating Tết: the five signature drinks together on a wooden tabletop, delicate yellow apricot blossom in the background, a cosy holiday gathering mood.
+
+Nothing in this section may be paraphrased, translated, corrected or improved. Where it
+conflicts with anything below, it wins.
+
+## C — REFERENCES
+
+  Image 1 is a reference sheet of 3 product photographs in panels: panel A is a tall clear cup of iced caramel coffee, panel B is a clear cup of iced blueberry tea, panel C is a cup of iced matcha latte, layered. Preserve each product's exact shape, proportions, colours, materials and label layout; do not redesign them and do not re-letter them. The lettering on these panels is NOT large enough to read reliably: take shape, proportions, colours and materials from the panel, and take any wording from the product facts below. Do not instruct that the panel's lettering be copied.
+  Image 2 is a reference sheet of 2 product photographs in panels: panel A is a clear cup of iced orange tea with fruit slices, panel B is a cup of iced matcha with lotus seed. Preserve each product's exact shape, proportions, colours, materials and label layout; do not redesign them and do not re-letter them.
+  NO LOGO IMAGE IS ATTACHED. Do NOT ask for a logo, brand mark, wordmark or emblem to be drawn anywhere in the picture.
+  The panel letters, the borders between panels and the flat grey ground are annotations on a contact sheet. They are not part of any product and must never appear in the rendered image.
+
+## D — PRODUCT FACTS
+
+  (none)
+
+## E — BRAND KIT
+
+  (none)
+
+## F — COPY
+
+  1. [headline] "Florian Cafe"
+  2. [supporting line] "Nơi giúp bạn giải tỏa căng thẳng"
+  3. [supporting line] "Bằng những ly nước ngọt ngào"
+  4. [supporting line] "Chỉ từ 30K"
+  5. [supporting line] "Caramel coffee - 35K"
+  6. [supporting line] "Trà cam - 40K"
+  7. [supporting line] "Trà việt quất - 40K"
+  8. [supporting line] "Matcha hạt sen - 45K"
+  9. [call to action] "Matcha Latte - 40K"
+  Every string above appears in the image exactly once, verbatim, character for character, in straight double quotes in the TEXT section. Vietnamese keeps every diacritic, in NFC. No string may be added, shortened, translated or corrected.
+
+## G — USER CHOICES (binding)
+
+  (the client set no explicit visual choices)
+
+## H — STRATEGY (advisory)
+
+  (none)
+
+## I — REFERENCE DATA — translate into plain visual description; never copy a number, unit or ratio into the master prompt
+
+  (none)
+
+## J — ASSET PLAYBOOK
+
+SOCIAL AD — one to three seconds, on a held phone, often at thumbnail size first.
+
+What it has to win: a frame that survives being small and rewards a second look at full
+size. One message, one call to action, high contrast.
+
+Hero: the product or the face is immediately legible at a glance. Nothing subtle.
+Type: one message. If a second line exists it is plainly subordinate. Large, high
+contrast against whatever sits behind it.
+Vertical canvases: keep the top strip and the bottom strip of the frame free of text and
+logos — the platform's own interface covers them. Put nothing there you need read.
+Layout for this canvas: a square frame: the subject centred or just below centre, the words in the calm band above it
+
+
+Industry module: (neutral studio treatment)
+Product-count rule: Several products: group them with a clear hierarchy, the main product largest, none deformed or duplicated.
+
+## K — TARGET MODEL NOTES
+
+(none beyond the standing instructions)
+
+## L — OUTPUT CONTRACT
+
+Write the master prompt in English prose, 1200–3500 characters, as nine
+labelled sections in exactly this order and with exactly these headings:
+
+OUTPUT:
+REFERENCE IMAGES:
+SCENE & CONCEPT:
+SUBJECT ARRANGEMENT:
+COMPOSITION & LAYOUT:
+LIGHT / CAMERA / MATERIALS:
+COLOR & BRAND STYLE:
+TEXT:
+CONSTRAINTS:
+
+**OUTPUT** states the asset type, the brand, the industry, the intended use and the canvas
+ORIENTATION in words. No ratio digits.
+
+**REFERENCE IMAGES** names every attached image by number — "Image 1 is …" — with its role,
+a short visual descriptor, and what must be preserved. For a product: preserve its shape,
+proportions, colours, materials and label layout; do not redesign it and do not re-letter
+it. For a logo: reproduce it as supplied, exactly once, at the stated position, and do not
+redraw or restyle it. For a contact sheet: say that the panel letters, the separating
+borders and the flat grey ground are annotations and must not appear in the image.
+
+**TEXT** sets each required string verbatim inside straight double quotes, with its
+position and how it is set. Vietnamese keeps every diacritic, in NFC. For a brand name
+that is not a dictionary word, spell it letter by letter beside the quoted form, unquoted.
+End with: "No other text, numbers, watermarks or extra logos." If section F says there is
+no copy, the whole TEXT section is exactly: "No text of any kind anywhere in the image."
+
+**CONSTRAINTS** lists concrete exclusions only.
+
+Nowhere in the master prompt may there appear: a colour temperature in Kelvin, an
+f-number, a focal length in millimetres, an aspect ratio as digits, a percentage, or a
+count of stops.
+
+## M — GOLD EXAMPLE (illustrative only)
+
+status: seed - unproven
+
+OUTPUT: A vertical social advertisement for the skincare brand Centella, beauty and skincare, for a paid feed placement. Photorealistic, finished and ready to publish.
+
+REFERENCE IMAGES: Image 1 is a reference sheet of two product photographs in panels: panel A a frosted glass serum bottle with a dropper cap, panel B a clear toner bottle with a pump. Keep each product exact in shape, proportions, colours, materials and label layout; do not redesign them and do not re-letter them. The panel letters, the separating borders and the flat grey ground are annotations and must not appear in the image.
+
+SCENE & CONCEPT: The two bottles stand together on pale wet stone under soft diffused daylight, a thin film of water around their bases. The idea is calm after irritation.
+
+SUBJECT ARRANGEMENT: Two bottles, the serum slightly forward and larger, the toner just behind to its right. No other objects.
+
+COMPOSITION & LAYOUT: The pair sits in the lower middle. The upper area is an even, gently lit wall held clear for the words. Keep the top strip and the bottom strip of the frame free of text.
+
+LIGHT / CAMERA / MATERIALS: Broad soft light from the front left with almost no hard shadow. A faint sheen on the wet stone. Frosted glass, clear glass, translucent gel, cool damp stone.
+
+COLOR & BRAND STYLE: Pale green and off-white, clean and clinical, with one soft shadow for depth.
+
+TEXT: In the upper area, left aligned, a clean sans-serif headline in deep green: "Da dịu sau 7 ngày". Beneath it, small: "Thử ngay". Render every Vietnamese accent exactly. No other text, numbers, watermarks or extra logos.
+
+CONSTRAINTS: No people, no hands, no droppers lifted out, no third bottle, no flowers.
+
+
+## SELF-CHECK before you answer
+
+- All nine headings present, in order, spelled as above.
+- Every string from section F appears verbatim, in straight double quotes, exactly once.
+- No quoted string that section F did not list.
+- Every attached image named by its number, and no number named that is not attached.
+- No Kelvin, f-number, millimetres, ratio digits, percentage or stop count anywhere.
+- No `{{` left anywhere, and no section letter, heading name or the words "brief",
+  "playbook" or "reference data" leaking into the prompt.
+- Length within the stated bounds.
+- The orientation word matches the canvas in section A.
+- If no logo image was supplied, the prompt does not ask for a logo to be drawn.
+- If a panel was flagged as below the trusted size, the prompt does not ask for its
+  lettering to be reproduced.
+
+## ANSWER FORMAT
+
+<decisions>
+What you chose and why, in a few lines: the route you took, any conflict you resolved and
+which side won, and every default you filled because the brief was silent.
+</decisions>
+<copy_final>
+One line per string, exactly as it must be set. Empty if there is no copy.
+</copy_final>
+<warnings>
+Anything the next person should know. Empty if nothing.
+</warnings>
+<image_prompt>
+The master prompt, and nothing else.
+</image_prompt>
+
+
+=== CODE-BUILT FALLBACK PROMPT ===
+OUTPUT: A square Social Ad for Florian, coffee_tea, for a Tết promotional post. Photorealistic, finished and ready to publish.
+
+REFERENCE IMAGES: Image 1 is a reference sheet in panels: panel A is a tall clear cup of iced caramel coffee, panel B is a clear cup of iced blueberry tea, panel C is a cup of iced matcha latte, layered. Preserve each product's exact shape, proportions, colours, materials and label layout; do not redesign them and do not re-letter them. Image 2 is a reference sheet in panels: panel A is a clear cup of iced orange tea with fruit slices, panel B is a cup of iced matcha with lotus seed. Preserve each product's exact shape, proportions, colours, materials and label layout; do not redesign them and do not re-letter them. The panel letters, the borders between panels and the flat grey ground are annotations and must not appear in the rendered image. Some panels are too small for their lettering to be read reliably; take shape, proportions, colours and materials from those panels and do not reproduce their lettering. No logo image is attached, so no logo, brand mark or emblem is drawn anywhere.
+
+SCENE & CONCEPT: A warm, inviting festive cafe celebrating Tết: the five signature drinks together on a wooden tabletop, delicate yellow apricot blossom in the background, a cosy holiday gathering mood.
+
+SUBJECT ARRANGEMENT: The 5 products are grouped with a clear hierarchy, the main product largest and nearest, none of them deformed or duplicated.
+
+COMPOSITION & LAYOUT: SOCIAL AD — one to three seconds, on a held phone, often at thumbnail size first. What it has to win: a frame that survives being small and rewards a second look at full size. One message, one call to action, high contrast. Hero: the product or the face is immediately legible at a glance. Nothing subtle. Type: one message. If a second line exists it is plainly subordinate. Large, high contrast against whatever sits behind it. Vertical canvases: keep the top strip and the bottom strip of the frame free of text and logos — the platform's own interface covers them. Put nothing there you need read. Layout for this canvas: a square frame: the subject centred or just below centre, the words in the calm band above it Text sits in the calmest area the composition leaves and never over the product.
+
+LIGHT / CAMERA / MATERIALS: Neutral studio lighting: a soft key that models the form, a rim that separates the subject from the background, and a soft contact shadow. Shallow depth of field so the background falls gently out of focus.
+
+COLOR & BRAND STYLE: A restrained palette of two colours, the second almost absent.
+
+TEXT: Set each of the following exactly once, in the upper area, as the headline, large and first to be read: "Florian Cafe"; directly below the headline, smaller and lighter: "Nơi giúp bạn giải tỏa căng thẳng"; directly below the headline, smaller and lighter: "Bằng những ly nước ngọt ngào"; directly below the headline, smaller and lighter: "Chỉ từ 30K"; directly below the headline, smaller and lighter: "Caramel coffee - 35K"; directly below the headline, smaller and lighter: "Trà cam - 40K"; directly below the headline, smaller and lighter: "Trà việt quất - 40K"; directly below the headline, smaller and lighter: "Matcha hạt sen - 45K"; near the lower edge, small, as the call to action: "Matcha Latte - 40K". Render every Vietnamese diacritic exactly. No other text, numbers, watermarks or extra logos.
+
+CONSTRAINTS: No people other than those described. No second copy of the product. No invented lettering of any kind. No brand mark other than one supplied as an image.
