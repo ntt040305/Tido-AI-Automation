@@ -531,9 +531,20 @@ async function main() {
       "branding was invented from nothing",
     );
     const stated = sheetFor(fixtureById("01_one_product_square"));
+    assert.strictEqual(
+      stated.products[0].printed_branding,
+      "ORIGIN BLEND / COLD BREW",
+      "the label was not read exactly out of its own fact",
+    );
+    // The regression: the facts used to be joined with a space and the capture ran to the
+    // next full stop, so a second fact was swallowed into the label. Measured on fixture 15,
+    // where the label came back as "SUONG / VITAMIN C frosted glass, matte white cap" and
+    // the brand-name comparison then reported a mismatch that did not exist.
+    const vertical = sheetFor(fixtureById("15_single_product_vertical"));
+    assert.strictEqual(vertical.products[0].printed_branding, "SUONG / VITAMIN C");
     assert.ok(
-      stated.products.some((p) => String(p.printed_branding).includes("ORIGIN BLEND")),
-      "a stated label was not read out of the product facts",
+      !vertical.conflicts_resolved.some((c) => /does not match the brand name/i.test(c)),
+      `a false brand mismatch survived: ${JSON.stringify(vertical.conflicts_resolved)}`,
     );
   });
   check("props are never invented", () => {

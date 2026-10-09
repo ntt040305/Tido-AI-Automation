@@ -15,7 +15,7 @@
       "colours": [
         "amber"
       ],
-      "printed_branding": "ORIGIN BLEND / COLD BREW glass, matte wood cap",
+      "printed_branding": "ORIGIN BLEND / COLD BREW",
       "description": "amber glass bottle of cold brew with a turned wood cap",
       "physics": null
     }
@@ -200,7 +200,7 @@ add a second one anywhere, and do not contradict it in CONSTRAINTS.
 
 ## D — PRODUCT MAP
 
-  - HERO — amber glass bottle of cold brew with a turned wood cap; reads amber; glass, wood; printed branding reads ORIGIN BLEND / COLD BREW glass, matte wood cap
+  - HERO — amber glass bottle of cold brew with a turned wood cap; reads amber; glass, wood; printed branding reads ORIGIN BLEND / COLD BREW
 
 Hero:   amber glass bottle of cold brew with a turned wood cap — the only product
 

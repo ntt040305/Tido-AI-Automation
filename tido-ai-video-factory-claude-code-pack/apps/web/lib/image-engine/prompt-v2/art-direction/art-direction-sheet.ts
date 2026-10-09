@@ -51,6 +51,9 @@ import type { NumericWordsDensity } from "../engine-selector";
 import { exclusionsFor, industryLabel } from "./industry-label";
 import { extractConceptSpecs, conceptWithoutSpecs, type ConceptSpecs } from "./concept-specs";
 import { printRuleFor, type PrintRule } from "./print-rule";
+// Reused, not re-written: the creative-approach work already needed Vietnamese accent
+// folding, and `run-tone-fixture-tests` already pins its collision cases.
+import { stripAccents } from "../../director/tone-strength";
 import { physicsFor, type ProductPhysics } from "./material-physics";
 import type { ProductVision, ProductVisionItem } from "./product-vision";
 import { resolvePrecedence, type Candidate } from "./precedence";
@@ -918,7 +921,7 @@ function deriveProducts(input: SheetInput): ArtDirectionSheet["products"] {
     // "the label reads X" is the only shape the system can read branding from today, and
     // only when a human typed it into the product facts. Anything else is unverified, and
     // saying so is the whole point: a guessed label is drawn as a guessed label.
-    const reads = /(?:label|front|cap|lid)\s+reads\s+([^;.]+)/i.exec(factText);
+    const reads = labelTextIn(input.productFacts);
     // Branding the vision pass could READ wins. Branding it could SEE but not read is
     // still unverified, which is the whole reason `legible` exists: a guessed label is
     // drawn as a guessed label on a real product.
@@ -931,7 +934,7 @@ function deriveProducts(input: SheetInput): ArtDirectionSheet["products"] {
       material: materials.length ? materials.join(", ") : UNVERIFIED,
       size_class: trim(seen?.size_class) || UNVERIFIED,
       colours,
-      printed_branding: seenBranding || (reads ? trim(reads[1]).replace(/["“”]/g, "") : UNVERIFIED),
+      printed_branding: seenBranding || reads || UNVERIFIED,
       description: p.description,
       physics: physics
         ? {
@@ -942,6 +945,32 @@ function deriveProducts(input: SheetInput): ArtDirectionSheet["products"] {
         : null,
     };
   });
+}
+
+/**
+ * Label wording a human typed into the product facts, or "".
+ *
+ * Read fact by fact, and never off the facts joined together — which is the bug this
+ * replaces. The facts were concatenated with a space and the capture ran to the next full
+ * stop, so `'the label reads "SUONG / VITAMIN C"'` followed by `"frosted glass, matte
+ * white cap"` came back as a label reading
+ * `SUONG / VITAMIN C frosted glass, matte white cap`, and the brand-name comparison then
+ * reported a mismatch against "Sương" that did not exist. Measured in the Step 1i
+ * evidence.
+ *
+ * A quoted value is preferred, because that is how a person writes a label down.
+ */
+function labelTextIn(facts: string[] | null | undefined): string {
+  for (const fact of facts || []) {
+    const text = trim(fact);
+    if (!/(?:label|front|cap|lid)\s+reads\b/i.test(text)) continue;
+    const quoted = /reads\s+["“]([^"”]+)["”]/i.exec(text);
+    if (quoted) return trim(quoted[1]);
+    // Unquoted: to the end of this fact, stopping at punctuation that ends a clause.
+    const bare = /reads\s+([^;.,]+)/i.exec(text);
+    if (bare) return trim(bare[1]).replace(/["“”]/g, "");
+  }
+  return "";
 }
 
 /**
@@ -1140,10 +1169,15 @@ export function buildArtDirectionSheet(input: SheetInput): ArtDirectionSheet {
   // Not an error and not corrected: the client may be advertising a sub-brand, or may have
   // uploaded the wrong photograph. Both are things a person should see, and neither is
   // something to resolve by guessing.
-  const brandName = lower(input.brand);
+  // Compared with accents FOLDED on both sides.
+  //
+  // A printed label routinely drops Vietnamese diacritics — "SUONG" for "Sương" — because
+  // that is how labels are set, and reporting that as a brand mismatch is a false positive
+  // on a very common case. Measured in the Step 1i evidence on fixture 15.
+  const brandName = stripAccents(lower(input.brand));
   if (brandName) {
     for (const product of sheet.products) {
-      const printed = lower(product.printed_branding);
+      const printed = stripAccents(lower(product.printed_branding));
       if (!printed || printed === UNVERIFIED) continue;
       if (!printed.includes(brandName) && !brandName.includes(printed.split(/[\s/]+/)[0] || "\u0000")) {
         sheet.conflicts_resolved.push(
