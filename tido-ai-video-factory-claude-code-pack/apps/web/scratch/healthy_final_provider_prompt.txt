@@ -1,28 +1,17 @@
-OUTPUT: A square social advertisement for the coffee and tea brand Florian, coffee_tea, for a social media promotional campaign celebrating Lunar New Year (Tết). Photorealistic, finished and ready to publish.
+OUTPUT: A horizontal banner for Fast Chicken, food and beverage, for online advertising. Photorealistic, finished and ready to publish.
 
-REFERENCE IMAGES: Image 1 is a reference sheet of three product photographs in panels: panel A, panel B, and panel C, each showing a distinct specialty drink cup. Keep each product exact in shape, proportions, colours, and materials; do not redesign them. The lettering on Image 1 panels is not legible enough to read: take shape, proportions, colours, and materials from the panels, and take text solely from the instructions below. Image 2 is a reference sheet of two product photographs in panels: panel A and panel B, showing two specialty drink cups. Preserve each product exact in shape, proportions, colours, and materials; do not redesign them. The panel letters, the separating borders, and the flat grey ground are annotations on the contact sheets and must never appear in the rendered image. No logo image is supplied; do not draw or render any logo, wordmark, or brand icon.
+REFERENCE IMAGES: Image 1 is a contact sheet of two product photographs in panels: panel A is French fries, panel B is a beef burger. Image 2 is a contact sheet of two product photographs in panels: panel A is a whole golden roasted grilled chicken, panel B is a cheese pizza. Preserve each product's exact shape, proportions, colours and materials; do not redesign them. The panel letters, dividing lines and neutral grey backing are annotations and must not appear in the finished image. No logo image is attached; do not render any logo, wordmark or emblem.
 
-SCENE & CONCEPT: A warm, inviting festive cafe scene celebrating Tết. The five signature drinks are presented together on a clean, warm wooden cafe tabletop. Subtle festive accents such as delicate yellow apricot blossom sprigs and elegant warm decor sit softly in the background, creating a cozy holiday gathering mood.
+SCENE & CONCEPT: A vibrant Tết Saigon celebratory feast concept. The delicious dishes are served together on clean modern festive tableware against a warm, festive gradient background with subtle gold and warm amber reflections, evoking joyful holiday reunions.
 
-SUBJECT ARRANGEMENT: Five drinks arranged in an attractive, layered group across the lower half of the frame: the taller iced matcha and tea beverages slightly behind, with the iced coffee and specialty fruit tea cups neatly positioned in the front tier. Each drink looks fresh, chilled, with condensation on the clear cups and rich layers of tea, milk, foam, and garnishes clearly visible.
+SUBJECT ARRANGEMENT: An appetizing multi-product hero cluster positioned across the right side and lower centre of the frame. The golden roasted chicken sits centrally as the largest focal point, accompanied by the cheese pizza, the beef hamburger, and the crispy French fries, grouped tightly and cleanly with distinct separation.
 
-COMPOSITION & LAYOUT: A balanced square composition. The drinks occupy the lower portion of the frame on the tabletop. The upper portion remains clean and softly lit against a tasteful cafe interior background to host the promotional typography.
+COMPOSITION & LAYOUT: Horizontal composition with the hero food group occupying the right portion and clean negative space reserved across the upper left side for typography. Clear spacing allows price tags to sit directly alongside their respective food items without clutter.
 
-LIGHT / CAMERA / MATERIALS: Warm, luminous commercial studio lighting highlighting the rich colors of the beverages, ice cubes, clear plastic and glass cups, smooth wooden surface, and crisp liquid textures. Shallow depth of field with the background softly blurred.
+LIGHT / CAMERA / MATERIALS: Bright commercial food photography lighting with warm key lights enhancing glistening roasted poultry skin, melted cheese texture, fresh toasted sesame buns, and golden potato surfaces. Shallow depth of field keeping all food crisp while softening the background seamlessly.
 
-COLOR & BRAND STYLE: Warm amber, deep coffee brown, vibrant matcha green, citrus orange, and berry red, accented by natural wood tones and subtle festive warm gold and crimson.
+COLOR & BRAND STYLE: Festive Saigon New Year palette featuring warm reds, festive gold accents, deep toasted ambers, and clean warm cream tones for high legibility and appetite appeal.
 
-TEXT: Centred in the upper calm area, set in clean, elegant, high-contrast sans-serif typography:
-Headline: "Florian Cafe" (spelled F-l-o-r-i-a-n C-a-f-e).
-Directly below the headline: "Nơi giúp bạn giải tỏa căng thẳng"
-Followed beneath by: "Bằng những ly nước ngọt ngào"
-Prominent promotional highlight: "Chỉ từ 30K"
-Neatly arranged menu pricing lines placed cleanly near the drinks:
-"Caramel coffee - 35K"
-"Trà cam - 40K"
-"Trà việt quất - 40K"
-"Matcha hạt sen - 45K"
-"Matcha Latte - 40K"
-Preserve every Vietnamese diacritic exactly as written. No other text, numbers, watermarks or extra logos.
+TEXT: In the clean upper-left area, set the main headline in bold festive sans-serif: "Tết đến sum vầy". Directly beneath it, set the supporting line in clean medium weight: "Cả nhà đều vui". Below that, set the welcome line: "Chào mừng bạn đến với Fast Chicken". Beside the French fries, set: "Khoai tây chiên 25K". Beside the roasted chicken, set: "Gà nướng 230K". Beside the hamburger, set: "Hamburger Bò 45K". Beside the cheese pizza, set: "Pizza Phô Mai 150K". Render all Vietnamese diacritics accurately in standard form. No other text, numbers, watermarks or extra logos.
 
-CONSTRAINTS: No people, no hands, no extra cups beyond the five drinks shown, no floating text bubbles, no cartoon graphics, no drawn logos or invented brand marks.
+CONSTRAINTS: No hands, no people, no invented logos or brand icons, no extra dishes, no floating graphics, and no panel borders or sheet letters from the references.
